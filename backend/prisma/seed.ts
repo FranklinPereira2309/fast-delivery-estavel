@@ -1,9 +1,10 @@
+import 'dotenv/config'
 import { PrismaClient } from '@prisma/client'
 const prisma = new PrismaClient()
 
 async function main() {
   const adminEmail = 'admin@admin.com'
-  
+
   const admin = await prisma.user.upsert({
     where: { email: adminEmail },
     update: {},
