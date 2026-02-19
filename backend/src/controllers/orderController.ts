@@ -113,8 +113,24 @@ export const saveOrder = async (req: Request, res: Response) => {
             }
 
             // 2. Client Synchronization and Order Counting
-            const finalClientId = await syncClientStats(tx, order, oldStatus);
-            order.clientId = finalClientId;
+            const clientId = order.clientId && order.clientId !== "" ? order.clientId : 'ANONYMOUS';
+            const waiterId = order.waiterId && order.waiterId !== "" ? order.waiterId : null;
+            const driverId = order.driverId && order.driverId !== "" ? order.driverId : null;
+
+            if (clientId === 'ANONYMOUS') {
+                await tx.client.upsert({
+                    where: { id: 'ANONYMOUS' },
+                    update: {},
+                    create: {
+                        id: 'ANONYMOUS',
+                        name: 'Consumidor Avulso',
+                        phone: '0000000000',
+                        addresses: []
+                    }
+                });
+            }
+
+            order.clientId = await syncClientStats(tx, { ...order, clientId }, oldStatus);
 
             // 3. Upsert Order
             return await tx.order.upsert({
@@ -123,7 +139,8 @@ export const saveOrder = async (req: Request, res: Response) => {
                     status: order.status,
                     clientId: order.clientId,
                     paymentMethod: order.paymentMethod,
-                    driverId: order.driverId,
+                    driverId: driverId,
+                    waiterId: waiterId,
                     total: order.total,
                     items: {
                         deleteMany: {},
@@ -147,9 +164,9 @@ export const saveOrder = async (req: Request, res: Response) => {
                     status: order.status,
                     type: order.type,
                     paymentMethod: order.paymentMethod,
-                    driverId: order.driverId,
+                    driverId: driverId,
                     tableNumber: order.tableNumber,
-                    waiterId: order.waiterId,
+                    waiterId: waiterId,
                     items: {
                         create: order.items.map((item: any) => ({
                             id: item.uid,

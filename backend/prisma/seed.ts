@@ -26,7 +26,18 @@ async function main() {
     },
   })
 
-  console.log({ admin })
+  const anonymous = await prisma.client.upsert({
+    where: { id: 'ANONYMOUS' },
+    update: {},
+    create: {
+      id: 'ANONYMOUS',
+      name: 'Consumidor Avulso',
+      phone: '0000000000',
+      addresses: []
+    }
+  })
+
+  console.log({ admin, anonymous })
 }
 
 main()

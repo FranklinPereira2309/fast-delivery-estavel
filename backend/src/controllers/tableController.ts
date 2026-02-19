@@ -76,7 +76,24 @@ export const saveTableSession = async (req: Request, res: Response) => {
                 }
             });
 
-            // 5. Ensure Kitchen Order exists (required for linking)
+            // 5. Ensure 'ANONYMOUS' client exists if needed
+            const clientId = sessionData.clientId && sessionData.clientId !== "" ? sessionData.clientId : 'ANONYMOUS';
+            const waiterId = sessionData.waiterId && sessionData.waiterId !== "" ? sessionData.waiterId : null;
+
+            if (clientId === 'ANONYMOUS') {
+                await tx.client.upsert({
+                    where: { id: 'ANONYMOUS' },
+                    update: {},
+                    create: {
+                        id: 'ANONYMOUS',
+                        name: 'Consumidor Avulso',
+                        phone: '0000000000',
+                        addresses: []
+                    }
+                });
+            }
+
+            // 6. Ensure Kitchen Order exists (required for linking)
             const total = currentItems.reduce((acc: number, it: any) => acc + (it.price * it.quantity), 0);
 
             // Calculate status based on items
@@ -91,25 +108,29 @@ export const saveTableSession = async (req: Request, res: Response) => {
                 where: { id: orderId },
                 update: {
                     status: calculatedStatus,
-                    total: total
+                    total: total,
+                    clientId: clientId,
+                    waiterId: waiterId
                 },
                 create: {
                     id: orderId,
-                    clientId: sessionData.clientId || 'ANONYMOUS',
+                    clientId: clientId,
                     clientName: sessionData.clientName || `Mesa ${tableNum}`,
                     total: total,
                     status: calculatedStatus,
                     type: 'TABLE',
                     tableNumber: tableNum,
-                    waiterId: sessionData.waiterId
+                    waiterId: waiterId
                 }
             });
 
-            // 6. Upsert TableSession with Linked Items
+            // 7. Upsert TableSession with Linked Items
             const session = await tx.tableSession.upsert({
                 where: { tableNumber: tableNum },
                 update: {
                     ...sessionData,
+                    clientId: clientId === 'ANONYMOUS' ? null : clientId, // TableSession allows null clientId
+                    waiterId: waiterId,
                     items: {
                         create: currentItems.map((item: any) => ({
                             id: item.uid,
