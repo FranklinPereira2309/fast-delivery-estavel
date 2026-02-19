@@ -1,0 +1,8 @@
+{
+  "name": "Delivery Fast - Desktop Management Suite",
+  "description": "A comprehensive React-based management system for delivery businesses, featuring CRM, inventory control, POS operations, and AI-driven insights.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}

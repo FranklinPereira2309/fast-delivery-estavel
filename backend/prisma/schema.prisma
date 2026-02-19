@@ -1,0 +1,196 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+enum OrderStatus {
+  PENDING
+  PREPARING
+  PARTIALLY_READY
+  READY
+  OUT_FOR_DELIVERY
+  DELIVERED
+  CANCELLED
+  REOPENED
+}
+
+enum SaleType {
+  COUNTER
+  TABLE
+  OWN_DELIVERY
+  THIRD_PARTY
+}
+
+enum UnitType {
+  G
+  ML
+  UN
+  KG
+  L
+}
+
+enum DriverStatus {
+  AVAILABLE
+  BUSY
+  OFFLINE
+}
+
+enum VehicleType {
+  Moto
+  Carro
+  Bicicleta
+}
+
+enum SessionStatus {
+  available
+  occupied
+  billing
+}
+
+model User {
+  id          String   @id @default(uuid())
+  name        String
+  email       String   @unique
+  password    String
+  permissions String[]
+  createdAt   DateTime @default(now())
+  AuditLog    AuditLog[]
+}
+
+model Client {
+  id             String   @id @default(uuid())
+  name           String
+  phone          String
+  addresses      String[]
+  totalOrders    Int      @default(0)
+  lastOrderDate  String?
+  orders         Order[]
+}
+
+model Waiter {
+  id           String         @id @default(uuid())
+  name         String
+  phone        String
+  orders       Order[]
+  tableSessions TableSession[]
+}
+
+model Product {
+  id        String   @id @default(uuid())
+  name      String
+  price     Float
+  category  String
+  stock     Int      @default(0)
+  imageUrl  String
+  recipe    RecipeItem[]
+  orderItems OrderItem[]
+}
+
+model InventoryItem {
+  id        String   @id @default(uuid())
+  name      String
+  unit      UnitType
+  quantity  Float
+  minStock  Float
+  cost      Float
+  recipes   RecipeItem[]
+}
+
+model RecipeItem {
+  id              String        @id @default(uuid())
+  productId       String
+  product         Product       @relation(fields: [productId], references: [id])
+  inventoryItemId String
+  inventoryItem   InventoryItem @relation(fields: [inventoryItemId], references: [id])
+  quantity        Float
+  wasteFactor     Float
+}
+
+model Order {
+  id            String      @id @default(uuid())
+  clientId      String
+  client        Client      @relation(fields: [clientId], references: [id])
+  clientName    String
+  clientAddress String?
+  clientPhone   String?
+  items         OrderItem[]
+  total         Float
+  status        OrderStatus @default(PENDING)
+  type          SaleType
+  createdAt     DateTime    @default(now())
+  paymentMethod String?
+  driverId      String?
+  driver        DeliveryDriver? @relation(fields: [driverId], references: [id])
+  tableNumber   Int?
+  waiterId      String?
+  waiter        Waiter?     @relation(fields: [waiterId], references: [id])
+}
+
+model OrderItem {
+  id             String   @id @default(uuid())
+  orderId        String?
+  order          Order?   @relation(fields: [orderId], references: [id])
+  tableSessionId Int?
+  tableSession   TableSession? @relation(fields: [tableSessionId], references: [tableNumber])
+  productId      String
+  product        Product  @relation(fields: [productId], references: [id])
+  quantity       Int
+  price          Float
+  isReady        Boolean  @default(false)
+  readyAt        DateTime?
+}
+
+model TableSession {
+  tableNumber   Int           @id
+  status        SessionStatus @default(available)
+  items         OrderItem[]
+  clientName    String?
+  clientId      String?
+  waiterId      String?
+  waiter        Waiter?       @relation(fields: [waiterId], references: [id])
+  startTime     DateTime      @default(now())
+  clientAddress String?
+  clientPhone   String?
+}
+
+model DeliveryDriver {
+  id           String       @id @default(uuid())
+  name         String
+  phone        String
+  email        String?
+  address      String?
+  vehiclePlate String
+  vehicleModel String
+  vehicleBrand String
+  vehicleType  VehicleType
+  status       DriverStatus @default(AVAILABLE)
+  orders       Order[]
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  timestamp DateTime @default(now())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  userName  String
+  action    String
+  details   String
+}
+
+model BusinessSettings {
+  key         String @id
+  name        String
+  cnpj        String
+  address     String
+  phone       String
+  deliveryFee String
+  tableCount  Int
+}
