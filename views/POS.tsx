@@ -66,6 +66,14 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
 
   const addToCart = (product: Product) => {
     if (editingOrderId) return showAlert("Ação Bloqueada", "Não é possível adicionar itens a um pedido pronto que está sendo recebido.", "DANGER");
+
+    if (saleType === SaleType.TABLE && tableNumberInput) {
+      const isBilling = pendingTables.some(t => t.tableNumber === parseInt(tableNumberInput));
+      if (isBilling) {
+        return showAlert("Modo Leitura", "Esta mesa está em modo somente leitura (Faturando). Para adicionar produtos, você deve Reabrir a mesa.", "DANGER");
+      }
+    }
+
     setCart(prev => [...prev, {
       uid: `item-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
       productId: product.id,
