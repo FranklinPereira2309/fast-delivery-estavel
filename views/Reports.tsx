@@ -372,7 +372,7 @@ const Reports: React.FC = () => {
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
 
                 {/* CARD RELATÓRIO DE VENDAS */}
-                <div className="bg-white p-10 rounded-[3rem] shadow-sm border border-slate-100 flex flex-col">
+                <div className="bg-white p-10 rounded-[3rem] shadow-sm border border-slate-100 flex flex-col h-max">
                     <div className="mb-8">
                         <h3 className="text-2xl font-black text-slate-800 uppercase tracking-tighter flex items-center gap-3">
                             <span className="p-3 bg-blue-50 text-blue-600 rounded-2xl"><Icons.Dashboard /></span>
@@ -381,7 +381,7 @@ const Reports: React.FC = () => {
                         <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-2 ml-14">Análise financeira detalhada por período</p>
                     </div>
 
-                    <div className="space-y-6 flex-1">
+                    <div className="space-y-6">
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Início</label>
@@ -425,7 +425,7 @@ const Reports: React.FC = () => {
                 </div>
 
                 {/* CARD LISTA DE CLIENTES */}
-                <div className="bg-white p-10 rounded-[3rem] shadow-sm border border-slate-100 flex flex-col">
+                <div className="bg-white p-10 rounded-[3rem] shadow-sm border border-slate-100 flex flex-col h-max">
                     <div className="mb-8">
                         <h3 className="text-2xl font-black text-slate-800 uppercase tracking-tighter flex items-center gap-3">
                             <span className="p-3 bg-blue-50 text-blue-600 rounded-2xl"><Icons.CRM /></span>
@@ -434,7 +434,7 @@ const Reports: React.FC = () => {
                         <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-2 ml-14">Fidelidade e contatos registrados</p>
                     </div>
 
-                    <div className="space-y-6 flex-1">
+                    <div className="space-y-6">
                         <div className="space-y-2 relative">
                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Buscar Cliente (Opcional)</label>
                             {selectedClient ? (
@@ -516,7 +516,7 @@ const Reports: React.FC = () => {
                 </div>
 
                 {/* CARD RELATÓRIO DE ENTREGADORES */}
-                <div className="bg-white p-10 rounded-[3rem] shadow-sm border border-slate-100 flex flex-col">
+                <div className="bg-white p-10 rounded-[3rem] shadow-sm border border-slate-100 flex flex-col h-max">
                     <div className="mb-8">
                         <h3 className="text-2xl font-black text-slate-800 uppercase tracking-tighter flex items-center gap-3">
                             <span className="p-3 bg-blue-50 text-blue-600 rounded-2xl"><Icons.Logistics /></span>
@@ -525,7 +525,7 @@ const Reports: React.FC = () => {
                         <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-2 ml-14">Histórico de entregas e conferência de rotas</p>
                     </div>
 
-                    <div className="space-y-6 flex-1">
+                    <div className="space-y-6">
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Início</label>
