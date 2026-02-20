@@ -20,6 +20,9 @@ const Reports: React.FC = () => {
 
     // Customer Filters
     const [clientSearch, setClientSearch] = useState('');
+    const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+    const [showClientDropdown, setShowClientDropdown] = useState(false);
+    const [previewType, setPreviewType] = useState<'SALES' | 'CLIENTS' | 'CLIENT_ORDERS' | null>(null);
 
     useEffect(() => {
         fetchData();
@@ -121,6 +124,7 @@ const Reports: React.FC = () => {
                 link.click();
                 URL.revokeObjectURL(url);
             } else {
+                setPreviewType('SALES');
                 setPdfPreviewUrl(url);
             }
         } catch (error) {
@@ -182,10 +186,90 @@ const Reports: React.FC = () => {
                 link.click();
                 URL.revokeObjectURL(url);
             } else {
+                setPreviewType('CLIENTS');
                 setPdfPreviewUrl(url);
             }
         } catch (error) {
             console.error('Erro ao gerar PDF:', error);
+        }
+    };
+
+    const generateClientOrdersPDF = async (downloadOnly = false) => {
+        if (!selectedClient || !businessSettings) return;
+
+        try {
+            const pdfDoc = await PDFDocument.create();
+            const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+            const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+
+            const clientOrders = orders.filter(o => o.clientId === selectedClient.id && o.status === OrderStatus.DELIVERED);
+            const totalRevenue = clientOrders.reduce((sum, o) => sum + o.total, 0);
+            const orderCount = clientOrders.length;
+            const avgTicket = orderCount > 0 ? totalRevenue / orderCount : 0;
+
+            let page = pdfDoc.addPage([595.28, 841.89]);
+            const { width, height } = page.getSize();
+            let y = height - 50;
+
+            // Header
+            page.drawText('RELATÓRIO DE COMPRAS DO CLIENTE', { x: 50, y, size: 18, font: fontBold });
+            y -= 25;
+            page.drawText(businessSettings.name, { x: 50, y, size: 12, font: fontBold });
+            y -= 15;
+            page.drawText(`Cliente: ${selectedClient.name}`, { x: 50, y, size: 10, font: fontBold });
+            y -= 15;
+            page.drawText(`Telefone: ${selectedClient.phone}`, { x: 50, y, size: 10, font });
+
+            y -= 40;
+            // KPIs
+            page.drawText('RESUMO DO CLIENTE', { x: 50, y, size: 12, font: fontBold });
+            y -= 20;
+            page.drawText(`Faturamento Total: R$ ${totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, { x: 50, y, size: 10, font });
+            y -= 15;
+            page.drawText(`Volume de Pedidos: ${orderCount}`, { x: 50, y, size: 10, font });
+            y -= 15;
+            page.drawText(`Ticket Médio: R$ ${avgTicket.toFixed(2)}`, { x: 50, y, size: 10, font });
+
+            y -= 40;
+            // Table Header
+            page.drawRectangle({ x: 50, y: y - 5, width: width - 100, height: 20, color: rgb(0.95, 0.95, 0.95) });
+            page.drawText('DATA e HORA', { x: 55, y, size: 8, font: fontBold });
+            page.drawText('MODALIDADE', { x: 180, y, size: 8, font: fontBold });
+            page.drawText('STATUS', { x: 300, y, size: 8, font: fontBold });
+            page.drawText('TOTAL', { x: 450, y, size: 8, font: fontBold });
+            y -= 25;
+
+            for (const o of clientOrders) {
+                if (y < 70) {
+                    page = pdfDoc.addPage([595.28, 841.89]);
+                    y = page.getHeight() - 50;
+                }
+                const dateObj = new Date(o.createdAt);
+                const dateStr = `${dateObj.toLocaleDateString('pt-BR')} ${dateObj.toLocaleTimeString('pt-BR').substring(0, 5)}`;
+                page.drawText(dateStr, { x: 55, y, size: 8, font });
+                page.drawText(getFriendlySaleType(o.type), { x: 180, y, size: 8, font });
+                page.drawText(o.status, { x: 300, y, size: 8, font });
+                page.drawText(`R$ ${o.total.toFixed(2)}`, { x: 450, y, size: 8, font: fontBold });
+                y -= 20;
+            }
+
+            const pdfBytes = await pdfDoc.save();
+            const blob = new Blob([pdfBytes as any], { type: 'application/pdf' });
+            const url = URL.createObjectURL(blob);
+
+            if (downloadOnly) {
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `relatorio_compras_${selectedClient.name.replace(/\s+/g, '_')}_${new Date().getTime()}.pdf`;
+                link.click();
+                URL.revokeObjectURL(url);
+            } else {
+                setPreviewType('CLIENT_ORDERS');
+                setPdfPreviewUrl(url);
+            }
+        } catch (error) {
+            console.error('Erro ao gerar PDF do cliente:', error);
+            alert('Erro ao gerar relatório do cliente.');
         }
     };
 
@@ -257,25 +341,84 @@ const Reports: React.FC = () => {
                     </div>
 
                     <div className="space-y-6 flex-1">
-                        <div className="space-y-2">
+                        <div className="space-y-2 relative">
                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Buscar Cliente (Opcional)</label>
-                            <input
-                                type="text"
-                                placeholder="Ex: Nome ou Telefone..."
-                                value={clientSearch}
-                                onChange={e => setClientSearch(e.target.value)}
-                                className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-sm"
-                            />
+                            {selectedClient ? (
+                                <div className="flex items-center justify-between p-4 bg-blue-50 border border-blue-100 rounded-2xl">
+                                    <div className="flex flex-col">
+                                        <span className="font-bold text-sm text-blue-900">{selectedClient.name}</span>
+                                        <span className="text-xs text-blue-600">{selectedClient.phone}</span>
+                                    </div>
+                                    <button
+                                        onClick={() => {
+                                            setSelectedClient(null);
+                                            setClientSearch('');
+                                        }}
+                                        className="text-blue-400 hover:text-blue-600 p-2 font-bold"
+                                        title="Remover cliente"
+                                    >
+                                        &times;
+                                    </button>
+                                </div>
+                            ) : (
+                                <>
+                                    <input
+                                        type="text"
+                                        placeholder="Ex: Nome ou Telefone..."
+                                        value={clientSearch}
+                                        onChange={e => {
+                                            setClientSearch(e.target.value);
+                                            setShowClientDropdown(true);
+                                        }}
+                                        onFocus={() => setShowClientDropdown(true)}
+                                        className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-sm"
+                                    />
+                                    {showClientDropdown && clientSearch && (
+                                        <div className="absolute z-10 w-full mt-2 bg-white rounded-2xl shadow-xl border border-slate-100 max-h-48 overflow-y-auto">
+                                            {clients.filter(c => c.name.toLowerCase().includes(clientSearch.toLowerCase()) || c.phone.includes(clientSearch)).length > 0 ? (
+                                                clients.filter(c => c.name.toLowerCase().includes(clientSearch.toLowerCase()) || c.phone.includes(clientSearch)).map(client => (
+                                                    <div
+                                                        key={client.id}
+                                                        onClick={() => {
+                                                            setSelectedClient(client);
+                                                            setShowClientDropdown(false);
+                                                            setClientSearch(client.name);
+                                                        }}
+                                                        className="p-3 hover:bg-slate-50 cursor-pointer border-b border-slate-50 last:border-none flex flex-col"
+                                                    >
+                                                        <span className="font-bold text-sm text-slate-700">{client.name}</span>
+                                                        <span className="text-xs text-slate-400">{client.phone}</span>
+                                                    </div>
+                                                ))
+                                            ) : (
+                                                <div className="p-4 text-sm text-slate-400 text-center font-bold">Nenhum cliente encontrado</div>
+                                            )}
+                                        </div>
+                                    )}
+                                </>
+                            )}
                         </div>
                     </div>
 
-                    <button
-                        onClick={() => generateClientsPDF(false)}
-                        className="mt-8 w-full py-6 bg-blue-600 hover:bg-blue-700 text-white rounded-[2rem] font-black uppercase text-xs tracking-widest shadow-xl transition-all flex items-center justify-center gap-3"
-                    >
-                        <Icons.Print />
-                        Visualizar Lista de Clientes
-                    </button>
+                    <div className="mt-8 flex flex-col gap-3">
+                        {selectedClient && (
+                            <button
+                                onClick={() => generateClientOrdersPDF(false)}
+                                className="w-full py-4 bg-purple-600 hover:bg-purple-700 text-white rounded-[2rem] font-black uppercase text-xs tracking-widest shadow-xl transition-all flex items-center justify-center gap-3"
+                            >
+                                <Icons.Dashboard />
+                                Ver Compras do Cliente
+                            </button>
+                        )}
+
+                        <button
+                            onClick={() => generateClientsPDF(false)}
+                            className={`w-full py-4 ${selectedClient ? 'bg-slate-100 hover:bg-slate-200 text-slate-600' : 'bg-blue-600 hover:bg-blue-700 text-white'} rounded-[2rem] font-black uppercase text-xs tracking-widest shadow-xl transition-all flex items-center justify-center gap-3`}
+                        >
+                            <Icons.Print />
+                            {selectedClient ? 'Gerar Lista Geral' : 'Visualizar Lista de Clientes'}
+                        </button>
+                    </div>
                 </div>
 
             </div>
@@ -292,11 +435,9 @@ const Reports: React.FC = () => {
                             <div className="flex gap-3">
                                 <button
                                     onClick={() => {
-                                        const isClientReport = pdfPreviewUrl.includes('lista_clientes') || clientSearch !== '' || !pdfPreviewUrl.includes('vendas'); // Simplistic check
-                                        // We should probably store which report is active but for simplicity since we have separate buttons:
-                                        // Actually, let's just use the current state.
-                                        if (pdfPreviewUrl.includes('vendas')) generateSalesPDF(true);
-                                        else generateClientsPDF(true);
+                                        if (previewType === 'SALES') generateSalesPDF(true);
+                                        else if (previewType === 'CLIENTS') generateClientsPDF(true);
+                                        else if (previewType === 'CLIENT_ORDERS') generateClientOrdersPDF(true);
                                     }}
                                     className="bg-slate-900 text-white px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all flex items-center gap-2"
                                 >
@@ -306,6 +447,7 @@ const Reports: React.FC = () => {
                                     onClick={() => {
                                         URL.revokeObjectURL(pdfPreviewUrl);
                                         setPdfPreviewUrl(null);
+                                        setPreviewType(null);
                                     }}
                                     className="bg-white text-slate-400 px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest border border-slate-200 hover:bg-slate-50 transition-all"
                                 >
