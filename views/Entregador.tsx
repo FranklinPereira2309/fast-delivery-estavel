@@ -141,7 +141,7 @@ const Entregador: React.FC<EntregadorProps> = ({ currentUser }) => {
                             </div>
                         </div>
 
-                        <div className="bg-slate-50 p-4 rounded-2xl flex flex-col gap-3 z-10 border border-slate-100">
+                        <div className="bg-slate-50 p-4 rounded-xl flex flex-col gap-2 z-10 border border-slate-100 flex-1 overflow-y-auto min-h-0">
                             <div className="flex items-center gap-2">
                                 <Icons.Logistics />
                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Local de Destino:</p>
@@ -171,24 +171,25 @@ const Entregador: React.FC<EntregadorProps> = ({ currentUser }) => {
                             )}
                         </div>
 
-                        <div className="flex justify-between items-center text-sm font-black text-slate-900 border-t border-slate-50 pt-4 z-10">
+                        <div className="flex justify-between items-center text-sm font-black text-slate-900 border-t border-slate-50 pt-3 z-10 mt-auto">
                             <div className="flex items-center gap-2">
-                                <span className="text-[10px] text-slate-400 uppercase tracking-widest">Cobrança/Total:</span>
+                                <span className="text-[10px] text-slate-400 uppercase tracking-widest">Total:</span>
                                 <span className="text-xl">R$ {order.total.toFixed(2)}</span>
                             </div>
                             <button
                                 onClick={() => setPrintingOrder(order)}
-                                className="p-2 text-slate-300 hover:text-blue-500 hover:bg-blue-50 rounded-xl transition-all"
+                                className="p-3 text-blue-500 hover:text-white hover:bg-blue-600 bg-blue-50 rounded-xl transition-all flex items-center gap-2 shadow-sm"
                                 title="Visualizar Cupom do Pedido"
                             >
                                 <Icons.Print />
+                                <span className="text-[10px] font-black uppercase hidden sm:block">Cupom</span>
                             </button>
                         </div>
 
-                        <div className="mt-2 border-t border-slate-50 pt-4 z-10">
+                        <div className="mt-2 z-10 shrink-0">
                             <button
                                 onClick={() => updateDeliveryStatus(order.id, OrderStatus.DELIVERED)}
-                                className="w-full py-5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all shadow-xl shadow-emerald-500/20 active:scale-95 flex items-center justify-center gap-2"
+                                className="w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all shadow-xl shadow-emerald-500/20 active:scale-95 flex items-center justify-center gap-2"
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
