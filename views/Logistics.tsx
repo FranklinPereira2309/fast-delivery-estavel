@@ -83,7 +83,7 @@ const Logistics: React.FC = () => {
                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{order.clientName}</p>
               </div>
               <div className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase text-white shadow-sm ${order.status === OrderStatus.READY ? 'bg-emerald-500' :
-                  order.status === OrderStatus.OUT_FOR_DELIVERY ? 'bg-blue-600' : 'bg-slate-900'
+                order.status === OrderStatus.OUT_FOR_DELIVERY ? 'bg-blue-600' : 'bg-slate-900'
                 }`}>
                 {OrderStatusLabels[order.status]}
               </div>
@@ -142,12 +142,9 @@ const Logistics: React.FC = () => {
                     <p className="text-[9px] text-blue-400 font-black uppercase mt-0.5">Veículo: {drivers.find(d => d.id === order.driverId)?.vehicle.plate || 'N/A'}</p>
                   </div>
                 </div>
-                <button
-                  onClick={() => updateDeliveryStatus(order.id, OrderStatus.DELIVERED)}
-                  className="w-full py-4 bg-slate-900 hover:bg-black text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-xl active:scale-95"
-                >
-                  Confirmar Entrega Realizada
-                </button>
+                <div className="p-3 bg-slate-50 border border-slate-100 rounded-xl text-center">
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Aguardando confirmação do Entregador no APP...</p>
+                </div>
               </div>
             ) : (
               <div className="mt-4 p-4 bg-emerald-50 border border-emerald-100 rounded-2xl text-center">

@@ -96,6 +96,7 @@ const UserManagementInternal: React.FC = () => {
         { id: 'crm', label: 'Clientes (CRM)' },
         { id: 'inventory', label: 'Estoque / Cardápio' },
         { id: 'logistics', label: 'Logística' },
+        { id: 'driver', label: 'Entregador' },
         { id: 'reports', label: 'Relatórios' },
         { id: 'settings', label: 'Configurações' }
     ];
@@ -302,6 +303,10 @@ const FleetManagement: React.FC = () => {
                                 <div className="space-y-1">
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Celular / Whats</label>
                                     <input type="text" required value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} className="w-full p-4 bg-slate-100 border-none rounded-2xl outline-none font-bold text-sm" placeholder="(00) 00000-0000" />
+                                </div>
+                                <div className="space-y-1 col-span-2">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Email <span className="text-blue-500 font-bold">(Obrigatório para login no App)</span></label>
+                                    <input type="email" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} className="w-full p-4 bg-slate-100 border-none rounded-2xl outline-none font-bold text-sm" placeholder="moto@exemplo.com" />
                                 </div>
                             </div>
                             <div className="pt-6 border-t border-slate-100">
