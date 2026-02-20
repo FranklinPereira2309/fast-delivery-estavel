@@ -31,7 +31,7 @@ const SalesMonitor: React.FC = () => {
     ]);
 
     setProducts(p);
-    const sortedOrders = o.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    const sortedOrders = o.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
     const newChangedIds = new Set<string>();
     sortedOrders.forEach(order => {
