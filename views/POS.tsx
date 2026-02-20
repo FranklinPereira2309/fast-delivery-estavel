@@ -220,9 +220,11 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       }
     }
 
-    let finalClientId = isTableSale ? 'ANONYMOUS' : (isAvulso ? undefined : selectedClient?.id);
+    let tableSessionToClose = isTableSale ? pendingTables.find(t => t.tableNumber === finalTableNum) : null;
+
+    let finalClientId = isTableSale ? (tableSessionToClose?.clientId || 'ANONYMOUS') : (isAvulso ? undefined : selectedClient?.id);
     let finalClientName = isTableSale
-      ? (pendingTables.find(t => t.tableNumber === finalTableNum)?.clientName || `Mesa ${finalTableNum}`)
+      ? (tableSessionToClose?.clientName || `Mesa ${finalTableNum}`)
       : (isAvulso ? avulsoData.name : (selectedClient?.name || 'Consumidor Padrão'));
 
     // Handle Unregistered/Avulso auto-save
@@ -242,7 +244,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
             addresses: avulsoData.address ? [avulsoData.address] : [],
             totalOrders: 0
           };
-          await db.saveClient(newClient, currentUser);
+          await db.saveClient(newClient);
           finalClientId = newClient.id;
           setClients(prev => [...prev, newClient]);
         }

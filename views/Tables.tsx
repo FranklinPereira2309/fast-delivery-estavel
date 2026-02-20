@@ -226,7 +226,7 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
             addresses: manualClientAddress ? [manualClientAddress] : [],
             totalOrders: 0
           };
-          await db.saveClient(newClient, currentUser);
+          await db.saveClient(newClient);
           finalClientId = newClient.id;
           // Add to local state so next searches find them
           setClients(prev => [...prev, newClient]);
@@ -327,7 +327,7 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
               <span className="text-2xl font-black shrink-0">Mesa {tableNum}</span>
               {sess && (
                 <div className="text-center w-full px-2 overflow-hidden flex flex-col items-center">
-                  <p className="text-[10px] font-black mt-1 uppercase opacity-80 w-[95%] text-ellipsis overflow-hidden whitespace-nowrap block">{sess.clientName || 'Consumo'}</p>
+                  <p className="text-[10px] font-black mt-1 opacity-80 w-[95%] text-ellipsis overflow-hidden whitespace-nowrap block">{sess.clientName || 'Consumo'}</p>
                   <p className="text-sm font-black shrink-0 mt-0.5">R$ {sess.items.reduce((acc, it) => acc + (it.price * it.quantity), 0).toFixed(2)}</p>
                 </div>
               )}
