@@ -87,7 +87,7 @@ const Logistics: React.FC = () => {
           onClick={() => setActiveTab('PENDING')}
           className={`px-6 py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all ${activeTab === 'PENDING' ? 'bg-slate-900 text-white shadow-xl' : 'text-slate-400 hover:bg-slate-50'}`}
         >
-          Entregas Pendentes
+          Entregas
         </button>
         <button
           onClick={() => setActiveTab('HISTORY')}
