@@ -179,6 +179,10 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       return showAlert("Mesa Inativa", "Esta mesa não possui uma sessão ativa iniciada por um garçom.", "DANGER");
     }
 
+    if (existingSess.status === 'billing') {
+      return showAlert("Mesa Bloqueada", "Esta mesa está em pré-fechamento (Faturando). Reabra a mesa para adicionar itens.", "DANGER");
+    }
+
     const mergedItems = [...existingSess.items, ...cart];
 
     const updatedSess: TableSession = {
@@ -216,10 +220,38 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       }
     }
 
-    const finalClientId = isTableSale ? 'ANONYMOUS' : (isAvulso ? 'ANONYMOUS' : (selectedClient?.id || 'ANONYMOUS'));
-    const finalClientName = isTableSale
+    let finalClientId = isTableSale ? 'ANONYMOUS' : (isAvulso ? undefined : selectedClient?.id);
+    let finalClientName = isTableSale
       ? (pendingTables.find(t => t.tableNumber === finalTableNum)?.clientName || `Mesa ${finalTableNum}`)
       : (isAvulso ? avulsoData.name : (selectedClient?.name || 'Consumidor Padrão'));
+
+    // Handle Unregistered/Avulso auto-save
+    if (!isTableSale && isAvulso && avulsoData.name && avulsoData.phone) {
+      try {
+        const formattedPhone = avulsoData.phone.replace(/\D/g, '');
+        const existingClient = clients.find(c => c.phone.replace(/\D/g, '') === formattedPhone);
+
+        if (existingClient) {
+          finalClientId = existingClient.id;
+          finalClientName = existingClient.name;
+        } else {
+          const newClient: Client = {
+            id: `CLIENT-${Date.now()}`,
+            name: avulsoData.name,
+            phone: avulsoData.phone,
+            addresses: avulsoData.address ? [avulsoData.address] : [],
+            totalOrders: 0
+          };
+          await db.saveClient(newClient, currentUser);
+          finalClientId = newClient.id;
+          setClients(prev => [...prev, newClient]);
+        }
+      } catch (err) {
+        console.error('Error auto-registering client', err);
+      }
+    }
+
+    if (!finalClientId) finalClientId = 'ANONYMOUS';
 
     // Counter Validation (New order must go to kitchen)
     if (isCounterSale && !editingOrderId) {

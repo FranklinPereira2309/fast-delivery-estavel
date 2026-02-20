@@ -86,6 +86,10 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
       return showAlert("Garçom Requerido", "Por favor, selecione o garçom responsável.", "DANGER");
     }
 
+    if (getTableStatus(selectedTable) === 'billing') {
+      return showAlert("Mesa Bloqueada", "Esta mesa está em processo de fechamento (Faturando). Para lançar mais itens, reabra a mesa.", "DANGER");
+    }
+
     const validation = await db.validateStockForOrder([{ productId: product.id, quantity: 1 }]);
     if (!validation.valid) {
       console.warn('Launch blocked: Out of stock', validation.message);
@@ -203,11 +207,41 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
     const clientPhone = isUnregisteredClient ? manualClientPhone : selectedClient?.phone;
     const clientAddress = isUnregisteredClient ? manualClientAddress : selectedClient?.addresses[0];
 
+    let finalClientId = isUnregisteredClient ? undefined : selectedClient?.id;
+
+    if (isUnregisteredClient && manualClientName && manualClientPhone) {
+      // Here we attempt to find or create the client in the DB
+      try {
+        const formattedPhone = manualClientPhone.replace(/\D/g, ''); // just numbers
+        const existingClient = clients.find(c => c.phone.replace(/\D/g, '') === formattedPhone);
+
+        if (existingClient) {
+          finalClientId = existingClient.id; // It actually existed, we can just use the ID
+        } else {
+          // Let's create a real client using db
+          const newClient: Client = {
+            id: `CLIENT-${Date.now()}`,
+            name: manualClientName,
+            phone: manualClientPhone,
+            addresses: manualClientAddress ? [manualClientAddress] : [],
+            totalOrders: 0
+          };
+          await db.saveClient(newClient, currentUser);
+          finalClientId = newClient.id;
+          // Add to local state so next searches find them
+          setClients(prev => [...prev, newClient]);
+        }
+      } catch (err) {
+        console.error('Error auto-registering client', err);
+        // It fails gracefully, let backend create ANONYMOUS if undefined
+      }
+    }
+
     await db.saveTableSession({
       ...printingPreBill,
       status: 'billing',
       clientName,
-      clientId,
+      clientId: finalClientId,
       clientPhone,
       clientAddress
     });
@@ -277,7 +311,7 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
               setSelectedTable(tableNum);
               const s = getSessForTable(tableNum);
               setSelectedWaiterId(s?.waiterId || '');
-              setActiveModalTab('LAUNCH');
+              setActiveModalTab(status === 'billing' ? 'CHECKOUT' : 'LAUNCH');
               setIsUnregisteredClient(false);
               setManualClientName('');
               setManualClientPhone('');
@@ -290,11 +324,11 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
                   'bg-orange-500 border-orange-600 text-white hover:bg-orange-600 animate-moderate-blink'
                 }`}
             >
-              <span className="text-2xl font-black">Mesa {tableNum}</span>
+              <span className="text-2xl font-black shrink-0">Mesa {tableNum}</span>
               {sess && (
-                <div className="text-center">
-                  <p className="text-[10px] font-black mt-1 uppercase opacity-80 truncate px-2">{sess.clientName || 'Consumo'}</p>
-                  <p className="text-sm font-black">R$ {sess.items.reduce((acc, it) => acc + (it.price * it.quantity), 0).toFixed(2)}</p>
+                <div className="text-center w-full px-2 overflow-hidden flex flex-col items-center">
+                  <p className="text-[10px] font-black mt-1 uppercase opacity-80 w-[95%] text-ellipsis overflow-hidden whitespace-nowrap block">{sess.clientName || 'Consumo'}</p>
+                  <p className="text-sm font-black shrink-0 mt-0.5">R$ {sess.items.reduce((acc, it) => acc + (it.price * it.quantity), 0).toFixed(2)}</p>
                 </div>
               )}
             </button>
@@ -341,10 +375,19 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
                 <button onClick={() => setActiveModalTab('CHECKOUT')} className={`flex-1 flex flex-col items-center justify-center gap-1 transition-all ${activeModalTab === 'CHECKOUT' ? 'bg-white text-emerald-600 border-r-4 border-emerald-600 shadow-inner' : 'text-slate-400 hover:bg-slate-200'}`}><Icons.Print /><span className="text-[10px] font-black uppercase">Fechar</span></button>
               </div>
 
-              <div className="flex-1 p-12 overflow-y-auto">
+              <div className="flex-1 p-12 overflow-y-auto relative">
                 {activeModalTab === 'LAUNCH' && (
                   <div className="space-y-8">
-                    <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Garçom:</label><select value={selectedWaiterId} onChange={(e) => setSelectedWaiterId(e.target.value)} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-blue-100 transition-all outline-none"><option value="">Selecione...</option>{waiters.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}</select></div>
+                    {getTableStatus(selectedTable) === 'billing' && (
+                      <div className="absolute inset-0 z-10 bg-white/60 backdrop-blur-[2px] flex items-center justify-center rounded-[2rem] p-8">
+                        <div className="bg-red-50 p-8 rounded-[2rem] border border-red-200 text-center max-w-sm shadow-xl animate-in zoom-in duration-300">
+                          <div className="text-red-500 mb-4 flex justify-center"><Icons.Dashboard /></div>
+                          <h4 className="text-lg font-black text-red-700 uppercase mb-2">Mesa Bloqueada</h4>
+                          <p className="text-[11px] font-bold text-red-600 uppercase">Esta mesa encontra-se em pré-fechamento. Para lançar novos itens, você deve Reabri-la pela área do PDV.</p>
+                        </div>
+                      </div>
+                    )}
+                    <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Garçom:</label><select disabled={getTableStatus(selectedTable) === 'billing'} value={selectedWaiterId} onChange={(e) => setSelectedWaiterId(e.target.value)} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-blue-100 transition-all outline-none disabled:opacity-50"><option value="">Selecione...</option>{waiters.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}</select></div>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                       {products.map(prod => (
                         <button
