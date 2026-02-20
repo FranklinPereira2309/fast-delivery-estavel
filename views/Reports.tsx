@@ -248,7 +248,7 @@ const Reports: React.FC = () => {
                 const dateStr = `${dateObj.toLocaleDateString('pt-BR')} ${dateObj.toLocaleTimeString('pt-BR').substring(0, 5)}`;
                 page.drawText(dateStr, { x: 55, y, size: 8, font });
                 page.drawText(getFriendlySaleType(o.type), { x: 180, y, size: 8, font });
-                page.drawText(o.status, { x: 300, y, size: 8, font });
+                page.drawText(o.status === OrderStatus.DELIVERED ? 'Finalizada' : o.status, { x: 300, y, size: 8, font });
                 page.drawText(`R$ ${o.total.toFixed(2)}`, { x: 450, y, size: 8, font: fontBold });
                 y -= 20;
             }

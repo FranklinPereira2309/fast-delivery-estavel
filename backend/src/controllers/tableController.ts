@@ -101,8 +101,7 @@ export const saveTableSession = async (req: Request, res: Response) => {
             const anyItemsReady = currentItems.some((it: any) => it.isReady);
             let calculatedStatus: any = allItemsReady ? 'READY' : (anyItemsReady ? 'PARTIALLY_READY' : 'PREPARING');
 
-            // If table is in billing, order is DELIVERED
-            if (sessionData.status === 'billing') calculatedStatus = 'DELIVERED';
+            // If table is in billing, keep its natural calculatedStatus so CRM correctly counts finalizations.
 
             await tx.order.upsert({
                 where: { id: orderId },
