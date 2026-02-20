@@ -368,8 +368,8 @@ const Reports: React.FC = () => {
     };
 
     return (
-        <div className="flex flex-col h-full gap-8 animate-in fade-in duration-500 overflow-hidden">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="flex flex-col h-full gap-8 animate-in fade-in duration-500 overflow-y-auto pb-8">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
 
                 {/* CARD RELATÓRIO DE VENDAS */}
                 <div className="bg-white p-10 rounded-[3rem] shadow-sm border border-slate-100 flex flex-col">
