@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { db, BusinessSettings } from '../services/db';
-import { Order, OrderStatus, SaleType, Client, Product } from '../types';
+import { Order, OrderStatus, SaleType, Client, Product, DeliveryDriver } from '../types';
 import { Icons } from '../constants';
 import CustomAlert from '../components/CustomAlert';
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
@@ -9,6 +9,7 @@ import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 const Reports: React.FC = () => {
     const [orders, setOrders] = useState<Order[]>([]);
     const [clients, setClients] = useState<Client[]>([]);
+    const [drivers, setDrivers] = useState<DeliveryDriver[]>([]);
     const [businessSettings, setBusinessSettings] = useState<BusinessSettings | null>(null);
     const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
 
@@ -22,21 +23,28 @@ const Reports: React.FC = () => {
     const [clientSearch, setClientSearch] = useState('');
     const [selectedClient, setSelectedClient] = useState<Client | null>(null);
     const [showClientDropdown, setShowClientDropdown] = useState(false);
-    const [previewType, setPreviewType] = useState<'SALES' | 'CLIENTS' | 'CLIENT_ORDERS' | null>(null);
+    const [previewType, setPreviewType] = useState<'SALES' | 'CLIENTS' | 'CLIENT_ORDERS' | 'DRIVERS' | null>(null);
+
+    // Driver Filters
+    const [driverStartDate, setDriverStartDate] = useState(new Date().toISOString().split('T')[0]);
+    const [driverEndDate, setDriverEndDate] = useState(new Date().toISOString().split('T')[0]);
+    const [selectedDriverId, setSelectedDriverId] = useState<string>('TODOS');
 
     useEffect(() => {
         fetchData();
     }, []);
 
     const fetchData = async () => {
-        const [o, c, s] = await Promise.all([
+        const [o, c, s, d] = await Promise.all([
             db.getOrders(),
             db.getClients(),
-            db.getSettings()
+            db.getSettings(),
+            db.getDrivers()
         ]);
         setOrders(o);
         setClients(c);
         setBusinessSettings(s);
+        setDrivers(d);
     };
 
     const getFriendlySaleType = (type: SaleType | string) => {
@@ -273,6 +281,92 @@ const Reports: React.FC = () => {
         }
     };
 
+    const generateDriversPDF = async (downloadOnly = false) => {
+        if (!businessSettings) return;
+
+        try {
+            const pdfDoc = await PDFDocument.create();
+            const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+            const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+
+            const filteredOrders = orders.filter(o => {
+                const orderDate = o.createdAt.split('T')[0];
+                const inDate = orderDate >= driverStartDate && orderDate <= driverEndDate;
+                const inDriver = selectedDriverId === 'TODOS' || o.driverId === selectedDriverId;
+                return inDate && inDriver && o.type === SaleType.OWN_DELIVERY && o.status === OrderStatus.DELIVERED;
+            });
+
+            const totalDeliveries = filteredOrders.length;
+            const totalRevenue = filteredOrders.reduce((sum, o) => sum + o.total, 0);
+
+            let page = pdfDoc.addPage([595.28, 841.89]);
+            const { width, height } = page.getSize();
+            let y = height - 50;
+
+            const driverName = selectedDriverId === 'TODOS' ? 'Todos os Entregadores' : (drivers.find(d => d.id === selectedDriverId)?.name || 'Desconhecido');
+
+            // Header
+            page.drawText('RELATÓRIO DE ENTREGADORES', { x: 50, y, size: 18, font: fontBold });
+            y -= 25;
+            page.drawText(businessSettings.name, { x: 50, y, size: 12, font: fontBold });
+            y -= 15;
+            page.drawText(`Entregador: ${driverName}`, { x: 50, y, size: 10, font: fontBold });
+            y -= 15;
+            page.drawText(`Período: ${new Date(driverStartDate + 'T00:00:00').toLocaleDateString('pt-BR')} a ${new Date(driverEndDate + 'T00:00:00').toLocaleDateString('pt-BR')}`, { x: 50, y, size: 10, font });
+
+            y -= 40;
+            // KPIs
+            page.drawText('RESUMO DE ENTREGAS', { x: 50, y, size: 12, font: fontBold });
+            y -= 20;
+            page.drawText(`Faturamento Vinculado: R$ ${totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, { x: 50, y, size: 10, font });
+            y -= 15;
+            page.drawText(`Total de Entregas Finalizadas: ${totalDeliveries}`, { x: 50, y, size: 10, font });
+
+            y -= 40;
+            // Table Header
+            page.drawRectangle({ x: 50, y: y - 5, width: width - 100, height: 20, color: rgb(0.95, 0.95, 0.95) });
+            page.drawText('DATA e HORA', { x: 55, y, size: 8, font: fontBold });
+            page.drawText('CLIENTE', { x: 180, y, size: 8, font: fontBold });
+            page.drawText('ENTREGADOR', { x: 350, y, size: 8, font: fontBold });
+            page.drawText('VALOR TOTAL', { x: 500, y, size: 8, font: fontBold });
+            y -= 25;
+
+            for (const o of filteredOrders) {
+                if (y < 70) {
+                    page = pdfDoc.addPage([595.28, 841.89]);
+                    y = page.getHeight() - 50;
+                }
+                const dateObj = new Date(o.createdAt);
+                const dateStr = `${dateObj.toLocaleDateString('pt-BR')} ${dateObj.toLocaleTimeString('pt-BR').substring(0, 5)}`;
+                const dName = drivers.find(d => d.id === o.driverId)?.name || 'N/A';
+
+                page.drawText(dateStr, { x: 55, y, size: 8, font });
+                page.drawText(o.clientName.substring(0, 30), { x: 180, y, size: 8, font });
+                page.drawText(dName.substring(0, 25), { x: 350, y, size: 8, font });
+                page.drawText(`R$ ${o.total.toFixed(2)}`, { x: 500, y, size: 8, font: fontBold });
+                y -= 20;
+            }
+
+            const pdfBytes = await pdfDoc.save();
+            const blob = new Blob([pdfBytes as any], { type: 'application/pdf' });
+            const url = URL.createObjectURL(blob);
+
+            if (downloadOnly) {
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `relatorio_entregadores_${driverStartDate}_${driverEndDate}.pdf`;
+                link.click();
+                URL.revokeObjectURL(url);
+            } else {
+                setPreviewType('DRIVERS');
+                setPdfPreviewUrl(url);
+            }
+        } catch (error) {
+            console.error('Erro ao gerar PDF de entregadores:', error);
+            alert('Erro ao gerar relatório de entregadores.');
+        }
+    };
+
     return (
         <div className="flex flex-col h-full gap-8 animate-in fade-in duration-500 overflow-hidden">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -421,6 +515,48 @@ const Reports: React.FC = () => {
                     </div>
                 </div>
 
+                {/* CARD RELATÓRIO DE ENTREGADORES */}
+                <div className="bg-white p-10 rounded-[3rem] shadow-sm border border-slate-100 flex flex-col">
+                    <div className="mb-8">
+                        <h3 className="text-2xl font-black text-slate-800 uppercase tracking-tighter flex items-center gap-3">
+                            <span className="p-3 bg-blue-50 text-blue-600 rounded-2xl"><Icons.Logistics /></span>
+                            Relatório de Entregadores
+                        </h3>
+                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-2 ml-14">Histórico de entregas e conferência de rotas</p>
+                    </div>
+
+                    <div className="space-y-6 flex-1">
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Início</label>
+                                <input type="date" value={driverStartDate} onChange={e => setDriverStartDate(e.target.value)} className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-sm" />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Fim</label>
+                                <input type="date" value={driverEndDate} onChange={e => setDriverEndDate(e.target.value)} className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-sm" />
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Entregador</label>
+                            <select value={selectedDriverId} onChange={e => setSelectedDriverId(e.target.value)} className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-sm">
+                                <option value="TODOS">TODOS OS ENTREGADORES</option>
+                                {drivers.map(d => (
+                                    <option key={d.id} value={d.id}>{d.name} ({d.vehicle.plate})</option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
+
+                    <button
+                        onClick={() => generateDriversPDF(false)}
+                        className="mt-8 w-full py-6 bg-slate-900 hover:bg-black text-white rounded-[2rem] font-black uppercase text-xs tracking-widest shadow-xl transition-all flex items-center justify-center gap-3"
+                    >
+                        <Icons.Print />
+                        Visualizar Relatório de Rotas
+                    </button>
+                </div>
+
             </div>
 
             {/* MODAL DE PREVIEW DO PDF */}
@@ -438,6 +574,7 @@ const Reports: React.FC = () => {
                                         if (previewType === 'SALES') generateSalesPDF(true);
                                         else if (previewType === 'CLIENTS') generateClientsPDF(true);
                                         else if (previewType === 'CLIENT_ORDERS') generateClientOrdersPDF(true);
+                                        else if (previewType === 'DRIVERS') generateDriversPDF(true);
                                     }}
                                     className="bg-slate-900 text-white px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all flex items-center gap-2"
                                 >
