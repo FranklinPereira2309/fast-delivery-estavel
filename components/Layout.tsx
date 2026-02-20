@@ -36,6 +36,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
     { id: 'crm', label: 'Clientes (CRM)', icon: Icons.CRM },
     { id: 'inventory', label: 'Estoque / Cardápio', icon: Icons.Inventory },
     { id: 'logistics', label: 'Logística', icon: Icons.Logistics },
+    { id: 'reports', label: 'Relatórios', icon: Icons.Print },
     { id: 'settings', label: 'Configurações', icon: Icons.Settings },
   ];
 

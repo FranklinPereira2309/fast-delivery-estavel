@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { Client, User } from '../types';
 import { db } from '../services/db';
 import CustomAlert from '../components/CustomAlert';
-import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 
 interface CRMProps {
   currentUser: User;
@@ -15,7 +14,6 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [isLoadingCep, setIsLoadingCep] = useState(false);
-  const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
 
   // Estados do CustomAlert
   const [alertConfig, setAlertConfig] = useState<{
@@ -56,7 +54,6 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
     refreshClients();
   }, []);
 
-  // Fixed: Made refreshClients async to await DB promise
   const refreshClients = async () => {
     const allClients = await db.getClients();
     setClients(allClients);
@@ -80,13 +77,11 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
 
   const openEditModal = (client: Client) => {
     setEditingClient(client);
-    // Tenta parsear o endereço salvo (assumindo formato CSV simples ou apenas string única)
-    // Para simplificar, se houver vírgulas, tentamos mapear, senão jogamos no logradouro
     const addr = client.addresses[0] || '';
     setFormData({
       name: client.name,
       phone: client.phone,
-      cep: '', // CEP não era armazenado separadamente antes
+      cep: '',
       logradouro: addr,
       numero: '',
       complemento: '',
@@ -97,7 +92,6 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
     setIsModalOpen(true);
   };
 
-  // Fixed: Added async/await for client deletion
   const handleDelete = async (id: string) => {
     if (!currentUser.permissions.includes('admin')) {
       showAlert('Acesso Negado', 'Apenas o Administrador Master pode excluir clientes.', 'DANGER');
@@ -158,7 +152,6 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
     }
   };
 
-  // Fixed: Added async/await for client persistence
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name || !formData.phone) {
@@ -166,7 +159,6 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
       return;
     }
 
-    // Formata o endereço completo para salvar
     const fullAddress = `${formData.logradouro}, ${formData.numero}${formData.complemento ? ' - ' + formData.complemento : ''}, ${formData.bairro}, ${formData.cidade} - ${formData.uf} (CEP: ${formData.cep})`;
 
     const clientData: Client = {
@@ -181,69 +173,6 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
     await db.saveClient(clientData);
     refreshClients();
     setIsModalOpen(false);
-  };
-
-  const generatePDFClientsReport = async (downloadOnly = false) => {
-    try {
-      const pdfDoc = await PDFDocument.create();
-      const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-      const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-
-      let page = pdfDoc.addPage([595.28, 841.89]);
-      const { width, height } = page.getSize();
-      let y = height - 50;
-
-      // Header
-      page.drawText('LISTA DE CLIENTES E FIDELIDADE', { x: 50, y, size: 18, font: fontBold });
-      y -= 25;
-      page.drawText('Relatório gerado via CRM Delivery Fast', { x: 50, y, size: 10, font });
-      y -= 15;
-      page.drawText(`Data de Emissão: ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR')}`, { x: 50, y, size: 10, font });
-
-      y -= 40;
-      // Table Header
-      page.drawRectangle({ x: 50, y: y - 5, width: width - 100, height: 20, color: rgb(0.95, 0.95, 0.95) });
-      page.drawText('NOME DO CLIENTE', { x: 55, y, size: 9, font: fontBold });
-      page.drawText('TELEFONE', { x: 300, y, size: 9, font: fontBold });
-      page.drawText('PEDIDOS', { x: 450, y, size: 9, font: fontBold });
-      y -= 25;
-
-      // Rows
-      for (const client of filtered) {
-        if (y < 70) {
-          page = pdfDoc.addPage([595.28, 841.89]);
-          y = page.getHeight() - 50;
-          page.drawRectangle({ x: 50, y: y - 5, width: width - 100, height: 20, color: rgb(0.95, 0.95, 0.95) });
-          page.drawText('NOME DO CLIENTE', { x: 55, y, size: 9, font: fontBold });
-          page.drawText('TELEFONE', { x: 300, y, size: 9, font: fontBold });
-          page.drawText('PEDIDOS', { x: 450, y, size: 9, font: fontBold });
-          y -= 25;
-        }
-
-        page.drawText(client.name.substring(0, 45), { x: 55, y, size: 9, font });
-        page.drawText(client.phone, { x: 300, y, size: 9, font });
-        page.drawText(client.totalOrders.toString(), { x: 450, y, size: 9, font: fontBold });
-
-        y -= 18;
-      }
-
-      const pdfBytes = await pdfDoc.save();
-      const blob = new Blob([pdfBytes as any], { type: 'application/pdf' });
-      const url = URL.createObjectURL(blob);
-
-      if (downloadOnly) {
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `lista_clientes_${new Date().getTime()}.pdf`;
-        link.click();
-        URL.revokeObjectURL(url);
-      } else {
-        setPdfPreviewUrl(url);
-      }
-    } catch (error) {
-      console.error('Erro ao gerar PDF:', error);
-      showAlert('Erro no PDF', 'Não foi possível gerar a lista de clientes.', 'DANGER');
-    }
   };
 
   const filtered = clients.filter(c =>
@@ -267,15 +196,6 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
           />
         </div>
         <div className="flex gap-3">
-          <button
-            onClick={() => generatePDFClientsReport(false)}
-            className="bg-slate-900 hover:bg-black text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 shadow-lg transition-all"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-            </svg>
-            Imprimir Lista
-          </button>
           <button
             onClick={openAddModal}
             className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 shadow-lg shadow-blue-200 transition-all"
@@ -512,44 +432,6 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
         onConfirm={alertConfig.onConfirm}
         onCancel={alertConfig.onCancel}
       />
-
-      {/* MODAL DE PREVIEW DO PDF */}
-      {pdfPreviewUrl && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center p-12 bg-slate-900/90 backdrop-blur-xl animate-in fade-in duration-300">
-          <div className="bg-white rounded-[4rem] shadow-2xl w-full max-w-5xl h-full flex flex-col overflow-hidden">
-            <div className="p-8 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-              <div>
-                <h3 className="text-xl font-black text-slate-900 uppercase tracking-tighter">Lista de Clientes (PDF)</h3>
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Visualização antes da impressão/download</p>
-              </div>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => generatePDFClientsReport(true)}
-                  className="bg-slate-900 text-white px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all flex items-center gap-2"
-                >
-                  Download PDF
-                </button>
-                <button
-                  onClick={() => {
-                    URL.revokeObjectURL(pdfPreviewUrl);
-                    setPdfPreviewUrl(null);
-                  }}
-                  className="bg-white text-slate-400 px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest border border-slate-200 hover:bg-slate-50 transition-all"
-                >
-                  Fechar
-                </button>
-              </div>
-            </div>
-            <div className="flex-1 bg-slate-200 p-8 flex justify-center items-center">
-              <iframe
-                src={pdfPreviewUrl}
-                className="w-full h-full rounded-2xl shadow-xl bg-white"
-                title="Customer List Preview"
-              />
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
