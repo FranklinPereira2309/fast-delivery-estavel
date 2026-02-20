@@ -24,7 +24,8 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
   const [showClientList, setShowClientList] = useState(false);
 
   const [isAvulso, setIsAvulso] = useState(false);
-  const [avulsoData, setAvulsoData] = useState({ name: '', phone: '', address: '' });
+  const [avulsoData, setAvulsoData] = useState({ name: '', phone: '', address: '', cep: '' });
+  const [isLoadingCep, setIsLoadingCep] = useState(false);
 
   const [tableNumberInput, setTableNumberInput] = useState('');
   const [tableNumber, setTableNumber] = useState<number | ''>('');
@@ -126,7 +127,8 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       setAvulsoData({
         name: order.clientName,
         phone: order.clientPhone || '',
-        address: order.clientAddress || ''
+        address: order.clientAddress || '',
+        cep: ''
       });
     }
 
@@ -382,7 +384,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
     setCurrentOrderStatus(null);
     setEditingOrderId(null);
     setIsAvulso(false);
-    setAvulsoData({ name: '', phone: '', address: '' });
+    setAvulsoData({ name: '', phone: '', address: '', cep: '' });
   };
 
   const getFriendlySaleType = (type: SaleType | string) => {
@@ -558,19 +560,59 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                         value={avulsoData.phone}
                         onChange={e => {
                           const phone = e.target.value;
-                          setAvulsoData({ ...avulsoData, phone });
-                          if (phone.length >= 8) {
-                            const matched = clients.find(c => c.phone.replace(/\D/g, '') === phone.replace(/\D/g, ''));
-                            if (matched) {
-                              setAvulsoData(prev => ({ ...prev, name: matched.name, address: matched.addresses[0] || '' }));
-                            }
+                          const cleanPhone = phone.replace(/\D/g, '');
+                          const cleanPrevPhone = avulsoData.phone.replace(/\D/g, '');
+                          const matchedNew = clients.find(c => c.phone.replace(/\D/g, '') === cleanPhone && cleanPhone.length > 0);
+                          const matchedOld = clients.find(c => c.phone.replace(/\D/g, '') === cleanPrevPhone && cleanPrevPhone.length > 0);
+
+                          if (matchedNew) {
+                            setAvulsoData({ phone, name: matchedNew.name, address: matchedNew.addresses[0] || '', cep: avulsoData.cep });
+                          } else if (matchedOld || (cleanPhone.length >= 8 && cleanPrevPhone.length < 8)) {
+                            setAvulsoData({ phone, name: '', address: '', cep: '' });
+                          } else {
+                            setAvulsoData(prev => ({ ...prev, phone }));
                           }
                         }}
                         className="w-full p-3 bg-slate-100 border-none rounded-xl text-[10px] font-black uppercase outline-none focus:ring-2 focus:ring-blue-500"
                       />
-                      <input type="text" placeholder="Nome do Cliente" value={avulsoData.name} onChange={e => setAvulsoData({ ...avulsoData, name: e.target.value })} className="w-full p-3 bg-slate-100 border-none rounded-xl text-[10px] font-black uppercase outline-none focus:ring-2 focus:ring-blue-500" />
+                      <input type="text" placeholder="Nome do Cliente" value={avulsoData.name} onChange={e => setAvulsoData({ ...avulsoData, name: e.target.value })} className="w-full p-3 bg-slate-100 border-none rounded-xl text-[10px] font-black outline-none focus:ring-2 focus:ring-blue-500" />
                       {(saleType === SaleType.OWN_DELIVERY || saleType === SaleType.THIRD_PARTY) && (
-                        <textarea placeholder="Endereço Completo de Entrega" value={avulsoData.address} onChange={e => setAvulsoData({ ...avulsoData, address: e.target.value })} className="w-full p-3 bg-slate-100 border-none rounded-xl text-[10px] font-black uppercase outline-none focus:ring-2 focus:ring-blue-500 h-20 resize-none" />
+                        <div className="flex gap-2 items-start">
+                          <div className="w-1/3 relative shrink-0">
+                            <input
+                              type="text"
+                              placeholder="CEP"
+                              maxLength={8}
+                              value={avulsoData.cep}
+                              onChange={async e => {
+                                const cep = e.target.value.replace(/\D/g, '').slice(0, 8);
+                                setAvulsoData(prev => ({ ...prev, cep }));
+                                if (cep.length === 8) {
+                                  setIsLoadingCep(true);
+                                  try {
+                                    const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+                                    const data = await res.json();
+                                    if (!data.erro) {
+                                      const newAddress = `${data.logradouro}, , ${data.bairro}, ${data.localidade} - ${data.uf}`;
+                                      setAvulsoData(prev => ({ ...prev, address: newAddress }));
+                                    }
+                                  } catch (err) {
+                                    console.error('ViaCep error:', err);
+                                  } finally {
+                                    setIsLoadingCep(false);
+                                  }
+                                }
+                              }}
+                              className={`w-full p-3 bg-slate-100 border-none rounded-xl text-[10px] font-black uppercase outline-none focus:ring-2 focus:ring-blue-500 ${isLoadingCep ? 'opacity-50' : ''}`}
+                            />
+                            {isLoadingCep && (
+                              <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                                <div className="w-3 h-3 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                              </div>
+                            )}
+                          </div>
+                          <textarea placeholder="Endereço de Entrega" value={avulsoData.address} onChange={e => setAvulsoData({ ...avulsoData, address: e.target.value })} className="flex-1 w-full p-3 bg-slate-100 border-none rounded-xl text-[10px] font-black uppercase outline-none focus:ring-2 focus:ring-blue-500 h-20 resize-none" />
+                        </div>
                       )}
                     </div>
                   ) : (

@@ -31,6 +31,8 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
   const [manualClientName, setManualClientName] = useState('');
   const [manualClientPhone, setManualClientPhone] = useState('');
   const [manualClientAddress, setManualClientAddress] = useState('');
+  const [manualClientCep, setManualClientCep] = useState('');
+  const [isLoadingCep, setIsLoadingCep] = useState(false);
   const [clientSearch, setClientSearch] = useState('');
   const [showClientList, setShowClientList] = useState(false);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
@@ -255,6 +257,7 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
     setManualClientName('');
     setManualClientPhone('');
     setManualClientAddress('');
+    setManualClientCep('');
     setClientSearch('');
     await refreshData();
     showAlert("Sucesso", "Solicitação de fechamento enviada ao PDV!", "SUCCESS");
@@ -316,6 +319,7 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
               setManualClientName('');
               setManualClientPhone('');
               setManualClientAddress('');
+              setManualClientCep('');
               setClientSearch('');
               setSelectedClient(null);
             }}
@@ -440,7 +444,7 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
                   <div className="flex flex-col items-center justify-center h-full">
                     <div className="text-center mb-8"><p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Valor Total da Conta</p><h4 className="text-6xl font-black text-slate-900 tracking-tighter">R$ {getSessForTable(selectedTable)?.items.reduce((acc, it) => acc + (it.price * it.quantity), 0).toFixed(2)}</h4></div>
                     <div className="w-full max-w-md bg-slate-50 p-8 rounded-[2rem] border border-slate-100 space-y-6">
-                      <div className="flex items-center justify-between"><label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Identificação do Cliente</label><button onClick={() => { setIsUnregisteredClient(!isUnregisteredClient); setSelectedClient(null); setManualClientName(''); setManualClientPhone(''); setManualClientAddress(''); setClientSearch(''); }} className={`text-[9px] font-black uppercase px-2 py-1 rounded-lg transition-all ${isUnregisteredClient ? 'bg-blue-600 text-white shadow-md' : 'bg-slate-200 text-slate-500'}`}>{isUnregisteredClient ? 'Mudar para Base' : 'Cliente Avulso?'}</button></div>
+                      <div className="flex items-center justify-between"><label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Identificação do Cliente</label><button onClick={() => { setIsUnregisteredClient(!isUnregisteredClient); setSelectedClient(null); setManualClientName(''); setManualClientPhone(''); setManualClientAddress(''); setManualClientCep(''); setClientSearch(''); }} className={`text-[9px] font-black uppercase px-2 py-1 rounded-lg transition-all ${isUnregisteredClient ? 'bg-blue-600 text-white shadow-md' : 'bg-slate-200 text-slate-500'}`}>{isUnregisteredClient ? 'Mudar para Base' : 'Cliente Avulso?'}</button></div>
                       {isUnregisteredClient ? (
                         <div className="space-y-3 animate-in zoom-in-95">
                           <input
@@ -450,24 +454,65 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
                             value={manualClientPhone}
                             onChange={async (e) => {
                               const phone = e.target.value;
+                              const cleanPhone = phone.replace(/\D/g, '');
+                              const cleanPrevPhone = manualClientPhone.replace(/\D/g, '');
+                              const matchedNew = clients.find(c => c.phone.replace(/\D/g, '') === cleanPhone && cleanPhone.length > 0);
+                              const matchedOld = clients.find(c => c.phone.replace(/\D/g, '') === cleanPrevPhone && cleanPrevPhone.length > 0);
+
                               setManualClientPhone(phone);
-                              if (phone.length >= 8) {
-                                const matched = clients.find(c => c.phone.replace(/\D/g, '') === phone.replace(/\D/g, ''));
-                                if (matched) {
-                                  setManualClientName(matched.name);
-                                  setManualClientAddress(matched.addresses[0] || '');
-                                }
+                              if (matchedNew) {
+                                setManualClientName(matchedNew.name);
+                                setManualClientAddress(matchedNew.addresses[0] || '');
+                              } else if (matchedOld || (cleanPhone.length >= 8 && cleanPrevPhone.length < 8)) {
+                                setManualClientName('');
+                                setManualClientAddress('');
+                                setManualClientCep('');
                               }
                             }}
                           />
                           <input
                             type="text"
-                            className="w-full p-4 bg-white border border-slate-200 rounded-2xl text-[11px] font-black uppercase outline-none focus:ring-4 focus:ring-blue-50 transition-all"
+                            className="w-full p-4 bg-white border border-slate-200 rounded-2xl text-[11px] font-black outline-none focus:ring-4 focus:ring-blue-50 transition-all"
                             placeholder="Nome Completo"
                             value={manualClientName}
                             onChange={(e) => setManualClientName(e.target.value)}
                           />
-                          <textarea className="w-full p-4 bg-white border border-slate-200 rounded-2xl text-[11px] font-black uppercase outline-none focus:ring-4 focus:ring-blue-50 transition-all h-20 resize-none" placeholder="Endereço (Opcional)" value={manualClientAddress} onChange={(e) => setManualClientAddress(e.target.value)} />
+                          <div className="flex gap-2 items-start">
+                            <div className="w-1/3 relative shrink-0">
+                              <input
+                                type="text"
+                                placeholder="CEP"
+                                maxLength={8}
+                                value={manualClientCep}
+                                onChange={async e => {
+                                  const cep = e.target.value.replace(/\D/g, '').slice(0, 8);
+                                  setManualClientCep(cep);
+                                  if (cep.length === 8) {
+                                    setIsLoadingCep(true);
+                                    try {
+                                      const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+                                      const data = await res.json();
+                                      if (!data.erro) {
+                                        const newAddress = `${data.logradouro}, , ${data.bairro}, ${data.localidade} - ${data.uf}`;
+                                        setManualClientAddress(newAddress);
+                                      }
+                                    } catch (err) {
+                                      console.error('ViaCep error:', err);
+                                    } finally {
+                                      setIsLoadingCep(false);
+                                    }
+                                  }
+                                }}
+                                className={`w-full p-4 bg-white border border-slate-200 rounded-2xl text-[11px] font-black uppercase outline-none focus:ring-4 focus:ring-blue-50 transition-all ${isLoadingCep ? 'opacity-50' : ''}`}
+                              />
+                              {isLoadingCep && (
+                                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                  <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                                </div>
+                              )}
+                            </div>
+                            <textarea className="flex-1 w-full p-4 bg-white border border-slate-200 rounded-2xl text-[11px] font-black uppercase outline-none focus:ring-4 focus:ring-blue-50 transition-all h-20 resize-none" placeholder="Endereço (Opcional)" value={manualClientAddress} onChange={(e) => setManualClientAddress(e.target.value)} />
+                          </div>
                         </div>
                       ) : (
                         <div className="relative animate-in zoom-in-95">
