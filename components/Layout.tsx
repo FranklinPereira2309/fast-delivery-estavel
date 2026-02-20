@@ -17,6 +17,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
   const [shouldBlinkPOS, setShouldBlinkPOS] = useState(false);
   const [shouldBlinkLogistics, setShouldBlinkLogistics] = useState(false);
   const [shouldBlinkKitchen, setShouldBlinkKitchen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
   const lastOrdersMap = useRef<Record<string, { status: OrderStatus, itemCount: number }>>({});
   const isFirstRun = useRef(true);
 
@@ -100,15 +101,34 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden">
       {/* Sidebar */}
-      <aside className="w-64 bg-slate-900 text-white flex flex-col shadow-xl shrink-0">
-        <div className="p-6">
-          <h1 className="text-xl font-bold tracking-tight flex items-center gap-2">
-            <span className="p-2 bg-blue-600 rounded-lg">DF</span>
-            Delivery Fast
-          </h1>
+      <aside className={`${isSidebarCollapsed ? 'w-20' : 'w-64'} bg-slate-900 text-white flex flex-col shadow-xl shrink-0 transition-all duration-300 ease-in-out`}>
+        <div className="p-4 flex items-center justify-between overflow-hidden">
+          {!isSidebarCollapsed && (
+            <h1 className="text-xl font-bold tracking-tight flex items-center gap-2 animate-in fade-in slide-in-from-left-2 duration-300">
+              <span className="p-2 bg-blue-600 rounded-lg shrink-0">DF</span>
+              <span className="truncate">Delivery Fast</span>
+            </h1>
+          )}
+          {isSidebarCollapsed && (
+            <div className="p-2 bg-blue-600 rounded-lg mx-auto">
+              <span className="text-white font-black">DF</span>
+            </div>
+          )}
         </div>
 
-        <nav className="flex-1 mt-4 px-3 space-y-1 overflow-y-auto">
+        <div className="px-3 mb-2">
+          <button
+            onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+            className="w-full p-2 hover:bg-slate-800 text-slate-400 hover:text-white rounded-lg transition-all flex items-center justify-center gap-2"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 transition-transform duration-300 ${isSidebarCollapsed ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+            </svg>
+            {!isSidebarCollapsed && <span className="text-[10px] font-black uppercase tracking-widest">Recolher</span>}
+          </button>
+        </div>
+
+        <nav className="flex-1 mt-2 px-3 space-y-1 overflow-y-auto scrollbar-hide">
           {navItems.map((item) => {
             const isMonitor = item.id === 'sales-monitor';
             const isPOS = item.id === 'pos';
@@ -125,49 +145,68 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${activeTab === item.id
+                className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 group relative ${activeTab === item.id
                   ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/50'
                   : 'text-slate-400 hover:bg-slate-800 hover:text-white'
-                  } ${blinkClass}`}
+                  } ${blinkClass} ${isSidebarCollapsed ? 'justify-center' : ''}`}
+                title={isSidebarCollapsed ? item.label : ''}
               >
-                <item.icon />
-                <span className="font-medium">{item.label}</span>
+                <div className="shrink-0 scale-110">
+                  <item.icon />
+                </div>
+                {!isSidebarCollapsed && (
+                  <span className="font-medium truncate animate-in fade-in slide-in-from-left-1 duration-200">
+                    {item.label}
+                  </span>
+                )}
+                {isSidebarCollapsed && (
+                  <div className="absolute left-full ml-2 px-2 py-1 bg-slate-800 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50">
+                    {item.label}
+                  </div>
+                )}
               </button>
             );
           })}
         </nav>
-
-        <div className="p-4 bg-slate-800/50 m-4 rounded-xl">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center font-bold text-sm uppercase">
-              {currentUser.name.substring(0, 2)}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold truncate">{currentUser.name}</p>
-              <p className="text-[10px] text-slate-400 truncate uppercase">Sessão 24h</p>
-            </div>
-            <button
-              onClick={onLogout}
-              className="p-1.5 text-slate-400 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all"
-              title="Sair"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-              </svg>
-            </button>
-          </div>
-        </div>
       </aside>
 
-      <main className="flex-1 flex flex-col min-w-0">
-        <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 shrink-0">
-          <h2 className="text-lg font-semibold text-slate-800">
-            {navItems.find(i => i.id === activeTab)?.label || 'Acesso Negado'}
-          </h2>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 text-sm text-slate-500 bg-slate-100 px-3 py-1.5 rounded-full">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              Conectado como {currentUser.email}
+      <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        <header className="h-20 bg-white border-b border-slate-200 flex items-center justify-between px-8 shrink-0 shadow-sm z-10">
+          <div className="flex items-center gap-6">
+            <h2 className="text-xl font-black text-slate-900 uppercase tracking-tighter">
+              {navItems.find(i => i.id === activeTab)?.label || 'Acesso Negado'}
+            </h2>
+
+            <div className="h-8 w-[1px] bg-slate-200 hidden md:block"></div>
+
+            {/* Sessão do Usuário Logado - Agora na Topbar */}
+            <div className="flex items-center gap-3 group">
+              <div className="w-10 h-10 rounded-2xl bg-slate-900 text-white flex items-center justify-center font-black text-sm uppercase shadow-lg shadow-slate-200 transition-transform group-hover:scale-105">
+                {currentUser.name.substring(0, 2)}
+              </div>
+              <div className="hidden sm:block">
+                <p className="text-sm font-black text-slate-900 uppercase tracking-tighter leading-tight">{currentUser.name}</p>
+                <div className="flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                  <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Sessão Ativa</p>
+                </div>
+              </div>
+              <button
+                onClick={onLogout}
+                className="ml-2 p-3 bg-slate-50 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all flex items-center gap-2 group/logout"
+                title="Sair do Sistema"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 transition-transform group-hover/logout:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                <span className="text-[10px] font-black uppercase tracking-widest hidden lg:block">Sair</span>
+              </button>
+            </div>
+          </div>
+
+          <div className="hidden xl:flex items-center gap-4">
+            <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 bg-slate-50 border border-slate-100 px-4 py-2 rounded-xl uppercase tracking-widest">
+              Email: <span className="text-slate-900">{currentUser.email}</span>
             </div>
           </div>
         </header>
