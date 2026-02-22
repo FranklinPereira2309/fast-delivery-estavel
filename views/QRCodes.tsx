@@ -43,9 +43,10 @@ const QRCodes: React.FC = () => {
             </div>
 
             {/* Grid de QR Codes */}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8 overflow-y-auto pb-12 print:overflow-visible print:pb-0 print:grid-cols-3 print:gap-4">
+            <div id="print-area" className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8 overflow-y-auto pb-12 print:overflow-visible print:pb-0 print:grid-cols-3 print:gap-8">
                 {tables.map((tableNum) => {
                     const tableUrl = `${MENU_BASE_URL}/?mesa=${tableNum}`;
+
 
                     return (
                         <div
@@ -86,23 +87,26 @@ const QRCodes: React.FC = () => {
         @media print {
           body {
             background-color: white !important;
+            visibility: hidden; /* Oculta tudo por padrão (Herdado do index.html) */
           }
-          /* Esconder Sidebar (No Layout.tsx ela já pode estar visível, então forçamos aqui) */
-          aside {
+          
+          /* Força a visibilidade Apenas da área de QR Codes */
+          #print-area, #print-area * {
+            visibility: visible !important;
+          }
+          
+          #print-area {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            margin: 0;
+            padding: 20px;
+          }
+
+          /* Esconder Sidebar e Header (Garantia extra) */
+          aside, header, nav {
             display: none !important;
-          }
-          /* Esconder Header do App.tsx/Layout.tsx */
-          header {
-            display: none !important;
-          }
-          /* O Main Content ocupa 100% da tela na impressão e reseta padding/overflow */
-          main {
-            padding: 0 !important;
-            overflow: visible !important;
-          }
-          section {
-            padding: 0 !important;
-            overflow: visible !important;
           }
         }
       `}</style>
