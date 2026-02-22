@@ -132,6 +132,7 @@ model Order {
   tableNumber   Int?
   waiterId      String?
   waiter        Waiter?     @relation(fields: [waiterId], references: [id])
+  isOriginDigitalMenu Boolean @default(false)
 }
 
 model OrderItem {
@@ -162,6 +163,7 @@ model TableSession {
   clientPhone        String?
   hasPendingDigital  Boolean       @default(false)
   pendingReviewItems String?       // To store stringified array of requested digital items before approval
+  isOriginDigitalMenu Boolean      @default(false)
 }
 
 model DeliveryDriver {

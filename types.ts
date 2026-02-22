@@ -101,6 +101,7 @@ export interface TableSession {
   clientPhone?: string;   // Novo: Telefone para cupom de mesa
   hasPendingDigital?: boolean;
   pendingReviewItems?: string;
+  isOriginDigitalMenu?: boolean;
 }
 
 export interface Order {
@@ -118,6 +119,7 @@ export interface Order {
   driverId?: string;
   tableNumber?: number;
   waiterId?: string;
+  isOriginDigitalMenu?: boolean;
 }
 
 export interface AuditLog {

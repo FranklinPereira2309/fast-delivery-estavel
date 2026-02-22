@@ -92,11 +92,13 @@ export const createOrder = async (req: Request, res: Response) => {
                     status: 'occupied',
                     clientName: clientName || 'Mesa Digital',
                     hasPendingDigital: true,
-                    pendingReviewItems: JSON.stringify(newPending)
+                    pendingReviewItems: JSON.stringify(newPending),
+                    isOriginDigitalMenu: true
                 },
                 update: {
                     hasPendingDigital: true,
-                    pendingReviewItems: JSON.stringify(newPending)
+                    pendingReviewItems: JSON.stringify(newPending),
+                    isOriginDigitalMenu: true
                 }
             });
         });

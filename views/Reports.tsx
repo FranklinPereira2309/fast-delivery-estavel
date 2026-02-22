@@ -18,6 +18,10 @@ const Reports: React.FC = () => {
     const [salesEndDate, setSalesEndDate] = useState(new Date().toISOString().split('T')[0]);
     const [salesPayment, setSalesPayment] = useState<string>('TODOS');
     const [salesModality, setSalesModality] = useState<string>('TODOS');
+    const [salesOrigin, setSalesOrigin] = useState<'TODOS' | 'FISICO' | 'DIGITAL'>('TODOS');
+
+    // Tab State
+    const [activeTab, setActiveTab] = useState<'SALES' | 'CLIENTS' | 'DRIVERS'>('SALES');
 
     // Customer Filters
     const [clientSearch, setClientSearch] = useState('');
@@ -69,7 +73,8 @@ const Reports: React.FC = () => {
                 const inDate = orderDate >= salesStartDate && orderDate <= salesEndDate;
                 const inPayment = salesPayment === 'TODOS' || o.paymentMethod === salesPayment;
                 const inModality = salesModality === 'TODOS' || o.type === salesModality;
-                return inDate && inPayment && inModality && o.status === OrderStatus.DELIVERED;
+                const inOrigin = salesOrigin === 'TODOS' ? true : (salesOrigin === 'DIGITAL' ? o.isOriginDigitalMenu === true : (o.isOriginDigitalMenu === false || o.isOriginDigitalMenu === undefined));
+                return inDate && inPayment && inModality && inOrigin && o.status === OrderStatus.DELIVERED;
             });
 
             const totalRevenue = filteredOrders.reduce((sum, o) => sum + o.total, 0);
@@ -369,193 +374,218 @@ const Reports: React.FC = () => {
 
     return (
         <div className="flex flex-col h-full gap-8 animate-in fade-in duration-500 overflow-y-auto pb-8">
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+
+            {/* TABS HEADER */}
+            <div className="flex gap-4 border-b border-slate-200 pb-2 px-2 shrink-0">
+                <button onClick={() => setActiveTab('SALES')} className={`pb-4 text-[12px] font-black uppercase tracking-widest transition-all ${activeTab === 'SALES' ? 'text-blue-600 border-b-4 border-blue-600' : 'text-slate-400 hover:text-slate-600'}`}>Relatórios de Vendas</button>
+                <button onClick={() => setActiveTab('CLIENTS')} className={`pb-4 text-[12px] font-black uppercase tracking-widest transition-all ${activeTab === 'CLIENTS' ? 'text-blue-600 border-b-4 border-blue-600' : 'text-slate-400 hover:text-slate-600'}`}>Lista de Clientes</button>
+                <button onClick={() => setActiveTab('DRIVERS')} className={`pb-4 text-[12px] font-black uppercase tracking-widest transition-all ${activeTab === 'DRIVERS' ? 'text-blue-600 border-b-4 border-blue-600' : 'text-slate-400 hover:text-slate-600'}`}>Rotas de Entregadores</button>
+            </div>
+
+            <div className="flex-1">
 
                 {/* CARD RELATÓRIO DE VENDAS */}
-                <div className="bg-white p-10 rounded-[3rem] shadow-sm border border-slate-100 flex flex-col h-max">
-                    <div className="mb-8">
-                        <h3 className="text-2xl font-black text-slate-800 uppercase tracking-tighter flex items-center gap-3">
-                            <span className="p-3 bg-blue-50 text-blue-600 rounded-2xl"><Icons.Dashboard /></span>
-                            Relatório de Vendas
-                        </h3>
-                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-2 ml-14">Análise financeira detalhada por período</p>
-                    </div>
-
-                    <div className="space-y-6">
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Início</label>
-                                <input type="date" value={salesStartDate} onChange={e => setSalesStartDate(e.target.value)} className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-sm" />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Fim</label>
-                                <input type="date" value={salesEndDate} onChange={e => setSalesEndDate(e.target.value)} className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-sm" />
-                            </div>
+                {activeTab === 'SALES' && (
+                    <div className="bg-white p-10 rounded-[3rem] shadow-sm border border-slate-100 flex flex-col h-max max-w-4xl animate-in fade-in zoom-in-95">
+                        <div className="mb-8">
+                            <h3 className="text-2xl font-black text-slate-800 uppercase tracking-tighter flex items-center gap-3">
+                                <span className="p-3 bg-blue-50 text-blue-600 rounded-2xl"><Icons.Dashboard /></span>
+                                Relatório de Vendas
+                            </h3>
+                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-2 ml-14">Análise financeira detalhada por período</p>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Pagamento</label>
-                                <select value={salesPayment} onChange={e => setSalesPayment(e.target.value)} className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-sm">
-                                    <option value="TODOS">TODOS</option>
-                                    <option value="DINHEIRO">DINHEIRO</option>
-                                    <option value="CARTÃO">CARTÃO</option>
-                                    <option value="PIX">PIX</option>
-                                </select>
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Modalidade</label>
-                                <select value={salesModality} onChange={e => setSalesModality(e.target.value)} className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-sm">
-                                    <option value="TODOS">TODOS</option>
-                                    <option value={SaleType.COUNTER}>BALCÃO</option>
-                                    <option value={SaleType.TABLE}>MESA</option>
-                                    <option value={SaleType.OWN_DELIVERY}>DELIVERY</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <button
-                        onClick={() => generateSalesPDF(false)}
-                        className="mt-8 w-full py-6 bg-slate-900 hover:bg-black text-white rounded-[2rem] font-black uppercase text-xs tracking-widest shadow-xl transition-all flex items-center justify-center gap-3"
-                    >
-                        <Icons.Print />
-                        Visualizar Relatório de Vendas
-                    </button>
-                </div>
-
-                {/* CARD LISTA DE CLIENTES */}
-                <div className="bg-white p-10 rounded-[3rem] shadow-sm border border-slate-100 flex flex-col h-max">
-                    <div className="mb-8">
-                        <h3 className="text-2xl font-black text-slate-800 uppercase tracking-tighter flex items-center gap-3">
-                            <span className="p-3 bg-blue-50 text-blue-600 rounded-2xl"><Icons.CRM /></span>
-                            Lista de Clientes
-                        </h3>
-                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-2 ml-14">Fidelidade e contatos registrados</p>
-                    </div>
-
-                    <div className="space-y-6">
-                        <div className="space-y-2 relative">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Buscar Cliente (Opcional)</label>
-                            {selectedClient ? (
-                                <div className="flex items-center justify-between p-4 bg-blue-50 border border-blue-100 rounded-2xl">
-                                    <div className="flex flex-col">
-                                        <span className="font-bold text-sm text-blue-900">{selectedClient.name}</span>
-                                        <span className="text-xs text-blue-600">{selectedClient.phone}</span>
-                                    </div>
-                                    <button
-                                        onClick={() => {
-                                            setSelectedClient(null);
-                                            setClientSearch('');
-                                        }}
-                                        className="text-blue-400 hover:text-blue-600 p-2 font-bold"
-                                        title="Remover cliente"
-                                    >
-                                        &times;
-                                    </button>
+                        <div className="space-y-6">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Início</label>
+                                    <input type="date" value={salesStartDate} onChange={e => setSalesStartDate(e.target.value)} className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-sm" />
                                 </div>
-                            ) : (
-                                <>
-                                    <input
-                                        type="text"
-                                        placeholder="Ex: Nome ou Telefone..."
-                                        value={clientSearch}
-                                        onChange={e => {
-                                            setClientSearch(e.target.value);
-                                            setShowClientDropdown(true);
-                                        }}
-                                        onFocus={() => setShowClientDropdown(true)}
-                                        className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-sm"
-                                    />
-                                    {showClientDropdown && clientSearch && (
-                                        <div className="absolute z-10 w-full mt-2 bg-white rounded-2xl shadow-xl border border-slate-100 max-h-48 overflow-y-auto">
-                                            {clients.filter(c => c.name.toLowerCase().includes(clientSearch.toLowerCase()) || c.phone.includes(clientSearch)).length > 0 ? (
-                                                clients.filter(c => c.name.toLowerCase().includes(clientSearch.toLowerCase()) || c.phone.includes(clientSearch)).map(client => (
-                                                    <div
-                                                        key={client.id}
-                                                        onClick={() => {
-                                                            setSelectedClient(client);
-                                                            setShowClientDropdown(false);
-                                                            setClientSearch(client.name);
-                                                        }}
-                                                        className="p-3 hover:bg-slate-50 cursor-pointer border-b border-slate-50 last:border-none flex flex-col"
-                                                    >
-                                                        <span className="font-bold text-sm text-slate-700">{client.name}</span>
-                                                        <span className="text-xs text-slate-400">{client.phone}</span>
-                                                    </div>
-                                                ))
-                                            ) : (
-                                                <div className="p-4 text-sm text-slate-400 text-center font-bold">Nenhum cliente encontrado</div>
-                                            )}
-                                        </div>
-                                    )}
-                                </>
-                            )}
-                        </div>
-                    </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Fim</label>
+                                    <input type="date" value={salesEndDate} onChange={e => setSalesEndDate(e.target.value)} className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-sm" />
+                                </div>
+                            </div>
 
-                    <div className="mt-8 flex flex-col gap-3">
-                        {selectedClient && (
-                            <button
-                                onClick={() => generateClientOrdersPDF(false)}
-                                className="w-full py-4 bg-purple-600 hover:bg-purple-700 text-white rounded-[2rem] font-black uppercase text-xs tracking-widest shadow-xl transition-all flex items-center justify-center gap-3"
-                            >
-                                <Icons.Dashboard />
-                                Ver Compras do Cliente
-                            </button>
-                        )}
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Pagamento</label>
+                                    <select value={salesPayment} onChange={e => setSalesPayment(e.target.value)} className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-sm">
+                                        <option value="TODOS">TODOS</option>
+                                        <option value="DINHEIRO">DINHEIRO</option>
+                                        <option value="CARTÃO">CARTÃO</option>
+                                        <option value="PIX">PIX</option>
+                                    </select>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Modalidade</label>
+                                    <select value={salesModality} onChange={e => setSalesModality(e.target.value)} className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-sm">
+                                        <option value="TODOS">TODOS</option>
+                                        <option value={SaleType.COUNTER}>BALCÃO</option>
+                                        <option value={SaleType.TABLE}>MESA</option>
+                                        <option value={SaleType.OWN_DELIVERY}>DELIVERY</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 gap-4">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Origem do Pedido (Cardápio Digital)</label>
+                                    <select value={salesOrigin} onChange={e => setSalesOrigin(e.target.value as any)} className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-sm">
+                                        <option value="TODOS">TODOS OS PEDIDOS</option>
+                                        <option value="FISICO">APENAS ATENDIMENTO FÍSICO/GARÇOM</option>
+                                        <option value="DIGITAL">APENAS CARDÁPIO DIGITAL</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
 
                         <button
-                            onClick={() => generateClientsPDF(false)}
-                            className={`w-full py-4 ${selectedClient ? 'bg-slate-100 hover:bg-slate-200 text-slate-600' : 'bg-blue-600 hover:bg-blue-700 text-white'} rounded-[2rem] font-black uppercase text-xs tracking-widest shadow-xl transition-all flex items-center justify-center gap-3`}
+                            onClick={() => generateSalesPDF(false)}
+                            className="mt-8 w-full py-6 bg-slate-900 hover:bg-black text-white rounded-[2rem] font-black uppercase text-xs tracking-widest shadow-xl transition-all flex items-center justify-center gap-3"
                         >
                             <Icons.Print />
-                            {selectedClient ? 'Gerar Lista Geral' : 'Visualizar Lista de Clientes'}
+                            Visualizar Relatório de Vendas
                         </button>
                     </div>
-                </div>
+                )}
+
+                {/* CARD LISTA DE CLIENTES */}
+                {activeTab === 'CLIENTS' && (
+                    <div className="bg-white p-10 rounded-[3rem] shadow-sm border border-slate-100 flex flex-col h-max max-w-4xl animate-in fade-in zoom-in-95">
+                        <div className="mb-8">
+                            <h3 className="text-2xl font-black text-slate-800 uppercase tracking-tighter flex items-center gap-3">
+                                <span className="p-3 bg-blue-50 text-blue-600 rounded-2xl"><Icons.CRM /></span>
+                                Lista de Clientes
+                            </h3>
+                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-2 ml-14">Fidelidade e contatos registrados</p>
+                        </div>
+
+                        <div className="space-y-6">
+                            <div className="space-y-2 relative">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Buscar Cliente (Opcional)</label>
+                                {selectedClient ? (
+                                    <div className="flex items-center justify-between p-4 bg-blue-50 border border-blue-100 rounded-2xl">
+                                        <div className="flex flex-col">
+                                            <span className="font-bold text-sm text-blue-900">{selectedClient.name}</span>
+                                            <span className="text-xs text-blue-600">{selectedClient.phone}</span>
+                                        </div>
+                                        <button
+                                            onClick={() => {
+                                                setSelectedClient(null);
+                                                setClientSearch('');
+                                            }}
+                                            className="text-blue-400 hover:text-blue-600 p-2 font-bold"
+                                            title="Remover cliente"
+                                        >
+                                            &times;
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <input
+                                            type="text"
+                                            placeholder="Ex: Nome ou Telefone..."
+                                            value={clientSearch}
+                                            onChange={e => {
+                                                setClientSearch(e.target.value);
+                                                setShowClientDropdown(true);
+                                            }}
+                                            onFocus={() => setShowClientDropdown(true)}
+                                            className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-sm"
+                                        />
+                                        {showClientDropdown && clientSearch && (
+                                            <div className="absolute z-10 w-full mt-2 bg-white rounded-2xl shadow-xl border border-slate-100 max-h-48 overflow-y-auto">
+                                                {clients.filter(c => c.name.toLowerCase().includes(clientSearch.toLowerCase()) || c.phone.includes(clientSearch)).length > 0 ? (
+                                                    clients.filter(c => c.name.toLowerCase().includes(clientSearch.toLowerCase()) || c.phone.includes(clientSearch)).map(client => (
+                                                        <div
+                                                            key={client.id}
+                                                            onClick={() => {
+                                                                setSelectedClient(client);
+                                                                setShowClientDropdown(false);
+                                                                setClientSearch(client.name);
+                                                            }}
+                                                            className="p-3 hover:bg-slate-50 cursor-pointer border-b border-slate-50 last:border-none flex flex-col"
+                                                        >
+                                                            <span className="font-bold text-sm text-slate-700">{client.name}</span>
+                                                            <span className="text-xs text-slate-400">{client.phone}</span>
+                                                        </div>
+                                                    ))
+                                                ) : (
+                                                    <div className="p-4 text-sm text-slate-400 text-center font-bold">Nenhum cliente encontrado</div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="mt-8 flex flex-col gap-3">
+                            {selectedClient && (
+                                <button
+                                    onClick={() => generateClientOrdersPDF(false)}
+                                    className="w-full py-4 bg-purple-600 hover:bg-purple-700 text-white rounded-[2rem] font-black uppercase text-xs tracking-widest shadow-xl transition-all flex items-center justify-center gap-3"
+                                >
+                                    <Icons.Dashboard />
+                                    Ver Compras do Cliente
+                                </button>
+                            )}
+
+                            <button
+                                onClick={() => generateClientsPDF(false)}
+                                className={`w-full py-4 ${selectedClient ? 'bg-slate-100 hover:bg-slate-200 text-slate-600' : 'bg-blue-600 hover:bg-blue-700 text-white'} rounded-[2rem] font-black uppercase text-xs tracking-widest shadow-xl transition-all flex items-center justify-center gap-3`}
+                            >
+                                <Icons.Print />
+                                {selectedClient ? 'Gerar Lista Geral' : 'Visualizar Lista de Clientes'}
+                            </button>
+                        </div>
+                    </div>
+                )}
 
                 {/* CARD RELATÓRIO DE ENTREGADORES */}
-                <div className="bg-white p-10 rounded-[3rem] shadow-sm border border-slate-100 flex flex-col h-max">
-                    <div className="mb-8">
-                        <h3 className="text-2xl font-black text-slate-800 uppercase tracking-tighter flex items-center gap-3">
-                            <span className="p-3 bg-blue-50 text-blue-600 rounded-2xl"><Icons.Logistics /></span>
-                            Relatório de Entregadores
-                        </h3>
-                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-2 ml-14">Histórico de entregas e conferência de rotas</p>
-                    </div>
+                {activeTab === 'DRIVERS' && (
+                    <div className="bg-white p-10 rounded-[3rem] shadow-sm border border-slate-100 flex flex-col h-max max-w-4xl animate-in fade-in zoom-in-95">
+                        <div className="mb-8">
+                            <h3 className="text-2xl font-black text-slate-800 uppercase tracking-tighter flex items-center gap-3">
+                                <span className="p-3 bg-blue-50 text-blue-600 rounded-2xl"><Icons.Logistics /></span>
+                                Relatório de Entregadores
+                            </h3>
+                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-2 ml-14">Histórico de entregas e conferência de rotas</p>
+                        </div>
 
-                    <div className="space-y-6">
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Início</label>
-                                <input type="date" value={driverStartDate} onChange={e => setDriverStartDate(e.target.value)} className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-sm" />
+                        <div className="space-y-6">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Início</label>
+                                    <input type="date" value={driverStartDate} onChange={e => setDriverStartDate(e.target.value)} className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-sm" />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Fim</label>
+                                    <input type="date" value={driverEndDate} onChange={e => setDriverEndDate(e.target.value)} className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-sm" />
+                                </div>
                             </div>
+
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Fim</label>
-                                <input type="date" value={driverEndDate} onChange={e => setDriverEndDate(e.target.value)} className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-sm" />
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Entregador</label>
+                                <select value={selectedDriverId} onChange={e => setSelectedDriverId(e.target.value)} className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-sm">
+                                    <option value="TODOS">TODOS OS ENTREGADORES</option>
+                                    {drivers.map(d => (
+                                        <option key={d.id} value={d.id}>{d.name} ({d.vehicle.plate})</option>
+                                    ))}
+                                </select>
                             </div>
                         </div>
 
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Entregador</label>
-                            <select value={selectedDriverId} onChange={e => setSelectedDriverId(e.target.value)} className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-sm">
-                                <option value="TODOS">TODOS OS ENTREGADORES</option>
-                                {drivers.map(d => (
-                                    <option key={d.id} value={d.id}>{d.name} ({d.vehicle.plate})</option>
-                                ))}
-                            </select>
-                        </div>
+                        <button
+                            onClick={() => generateDriversPDF(false)}
+                            className="mt-8 w-full py-6 bg-slate-900 hover:bg-black text-white rounded-[2rem] font-black uppercase text-xs tracking-widest shadow-xl transition-all flex items-center justify-center gap-3"
+                        >
+                            <Icons.Print />
+                            Visualizar Relatório de Rotas
+                        </button>
                     </div>
-
-                    <button
-                        onClick={() => generateDriversPDF(false)}
-                        className="mt-8 w-full py-6 bg-slate-900 hover:bg-black text-white rounded-[2rem] font-black uppercase text-xs tracking-widest shadow-xl transition-all flex items-center justify-center gap-3"
-                    >
-                        <Icons.Print />
-                        Visualizar Relatório de Rotas
-                    </button>
-                </div>
+                )}
 
             </div>
 

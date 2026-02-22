@@ -292,7 +292,8 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
         status: OrderStatus.PREPARING,
         type: SaleType.COUNTER,
         createdAt: new Date().toISOString(),
-        paymentMethod: undefined
+        paymentMethod: undefined,
+        isOriginDigitalMenu: false
       };
       await db.saveOrder(orderData, currentUser);
       showAlert("Enviado para Cozinha", `Pedido de balcão (${finalClientName}) enviado para preparo.`, "INFO");
@@ -341,7 +342,8 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
         type: saleType,
         createdAt: editingOrderId ? orders.find(o => o.id === editingOrderId)?.createdAt || new Date().toISOString() : new Date().toISOString(),
         paymentMethod: paymentMethod,
-        driverId: undefined
+        driverId: undefined,
+        isOriginDigitalMenu: false
       };
 
       await db.saveOrder(orderData, currentUser);
@@ -364,7 +366,8 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       createdAt: (existingTableOrderId || editingOrderId) ? orders.find(o => o.id === (existingTableOrderId || editingOrderId))?.createdAt || new Date().toISOString() : new Date().toISOString(),
       paymentMethod: paymentMethod,
       tableNumber: isTableSale ? finalTableNum! : undefined,
-      waiterId: isTableSale ? orders.find(o => o.id === existingTableOrderId)?.waiterId : undefined
+      waiterId: isTableSale ? orders.find(o => o.id === existingTableOrderId)?.waiterId : undefined,
+      isOriginDigitalMenu: isTableSale ? (pendingTables.find(t => t.tableNumber === finalTableNum)?.isOriginDigitalMenu || false) : false
     };
 
     await db.saveOrder(orderData, currentUser);
