@@ -37,6 +37,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
     { id: 'inventory', label: 'Estoque / Cardápio', icon: Icons.Inventory },
     { id: 'logistics', label: 'Logística', icon: Icons.Logistics },
     { id: 'driver', label: 'Entregador', icon: Icons.Driver },
+    { id: 'qrcodes', label: 'QR Codes das Mesas', icon: Icons.Dashboard }, // Consider adding a specific icon later if needed
     { id: 'reports', label: 'Relatórios', icon: Icons.Print },
     { id: 'settings', label: 'Configurações', icon: Icons.Settings },
   ];
