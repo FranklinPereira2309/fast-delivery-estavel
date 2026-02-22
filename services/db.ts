@@ -153,6 +153,13 @@ class APIDBService {
     });
   }
 
+  public async updateOrderPaymentMethod(orderId: string, paymentMethod: string, user: User) {
+    await this.request(`/orders/${orderId}/payment`, {
+      method: 'PATCH',
+      body: JSON.stringify({ paymentMethod, user })
+    });
+  }
+
   public async deleteOrder(id: string, user: User) {
     await this.request(`/orders/${id}`, {
       method: 'DELETE',

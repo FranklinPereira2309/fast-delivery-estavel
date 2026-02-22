@@ -10,6 +10,7 @@ export interface OrderPayload {
     tableNumber: number;
     items: { productId: string; quantity: number }[];
     observations?: string;
+    clientName?: string;
 }
 
 export const fetchProducts = async (): Promise<Product[]> => {

@@ -259,3 +259,36 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
         res.status(500).json({ error: error.message });
     }
 };
+
+export const updateOrderPaymentMethod = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const { paymentMethod, user } = req.body;
+
+    try {
+        const order = await prisma.order.update({
+            where: { id: id as string },
+            data: {
+                paymentMethod
+            },
+            include: { items: true }
+        });
+
+        // Registrar na auditoria a edição do cupom
+        if (user) {
+            await prisma.auditLog.create({
+                data: {
+                    userId: user.id,
+                    userName: user.name,
+                    action: 'EDIT_ORDER',
+                    details: `Forma de pagamento do pedido ${id} alterada para ${paymentMethod}.`
+                }
+            });
+        }
+
+        res.json(mapOrderResponse(order));
+    } catch (error: any) {
+        console.error('Error updating payment method:', error);
+        res.status(500).json({ error: error.message });
+    }
+};
+

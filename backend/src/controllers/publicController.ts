@@ -58,7 +58,7 @@ export const verifyTable = async (req: Request, res: Response) => {
 };
 
 export const createOrder = async (req: Request, res: Response) => {
-    const { tableNumber, items, observations } = req.body;
+    const { tableNumber, items, observations, clientName } = req.body;
 
     if (!tableNumber || !items || !Array.isArray(items) || items.length === 0) {
         return res.status(400).json({ message: 'Invalid payload' });
@@ -90,7 +90,7 @@ export const createOrder = async (req: Request, res: Response) => {
                 create: {
                     tableNumber,
                     status: 'occupied',
-                    clientName: 'Mesa Digital',
+                    clientName: clientName || 'Mesa Digital',
                     hasPendingDigital: true,
                     pendingReviewItems: JSON.stringify(newPending)
                 },
