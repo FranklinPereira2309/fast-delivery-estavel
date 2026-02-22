@@ -96,10 +96,14 @@ export const saveTableSession = async (req: Request, res: Response) => {
             // 6. Ensure Kitchen Order exists (required for linking)
             const total = currentItems.reduce((acc: number, it: any) => acc + (it.price * it.quantity), 0);
 
-            // Calculate status based on items
-            const allItemsReady = currentItems.length > 0 && currentItems.every((it: any) => it.isReady);
-            const anyItemsReady = currentItems.some((it: any) => it.isReady);
-            let calculatedStatus: any = allItemsReady ? 'READY' : (anyItemsReady ? 'PARTIALLY_READY' : 'PREPARING');
+            // Calculate status based on items safely
+            let calculatedStatus: any = 'PREPARING';
+            if (currentItems.length > 0) {
+                // Ensure items without `isReady` property are treated as false
+                const allItemsReady = currentItems.every((it: any) => it.isReady === true);
+                const anyItemsReady = currentItems.some((it: any) => it.isReady === true);
+                calculatedStatus = allItemsReady ? 'READY' : (anyItemsReady ? 'PARTIALLY_READY' : 'PREPARING');
+            }
 
             // If table is in billing, keep its natural calculatedStatus so CRM correctly counts finalizations.
 
@@ -136,8 +140,9 @@ export const saveTableSession = async (req: Request, res: Response) => {
                             productId: item.productId,
                             quantity: item.quantity,
                             price: item.price,
-                            isReady: item.isReady,
+                            isReady: item.isReady || false,
                             readyAt: item.readyAt ? new Date(item.readyAt) : null,
+                            observations: item.observations || null,
                             orderId: orderId // Link to Kitchen Order
                         }))
                     }
@@ -151,8 +156,9 @@ export const saveTableSession = async (req: Request, res: Response) => {
                             productId: item.productId,
                             quantity: item.quantity,
                             price: item.price,
-                            isReady: item.isReady,
+                            isReady: item.isReady || false,
                             readyAt: item.readyAt ? new Date(item.readyAt) : null,
+                            observations: item.observations || null,
                             orderId: orderId // Link to Kitchen Order
                         }))
                     }

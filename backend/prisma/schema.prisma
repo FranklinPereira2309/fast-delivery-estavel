@@ -146,6 +146,7 @@ model OrderItem {
   price          Float
   isReady        Boolean  @default(false)
   readyAt        DateTime?
+  observations   String?
 }
 
 model TableSession {

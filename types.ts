@@ -86,6 +86,7 @@ export interface OrderItem {
   price: number;
   isReady?: boolean;
   readyAt?: string;
+  observations?: string;
 }
 
 export interface TableSession {
@@ -124,7 +125,7 @@ export interface AuditLog {
   timestamp: string;
   userId: string;
   userName: string;
-  action: 'CREATE_ORDER' | 'EDIT_ORDER' | 'DELETE_ORDER' | 'LOGIN' | 'LOGOUT' | 'STOCK_ADJUST' | 'RECIPE_UPDATE' | 'TABLE_OPEN' | 'TABLE_ADD_ITEM' | 'TABLE_VOID_ITEM' | 'TABLE_BILL_REQUEST';
+  action: 'CREATE_ORDER' | 'EDIT_ORDER' | 'DELETE_ORDER' | 'LOGIN' | 'LOGOUT' | 'STOCK_ADJUST' | 'RECIPE_UPDATE' | 'TABLE_OPEN' | 'TABLE_ADD_ITEM' | 'TABLE_VOID_ITEM' | 'TABLE_BILL_REQUEST' | 'TABLE_DIGITAL_APPROVE';
   details: string;
 }
 

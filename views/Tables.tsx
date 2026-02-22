@@ -27,6 +27,7 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
 
   const [showConsumptionTicket, setShowConsumptionTicket] = useState(false);
   const [selectedWaiterId, setSelectedWaiterId] = useState<string>('');
+  const [launchObservation, setLaunchObservation] = useState('');
 
   const [isUnregisteredClient, setIsUnregisteredClient] = useState(false);
   const [manualClientName, setManualClientName] = useState('');
@@ -118,7 +119,8 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
       productId: product.id,
       quantity: 1,
       price: product.price,
-      isReady: false
+      isReady: false,
+      observations: launchObservation || ''
     };
     const newItems: OrderItem[] = existingSess ? [...existingSess.items, newItem] : [newItem];
     const startTime = existingSess?.startTime || new Date().toISOString();
@@ -147,6 +149,7 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
 
     setLastAddedProduct(product.id);
     setTimeout(() => setLastAddedProduct(null), 800);
+    setLaunchObservation(''); // Clear observation after launch
     await refreshData();
   };
 
@@ -209,7 +212,8 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
           productId: pi.productId,
           quantity: pi.quantity,
           price: product?.price || 0,
-          isReady: false
+          isReady: false,
+          observations: pi.observations || ''
         };
       });
 
@@ -480,7 +484,19 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
                         <button onClick={() => approveDigitalOrders(selectedTable!)} className="w-full bg-fuchsia-600 hover:bg-fuchsia-700 text-white font-black py-4 rounded-xl transition-all shadow-lg text-sm uppercase flex items-center justify-center gap-2 relative z-10">Aprovar e Lançar Ordem ✓</button>
                       </div>
                     )}
-                    <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Garçom:</label><select disabled={getTableStatus(selectedTable) === 'billing'} value={selectedWaiterId} onChange={(e) => setSelectedWaiterId(e.target.value)} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-blue-100 transition-all outline-none disabled:opacity-50"><option value="">Selecione...</option>{waiters.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}</select></div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-white p-6 rounded-3xl border border-slate-100 shadow-sm mb-6">
+                      <div>
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Garçom Local:</label>
+                        <select disabled={getTableStatus(selectedTable) === 'billing'} value={selectedWaiterId} onChange={(e) => setSelectedWaiterId(e.target.value)} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-blue-100 transition-all outline-none disabled:opacity-50">
+                          <option value="">Selecione...</option>
+                          {waiters.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Observação (Opcional):</label>
+                        <input type="text" placeholder="Ex: Sem cebola, bem passado..." value={launchObservation} onChange={e => setLaunchObservation(e.target.value)} maxLength={50} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-blue-100 transition-all outline-none" disabled={getTableStatus(selectedTable) === 'billing'} />
+                      </div>
+                    </div>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                       {products.map(prod => (
                         <button

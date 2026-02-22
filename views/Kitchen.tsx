@@ -192,8 +192,28 @@ const Kitchen: React.FC = () => {
                           <p className="font-black text-slate-800 uppercase text-xs">
                             <span className="text-blue-600 text-sm">{item.quantity}x</span> {product?.name}
                           </p>
+                          {item.observations && (
+                            <p className="inline-block text-[10px] text-orange-600 font-bold bg-orange-100/50 px-2 py-1 rounded-md mt-1 mb-1 border border-orange-200">
+                              Obs: {item.observations}
+                            </p>
+                          )}
+                          {product?.recipe && product.recipe.length > 0 && (
+                            <div className="mt-2 pl-2 border-l-2 border-slate-200">
+                              <p className="text-[8px] font-black text-slate-400 uppercase mb-1">Ficha Técnica:</p>
+                              <ul className="space-y-0.5">
+                                {product.recipe.map((rec, i) => {
+                                  const inv = inventory.find(invIt => invIt.id === rec.inventoryItemId);
+                                  return (
+                                    <li key={i} className="text-[9px] font-bold text-slate-500 uppercase list-inside list-disc">
+                                      {inv?.name || 'Ingrediente Desconhecido'} ({(rec.quantity * item.quantity).toFixed(2)}{inv?.unit})
+                                    </li>
+                                  );
+                                })}
+                              </ul>
+                            </div>
+                          )}
                           {item.isReady && (
-                            <p className="text-[8px] text-emerald-500 font-black uppercase mt-1">Pronto em: {new Date(item.readyAt!).toLocaleTimeString()}</p>
+                            <p className="text-[8px] text-emerald-500 font-black uppercase mt-2">Pronto em: {new Date(item.readyAt!).toLocaleTimeString()}</p>
                           )}
                         </div>
                       </div>

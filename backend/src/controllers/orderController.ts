@@ -149,8 +149,9 @@ export const saveOrder = async (req: Request, res: Response) => {
                             productId: item.productId,
                             quantity: item.quantity,
                             price: item.price,
-                            isReady: item.isReady,
-                            readyAt: item.readyAt ? new Date(item.readyAt) : null
+                            isReady: item.isReady || false,
+                            readyAt: item.readyAt ? new Date(item.readyAt) : null,
+                            observations: item.observations || null
                         }))
                     }
                 },
@@ -173,8 +174,9 @@ export const saveOrder = async (req: Request, res: Response) => {
                             productId: item.productId,
                             quantity: item.quantity,
                             price: item.price,
-                            isReady: item.isReady,
-                            readyAt: item.readyAt ? new Date(item.readyAt) : null
+                            isReady: item.isReady || false,
+                            readyAt: item.readyAt ? new Date(item.readyAt) : null,
+                            observations: item.observations || null
                         }))
                     }
                 },
