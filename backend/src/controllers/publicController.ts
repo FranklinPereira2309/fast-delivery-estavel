@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
+import { getIO } from '../socket';
 
 const prisma = new PrismaClient();
 
@@ -129,6 +130,16 @@ export const createOrder = async (req: Request, res: Response) => {
 
             return newOrder;
         });
+
+        // Dispara evento de websocket para o sistema PDV atualizar as telas em tempo real
+        try {
+            getIO().emit('newOrder', {
+                tableNumber: tableNumber,
+                action: 'refresh'
+            });
+        } catch (e) {
+            console.error('Socket.io error emitting newOrder:', e);
+        }
 
         res.status(201).json({ message: 'Order created successfully', order: orderData });
 

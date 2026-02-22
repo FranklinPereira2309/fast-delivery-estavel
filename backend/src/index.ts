@@ -14,9 +14,13 @@ import settingsRoutes from './routes/settingsRoutes';
 import auditRoutes from './routes/auditRoutes';
 import tableRoutes from './routes/tableRoutes';
 import publicRoutes from './routes/publicRoutes';
+import { initSocket } from './socket';
+import http from 'http';
 
 const app = express();
 const port = process.env.PORT || 3000;
+const server = http.createServer(app);
+initSocket(server);
 
 app.use(cors());
 app.use(express.json());
@@ -40,6 +44,6 @@ app.get('/health', (req, res) => {
     res.json({ status: 'ok' });
 });
 
-app.listen(port, () => {
+server.listen(port, () => {
     console.log(`Server running on port ${port}`);
 });

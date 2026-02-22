@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { db, BusinessSettings } from '../services/db';
+import { socket } from '../services/socket';
 import { TableSession, Product, User, OrderItem, Order, OrderStatus, SaleType, Waiter, Client } from '../types';
 import { Icons, PLACEHOLDER_FOOD_IMAGE, formatImageUrl } from '../constants';
 import CustomAlert from '../components/CustomAlert';
@@ -53,7 +54,19 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
   useEffect(() => {
     refreshData();
     const agent = setInterval(refreshData, 3000);
-    return () => clearInterval(agent);
+
+    // Escuta evento de novo pedido via WebSockets
+    const handleNewOrder = () => {
+      console.log('WS: Novo pedido recebido na mesa! Atualizando tela de mesas...');
+      refreshData();
+    };
+
+    socket.on('newOrder', handleNewOrder);
+
+    return () => {
+      clearInterval(agent);
+      socket.off('newOrder', handleNewOrder);
+    };
   }, []);
 
   const refreshData = async () => {

@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Order, OrderStatus, OrderStatusLabels, Product, InventoryItem, User, SaleType, OrderItem, Waiter } from '../types';
 import { db } from '../services/db';
+import { socket } from '../services/socket';
 import { Icons } from '../constants';
 
 const Kitchen: React.FC = () => {
@@ -25,7 +26,15 @@ const Kitchen: React.FC = () => {
 
     refreshData(true);
     const interval = setInterval(() => refreshData(false), 3000);
-    return () => clearInterval(interval);
+
+    // Socket.io Real-time
+    const handleNewOrder = () => refreshData(false);
+    socket.on('newOrder', handleNewOrder);
+
+    return () => {
+      clearInterval(interval);
+      socket.off('newOrder', handleNewOrder);
+    };
   }, [viewTab]);
 
   const refreshData = async (isFirstLoad: boolean) => {
