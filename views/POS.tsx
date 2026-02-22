@@ -496,8 +496,8 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
 
         <div className="flex-1 flex flex-col min-w-0">
           <div className="flex gap-2 mb-6 overflow-x-auto pb-2 shrink-0">
-            {['Todos', ...new Set(products.map(p => p.category))].map(cat => (
-              <button key={cat} onClick={() => setActiveCategory(cat)} className={`px-4 py-2 rounded-full whitespace-nowrap text-[10px] font-black uppercase tracking-widest ${activeCategory === cat ? 'bg-blue-600 text-white shadow-lg shadow-blue-100' : 'bg-white text-slate-600 shadow-sm border'}`}>{cat}</button>
+            {['Todos', ...Array.from(new Set(products.map(p => p.category)))].map(cat => (
+              <button key={cat as string} onClick={() => setActiveCategory(cat as string)} className={`px-4 py-2 rounded-full whitespace-nowrap text-[10px] font-black uppercase tracking-widest ${activeCategory === cat ? 'bg-blue-600 text-white shadow-lg shadow-blue-100' : 'bg-white text-slate-600 shadow-sm border'}`}>{cat as string}</button>
             ))}
           </div>
           <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 overflow-y-auto pr-2">

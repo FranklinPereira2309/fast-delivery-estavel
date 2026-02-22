@@ -7,14 +7,20 @@ export const useDigitalAlert = () => {
     const playCountRef = useRef(0);
     const maxPlays = 3;
 
+    const isAlertingRef = useRef(isAlerting);
+
     useEffect(() => {
-        // Initialize audio instance
+        isAlertingRef.current = isAlerting;
+    }, [isAlerting]);
+
+    useEffect(() => {
+        // Initialize audio instance ONCE
         audioRef.current = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
 
         const handleAudioEnded = () => {
             playCountRef.current += 1;
-            if (playCountRef.current < maxPlays && isAlerting) {
-                audioRef.current?.play().catch(e => console.log('Audio play blocked', e));
+            if (playCountRef.current < maxPlays && isAlertingRef.current) {
+                audioRef.current?.play().catch(e => console.log('Audio loop blocked:', e));
             }
         };
 
@@ -25,13 +31,16 @@ export const useDigitalAlert = () => {
                 audioRef.current.removeEventListener('ended', handleAudioEnded);
             }
         };
-    }, [isAlerting]);
+    }, []);
 
     useEffect(() => {
         const handleNewOrder = () => {
             setIsAlerting(true);
             playCountRef.current = 0;
-            audioRef.current?.play().catch(e => console.log('Audio play blocked (needs interaction)', e));
+            if (audioRef.current) {
+                audioRef.current.currentTime = 0;
+                audioRef.current.play().catch(e => console.log('Audio play blocked (needs interaction)', e));
+            }
         };
 
         socket.on('newOrder', handleNewOrder);
