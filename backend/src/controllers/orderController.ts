@@ -139,6 +139,9 @@ export const saveOrder = async (req: Request, res: Response) => {
                 update: {
                     status: order.status,
                     clientId: order.clientId,
+                    clientName: order.clientName, // Fix: Also update client actual string names for Table edits
+                    clientAddress: order.clientAddress,
+                    clientPhone: order.clientPhone,
                     paymentMethod: order.paymentMethod,
                     driverId: driverId,
                     waiterId: waiterId,
