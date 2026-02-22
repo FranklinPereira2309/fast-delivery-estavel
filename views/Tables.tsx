@@ -27,7 +27,8 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
 
   const [showConsumptionTicket, setShowConsumptionTicket] = useState(false);
   const [selectedWaiterId, setSelectedWaiterId] = useState<string>('');
-  const [launchObservation, setLaunchObservation] = useState('');
+  const [selectedProductForLaunch, setSelectedProductForLaunch] = useState<Product | null>(null);
+  const [modalObservation, setModalObservation] = useState('');
 
   const [isUnregisteredClient, setIsUnregisteredClient] = useState(false);
   const [manualClientName, setManualClientName] = useState('');
@@ -95,21 +96,27 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
 
   const getSessForTable = (num: number) => sessions.find(s => s.tableNumber === num);
 
-  const launchProduct = async (product: Product) => {
+  const confirmLaunchProduct = async () => {
+    if (!selectedProductForLaunch) return;
+    const product = selectedProductForLaunch;
+
     console.log('Attempting to launch product:', product.name, 'to table:', selectedTable);
     if (selectedTable === null) return;
     if (!selectedWaiterId) {
       console.warn('Launch blocked: No waiter selected');
+      setSelectedProductForLaunch(null);
       return showAlert("Garçom Requerido", "Por favor, selecione o garçom responsável.", "DANGER");
     }
 
     if (getTableStatus(selectedTable) === 'billing') {
+      setSelectedProductForLaunch(null);
       return showAlert("Mesa Bloqueada", "Esta mesa está em processo de fechamento (Faturando). Para lançar mais itens, reabra a mesa.", "DANGER");
     }
 
     const validation = await db.validateStockForOrder([{ productId: product.id, quantity: 1 }]);
     if (!validation.valid) {
       console.warn('Launch blocked: Out of stock', validation.message);
+      setSelectedProductForLaunch(null);
       return showAlert("Sem Estoque", validation.message || "Produto sem estoque.", "DANGER");
     }
 
@@ -120,7 +127,7 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
       quantity: 1,
       price: product.price,
       isReady: false,
-      observations: launchObservation || ''
+      observations: modalObservation || ''
     };
     const newItems: OrderItem[] = existingSess ? [...existingSess.items, newItem] : [newItem];
     const startTime = existingSess?.startTime || new Date().toISOString();
@@ -142,14 +149,14 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
       console.log('Product launched successfully to Table', selectedTable);
     } catch (err: any) {
       console.error('Error saving table session:', err);
-      // Try to get message from backend response
       const errorMessage = err.message || "Erro desconhecido";
       showAlert("Erro ao Salvar", `Não foi possível adicionar o item: ${errorMessage}`, "DANGER");
     }
 
     setLastAddedProduct(product.id);
     setTimeout(() => setLastAddedProduct(null), 800);
-    setLaunchObservation(''); // Clear observation after launch
+    setSelectedProductForLaunch(null);
+    setModalObservation('');
     await refreshData();
   };
 
@@ -484,24 +491,21 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
                         <button onClick={() => approveDigitalOrders(selectedTable!)} className="w-full bg-fuchsia-600 hover:bg-fuchsia-700 text-white font-black py-4 rounded-xl transition-all shadow-lg text-sm uppercase flex items-center justify-center gap-2 relative z-10">Aprovar e Lançar Ordem ✓</button>
                       </div>
                     )}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-white p-6 rounded-3xl border border-slate-100 shadow-sm mb-6">
-                      <div>
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Garçom Local:</label>
-                        <select disabled={getTableStatus(selectedTable) === 'billing'} value={selectedWaiterId} onChange={(e) => setSelectedWaiterId(e.target.value)} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-blue-100 transition-all outline-none disabled:opacity-50">
-                          <option value="">Selecione...</option>
-                          {waiters.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Observação (Opcional):</label>
-                        <input type="text" placeholder="Ex: Sem cebola, bem passado..." value={launchObservation} onChange={e => setLaunchObservation(e.target.value)} maxLength={50} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-blue-100 transition-all outline-none" disabled={getTableStatus(selectedTable) === 'billing'} />
-                      </div>
+                    <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm mb-6">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Selecione o Garçom da Mesa:</label>
+                      <select disabled={getTableStatus(selectedTable) === 'billing'} value={selectedWaiterId} onChange={(e) => setSelectedWaiterId(e.target.value)} className="w-full max-w-sm p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-blue-100 transition-all outline-none disabled:opacity-50">
+                        <option value="">Selecione...</option>
+                        {waiters.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
+                      </select>
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                       {products.map(prod => (
                         <button
                           key={prod.id}
-                          onClick={() => launchProduct(prod)}
+                          onClick={() => {
+                            setSelectedProductForLaunch(prod);
+                            setModalObservation('');
+                          }}
                           className={`p-5 bg-white border rounded-[2.5rem] shadow-sm transition-all duration-200 text-left group relative overflow-hidden active:scale-95 hover:scale-[1.02] ${lastAddedProduct === prod.id
                             ? 'border-emerald-500 ring-4 ring-emerald-50 scale-95'
                             : 'border-slate-100 hover:border-blue-200 hover:shadow-lg'
@@ -640,7 +644,28 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
         </div>
       )}
 
+      {/* MODAL DE OBSERVAÇÃO PARA LANÇAMENTO */}
+      {selectedProductForLaunch !== null && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in zoom-in duration-200">
+          <div className="bg-white rounded-[2rem] shadow-2xl p-8 w-full max-w-sm border border-white/20">
+            <h3 className="text-lg font-black text-slate-800 uppercase mb-2 tracking-tighter text-center">Lançar Item</h3>
+            <p className="text-center text-[10px] font-bold text-slate-400 uppercase mb-6">{selectedProductForLaunch.name}</p>
+            <div className="space-y-6">
+              <div>
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 block">Deseja adicionar alguma observação?</label>
+                <input autoFocus type="text" placeholder="Ex: Sem sal, bem passado..." value={modalObservation} onChange={(e) => setModalObservation(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && confirmLaunchProduct()} className="w-full p-4 bg-slate-100 rounded-2xl border-none focus:ring-2 focus:ring-blue-600 font-bold text-sm outline-none placeholder:font-normal" maxLength={60} />
+              </div>
+              <div className="flex gap-2">
+                <button onClick={() => setSelectedProductForLaunch(null)} className="flex-1 py-4 font-black text-[10px] uppercase text-slate-400 hover:text-slate-600 transition-colors">Cancelar</button>
+                <button onClick={confirmLaunchProduct} className="flex-1 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-black text-[10px] uppercase shadow-xl hover:shadow-blue-200 transition-all active:scale-95">Confirmar ✓</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* MODAL DE VISUALIZAÇÃO PRÉVIA (CUPOM DE CONFERÊNCIA) - REFATORADO COM AGRUPAMENTO */}
+
       {(showConsumptionTicket || isConfirmingBilling) && (printingPreBill || getSessForTable(selectedTable!)) && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-900/90 backdrop-blur-xl animate-in fade-in duration-300">
           <div className="relative w-full max-w-[80mm] bg-white p-8 border border-dashed shadow-2xl font-receipt text-black overflow-hidden animate-in zoom-in duration-300 print-container is-receipt rounded-sm">

@@ -31,6 +31,8 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
   const [tableNumber, setTableNumber] = useState<number | ''>('');
   const [printingOrder, setPrintingOrder] = useState<Order | null>(null);
   const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
+  const [selectedProductForCart, setSelectedProductForCart] = useState<Product | null>(null);
+  const [cartObservation, setCartObservation] = useState('');
 
   const [pendingTables, setPendingTables] = useState<TableSession[]>([]);
   const [pendingCounterOrders, setPendingCounterOrders] = useState<Order[]>([]);
@@ -65,12 +67,19 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
     setPendingCounterOrders(o.filter(order => order.type === SaleType.COUNTER && order.status === OrderStatus.READY));
   };
 
-  const addToCart = (product: Product) => {
-    if (editingOrderId) return showAlert("Ação Bloqueada", "Não é possível adicionar itens a um pedido pronto que está sendo recebido.", "DANGER");
+  const confirmAddToCart = () => {
+    if (!selectedProductForCart) return;
+    const product = selectedProductForCart;
+
+    if (editingOrderId) {
+      setSelectedProductForCart(null);
+      return showAlert("Ação Bloqueada", "Não é possível adicionar itens a um pedido pronto que está sendo recebido.", "DANGER");
+    }
 
     if (saleType === SaleType.TABLE && tableNumberInput) {
       const isBilling = pendingTables.some(t => t.tableNumber === parseInt(tableNumberInput));
       if (isBilling) {
+        setSelectedProductForCart(null);
         return showAlert("Modo Leitura", "Esta mesa está em modo somente leitura (Faturando). Para adicionar produtos, você deve Reabrir a mesa.", "DANGER");
       }
     }
@@ -80,8 +89,12 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       productId: product.id,
       quantity: 1,
       price: product.price,
-      isReady: false
+      isReady: false,
+      observations: cartObservation || ''
     }]);
+
+    setSelectedProductForCart(null);
+    setCartObservation('');
   };
 
   const loadTableSession = async (sess: TableSession) => {
@@ -483,7 +496,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
           </div>
           <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 overflow-y-auto pr-2">
             {products.filter(p => activeCategory === 'Todos' || p.category === activeCategory).map(product => (
-              <button key={product.id} onClick={() => addToCart(product)} className="bg-white p-4 rounded-3xl shadow-sm border border-slate-50 hover:border-blue-300 hover:scale-[1.02] transition-all text-left group">
+              <button key={product.id} onClick={() => { setSelectedProductForCart(product); setCartObservation(''); }} className="bg-white p-4 rounded-3xl shadow-sm border border-slate-50 hover:border-blue-300 hover:scale-[1.02] transition-all text-left group">
                 <div className="w-full h-32 bg-slate-50 rounded-2xl mb-3 flex items-center justify-center overflow-hidden">
                   <img src={formatImageUrl(product.imageUrl)} onError={e => e.currentTarget.src = PLACEHOLDER_FOOD_IMAGE} className="max-h-full object-contain group-hover:scale-110 transition-transform" />
                 </div>
@@ -725,6 +738,26 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
           </div>
         </div>
       </div>
+
+      {/* MODAL DE OBSERVAÇÃO PARA CARRINHO */}
+      {selectedProductForCart !== null && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in zoom-in duration-200">
+          <div className="bg-white rounded-[2rem] shadow-2xl p-8 w-full max-w-sm border border-white/20">
+            <h3 className="text-lg font-black text-slate-800 uppercase mb-2 tracking-tighter text-center">Adicionar ao Carrinho</h3>
+            <p className="text-center text-[10px] font-bold text-slate-400 uppercase mb-6">{selectedProductForCart.name}</p>
+            <div className="space-y-6">
+              <div>
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 block">Deseja adicionar alguma observação?</label>
+                <input autoFocus type="text" placeholder="Ex: Sem sal, bem passado..." value={cartObservation} onChange={(e) => setCartObservation(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && confirmAddToCart()} className="w-full p-4 bg-slate-100 rounded-2xl border-none focus:ring-2 focus:ring-blue-600 font-bold text-sm outline-none placeholder:font-normal" maxLength={60} />
+              </div>
+              <div className="flex gap-2">
+                <button onClick={() => setSelectedProductForCart(null)} className="flex-1 py-4 font-black text-[10px] uppercase text-slate-400 hover:text-slate-600 transition-colors">Cancelar</button>
+                <button onClick={confirmAddToCart} className="flex-1 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-black text-[10px] uppercase shadow-xl hover:shadow-blue-200 transition-all active:scale-95">Adicionar ✓</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {printingOrder && businessSettings && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
