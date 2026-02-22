@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import prisma from '../prisma';
+import { getIO } from '../socket';
 
 const mapSessionResponse = (session: any) => {
     if (!session) return null;
@@ -26,6 +27,7 @@ export const saveTableSession = async (req: Request, res: Response) => {
     console.log('SaveTableSession Request:', { table: data.tableNumber, itemsCount: items?.length });
 
     try {
+        let isNewItemsAdded = false;
         const result = await prisma.$transaction(async (tx) => {
             const tableNum = parseInt(data.tableNumber.toString());
             const orderId = `TABLE-${tableNum}`;
@@ -44,6 +46,10 @@ export const saveTableSession = async (req: Request, res: Response) => {
             const itemsToDeduct = currentItems.filter((newItem: any) =>
                 !previousItems.some((oldItem: any) => oldItem.id === newItem.uid)
             );
+
+            if (!existingSession || itemsToDeduct.length > 0) {
+                isNewItemsAdded = true;
+            }
 
             // 3. (REMOVIDO: Deduct Stock for new items)
             // A baixa de estoque nas mesas causava dupla-dedução ao fechar o pedido depois no PDV.
@@ -155,6 +161,14 @@ export const saveTableSession = async (req: Request, res: Response) => {
 
             return session;
         });
+
+        if (isNewItemsAdded) {
+            try {
+                getIO().emit('newOrder', { action: 'refresh', tableNumber: data.tableNumber });
+            } catch (e) {
+                console.error('Socket error emitting newOrder:', e);
+            }
+        }
 
         res.json(mapSessionResponse(result));
     } catch (error: any) {

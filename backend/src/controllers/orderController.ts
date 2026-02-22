@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import prisma from '../prisma';
+import { getIO } from '../socket';
 
 const mapOrderResponse = (order: any) => {
     if (!order) return null;
@@ -96,11 +97,21 @@ export const saveOrder = async (req: Request, res: Response) => {
     console.log('Receiving order save request:', { id: order.id, type: order.type, status: order.status, itemsCount: order.items?.length });
 
     try {
+        let isNewItemsAdded = false;
+
         const result = await prisma.$transaction(async (tx: any) => {
             const existingOrder = await tx.order.findUnique({
                 where: { id: order.id },
                 include: { items: true }
             });
+
+            if (!existingOrder) {
+                isNewItemsAdded = true;
+            } else if (order.items && existingOrder.items) {
+                if (order.items.length > existingOrder.items.length) {
+                    isNewItemsAdded = true;
+                }
+            }
 
             const oldStatus = existingOrder?.status;
             const newStatus = order.status;
@@ -189,6 +200,14 @@ export const saveOrder = async (req: Request, res: Response) => {
                 include: { items: true }
             });
         });
+
+        if (isNewItemsAdded) {
+            try {
+                getIO().emit('newOrder', { action: 'refresh', id: order.id });
+            } catch (e) {
+                console.error('Socket error emitting newOrder:', e);
+            }
+        }
 
         res.json(mapOrderResponse(result));
     } catch (error: any) {
