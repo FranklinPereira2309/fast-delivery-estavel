@@ -7,7 +7,8 @@ const mapSessionResponse = (session: any) => {
         ...session,
         items: (session.items || []).map((item: any) => ({
             ...item,
-            uid: item.id // Ensure frontend gets 'uid'
+            uid: item.id, // Ensure frontend gets 'uid'
+            observations: item.observations || null
         }))
     };
 };

@@ -7,7 +7,8 @@ const mapOrderResponse = (order: any) => {
         ...order,
         items: (order.items || []).map((item: any) => ({
             ...item,
-            uid: item.id // Ensure frontend gets 'uid'
+            uid: item.id, // Ensure frontend gets 'uid'
+            observations: item.observations || null
         }))
     };
 };
