@@ -328,7 +328,7 @@ const Reports: React.FC = () => {
             page.drawText('DATA e HORA', { x: 55, y, size: 8, font: fontBold });
             page.drawText('CLIENTE', { x: 180, y, size: 8, font: fontBold });
             page.drawText('ENTREGADOR', { x: 350, y, size: 8, font: fontBold });
-            page.drawText('VALOR TOTAL', { x: 500, y, size: 8, font: fontBold });
+            page.drawText('TOTAL', { x: 500, y, size: 8, font: fontBold });
             y -= 25;
 
             for (const o of filteredOrders) {
