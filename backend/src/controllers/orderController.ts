@@ -201,18 +201,49 @@ export const deleteOrder = async (req: Request, res: Response) => {
     const { user } = req.body;
 
     try {
-        await prisma.order.delete({ where: { id: id as string } });
+        await prisma.$transaction(async (tx: any) => {
+            // 1. Inspeciona o pedido antes de apagar
+            const orderToDelete = await tx.order.findUnique({
+                where: { id: id as string },
+                include: { items: true }
+            });
 
-        await prisma.auditLog.create({
-            data: {
-                userId: user.id,
-                userName: user.name,
-                action: 'DELETE_ORDER',
-                details: `Pedido ${id} removido.`
+            if (!orderToDelete) {
+                throw new Error("Pedido não encontrado.");
             }
+
+            // 2. Se era um pedido Finalizado (DELIVERED), desfazemos os logs
+            if (orderToDelete.status === 'DELIVERED') {
+                // Re-estoca os ingredientes virtualmente
+                await handleInventoryImpact(tx, orderToDelete.items, 'INCREMENT');
+
+                // Se tinha um ID próprio de CRM, abassa 1
+                if (orderToDelete.clientId && orderToDelete.clientId !== 'ANONYMOUS') {
+                    const client = await tx.client.findUnique({ where: { id: orderToDelete.clientId } });
+                    if (client && client.totalOrders > 0) {
+                        await tx.client.update({
+                            where: { id: orderToDelete.clientId },
+                            data: { totalOrders: { decrement: 1 } }
+                        });
+                    }
+                }
+            }
+
+            // 3. Exclui físicamente
+            await tx.order.delete({ where: { id: id as string } });
+
+            // 4. Registra a ação
+            await tx.auditLog.create({
+                data: {
+                    userId: user.id,
+                    userName: user.name,
+                    action: 'DELETE_ORDER',
+                    details: `Pedido ${id} removido e estornos (se aplicáveis) processados.`
+                }
+            });
         });
 
-        res.json({ message: 'Pedido removido' });
+        res.json({ message: 'Pedido removido e histórico consolidado.' });
     } catch (error: any) {
         res.status(500).json({ error: error.message });
     }
