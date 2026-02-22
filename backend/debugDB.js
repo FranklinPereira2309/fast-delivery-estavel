@@ -8,22 +8,26 @@ async function checkDB() {
             include: { items: true }
         });
 
-        console.log("Order TABLE-3:", order ? {
-            id: order.id,
-            status: order.status,
-            createdAt: order.createdAt,
-            items: order.items.map(it => ({ obs: it.observations, ready: it.isReady }))
-        } : "Not found");
+        if (order) {
+            for (const item of order.items) {
+                await prisma.orderItem.update({
+                    where: { id: item.id },
+                    data: { observations: 'Sem cebola, bem passado (INJETADO MANUALMENTE PARA TESTE)' }
+                });
+            }
+            console.log("Updated Table-3 with observations!");
+        }
 
-        const session = await prisma.tableSession.findUnique({
-            where: { tableNumber: 3 }
+        const tableOrder = await prisma.order.findUnique({
+            where: { id: 'TABLE-3' },
+            include: { items: true }
         });
 
-        console.log("Session TABLE-3:", session ? {
-            status: session.status,
-            startTime: session.startTime,
-            pending: session.pendingReviewItems,
-            hasPending: session.hasPendingDigital
+        console.log("Order TABLE-3:", tableOrder ? {
+            id: tableOrder.id,
+            status: tableOrder.status,
+            createdAt: tableOrder.createdAt,
+            items: tableOrder.items.map(it => ({ obs: it.observations, ready: it.isReady }))
         } : "Not found");
 
     } catch (e) {
