@@ -5,12 +5,14 @@ import { socket } from '../services/socket';
 import { TableSession, Product, User, OrderItem, Order, OrderStatus, SaleType, Waiter, Client } from '../types';
 import { Icons, PLACEHOLDER_FOOD_IMAGE, formatImageUrl } from '../constants';
 import CustomAlert from '../components/CustomAlert';
+import { useDigitalAlert } from '../hooks/useDigitalAlert';
 
 interface TablesProps {
   currentUser: User;
 }
 
 const Tables: React.FC<TablesProps> = ({ currentUser }) => {
+  const { isAlerting, dismissAlert } = useDigitalAlert();
   const [settings, setSettings] = useState<BusinessSettings | null>(null);
   const [sessions, setSessions] = useState<TableSession[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -352,7 +354,10 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
   if (!settings) return null;
 
   return (
-    <div className="flex flex-col h-full gap-8">
+    <div className={`flex flex-col h-full gap-8 rounded-[2rem] p-2 transition-all duration-300 ${isAlerting ? 'animate-pulse ring-8 ring-fuchsia-500 bg-fuchsia-50/30' : ''}`} onClick={(e) => {
+      // Intercept clicks to dismiss the blinking alert, but don't prevent modal interactions if they click deeper
+      if (isAlerting) dismissAlert();
+    }}>
       <CustomAlert {...alertConfig} onConfirm={alertConfig.onConfirm} onCancel={alertConfig.onCancel} />
 
       {/* Header Gestão de Mesas */}

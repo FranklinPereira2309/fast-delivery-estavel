@@ -3,12 +3,14 @@ import { DeliveryDriver, Order, OrderStatus, OrderStatusLabels, SaleType, User, 
 import { db, BusinessSettings } from '../services/db';
 import { Icons } from '../constants';
 import CustomAlert from '../components/CustomAlert';
+import { useDigitalAlert } from '../hooks/useDigitalAlert';
 
 interface EntregadorProps {
     currentUser: User | null;
 }
 
 const Entregador: React.FC<EntregadorProps> = ({ currentUser }) => {
+    const { isAlerting, dismissAlert } = useDigitalAlert();
     const [driver, setDriver] = useState<DeliveryDriver | null>(null);
     const [myOrders, setMyOrders] = useState<Order[]>([]);
     const [products, setProducts] = useState<Product[]>([]);
@@ -121,7 +123,7 @@ const Entregador: React.FC<EntregadorProps> = ({ currentUser }) => {
     }
 
     return (
-        <div className="flex flex-col h-full gap-6">
+        <div className={`flex flex-col h-full gap-6 rounded-[2rem] p-2 transition-all duration-300 ${isAlerting ? 'animate-pulse ring-8 ring-fuchsia-500 bg-fuchsia-50/30' : ''}`} onClick={() => { if (isAlerting) dismissAlert(); }}>
             <CustomAlert
                 isOpen={isAlertOpen}
                 title="NOVA ENTREGA!"

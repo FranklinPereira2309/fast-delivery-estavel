@@ -4,8 +4,10 @@ import { Order, OrderStatus, OrderStatusLabels, Product, InventoryItem, User, Sa
 import { db } from '../services/db';
 import { socket } from '../services/socket';
 import { Icons } from '../constants';
+import { useDigitalAlert } from '../hooks/useDigitalAlert';
 
 const Kitchen: React.FC = () => {
+  const { isAlerting, dismissAlert } = useDigitalAlert();
   const [orders, setOrders] = useState<Order[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
@@ -17,10 +19,8 @@ const Kitchen: React.FC = () => {
   const [selectedItems, setSelectedItems] = useState<Record<string, string[]>>({});
 
   const lastOrdersCount = useRef<number>(0);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
-    audioRef.current = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
     const session = db.getCurrentSession();
     if (session) setCurrentUser(session.user);
 
@@ -48,10 +48,6 @@ const Kitchen: React.FC = () => {
       o.status !== OrderStatus.CANCELLED &&
       o.status !== OrderStatus.DELIVERED
     );
-
-    if (!isFirstLoad && viewTab === 'FILA' && activeOrders.length > lastOrdersCount.current) {
-      audioRef.current?.play().catch(e => console.log("Audio play blocked"));
-    }
 
     lastOrdersCount.current = activeOrders.length;
 
@@ -133,7 +129,7 @@ const Kitchen: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className={`space-y-6 rounded-[2rem] p-2 transition-all duration-300 ${isAlerting ? 'animate-pulse ring-8 ring-fuchsia-500 bg-fuchsia-50/30' : ''}`} onClick={() => { if (isAlerting) dismissAlert(); }}>
       <div className="flex gap-6 border-b pb-2">
         <button onClick={() => setViewTab('FILA')} className={`pb-4 text-xl font-black uppercase transition-all ${viewTab === 'FILA' ? 'text-blue-600 border-b-4 border-blue-600' : 'text-slate-400 hover:text-slate-600'}`}>Fila de Produção</button>
         <button onClick={() => setViewTab('HISTORICO')} className={`pb-4 text-xl font-black uppercase transition-all ${viewTab === 'HISTORICO' ? 'text-blue-600 border-b-4 border-blue-600' : 'text-slate-400 hover:text-slate-600'}`}>Histórico de Itens</button>
