@@ -13,6 +13,7 @@ import waiterRoutes from './routes/waiterRoutes';
 import settingsRoutes from './routes/settingsRoutes';
 import auditRoutes from './routes/auditRoutes';
 import tableRoutes from './routes/tableRoutes';
+import publicRoutes from './routes/publicRoutes';
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -32,6 +33,7 @@ app.use('/api/waiters', waiterRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/audit', auditRoutes);
 app.use('/api/tables', tableRoutes);
+app.use('/api/public', publicRoutes); // Rotas abertas para clientes e cardápio digital
 
 // Basic health check
 app.get('/health', (req, res) => {

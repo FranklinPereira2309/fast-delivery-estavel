@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, useSearchParams } from 'react-router-dom'
 import Home from './components/Home';
 import CartModal from './components/CartModal';
 import { CartItem } from './types';
+import { verifyTable } from './api';
 
 function AppContent() {
   const [searchParams] = useSearchParams();
@@ -11,9 +12,32 @@ function AppContent() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
 
-  // Atualizar mesa caso mude a url
+  // Estados da API
+  const [isValidating, setIsValidating] = useState(true);
+  const [tableError, setTableError] = useState<string | null>(null);
+  const [clientName, setClientName] = useState<string | null>(null);
+
+  // Atualizar mesa e verificar
   useEffect(() => {
-    if (tableParam) setTableNumber(tableParam);
+    const validateTable = async () => {
+      if (!tableParam) {
+        setTableError('Mesa não informada');
+        setIsValidating(false);
+        return;
+      }
+
+      try {
+        const data = await verifyTable(tableParam);
+        setTableNumber(tableParam);
+        setClientName(data.clientName);
+        setIsValidating(false);
+      } catch (err: any) {
+        setTableError(err.message || 'Erro ao validar a mesa.');
+        setIsValidating(false);
+      }
+    };
+
+    validateTable();
   }, [tableParam]);
 
   const addToCart = (item: CartItem) => {
@@ -37,15 +61,23 @@ function AppContent() {
     setCart(prev => prev.map(i => i.id === id ? { ...i, quantity: qty } : i));
   };
 
-  if (!tableNumber) {
+  if (isValidating) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-6 bg-slate-900 text-white text-center">
+        <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+      </div>
+    );
+  }
+
+  if (tableError || !tableNumber) {
     return (
       <div className="min-h-screen flex items-center justify-center p-6 bg-slate-900 text-white text-center">
         <div className="max-w-md w-full space-y-6">
           <div className="w-20 h-20 bg-red-500 rounded-3xl mx-auto flex items-center justify-center rotate-12">
-            <span className="text-3xl font-black">?</span>
+            <span className="text-3xl font-black">X</span>
           </div>
-          <h1 className="text-2xl font-black uppercase tracking-tighter">Mesa não identificada</h1>
-          <p className="text-slate-400">Por favor, escaneie o QR Code que está na sua mesa para acessar o cardápio.</p>
+          <h1 className="text-2xl font-black uppercase tracking-tighter">Erro de Acesso</h1>
+          <p className="text-slate-400">{tableError || 'Mesa não identificada.'}</p>
         </div>
       </div>
     );
@@ -57,8 +89,9 @@ function AppContent() {
       <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-100 p-4 pt-6 flex justify-between items-center">
         <div>
           <h1 className="text-xl font-black text-slate-900 tracking-tighter uppercase">Delivery Fast</h1>
-          <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">
-            Mesa {tableNumber} • Ativa
+          <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            Mesa {tableNumber} {clientName ? `• ${clientName}` : '• Disponível'}
           </p>
         </div>
       </header>
