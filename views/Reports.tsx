@@ -72,7 +72,13 @@ const Reports: React.FC = () => {
                 const orderDate = o.createdAt.split('T')[0];
                 const inDate = orderDate >= salesStartDate && orderDate <= salesEndDate;
                 const inPayment = salesPayment === 'TODOS' || o.paymentMethod === salesPayment;
-                const inModality = salesModality === 'TODOS' || o.type === salesModality;
+
+                // If checking for purely DIGITAL origins, it ignores the modality because all digital origins become TABLE sales right now.
+                // Otherwise normal modality check
+                const inModality = (salesOrigin === 'DIGITAL')
+                    ? true
+                    : (salesModality === 'TODOS' || o.type === salesModality);
+
                 const inOrigin = salesOrigin === 'TODOS' ? true : (salesOrigin === 'DIGITAL' ? o.isOriginDigitalMenu === true : (o.isOriginDigitalMenu === false || o.isOriginDigitalMenu === undefined));
                 return inDate && inPayment && inModality && inOrigin && o.status === OrderStatus.DELIVERED;
             });

@@ -243,7 +243,10 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       }
     }
 
-    let tableSessionToClose = isTableSale ? pendingTables.find(t => t.tableNumber === finalTableNum) : null;
+    // Busca a sessão da mesa diretamente no banco de garantir que pegamos os dados reais, 
+    // mesmo que ela esteja apenas 'occupied' (e não 'billing' no pendingTables)
+    let freshTableSession = isTableSale ? ((await db.getTableSessions()).find(t => t.tableNumber === finalTableNum)) : null;
+    let tableSessionToClose = isTableSale ? (freshTableSession || pendingTables.find(t => t.tableNumber === finalTableNum)) : null;
 
     let finalClientId = isTableSale ? (tableSessionToClose?.clientId || 'ANONYMOUS') : (isAvulso ? undefined : selectedClient?.id);
     let finalClientName = isTableSale
@@ -367,7 +370,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       paymentMethod: paymentMethod,
       tableNumber: isTableSale ? finalTableNum! : undefined,
       waiterId: isTableSale ? orders.find(o => o.id === existingTableOrderId)?.waiterId : undefined,
-      isOriginDigitalMenu: isTableSale ? (pendingTables.find(t => t.tableNumber === finalTableNum)?.isOriginDigitalMenu || false) : false
+      isOriginDigitalMenu: isTableSale ? (tableSessionToClose?.isOriginDigitalMenu || false) : false
     };
 
     await db.saveOrder(orderData, currentUser);
