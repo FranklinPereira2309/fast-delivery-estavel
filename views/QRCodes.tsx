@@ -16,8 +16,8 @@ const QRCodes: React.FC = () => {
 
     if (!settings) return null;
 
-    // Substitua pelo domínio futuro do cardápio digital
-    const MENU_BASE_URL = 'https://menu.seudominio.com.br';
+    // Base da URL do cardápio digital (via Variável de Ambiente ou Local)
+    const MENU_BASE_URL = import.meta.env.VITE_MENU_URL || 'http://localhost:5173';
 
     const tables = Array.from({ length: settings.tableCount }).map((_, i) => i + 1);
 
