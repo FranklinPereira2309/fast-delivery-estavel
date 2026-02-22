@@ -109,6 +109,7 @@ export const saveTableSession = async (req: Request, res: Response) => {
                     type: 'TABLE',
                     tableNumber: tableNum,
                     waiterId: waiterId,
+                    isOriginDigitalMenu: sessionData.isOriginDigitalMenu || false, // Fix: Propagate origin into standard Order DB
                     createdAt: sessionData.startTime ? new Date(sessionData.startTime) : undefined
                 }
             });

@@ -146,6 +146,7 @@ export const saveOrder = async (req: Request, res: Response) => {
                     driverId: driverId,
                     waiterId: waiterId,
                     total: order.total,
+                    isOriginDigitalMenu: order.isOriginDigitalMenu !== undefined ? order.isOriginDigitalMenu : false, // Fix: Preserve Origin into Update
                     items: {
                         deleteMany: {},
                         create: order.items.map((item: any) => ({
@@ -172,6 +173,7 @@ export const saveOrder = async (req: Request, res: Response) => {
                     driverId: driverId,
                     tableNumber: order.tableNumber,
                     waiterId: waiterId,
+                    isOriginDigitalMenu: order.isOriginDigitalMenu !== undefined ? order.isOriginDigitalMenu : false, // Fix: Preserve Origin into Creation
                     items: {
                         create: order.items.map((item: any) => ({
                             id: item.uid,
