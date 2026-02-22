@@ -26,7 +26,7 @@ const Dashboard: React.FC = () => {
     const today = new Date().toLocaleDateString('pt-BR');
     const todayOrders = orders.filter(o => new Date(o.createdAt).toLocaleDateString('pt-BR') === today);
     const deliveredToday = todayOrders.filter(o => o.status === OrderStatus.DELIVERED);
-    
+
     const revenueToday = deliveredToday.reduce((acc, o) => acc + o.total, 0);
     const avgTicket = deliveredToday.length > 0 ? revenueToday / deliveredToday.length : 0;
 
@@ -134,8 +134,8 @@ const Dashboard: React.FC = () => {
               <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Últimos 7 dias de operação</p>
             </div>
             <div className="text-right">
-               <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Total Semana</p>
-               <p className="text-2xl font-black text-slate-900">R$ {chartData.reduce((acc, d) => acc + d.vendas, 0).toFixed(2)}</p>
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Total Semana</p>
+              <p className="text-2xl font-black text-slate-900">R$ {chartData.reduce((acc, d) => acc + d.vendas, 0).toFixed(2)}</p>
             </div>
           </div>
           <div className="h-80 w-full">
@@ -143,14 +143,14 @@ const Dashboard: React.FC = () => {
               <AreaChart data={chartData}>
                 <defs>
                   <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2}/>
-                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2} />
+                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 10, fontWeight: 700}} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 10, fontWeight: 700}} />
-                <Tooltip 
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 700 }} dy={10} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 700 }} />
+                <Tooltip
                   contentStyle={{ borderRadius: '20px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)', padding: '15px' }}
                   itemStyle={{ fontWeight: 800, fontSize: '12px', textTransform: 'uppercase' }}
                 />
@@ -168,9 +168,9 @@ const Dashboard: React.FC = () => {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 10, fontWeight: 700}} />
-                <Tooltip 
-                  cursor={{fill: '#f8fafc'}}
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 700 }} />
+                <Tooltip
+                  cursor={{ fill: '#f8fafc' }}
                   contentStyle={{ borderRadius: '20px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }}
                 />
                 <Bar dataKey="pedidos" radius={[10, 10, 0, 0]}>
@@ -182,13 +182,12 @@ const Dashboard: React.FC = () => {
             </ResponsiveContainer>
           </div>
           <div className="mt-6 pt-6 border-t border-slate-50">
-             <div className="flex items-center justify-between">
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Performance Semanal</span>
-                <span className="text-xs font-black text-blue-600">Fila: {orders.filter(o => o.status === OrderStatus.PREPARING).length}</span>
-             </div>
-             <div className="w-full h-2 bg-slate-100 rounded-full mt-2 overflow-hidden">
-                <div className="h-full bg-blue-500 rounded-full transition-all duration-500" style={{ width: `${Math.min(100, (stats.ordersToday / 20) * 100)}%` }}></div>
-             </div>
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Performance Semanal</span>
+            </div>
+            <div className="w-full h-2 bg-slate-100 rounded-full mt-2 overflow-hidden">
+              <div className="h-full bg-blue-500 rounded-full transition-all duration-500" style={{ width: `${Math.min(100, (stats.ordersToday / 20) * 100)}%` }}></div>
+            </div>
           </div>
         </div>
       </div>
@@ -216,7 +215,7 @@ const Dashboard: React.FC = () => {
                     <Cell key={`cell-${index}`} fill={COLORS_PAYMENT[index % COLORS_PAYMENT.length]} />
                   ))}
                 </Pie>
-                <Tooltip 
+                <Tooltip
                   contentStyle={{ borderRadius: '15px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
                   formatter={(value: number) => `R$ ${value.toFixed(2)}`}
                 />
@@ -233,26 +232,26 @@ const Dashboard: React.FC = () => {
             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Comparativo Delivery vs Salão/Balcão</p>
           </div>
           <div className="h-64">
-             <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={deliveryData}
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                  >
-                    {deliveryData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip 
-                    contentStyle={{ borderRadius: '15px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                  />
-                </PieChart>
-             </ResponsiveContainer>
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={deliveryData}
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="value"
+                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                >
+                  {deliveryData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  contentStyle={{ borderRadius: '15px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
           </div>
           <div className="mt-4 grid grid-cols-3 gap-2">
             {deliveryData.map((item, i) => (
