@@ -20,8 +20,6 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
   const [clients, setClients] = useState<Client[]>([]);
   const [selectedTable, setSelectedTable] = useState<number | null>(null);
   const [activeModalTab, setActiveModalTab] = useState<'LAUNCH' | 'REMOVE' | 'CHECKOUT' | 'CONSUMPTION'>('LAUNCH');
-  const [isEditingTableCount, setIsEditingTableCount] = useState(false);
-  const [newTableCount, setNewTableCount] = useState(0);
 
   const [lastAddedProduct, setLastAddedProduct] = useState<string | null>(null);
   const [isConfirmingBilling, setIsConfirmingBilling] = useState(false);
@@ -86,7 +84,6 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
     setProducts(prods);
     setWaiters(wa);
     setClients(cl);
-    if (s && newTableCount === 0) setNewTableCount(s.tableCount);
   };
 
   const getTableStatus = (num: number) => {
@@ -340,17 +337,6 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
     showAlert("Sucesso", "Solicitação de fechamento enviada ao PDV!", "SUCCESS");
   };
 
-  const updateTableCount = async () => {
-    if (!settings) return;
-    if (newTableCount < 1) return showAlert("Erro", "Mínimo de 1 mesa.", "DANGER");
-
-    const updatedSettings = { ...settings, tableCount: newTableCount };
-    await db.saveSettings(updatedSettings);
-    setSettings(updatedSettings);
-    setIsEditingTableCount(false);
-    showAlert("Sucesso", `Sistema atualizado para ${newTableCount} mesas.`, "SUCCESS");
-  };
-
   if (!settings) return null;
 
   return (
@@ -368,20 +354,14 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
         </div>
         <div className="flex items-center gap-6">
           <div className="flex gap-4">
-            <div className="flex items-center gap-1.5"><span className="w-2 h-2 bg-emerald-500 rounded-full"></span><span className="text-[10px] font-bold uppercase text-slate-400">Livre</span></div>
+            <div className="flex items-center gap-1.5"><span className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce"></span><span className="text-[10px] font-bold uppercase text-slate-400">Livre</span></div>
             <div className="flex items-center gap-1.5"><span className="w-2 h-2 bg-fuchsia-600 rounded-full animate-bounce"></span><span className="text-[10px] font-bold uppercase text-slate-400">App Digital</span></div>
-            <div className="flex items-center gap-1.5"><span className="w-2 h-2 bg-red-600 rounded-full"></span><span className="text-[10px] font-bold uppercase text-slate-400">Ocupada</span></div>
-            <div className="flex items-center gap-1.5"><span className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></span><span className="text-[10px] font-bold uppercase text-slate-400">Checkout</span></div>
+            <div className="flex items-center gap-1.5"><span className="w-2 h-2 bg-red-600 rounded-full animate-bounce"></span><span className="text-[10px] font-bold uppercase text-slate-400">Ocupada</span></div>
+            <div className="flex items-center gap-1.5"><span className="w-2 h-2 bg-orange-500 rounded-full animate-bounce"></span><span className="text-[10px] font-bold uppercase text-slate-400">Checkout</span></div>
           </div>
-          <button
-            onClick={() => { setNewTableCount(settings.tableCount); setIsEditingTableCount(true); }}
-            className="px-4 py-2 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase hover:bg-slate-800 transition-all flex items-center gap-2"
-          >
-            <Icons.Settings />
-            Quantidade de Mesas
-          </button>
         </div>
       </div>
+
 
       {/* Grid de Mesas */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-6 overflow-y-auto pb-12 transition-all pr-2">
@@ -421,22 +401,6 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
           );
         })}
       </div>
-
-      {/* MODAL CONFIGURAÇÃO QUANTIDADE DE MESAS (REDUZIDO) */}
-      {isEditingTableCount && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in zoom-in duration-200">
-          <div className="bg-white rounded-[2rem] shadow-2xl p-8 w-full max-w-xs border border-white/20">
-            <h3 className="text-xs font-black text-slate-800 uppercase mb-6 text-center tracking-widest">Ajustar Quantidade</h3>
-            <div className="space-y-6">
-              <input type="number" value={newTableCount} onChange={(e) => setNewTableCount(parseInt(e.target.value) || 0)} className="w-full p-4 bg-slate-100 rounded-2xl border-none focus:ring-2 focus:ring-blue-600 font-bold text-2xl text-center outline-none" />
-              <div className="flex gap-2">
-                <button onClick={() => setIsEditingTableCount(false)} className="flex-1 py-3 font-black text-[9px] uppercase text-slate-400">Sair</button>
-                <button onClick={updateTableCount} className="flex-1 py-3 bg-blue-600 text-white rounded-xl font-black text-[9px] uppercase shadow-lg">Salvar</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* MODAL GESTÃO DE MESA SELECIONADA */}
       {selectedTable !== null && (
