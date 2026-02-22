@@ -149,16 +149,18 @@ model OrderItem {
 }
 
 model TableSession {
-  tableNumber   Int           @id
-  status        SessionStatus @default(available)
-  items         OrderItem[]
-  clientName    String?
-  clientId      String?
-  waiterId      String?
-  waiter        Waiter?       @relation(fields: [waiterId], references: [id])
-  startTime     DateTime      @default(now())
-  clientAddress String?
-  clientPhone   String?
+  tableNumber        Int           @id
+  status             SessionStatus @default(available)
+  items              OrderItem[]
+  clientName         String?
+  clientId           String?
+  waiterId           String?
+  waiter             Waiter?       @relation(fields: [waiterId], references: [id])
+  startTime          DateTime      @default(now())
+  clientAddress      String?
+  clientPhone        String?
+  hasPendingDigital  Boolean       @default(false)
+  pendingReviewItems String?       // To store stringified array of requested digital items before approval
 }
 
 model DeliveryDriver {

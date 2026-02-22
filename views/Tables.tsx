@@ -88,6 +88,7 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
   const getTableStatus = (num: number) => {
     const sess = sessions.find(s => s.tableNumber === num);
     if (!sess) return 'available';
+    if (sess.hasPendingDigital) return 'pending_digital';
     return sess.status;
   };
 
@@ -182,6 +183,56 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
       setAlertConfig(prev => ({ ...prev, isOpen: false }));
       await refreshData();
     }, () => setAlertConfig(prev => ({ ...prev, isOpen: false })));
+  };
+
+  const approveDigitalOrders = async (tableNum: number) => {
+    const sess = getSessForTable(tableNum);
+    if (!sess || !sess.hasPendingDigital) return;
+
+    if (!selectedWaiterId) {
+      return showAlert("Garçom Requerido", "Para oficializar estes itens, selecione qual garçom assumirá o atendimento dessa mesa.", "DANGER");
+    }
+
+    try {
+      const pendingItems = JSON.parse(sess.pendingReviewItems || '[]');
+
+      // Stock Validation
+      const validation = await db.validateStockForOrder(pendingItems);
+      if (!validation.valid) {
+        return showAlert("Sem Estoque", `Estoque insuficiente para os itens digitais: ${validation.message}`, "DANGER");
+      }
+
+      const resolvedItems: OrderItem[] = pendingItems.map((pi: any) => {
+        const product = products.find(p => p.id === pi.productId);
+        return {
+          uid: `item-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+          productId: pi.productId,
+          quantity: pi.quantity,
+          price: product?.price || 0,
+          isReady: false
+        };
+      });
+
+      const newItems = [...sess.items, ...resolvedItems];
+
+      await db.saveTableSession({
+        ...sess,
+        items: newItems,
+        waiterId: selectedWaiterId,
+        status: 'occupied',
+        hasPendingDigital: false,
+        pendingReviewItems: undefined
+      });
+
+      const waiter = waiters.find(w => w.id === selectedWaiterId);
+      await db.logAction(currentUser, 'TABLE_DIGITAL_APPROVE', `Mesa ${tableNum}: Pedido digital aprovado por ${waiter?.name}.`);
+
+      showAlert("Aprovado!", "Itens do Cardápio Digital foram confirmados e enviados para a Cozinha.", "SUCCESS");
+      await refreshData();
+    } catch (err) {
+      console.error("Erro ao aprovar digitais", err);
+      showAlert("Erro", "Falha ao processar a aprovação.", "DANGER");
+    }
   };
 
   // Lógica de agrupamento para exibição em cupons de mesa
@@ -302,6 +353,7 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
         <div className="flex items-center gap-6">
           <div className="flex gap-4">
             <div className="flex items-center gap-1.5"><span className="w-2 h-2 bg-emerald-500 rounded-full"></span><span className="text-[10px] font-bold uppercase text-slate-400">Livre</span></div>
+            <div className="flex items-center gap-1.5"><span className="w-2 h-2 bg-fuchsia-600 rounded-full animate-bounce"></span><span className="text-[10px] font-bold uppercase text-slate-400">App Digital</span></div>
             <div className="flex items-center gap-1.5"><span className="w-2 h-2 bg-red-600 rounded-full"></span><span className="text-[10px] font-bold uppercase text-slate-400">Ocupada</span></div>
             <div className="flex items-center gap-1.5"><span className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></span><span className="text-[10px] font-bold uppercase text-slate-400">Checkout</span></div>
           </div>
@@ -338,7 +390,8 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
             }}
               className={`relative h-44 rounded-[2.5rem] border-4 transition-all duration-300 flex flex-col items-center justify-center gap-2 shadow-sm ${status === 'available' ? 'bg-white border-emerald-50 text-emerald-600 hover:border-emerald-300' :
                 status === 'occupied' ? 'bg-red-600 border-red-700 text-white hover:bg-red-700' :
-                  'bg-orange-500 border-orange-600 text-white hover:bg-orange-600 animate-moderate-blink'
+                  status === 'pending_digital' ? 'bg-fuchsia-600 border-fuchsia-700 text-white hover:bg-fuchsia-700 shadow-[0_0_15px_rgba(192,38,211,0.5)] animate-pulse' :
+                    'bg-orange-500 border-orange-600 text-white hover:bg-orange-600 animate-moderate-blink'
                 }`}
             >
               <span className="text-2xl font-black shrink-0">Mesa {tableNum}</span>
@@ -375,7 +428,7 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
           <div className="bg-white rounded-[3rem] shadow-2xl w-full max-w-5xl h-[85vh] flex flex-col overflow-hidden animate-in zoom-in duration-200 border border-white/20">
             <div className="p-8 border-b bg-slate-50 flex justify-between items-center">
               <div className="flex items-center gap-6">
-                <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-white text-3xl font-black shadow-xl ${getTableStatus(selectedTable) === 'available' ? 'bg-emerald-500' : 'bg-red-600'}`}>{selectedTable}</div>
+                <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-white text-3xl font-black shadow-xl ${getTableStatus(selectedTable) === 'available' ? 'bg-emerald-500' : getTableStatus(selectedTable) === 'pending_digital' ? 'bg-fuchsia-600 animate-pulse' : 'bg-red-600'}`}>{selectedTable}</div>
                 <div>
                   <h3 className="text-2xl font-black text-slate-800 uppercase tracking-tighter">Painel da Mesa {selectedTable}</h3>
                   <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">{getSessForTable(selectedTable)?.startTime ? `Aberta às ${new Date(getSessForTable(selectedTable)!.startTime).toLocaleTimeString()}` : 'Aguardando Atendimento'}</p>
@@ -402,6 +455,29 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
                           <h4 className="text-lg font-black text-red-700 uppercase mb-2">Mesa Bloqueada</h4>
                           <p className="text-[11px] font-bold text-red-600 uppercase">Esta mesa encontra-se em pré-fechamento. Para lançar novos itens, você deve Reabri-la pela área do PDV.</p>
                         </div>
+                      </div>
+                    )}
+                    {getSessForTable(selectedTable)?.hasPendingDigital && (
+                      <div className="bg-fuchsia-50 border-2 border-fuchsia-200 rounded-3xl p-6 shadow-sm overflow-hidden mb-8">
+                        <div className="flex items-center gap-4 mb-4">
+                          <div className="bg-fuchsia-600 text-white p-3 rounded-2xl shadow-lg"><Icons.Dashboard /></div>
+                          <div>
+                            <h4 className="text-lg font-black text-fuchsia-800 uppercase tracking-tighter">Pedidos do Cardápio Digital</h4>
+                            <p className="text-[10px] font-bold text-fuchsia-600/80 uppercase">Confira os itens e selecione o Garçom abaixo para Aprovar</p>
+                          </div>
+                        </div>
+                        <div className="bg-white rounded-2xl p-4 space-y-2 mb-4">
+                          {JSON.parse(getSessForTable(selectedTable)?.pendingReviewItems || '[]').map((it: any, i: number) => {
+                            const prod = products.find(p => p.id === it.productId);
+                            return (
+                              <div key={i} className="flex flex-col bg-slate-50 p-3 rounded-xl border border-slate-100">
+                                <p className="font-black text-slate-800 text-sm">{it.quantity}x <span className="uppercase">{prod?.name || 'Item Desconhecido'}</span></p>
+                                {it.observations && <span className="text-[10px] text-orange-500 font-bold bg-orange-50 px-2 py-1 rounded-lg mt-1 w-fit">Obs: {it.observations}</span>}
+                              </div>
+                            );
+                          })}
+                        </div>
+                        <button onClick={() => approveDigitalOrders(selectedTable!)} className="w-full bg-fuchsia-600 hover:bg-fuchsia-700 text-white font-black py-4 rounded-xl transition-all shadow-lg text-sm uppercase flex items-center justify-center gap-2 relative z-10">Aprovar e Lançar Ordem ✓</button>
                       </div>
                     )}
                     <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Garçom:</label><select disabled={getTableStatus(selectedTable) === 'billing'} value={selectedWaiterId} onChange={(e) => setSelectedWaiterId(e.target.value)} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-blue-100 transition-all outline-none disabled:opacity-50"><option value="">Selecione...</option>{waiters.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}</select></div>

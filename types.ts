@@ -98,6 +98,8 @@ export interface TableSession {
   startTime: string;
   clientAddress?: string; // Novo: Endereço para cupom de mesa
   clientPhone?: string;   // Novo: Telefone para cupom de mesa
+  hasPendingDigital?: boolean;
+  pendingReviewItems?: string;
 }
 
 export interface Order {

@@ -65,70 +65,40 @@ export const createOrder = async (req: Request, res: Response) => {
     }
 
     try {
-        // 1. Transação para criar todas as relações de uma vez
-        const orderData = await prisma.$transaction(async (tx) => {
-            // 1.1 Garantir (Oupsert) que exista uma sessão de mesa 'occupied'
-            const session = await tx.tableSession.upsert({
+        const updatedSession = await prisma.$transaction(async (tx) => {
+            const session = await tx.tableSession.findUnique({ where: { tableNumber } });
+
+            // Validate products exist
+            for (const item of items) {
+                const product = await tx.product.findUnique({ where: { id: item.productId } });
+                if (!product) throw new Error(`Product ${item.productId} not found`);
+            }
+
+            const existingPending = session?.pendingReviewItems ? JSON.parse(session.pendingReviewItems) : [];
+
+            // Append new items, carrying over any observations
+            const newItems = items.map((it: any) => ({
+                productId: it.productId,
+                quantity: it.quantity,
+                observations: observations || ''
+            }));
+
+            const newPending = [...existingPending, ...newItems];
+
+            return await tx.tableSession.upsert({
                 where: { tableNumber },
                 create: {
                     tableNumber,
                     status: 'occupied',
-                    clientName: 'Cardápio Digital', // Nome genérico para identificar a origem
+                    clientName: 'Mesa Digital',
+                    hasPendingDigital: true,
+                    pendingReviewItems: JSON.stringify(newPending)
                 },
                 update: {
-                    status: 'occupied'
+                    hasPendingDigital: true,
+                    pendingReviewItems: JSON.stringify(newPending)
                 }
             });
-
-            // 1.2 Converter a lista enviada pelos Ids para buscar preços
-            const orderItemsToCreate = [];
-            let totalAmount = 0;
-
-            for (const item of items) {
-                const product = await tx.product.findUnique({ where: { id: item.productId } });
-                if (!product) throw new Error(`Product ${item.productId} not found`);
-
-                const price = product.price;
-                totalAmount += price * item.quantity;
-
-                // O Prisma OrderItem nativo precisa de um item para CADA quantidade no backend atual ou podemos somar na TableSession
-                // No esquema atual do ERP PDV, a TableSession guarda múltiplos itens.
-                // O `OrderItem` possui o campo `quantity`, então vamos registrar agrupado na Order.
-
-                orderItemsToCreate.push({
-                    productId: product.id,
-                    quantity: item.quantity,
-                    price: price,
-                    tableSessionId: session.tableNumber
-                });
-            }
-
-            // 1.3 Criar a Order vinculada à mesa
-            const newOrder = await tx.order.create({
-                data: {
-                    clientId: 'ANONYMOUS', // O banco atual requer clientId. Precisamos garantir que esse client exista no PDV, ou adaptar para não requerer. 
-                    // Como clientId e clientName são required no schema do Order, vamos mockar por enquanto
-                    // O PDV tem um `ensure-anonymous.ts` script. Precisamos ter certeza que o client 'ANONYMOUS' existe.
-                    clientName: session.clientName || 'Mesa Digital',
-                    tableNumber: tableNumber,
-                    type: 'TABLE',
-                    status: 'PREPARING',
-                    total: totalAmount,
-                    items: {
-                        create: orderItemsToCreate.map(reqItem => ({
-                            productId: reqItem.productId,
-                            quantity: reqItem.quantity,
-                            price: reqItem.price,
-                            tableSessionId: reqItem.tableSessionId
-                        }))
-                    }
-                },
-                include: {
-                    items: true
-                }
-            });
-
-            return newOrder;
         });
 
         // Dispara evento de websocket para o sistema PDV atualizar as telas em tempo real
@@ -141,7 +111,7 @@ export const createOrder = async (req: Request, res: Response) => {
             console.error('Socket.io error emitting newOrder:', e);
         }
 
-        res.status(201).json({ message: 'Order created successfully', order: orderData });
+        res.status(201).json({ message: 'Order sent to approval queue', session: updatedSession });
 
     } catch (error: any) {
         console.error('Error creating digital menu order:', error);
