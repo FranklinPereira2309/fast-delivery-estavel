@@ -114,7 +114,8 @@ export const saveTableSession = async (req: Request, res: Response) => {
                     status: calculatedStatus,
                     total: total,
                     clientId: clientId,
-                    waiterId: waiterId
+                    waiterId: waiterId,
+                    createdAt: sessionData.startTime ? new Date(sessionData.startTime) : undefined
                 },
                 create: {
                     id: orderId,
@@ -124,7 +125,8 @@ export const saveTableSession = async (req: Request, res: Response) => {
                     status: calculatedStatus,
                     type: 'TABLE',
                     tableNumber: tableNum,
-                    waiterId: waiterId
+                    waiterId: waiterId,
+                    createdAt: sessionData.startTime ? new Date(sessionData.startTime) : undefined
                 }
             });
 
