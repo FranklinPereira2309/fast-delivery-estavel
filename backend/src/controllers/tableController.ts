@@ -45,26 +45,9 @@ export const saveTableSession = async (req: Request, res: Response) => {
                 !previousItems.some((oldItem: any) => oldItem.id === newItem.uid)
             );
 
-            // 3. Deduct Stock for new items
-            for (const item of itemsToDeduct) {
-                const product = await tx.product.findUnique({
-                    where: { id: item.productId },
-                    include: { recipe: true }
-                });
-
-                if (product?.recipe) {
-                    for (const r of product.recipe) {
-                        await tx.inventoryItem.update({
-                            where: { id: r.inventoryItemId },
-                            data: {
-                                quantity: {
-                                    decrement: r.quantity * item.quantity * r.wasteFactor
-                                }
-                            }
-                        });
-                    }
-                }
-            }
+            // 3. (REMOVIDO: Deduct Stock for new items)
+            // A baixa de estoque nas mesas causava dupla-dedução ao fechar o pedido depois no PDV.
+            // A baixa ocorrerá APENAS via orderController.ts -> handleInventoryImpact no momento DELIVERED.
 
             // 4. Clean up items to avoid primary key conflicts before re-inserting
             // We delete all items associated with this table or its corresponding order
