@@ -126,6 +126,7 @@ function AppContent() {
         tableNumber={tableNumber || '0'}
         updateQuantity={updateQuantity}
         clearCart={clearCart}
+        initialClientName={clientName || undefined}
       />
     </div>
   );

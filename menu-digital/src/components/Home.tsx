@@ -12,6 +12,7 @@ const Home: React.FC<HomeProps> = ({ cart, addToCart, updateQuantity }) => {
     const [products, setProducts] = useState<Product[]>([]);
     const [categories, setCategories] = useState<string[]>(MOCK_CATEGORIES);
     const [activeCategory, setActiveCategory] = useState(MOCK_CATEGORIES[0]);
+    const [searchTerm, setSearchTerm] = useState('');
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
@@ -31,8 +32,12 @@ const Home: React.FC<HomeProps> = ({ cart, addToCart, updateQuantity }) => {
         loadProducts();
     }, []);
 
-    // Filtra produtos pela categoria ativa
-    const filteredProducts = products.filter(p => p.category === activeCategory);
+    // Filtra produtos pela categoria ativa E pelo termo de busca
+    const filteredProducts = products.filter(p => {
+        const matchesCategory = searchTerm ? true : p.category === activeCategory; // Se buscar, ignora categoria ou apenas filtra geral
+        const matchesSearch = searchTerm ? p.name.toLowerCase().includes(searchTerm.toLowerCase()) : true;
+        return matchesCategory && matchesSearch;
+    });
 
     if (isLoading) {
         return (
@@ -45,11 +50,17 @@ const Home: React.FC<HomeProps> = ({ cart, addToCart, updateQuantity }) => {
     return (
         <div className="pb-32 px-4 space-y-8 pt-4 animate-fade-in">
             {/* Search Bar Falsa / Destaque */}
-            <div className="bg-white p-4 rounded-3xl shadow-sm border border-slate-100 flex items-center gap-3">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="bg-white p-2 rounded-3xl shadow-sm border border-slate-100 flex items-center gap-3 focus-within:ring-2 focus-within:ring-blue-500 transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-slate-300 ml-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
-                <div className="text-xs font-black uppercase tracking-widest text-slate-400">O que você deseja pedir?</div>
+                <input
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="O que você deseja pedir?"
+                    className="w-full bg-transparent border-none text-sm font-black text-slate-700 placeholder-slate-400 focus:outline-none py-2"
+                />
             </div>
 
             {/* Categorias */}
@@ -73,9 +84,11 @@ const Home: React.FC<HomeProps> = ({ cart, addToCart, updateQuantity }) => {
 
             {/* Lista de Produtos */}
             <div className="space-y-4">
-                <h2 className="text-sm font-black text-slate-900 uppercase tracking-tighter mb-4">{activeCategory}</h2>
+                <h2 className="text-sm font-black text-slate-900 uppercase tracking-tighter mb-4">
+                    {searchTerm ? `Resultados para "${searchTerm}"` : activeCategory}
+                </h2>
                 {filteredProducts.length === 0 ? (
-                    <p className="text-center text-slate-400 font-bold py-8">Nenhum produto nesta categoria.</p>
+                    <p className="text-center text-slate-400 font-bold py-8">Nenhum produto encontrado.</p>
                 ) : (
                     filteredProducts.map(product => {
                         const cartItem = cart.find(i => i.id === product.id);

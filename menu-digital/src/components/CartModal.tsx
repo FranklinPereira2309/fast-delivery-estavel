@@ -9,9 +9,10 @@ interface CartModalProps {
     tableNumber: string;
     updateQuantity: (id: string, qty: number) => void;
     clearCart: () => void;
+    initialClientName?: string;
 }
 
-const CartModal: React.FC<CartModalProps> = ({ isOpen, onClose, cart, tableNumber, updateQuantity, clearCart }) => {
+const CartModal: React.FC<CartModalProps> = ({ isOpen, onClose, cart, tableNumber, updateQuantity, clearCart, initialClientName }) => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [observations, setObservations] = useState('');
     const [clientName, setClientName] = useState('');
@@ -30,7 +31,7 @@ const CartModal: React.FC<CartModalProps> = ({ isOpen, onClose, cart, tableNumbe
                     tableNumber: parseInt(tableNumber),
                     items: cart.map(i => ({ productId: i.id, quantity: i.quantity })),
                     observations,
-                    clientName: clientName || undefined,
+                    clientName: initialClientName || clientName || undefined,
                     clientLat: lat,
                     clientLng: lng
                 });
@@ -118,16 +119,18 @@ const CartModal: React.FC<CartModalProps> = ({ isOpen, onClose, cart, tableNumbe
 
                     {cart.length > 0 && (
                         <div className="mt-4 space-y-4">
-                            <div>
-                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2 px-2">Identificação (Opcional)</label>
-                                <input
-                                    type="text"
-                                    value={clientName}
-                                    onChange={(e) => setClientName(e.target.value)}
-                                    placeholder="Qual o seu nome?"
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-sm font-bold text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-blue-50"
-                                />
-                            </div>
+                            {!initialClientName && (
+                                <div>
+                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2 px-2">Identificação (Opcional)</label>
+                                    <input
+                                        type="text"
+                                        value={clientName}
+                                        onChange={(e) => setClientName(e.target.value)}
+                                        placeholder="Qual o seu nome?"
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-sm font-bold text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-blue-50"
+                                    />
+                                </div>
+                            )}
                             <div>
                                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2 px-2">Observações (Opcional)</label>
                                 <textarea
