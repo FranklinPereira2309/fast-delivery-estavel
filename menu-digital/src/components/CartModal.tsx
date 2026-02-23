@@ -37,6 +37,9 @@ const CartModal: React.FC<CartModalProps> = ({ isOpen, onClose, cart, tableNumbe
                     clientLng: lng
                 });
                 setSuccess(true);
+                if (onOrderSuccess) {
+                    onOrderSuccess();
+                }
                 setTimeout(() => {
                     setSuccess(false);
                     clearCart();
