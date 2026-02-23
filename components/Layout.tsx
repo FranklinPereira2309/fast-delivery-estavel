@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Icons } from '../constants';
 import { db } from '../services/db';
 import { User, Order, OrderStatus, TableSession, SaleType } from '../types';
+import { useDigitalAlert } from '../hooks/useDigitalAlert';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -17,7 +18,9 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
   const [shouldBlinkPOS, setShouldBlinkPOS] = useState(false);
   const [shouldBlinkLogistics, setShouldBlinkLogistics] = useState(false);
   const [shouldBlinkKitchen, setShouldBlinkKitchen] = useState(false);
+  const [shouldBlinkTables, setShouldBlinkTables] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
+  const { isAlerting } = useDigitalAlert();
   const lastOrdersMap = useRef<Record<string, { status: OrderStatus, itemCount: number }>>({});
   const isFirstRun = useRef(true);
 
@@ -93,6 +96,10 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
       // 3. Checagem de Logística (Pedidos prontos para entrega)
       const hasReadyDelivery = orders.some(o => o.status === OrderStatus.READY && o.type === SaleType.OWN_DELIVERY);
       setShouldBlinkLogistics(hasReadyDelivery && activeTab !== 'logistics');
+
+      // 4. Checagem de Mesas (Pedidos digitais pendentes)
+      const hasPendingDigital = tableSessions.some(s => s.hasPendingDigital);
+      setShouldBlinkTables(hasPendingDigital && activeTab !== 'tables');
     };
 
     const interval = setInterval(monitorSystem, 3000);
@@ -137,12 +144,14 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
             const isPOS = item.id === 'pos';
             const isLogistics = item.id === 'logistics';
             const isKitchen = item.id === 'kitchen';
+            const isTables = item.id === 'tables';
 
             let blinkClass = '';
             if (isMonitor && shouldBlinkMonitor) blinkClass = 'animate-notify-turquoise border-none';
             if (isPOS && shouldBlinkPOS) blinkClass = 'animate-notify-turquoise border-none';
             if (isLogistics && shouldBlinkLogistics) blinkClass = 'animate-notify-turquoise border-none';
             if (isKitchen && shouldBlinkKitchen) blinkClass = 'animate-notify-turquoise border-none';
+            if (isTables && (isAlerting || shouldBlinkTables)) blinkClass = 'animate-notify-fuchsia border-none ring-4 ring-fuchsia-500/50';
 
             return (
               <button
