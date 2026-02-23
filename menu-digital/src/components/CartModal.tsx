@@ -10,9 +10,10 @@ interface CartModalProps {
     updateQuantity: (id: string, qty: number) => void;
     clearCart: () => void;
     initialClientName?: string;
+    onOrderSuccess?: () => void;
 }
 
-const CartModal: React.FC<CartModalProps> = ({ isOpen, onClose, cart, tableNumber, updateQuantity, clearCart, initialClientName }) => {
+const CartModal: React.FC<CartModalProps> = ({ isOpen, onClose, cart, tableNumber, updateQuantity, clearCart, initialClientName, onOrderSuccess }) => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [observations, setObservations] = useState('');
     const [clientName, setClientName] = useState('');

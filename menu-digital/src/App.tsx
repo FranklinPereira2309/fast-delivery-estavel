@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { BrowserRouter, Routes, Route, useSearchParams } from 'react-router-dom';
 import Home from './components/Home';
 import CartModal from './components/CartModal';
@@ -17,28 +17,29 @@ function AppContent() {
   const [tableError, setTableError] = useState<string | null>(null);
   const [clientName, setClientName] = useState<string | null>(null);
 
-  // Atualizar mesa e verificar
-  useEffect(() => {
-    const validateTable = async () => {
-      if (!tableParam) {
-        setTableError('Mesa não informada');
-        setIsValidating(false);
-        return;
-      }
+  // Extracted logic to allow re-fetching the table data manually
+  const fetchTableData = useCallback(async () => {
+    if (!tableParam) {
+      setTableError('Mesa não informada');
+      setIsValidating(false);
+      return;
+    }
 
-      try {
-        const data = await verifyTable(tableParam);
-        setTableNumber(tableParam);
-        setClientName(data.clientName);
-        setIsValidating(false);
-      } catch (err: any) {
-        setTableError(err.message || 'Erro ao validar a mesa.');
-        setIsValidating(false);
-      }
-    };
-
-    validateTable();
+    try {
+      const data = await verifyTable(tableParam);
+      setTableNumber(tableParam);
+      setClientName(data.clientName);
+      setIsValidating(false);
+    } catch (err: any) {
+      setTableError(err.message || 'Erro ao validar a mesa.');
+      setIsValidating(false);
+    }
   }, [tableParam]);
+
+  // Atualizar mesa e verificar no início
+  useEffect(() => {
+    fetchTableData();
+  }, [fetchTableData]);
 
   const addToCart = (item: CartItem) => {
     setCart(prev => {
@@ -127,6 +128,7 @@ function AppContent() {
         updateQuantity={updateQuantity}
         clearCart={clearCart}
         initialClientName={clientName || undefined}
+        onOrderSuccess={fetchTableData}
       />
     </div>
   );
