@@ -234,6 +234,22 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
         pendingReviewItems: undefined
       });
 
+      // Geração de ORDEM para a COZINHA SOMENTE com os novos itens aprovados
+      const kitchenOrder: Order = {
+        id: `TABLE-${tableNum}-DIGITAL-${Date.now()}`, // ID Unico para não sobrescrever pedidos antigos da mesa
+        clientId: 'ANONYMOUS',
+        clientName: `Mesa ${tableNum} (App Digital)`,
+        items: resolvedItems,
+        total: resolvedItems.reduce((acc, it) => acc + (it.price * it.quantity), 0),
+        status: OrderStatus.PREPARING,
+        type: SaleType.TABLE,
+        createdAt: new Date().toISOString(),
+        tableNumber: tableNum,
+        waiterId: selectedWaiterId
+      };
+
+      await db.saveOrder(kitchenOrder, currentUser);
+
       const waiter = waiters.find(w => w.id === selectedWaiterId);
       await db.logAction(currentUser, 'TABLE_DIGITAL_APPROVE', `Mesa ${tableNum}: Pedido digital aprovado por ${waiter?.name}.`);
 

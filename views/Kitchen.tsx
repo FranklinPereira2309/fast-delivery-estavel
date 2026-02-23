@@ -100,7 +100,16 @@ const Kitchen: React.FC = () => {
     if (order.type === SaleType.TABLE && order.tableNumber) {
       const sess = (await db.getTableSessions()).find(s => s.tableNumber === order.tableNumber);
       if (sess) {
-        await db.saveTableSession({ ...sess, items: updatedItems });
+        // As sessões de mesa agora podem possuir os itens de múltiplos pedidos da cozinha (lançamento manual + app digital individual)
+        // Precisamos localizar no sess.items baseados nos uids que foram marcados como prontos no order atual
+        const newSessItems = sess.items.map(sessIt => {
+          if (itemsToMark.includes(sessIt.uid)) {
+            return { ...sessIt, isReady: true, readyAt: new Date().toISOString() };
+          }
+          return sessIt;
+        });
+
+        await db.saveTableSession({ ...sess, items: newSessItems });
       }
     }
 
