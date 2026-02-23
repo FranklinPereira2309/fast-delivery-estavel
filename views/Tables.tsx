@@ -245,6 +245,37 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
     }
   };
 
+  const rejectDigitalOrders = async (tableNum: number) => {
+    const sess = getSessForTable(tableNum);
+    if (!sess || !sess.hasPendingDigital) return;
+
+    showAlert("Rejeitar Pedido", "Deseja realmente excluir este pedido do cardápio digital?", "DANGER", async () => {
+      try {
+        if (sess.items.length === 0) {
+          // Se não há outros itens, exclui a sessão da mesa e ela volta a ficar livre
+          await db.deleteTableSession(tableNum);
+        } else {
+          // Se já haviam outros itens na mesa, apenas remove o status de digital pendente
+          await db.saveTableSession({
+            ...sess,
+            hasPendingDigital: false,
+            pendingReviewItems: null as any
+          });
+        }
+
+        await db.logAction(currentUser, 'TABLE_DIGITAL_REJECT', `Mesa ${tableNum}: Pedido digital rejeitado/excluído.`);
+
+        setAlertConfig(prev => ({ ...prev, isOpen: false }));
+        showAlert("Rejeitado", "O pedido digital foi excluído com sucesso.", "SUCCESS");
+        await refreshData();
+      } catch (err) {
+        console.error("Erro ao rejeitar digitais", err);
+        setAlertConfig(prev => ({ ...prev, isOpen: false }));
+        showAlert("Erro", "Falha ao processar a rejeição.", "DANGER");
+      }
+    }, () => setAlertConfig(prev => ({ ...prev, isOpen: false })));
+  };
+
   // Lógica de agrupamento para exibição em cupons de mesa
   const getGroupedItems = (items: OrderItem[]) => {
     const grouped: Record<string, { product: Product | undefined, quantity: number, price: number, allReady: boolean }> = {};
@@ -457,7 +488,10 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
                             );
                           })}
                         </div>
-                        <button onClick={() => approveDigitalOrders(selectedTable!)} className="w-full bg-fuchsia-600 hover:bg-fuchsia-700 text-white font-black py-4 rounded-xl transition-all shadow-lg text-sm uppercase flex items-center justify-center gap-2 relative z-10">Aprovar e Lançar Ordem ✓</button>
+                        <div className="flex flex-col gap-3 relative z-10 mt-2">
+                          <button onClick={() => approveDigitalOrders(selectedTable!)} className="w-full bg-fuchsia-600 hover:bg-fuchsia-700 text-white font-black py-4 rounded-xl transition-all shadow-lg text-sm uppercase flex items-center justify-center gap-2">Aprovar e Lançar Ordem ✓</button>
+                          <button onClick={() => rejectDigitalOrders(selectedTable!)} className="w-full bg-red-50 hover:bg-red-500 text-red-600 hover:text-white border border-red-200 hover:border-red-500 font-black py-3 rounded-xl transition-all shadow-sm text-xs uppercase flex items-center justify-center gap-2">Excluir Pedido Incorreto ✗</button>
+                        </div>
                       </div>
                     )}
                     <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm mb-6">
