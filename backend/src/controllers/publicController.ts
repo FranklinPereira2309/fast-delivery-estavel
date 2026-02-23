@@ -132,6 +132,8 @@ export const createOrder = async (req: Request, res: Response) => {
                     isOriginDigitalMenu: true
                 },
                 update: {
+                    status: 'occupied',
+                    ...(clientName ? { clientName } : {}),
                     hasPendingDigital: true,
                     pendingReviewItems: JSON.stringify(newPending),
                     isOriginDigitalMenu: true
