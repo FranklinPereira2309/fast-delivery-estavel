@@ -4,6 +4,7 @@ import { Icons } from '../constants';
 import { db } from '../services/db';
 import { User, Order, OrderStatus, TableSession, SaleType } from '../types';
 import { useDigitalAlert } from '../hooks/useDigitalAlert';
+import { audioAlert } from '../services/audioAlert';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -19,10 +20,12 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
   const [shouldBlinkLogistics, setShouldBlinkLogistics] = useState(false);
   const [shouldBlinkKitchen, setShouldBlinkKitchen] = useState(false);
   const [shouldBlinkTables, setShouldBlinkTables] = useState(false);
+  const [shouldBlinkDriver, setShouldBlinkDriver] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
   const { isAlerting } = useDigitalAlert();
   const lastOrdersMap = useRef<Record<string, { status: OrderStatus, itemCount: number }>>({});
   const isFirstRun = useRef(true);
+  const prevAlertStates = useRef({ kitchen: false, tables: false, driver: false });
 
   const allNavItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Icons.Dashboard },
@@ -94,10 +97,22 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
       // 3. Checagem de Logística (Pedidos prontos para entrega)
       const hasReadyDelivery = orders.some(o => o.status === OrderStatus.READY && o.type === SaleType.OWN_DELIVERY);
       setShouldBlinkLogistics(hasReadyDelivery && activeTab !== 'logistics');
+      setShouldBlinkDriver(hasReadyDelivery && activeTab !== 'driver');
 
       // 4. Checagem de Mesas (Pedidos digitais pendentes)
       const hasPendingDigital = tableSessions.some(s => s.hasPendingDigital);
       setShouldBlinkTables(hasPendingDigital && activeTab !== 'tables');
+
+      // 5. Tocar Alertas Sonoros apenas em transições (false -> true)
+      const alertState = prevAlertStates.current;
+      if (!isFirstRun.current) {
+        if (hasNewOrder && !alertState.kitchen && activeTab !== 'kitchen') audioAlert.play();
+        if (hasPendingDigital && !alertState.tables && activeTab !== 'tables') audioAlert.play();
+        if (hasReadyDelivery && !alertState.driver && activeTab !== 'driver' && activeTab !== 'logistics') audioAlert.play();
+      }
+      alertState.kitchen = hasNewOrder;
+      alertState.tables = hasPendingDigital;
+      alertState.driver = hasReadyDelivery;
     };
 
     const interval = setInterval(monitorSystem, 3000);
@@ -107,6 +122,9 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
   useEffect(() => {
     if (activeTab === 'kitchen') setShouldBlinkKitchen(false);
     if (activeTab === 'sales-monitor') setShouldBlinkMonitor(false);
+    if (activeTab === 'driver') setShouldBlinkDriver(false);
+    if (activeTab === 'logistics') setShouldBlinkLogistics(false);
+    if (activeTab === 'tables') setShouldBlinkTables(false);
   }, [activeTab]);
 
   const navItems = allNavItems.filter(item => currentUser.permissions.includes(item.id));
@@ -148,11 +166,13 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
             const isLogistics = item.id === 'logistics';
             const isKitchen = item.id === 'kitchen';
             const isTables = item.id === 'tables';
+            const isDriver = item.id === 'driver';
 
             let blinkClass = '';
             if (isMonitor && shouldBlinkMonitor) blinkClass = 'animate-notify-turquoise border-none';
             if (isPOS && shouldBlinkPOS) blinkClass = 'animate-notify-turquoise border-none';
             if (isLogistics && shouldBlinkLogistics) blinkClass = 'animate-notify-turquoise border-none';
+            if (isDriver && shouldBlinkDriver) blinkClass = 'animate-notify-turquoise border-none';
             if (isKitchen && shouldBlinkKitchen) blinkClass = 'animate-notify-turquoise border-none';
             if (isTables && (isAlerting || shouldBlinkTables)) blinkClass = 'animate-notify-turquoise border-none';
 
