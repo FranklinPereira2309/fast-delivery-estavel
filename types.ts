@@ -87,6 +87,7 @@ export interface OrderItem {
   isReady?: boolean;
   readyAt?: string;
   observations?: string;
+  tableSessionId?: number;
 }
 
 export interface TableSession {

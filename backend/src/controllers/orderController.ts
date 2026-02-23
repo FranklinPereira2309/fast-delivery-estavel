@@ -9,7 +9,8 @@ const mapOrderResponse = (order: any) => {
         items: (order.items || []).map((item: any) => ({
             ...item,
             uid: item.id, // Ensure frontend gets 'uid'
-            observations: item.observations || null
+            observations: item.observations || null,
+            tableSessionId: item.tableSessionId || null
         }))
     };
 };
@@ -167,7 +168,8 @@ export const saveOrder = async (req: Request, res: Response) => {
                             price: item.price,
                             isReady: item.isReady || false,
                             readyAt: item.readyAt ? new Date(item.readyAt) : null,
-                            observations: item.observations || null
+                            observations: item.observations || null,
+                            tableSessionId: item.tableSessionId || null
                         }))
                     }
                 },
@@ -193,7 +195,8 @@ export const saveOrder = async (req: Request, res: Response) => {
                             price: item.price,
                             isReady: item.isReady || false,
                             readyAt: item.readyAt ? new Date(item.readyAt) : null,
-                            observations: item.observations || null
+                            observations: item.observations || null,
+                            tableSessionId: item.tableSessionId || null
                         }))
                     }
                 },
