@@ -77,12 +77,10 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
       if (!isFirstRun.current) {
         if (hasOrderChange && activeTab !== 'sales-monitor') {
           setShouldBlinkMonitor(true);
-          setTimeout(() => setShouldBlinkMonitor(false), 5000);
         }
 
         if (hasNewOrder && activeTab !== 'kitchen') {
           setShouldBlinkKitchen(true);
-          setTimeout(() => setShouldBlinkKitchen(false), 3000);
         }
       }
 
@@ -104,6 +102,11 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
 
     const interval = setInterval(monitorSystem, 3000);
     return () => clearInterval(interval);
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (activeTab === 'kitchen') setShouldBlinkKitchen(false);
+    if (activeTab === 'sales-monitor') setShouldBlinkMonitor(false);
   }, [activeTab]);
 
   const navItems = allNavItems.filter(item => currentUser.permissions.includes(item.id));
