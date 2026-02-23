@@ -25,7 +25,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
   const { isAlerting } = useDigitalAlert();
   const lastOrdersMap = useRef<Record<string, { status: OrderStatus, itemCount: number }>>({});
   const isFirstRun = useRef(true);
-  const prevAlertStates = useRef({ kitchen: false, tables: false, driver: false });
+  const prevAlertStates = useRef({ kitchen: false, tables: false, driver: false, logistics: false });
 
   const allNavItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Icons.Dashboard },
@@ -94,10 +94,12 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
       const hasBillingTables = tableSessions.some(s => s.status === 'billing');
       setShouldBlinkPOS(hasBillingTables && activeTab !== 'pos');
 
-      // 3. Checagem de Logística (Pedidos prontos para entrega)
+      // 3. Checagem de Logística (Pedidos prontos para entrega) e Entregador (Pedidos em rota)
       const hasReadyDelivery = orders.some(o => o.status === OrderStatus.READY && o.type === SaleType.OWN_DELIVERY);
+      const hasDispatchedDelivery = orders.some(o => o.status === OrderStatus.OUT_FOR_DELIVERY && o.type === SaleType.OWN_DELIVERY);
+
       setShouldBlinkLogistics(hasReadyDelivery && activeTab !== 'logistics');
-      setShouldBlinkDriver(hasReadyDelivery && activeTab !== 'driver');
+      setShouldBlinkDriver(hasDispatchedDelivery && activeTab !== 'driver');
 
       // 4. Checagem de Mesas (Pedidos digitais pendentes)
       const hasPendingDigital = tableSessions.some(s => s.hasPendingDigital);
@@ -108,11 +110,13 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
       if (!isFirstRun.current) {
         if (hasNewOrder && !alertState.kitchen && activeTab !== 'kitchen') audioAlert.play();
         if (hasPendingDigital && !alertState.tables && activeTab !== 'tables') audioAlert.play();
-        if (hasReadyDelivery && !alertState.driver && activeTab !== 'driver' && activeTab !== 'logistics') audioAlert.play();
+        if (hasReadyDelivery && !alertState.logistics && activeTab !== 'logistics') audioAlert.play();
+        if (hasDispatchedDelivery && !alertState.driver && activeTab !== 'driver') audioAlert.play();
       }
       alertState.kitchen = hasNewOrder;
       alertState.tables = hasPendingDigital;
-      alertState.driver = hasReadyDelivery;
+      alertState.logistics = hasReadyDelivery;
+      alertState.driver = hasDispatchedDelivery;
     };
 
     const interval = setInterval(monitorSystem, 3000);
