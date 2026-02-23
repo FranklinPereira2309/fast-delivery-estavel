@@ -10,6 +10,9 @@ export interface BusinessSettings {
   phone: string;
   deliveryFee: string;
   tableCount: number;
+  restaurantLat?: number;
+  restaurantLng?: number;
+  geofenceRadius?: number;
 }
 
 const DEFAULT_SETTINGS: BusinessSettings = {
@@ -18,7 +21,8 @@ const DEFAULT_SETTINGS: BusinessSettings = {
   address: 'Av. Paulista, 1000 - São Paulo, SP',
   phone: '(11) 98888-7777',
   deliveryFee: 'R$ 8,00',
-  tableCount: 10
+  tableCount: 10,
+  geofenceRadius: 30
 };
 
 class APIDBService {

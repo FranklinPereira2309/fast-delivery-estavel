@@ -23,23 +23,42 @@ const CartModal: React.FC<CartModalProps> = ({ isOpen, onClose, cart, tableNumbe
 
     const handleSubmit = async () => {
         setIsSubmitting(true);
-        try {
-            await submitOrder({
-                tableNumber: parseInt(tableNumber),
-                items: cart.map(i => ({ productId: i.id, quantity: i.quantity })),
-                observations,
-                clientName: clientName || undefined
-            });
-            setSuccess(true);
-            setTimeout(() => {
-                setSuccess(false);
-                clearCart();
-                onClose();
+
+        const executeOrder = async (lat?: number, lng?: number) => {
+            try {
+                await submitOrder({
+                    tableNumber: parseInt(tableNumber),
+                    items: cart.map(i => ({ productId: i.id, quantity: i.quantity })),
+                    observations,
+                    clientName: clientName || undefined,
+                    clientLat: lat,
+                    clientLng: lng
+                });
+                setSuccess(true);
+                setTimeout(() => {
+                    setSuccess(false);
+                    clearCart();
+                    onClose();
+                    setIsSubmitting(false);
+                }, 3000);
+            } catch (e: any) {
+                console.error(e);
+                alert(e.message || "Erro ao enviar o pedido.");
                 setIsSubmitting(false);
-            }, 3000);
-        } catch (e) {
-            console.error(e);
-            setIsSubmitting(false);
+            }
+        };
+
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => executeOrder(position.coords.latitude, position.coords.longitude),
+                (error) => {
+                    console.warn("Localização negada ou indisponível:", error);
+                    executeOrder(); // Tenta sem localização, backend recusa se geofence for estrito
+                },
+                { timeout: 10000, enableHighAccuracy: true }
+            );
+        } else {
+            executeOrder();
         }
     };
 

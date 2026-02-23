@@ -191,11 +191,14 @@ model AuditLog {
 }
 
 model BusinessSettings {
-  key         String @id
-  name        String
-  cnpj        String
-  address     String
-  phone       String
-  deliveryFee String
-  tableCount  Int
+  key             String @id
+  name            String
+  cnpj            String
+  address         String
+  phone           String
+  deliveryFee     String
+  tableCount      Int
+  restaurantLat   Float?
+  restaurantLng   Float?
+  geofenceRadius  Int    @default(30)
 }

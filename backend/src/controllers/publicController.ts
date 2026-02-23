@@ -57,14 +57,50 @@ export const verifyTable = async (req: Request, res: Response) => {
     }
 };
 
+function deg2rad(deg: number) {
+    return deg * (Math.PI / 180);
+}
+
+function getDistanceFromLatLonInMeters(lat1: number, lon1: number, lat2: number, lon2: number) {
+    const R = 6371000; // Raio da Terra em metros
+    const dLat = deg2rad(lat2 - lat1);
+    const dLon = deg2rad(lon2 - lon1);
+    const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+}
+
 export const createOrder = async (req: Request, res: Response) => {
-    const { tableNumber, items, observations, clientName } = req.body;
+    const { tableNumber, items, observations, clientName, clientLat, clientLng } = req.body;
 
     if (!tableNumber || !items || !Array.isArray(items) || items.length === 0) {
         return res.status(400).json({ message: 'Invalid payload' });
     }
 
     try {
+        // --- Verificação de Geofencing ---
+        const settings = await prisma.businessSettings.findFirst();
+        if (settings && settings.restaurantLat && settings.restaurantLng && settings.geofenceRadius && settings.geofenceRadius > 0) {
+            if (typeof clientLat !== 'number' || typeof clientLng !== 'number') {
+                return res.status(403).json({ message: 'Localização obrigatória. Por favor, permita o acesso à sua localização para fazer pedidos na mesa.' });
+            }
+
+            const distance = getDistanceFromLatLonInMeters(
+                settings.restaurantLat,
+                settings.restaurantLng,
+                clientLat,
+                clientLng
+            );
+
+            if (distance > settings.geofenceRadius) {
+                return res.status(403).json({ message: `Você está muito longe para pedir. Aproxime-se do restaurante (Distância: ${distance.toFixed(0)}m / Máx: ${settings.geofenceRadius}m).` });
+            }
+        }
+        // ----------------------------------
+
         const updatedSession = await prisma.$transaction(async (tx) => {
             const session = await tx.tableSession.findUnique({ where: { tableNumber } });
 
