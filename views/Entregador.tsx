@@ -82,7 +82,7 @@ const Entregador: React.FC<EntregadorProps> = ({ currentUser }) => {
 
     const updateDeliveryStatus = async (orderId: string, status: OrderStatus, forceDriverId?: string | null) => {
         if (!currentUser) return;
-        await db.updateOrderStatus(orderId, status, currentUser, forceDriverId !== undefined ? forceDriverId : currentUser.id);
+        await db.updateOrderStatus(orderId, status, currentUser, forceDriverId !== undefined ? forceDriverId : undefined);
         refreshData();
     };
 
