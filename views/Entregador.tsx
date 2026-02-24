@@ -158,8 +158,10 @@ const Entregador: React.FC<EntregadorProps> = ({ currentUser }) => {
                         </span>
                     </div>
                     <div className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 bg-emerald-50 rounded-2xl border border-emerald-100">
-                        <span className="w-2 h-2 md:w-2.5 md:h-2.5 bg-emerald-500 rounded-full animate-pulse"></span>
-                        <span className="text-[9px] md:text-[10px] font-black text-emerald-700 uppercase tracking-widest">Entregador Online</span>
+                        <span className={`w-2 h-2 md:w-2.5 md:h-2.5 rounded-full ${driver.status === 'AVAILABLE' ? 'bg-emerald-500 animate-pulse' : (driver.status === 'BUSY' ? 'bg-amber-500' : 'bg-slate-400')}`}></span>
+                        <span className="text-[9px] md:text-[10px] font-black text-emerald-700 uppercase tracking-widest">
+                            {driver.status === 'AVAILABLE' ? 'Entregador Disponível' : (driver.status === 'BUSY' ? 'Em Entrega' : 'Offline')}
+                        </span>
                     </div>
                 </div>
             </div>
