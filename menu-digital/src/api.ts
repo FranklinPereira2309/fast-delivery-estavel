@@ -1,8 +1,15 @@
 import axios from 'axios';
+import { io } from 'socket.io-client';
 import { Product } from './types';
 
 // O Backend está rodando na porta 3000
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/public';
+const SOCKET_URL = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api/public', '') : 'http://localhost:3000';
+
+export const socket = io(SOCKET_URL, {
+    autoConnect: true,
+    reconnection: true,
+});
 
 export const MOCK_CATEGORIES = ['Lanches', 'Porções', 'Bebidas', 'Sobremesas', 'Pizzas']; // Temporário, idealmente também viria do BD.
 

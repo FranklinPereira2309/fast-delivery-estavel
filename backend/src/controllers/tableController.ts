@@ -171,6 +171,12 @@ export const saveTableSession = async (req: Request, res: Response) => {
             }
         }
 
+        try {
+            getIO().emit('tableStatusChanged', { tableNumber: data.tableNumber });
+        } catch (e) {
+            console.error('Socket error emitting tableStatusChanged:', e);
+        }
+
         res.json(mapSessionResponse(result));
     } catch (error: any) {
         console.error('Error saving table session:', error);
@@ -183,6 +189,14 @@ export const saveTableSession = async (req: Request, res: Response) => {
 
 export const deleteTableSession = async (req: Request, res: Response) => {
     const { tableNumber } = req.params;
-    await prisma.tableSession.delete({ where: { tableNumber: parseInt(tableNumber as string) } });
+    const tableNum = parseInt(tableNumber as string);
+    await prisma.tableSession.delete({ where: { tableNumber: tableNum } });
+
+    try {
+        getIO().emit('tableStatusChanged', { tableNumber: tableNum });
+    } catch (e) {
+        console.error('Socket error emitting tableStatusChanged:', e);
+    }
+
     res.json({ message: 'Sessão de mesa finalizada' });
 };

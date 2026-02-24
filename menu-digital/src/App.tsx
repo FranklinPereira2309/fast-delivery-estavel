@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route, useSearchParams } from 'react-router-dom'
 import Home from './components/Home';
 import CartModal from './components/CartModal';
 import { CartItem } from './types';
-import { verifyTable } from './api';
+import { verifyTable, socket } from './api';
 
 function AppContent() {
   const [searchParams] = useSearchParams();
@@ -39,7 +39,22 @@ function AppContent() {
   // Atualizar mesa e verificar no início
   useEffect(() => {
     fetchTableData();
-  }, [fetchTableData]);
+
+    const handleTableStatus = (data: any) => {
+      if (data.tableNumber === Number(tableParam)) {
+        console.log('Recebemos evento de mudança de status da mesa via socket.io. Atualizando...');
+        fetchTableData();
+      }
+    };
+
+    socket.on('tableStatusChanged', handleTableStatus);
+    socket.on('newOrder', handleTableStatus);
+
+    return () => {
+      socket.off('tableStatusChanged', handleTableStatus);
+      socket.off('newOrder', handleTableStatus);
+    };
+  }, [fetchTableData, tableParam]);
 
   const addToCart = (item: CartItem) => {
     setCart(prev => {
