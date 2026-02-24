@@ -185,6 +185,15 @@ class APIDBService {
     }
   }
 
+  public async getStoreOperationalStatus(): Promise<{ status: 'online' | 'offline', is_manually_closed: boolean, next_status_change: string | null }> {
+    try {
+      // Use the public endpoint which calculates logic based on operating hours
+      return await this.request('/public/store-status');
+    } catch (e) {
+      return { status: 'offline', is_manually_closed: true, next_status_change: null };
+    }
+  }
+
   public async saveSettings(s: BusinessSettings) {
     await this.request('/settings', { method: 'POST', body: JSON.stringify(s) });
   }

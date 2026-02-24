@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { DeliveryDriver, Order, OrderStatus, OrderStatusLabels, SaleType, User, Product } from '../types';
 import { db, BusinessSettings } from '../services/db';
+import { socket } from '../services/socket';
 import { Icons } from '../constants';
 import CustomAlert from '../components/CustomAlert';
 import { useDigitalAlert } from '../hooks/useDigitalAlert';
@@ -23,13 +24,23 @@ const Entregador: React.FC<EntregadorProps> = ({ currentUser }) => {
     const [historyStartDate, setHistoryStartDate] = useState(new Date().toISOString().split('T')[0]);
     const [historyEndDate, setHistoryEndDate] = useState(new Date().toISOString().split('T')[0]);
     const [printingHistoryOrder, setPrintingHistoryOrder] = useState<Order | null>(null);
+    const [storeStatus, setStoreStatus] = useState<{ status: 'online' | 'offline' }>({ status: 'offline' });
 
     const previousOrderCount = useRef(-1);
 
     useEffect(() => {
         refreshData();
         const interval = setInterval(refreshData, 3000);
-        return () => clearInterval(interval);
+
+        // Socket listener for store status
+        socket.on('store_status_changed', (data: any) => {
+            setStoreStatus(data);
+        });
+
+        return () => {
+            clearInterval(interval);
+            socket.off('store_status_changed');
+        };
     }, [currentUser]);
 
     const refreshData = async () => {
@@ -46,14 +57,16 @@ const Entregador: React.FC<EntregadorProps> = ({ currentUser }) => {
 
         setDriver(currentDriver);
 
-        const [allOrders, allProds, settings] = await Promise.all([
+        const [allOrders, allProds, settings, status] = await Promise.all([
             db.getOrders(),
             db.getProducts(),
-            db.getSettings()
+            db.getSettings(),
+            db.getStoreOperationalStatus()
         ]);
 
         setProducts(allProds);
         setBusinessSettings(settings);
+        setStoreStatus(status);
 
         // Filter OUT_FOR_DELIVERY AND READY assigned to this driver
         const driverOrders = allOrders.filter(o =>
@@ -137,9 +150,17 @@ const Entregador: React.FC<EntregadorProps> = ({ currentUser }) => {
                     <h2 className="text-lg md:text-2xl font-black text-slate-800 uppercase tracking-tighter truncate">Minhas Entregas</h2>
                     <p className="text-[9px] md:text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5 truncate">Olá, {driver.name}</p>
                 </div>
-                <div className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 bg-emerald-50 rounded-2xl border border-emerald-100 shrink-0">
-                    <span className="w-2 h-2 md:w-2.5 md:h-2.5 bg-emerald-500 rounded-full animate-pulse"></span>
-                    <span className="text-[9px] md:text-[10px] font-black text-emerald-700 uppercase tracking-widest">Online</span>
+                <div className="flex flex-col md:flex-row items-end md:items-center gap-2 shrink-0">
+                    <div className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 bg-slate-50 rounded-2xl border border-slate-100">
+                        <span className={`w-2 h-2 md:w-2.5 md:h-2.5 rounded-full ${storeStatus.status === 'online' ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`}></span>
+                        <span className={`text-[9px] md:text-[10px] font-black uppercase tracking-widest ${storeStatus.status === 'online' ? 'text-emerald-700' : 'text-red-600'}`}>
+                            Loja {storeStatus.status === 'online' ? 'Aberta' : 'Fechada'}
+                        </span>
+                    </div>
+                    <div className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 bg-emerald-50 rounded-2xl border border-emerald-100">
+                        <span className="w-2 h-2 md:w-2.5 md:h-2.5 bg-emerald-500 rounded-full animate-pulse"></span>
+                        <span className="text-[9px] md:text-[10px] font-black text-emerald-700 uppercase tracking-widest">Entregador Online</span>
+                    </div>
                 </div>
             </div>
 
