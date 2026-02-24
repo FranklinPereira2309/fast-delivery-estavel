@@ -466,13 +466,13 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
   }, [printingOrder, products]);
 
   return (
-    <div className="flex flex-col h-full gap-6">
+    <div className="flex flex-col h-full gap-2 lg:gap-4 xl:gap-6">
       <CustomAlert {...alertConfig} onConfirm={alertConfig.onConfirm} />
 
-      <div className="flex gap-6 flex-1 min-h-0">
-        <div className="w-72 flex flex-col gap-4 shrink-0">
-          <div className="bg-orange-50 p-6 rounded-[2rem] border border-orange-100 flex-1 flex flex-col overflow-hidden">
-            <h3 className="text-[10px] font-black text-orange-600 uppercase tracking-widest mb-4 flex items-center gap-2">
+      <div className="flex gap-2 lg:gap-4 xl:gap-6 flex-1 min-h-0">
+        <div className="w-64 lg:w-72 flex flex-col gap-2 lg:gap-4 shrink-0">
+          <div className="bg-orange-50 p-4 lg:p-6 rounded-[2rem] border border-orange-100 flex-1 flex flex-col overflow-hidden">
+            <h3 className="text-[10px] font-black text-orange-600 uppercase tracking-widest mb-2 lg:mb-4 flex items-center gap-2">
               <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
               Aguardando Recebimento
             </h3>
@@ -531,7 +531,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
           </div>
         </div>
 
-        <div className="w-96 bg-white rounded-3xl border border-slate-100 shadow-sm flex flex-col shrink-0 overflow-hidden relative border-l-4 border-l-blue-600/10">
+        <div className="w-80 lg:w-80 xl:w-96 bg-white rounded-3xl border border-slate-100 shadow-sm flex flex-col shrink-0 overflow-hidden relative border-l-4 border-l-blue-600/10">
           {isLoadingOrder && (
             <div className="absolute inset-0 z-20 bg-white/80 backdrop-blur-sm flex items-center justify-center animate-in fade-in duration-300">
               <div className="flex flex-col items-center gap-4">
@@ -541,9 +541,9 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
             </div>
           )}
 
-          <div className="p-8 border-b border-slate-50">
-            <h3 className="font-black text-xl text-slate-800 uppercase tracking-tighter">Área de Pagamento</h3>
-            <div className="mt-6 space-y-4">
+          <div className="p-4 lg:p-6 xl:p-8 border-b border-slate-50 shrink-0">
+            <h3 className="font-black text-lg xl:text-xl text-slate-800 uppercase tracking-tighter">Área de Pagamento</h3>
+            <div className="mt-3 xl:mt-6 space-y-3 xl:space-y-4">
               <div className="flex gap-2 bg-slate-100 p-1.5 rounded-2xl">
                 {[SaleType.COUNTER, SaleType.TABLE, SaleType.OWN_DELIVERY].map(type => (
                   <button
@@ -697,7 +697,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-8 space-y-4 font-receipt text-[11px]">
+          <div className="flex-1 overflow-y-auto min-h-0 p-4 lg:p-6 xl:p-8 space-y-3 xl:space-y-4 font-receipt text-[11px]">
             {groupedCart.length > 0 ? groupedCart.map(([id, data]) => (
               <div key={id} className={`flex justify-between items-center border-b border-dotted pb-2 ${(currentOrderStatus === OrderStatus.PREPARING || currentOrderStatus === OrderStatus.PARTIALLY_READY) ? 'animate-moderate-blink text-orange-600' : ''}`}>
                 <div className="flex-1">
@@ -723,8 +723,8 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
             )}
           </div>
 
-          <div className="p-8 bg-slate-50 border-t border-slate-100">
-            <div className="flex justify-between items-end mb-6 font-receipt"><span className="font-black text-slate-400 uppercase text-[10px] tracking-widest">VALOR FINAL</span><span className="text-4xl font-black text-blue-600 tracking-tighter">R$ {cart.reduce((acc, item) => acc + (item.price * item.quantity), 0).toFixed(2)}</span></div>
+          <div className="p-4 lg:p-6 xl:p-8 bg-slate-50 border-t border-slate-100 shrink-0">
+            <div className="flex justify-between items-end mb-3 xl:mb-6 font-receipt"><span className="font-black text-slate-400 uppercase text-[10px] tracking-widest">VALOR FINAL</span><span className="text-2xl xl:text-4xl font-black text-blue-600 tracking-tighter">R$ {cart.reduce((acc, item) => acc + (item.price * item.quantity), 0).toFixed(2)}</span></div>
 
             {saleType === SaleType.TABLE && tableNumberInput && (
               <div className="flex gap-2 mb-2">
@@ -733,14 +733,14 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                   <button
                     onClick={handleLaunchToTable}
                     disabled={cart.length === 0}
-                    className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-black py-4 rounded-2xl shadow-xl uppercase text-[10px] tracking-widest transition-all active:scale-95 disabled:opacity-30"
+                    className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-black py-3 xl:py-4 rounded-xl xl:rounded-2xl shadow-xl uppercase text-[9px] xl:text-[10px] tracking-widest transition-all active:scale-95 disabled:opacity-30"
                   >
                     Lançar na Mesa
                   </button>
                 )}
                 <button
                   onClick={handleReopenTable}
-                  className="flex-1 bg-amber-500 hover:bg-amber-600 text-white font-black py-4 rounded-2xl shadow-xl uppercase text-[10px] tracking-widest transition-all active:scale-95"
+                  className="flex-1 bg-amber-500 hover:bg-amber-600 text-white font-black py-3 xl:py-4 rounded-xl xl:rounded-2xl shadow-xl uppercase text-[9px] xl:text-[10px] tracking-widest transition-all active:scale-95"
                 >
                   Reabrir a Mesa
                 </button>
@@ -750,7 +750,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
             <button
               onClick={handleFinalize}
               disabled={cart.length === 0 || (saleType === SaleType.TABLE && !tableNumberInput)}
-              className={`w-full text-white font-black py-5 rounded-2xl shadow-xl uppercase text-[10px] tracking-widest transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed ${(saleType === SaleType.COUNTER && !editingOrderId) ? 'bg-orange-500 hover:bg-orange-600' : 'bg-blue-600 hover:bg-blue-700'
+              className={`w-full text-white font-black py-4 xl:py-5 rounded-xl xl:rounded-2xl shadow-xl uppercase text-[10px] tracking-widest transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed ${(saleType === SaleType.COUNTER && !editingOrderId) ? 'bg-orange-500 hover:bg-orange-600' : 'bg-blue-600 hover:bg-blue-700'
                 }`}
             >
               {(saleType === SaleType.COUNTER && !editingOrderId) ? 'Enviar p/ Produção' : 'Finalizar e Receber'}
