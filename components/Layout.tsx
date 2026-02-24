@@ -26,6 +26,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
   const { isAlerting } = useDigitalAlert();
   const lastOrdersMap = useRef<Record<string, { status: OrderStatus, itemCount: number }>>({});
   const isFirstRun = useRef(true);
+  const isDataInitialized = useRef(false);
   const prevAlertStates = useRef({ kitchen: false, tables: false, driver: false, logistics: false });
 
   const allNavItems = [
@@ -57,10 +58,13 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
       if (myDriver) {
         setCurrentDriverId(myDriver.id);
       }
+      // Primeiro 'run' silencioso para evitar alerta de login
+      await monitorSystem(true);
+      isDataInitialized.current = true;
     };
     checkDriverProfile();
 
-    const monitorSystem = async () => {
+    const monitorSystem = async (silent = false) => {
       const orders = await db.getOrders();
 
       // 1. Checagem do Monitor de Vendas (Mudanças de Status) e Cozinha (Novos Pedidos)
@@ -88,22 +92,22 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
         };
       });
 
-      if (!isFirstRun.current) {
+      if (!silent && !isFirstRun.current) {
         if (hasOrderChange && activeTab !== 'sales-monitor') {
           setShouldBlinkMonitor(true);
         }
 
-        if (hasNewOrder && activeTab !== 'kitchen') {
+        if (hasNewOrder) {
           setShouldBlinkKitchen(true);
         }
       }
 
-      isFirstRun.current = false;
-
       // 2. Checagem do PDV (Mesas aguardando recebimento)
       const tableSessions = await db.getTableSessions();
       const hasBillingTables = tableSessions.some(s => s.status === 'billing');
-      setShouldBlinkPOS(hasBillingTables && activeTab !== 'pos');
+      if (!silent && !isFirstRun.current) {
+        setShouldBlinkPOS(hasBillingTables && activeTab !== 'pos');
+      }
 
       // 3. Checagem de Logística (Pedidos prontos para entrega) e Entregador (Pedidos em rota)
       // Logística brilha se houver pedido READY mas AINDA SEM entregador (exige vinculação)
@@ -112,31 +116,42 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
       // Entregador brilha APENAS se houver pedido READY com O SEU driverId atribuído (esperando o Aceite)
       const hasAssignedDelivery = currentDriverId ? orders.some(o => o.status === OrderStatus.READY && o.type === SaleType.OWN_DELIVERY && o.driverId === currentDriverId) : false;
 
-      setShouldBlinkLogistics(hasReadyDelivery && activeTab !== 'logistics');
-      setShouldBlinkDriver(hasAssignedDelivery && activeTab !== 'driver');
+      if (!silent && !isFirstRun.current) {
+        setShouldBlinkLogistics(hasReadyDelivery);
+        setShouldBlinkDriver(hasAssignedDelivery);
+      }
 
       // 4. Checagem de Mesas (Pedidos digitais pendentes)
       const hasPendingDigital = tableSessions.some(s => s.hasPendingDigital);
-      setShouldBlinkTables(hasPendingDigital && activeTab !== 'tables');
+      if (!silent && !isFirstRun.current) {
+        setShouldBlinkTables(hasPendingDigital);
+      }
 
       // 5. Tocar Alertas Sonoros apenas em transições (false -> true)
-      const alertState = prevAlertStates.current;
-      if (!isFirstRun.current) {
-        if (hasNewOrder && !alertState.kitchen && activeTab !== 'kitchen') audioAlert.play();
-        if (hasPendingDigital && !alertState.tables && activeTab !== 'tables') audioAlert.play();
-        if (hasReadyDelivery && !alertState.logistics && activeTab !== 'logistics') audioAlert.play();
+      if (!silent && isDataInitialized.current) {
+        const alertState = prevAlertStates.current;
+        if (hasNewOrder && !alertState.kitchen) audioAlert.play();
+        if (hasPendingDigital && !alertState.tables) audioAlert.play();
+        if (hasReadyDelivery && !alertState.logistics) audioAlert.play();
         // Toca SOM EXCLUSIVO para o ENTREGADOR SELECIONADO para aceitar corrida
-        if (hasAssignedDelivery && !alertState.driver && activeTab !== 'driver') audioAlert.play();
+        if (hasAssignedDelivery && !alertState.driver) audioAlert.play();
       }
-      alertState.kitchen = hasNewOrder;
-      alertState.tables = hasPendingDigital;
-      alertState.logistics = hasReadyDelivery;
-      alertState.driver = hasAssignedDelivery;
+
+      // Sincroniza estados anteriores para o próximo loop
+      prevAlertStates.current = {
+        kitchen: hasNewOrder,
+        tables: hasPendingDigital,
+        logistics: hasReadyDelivery,
+        driver: hasAssignedDelivery
+      };
+
+      isFirstRun.current = false;
     };
 
-    const interval = setInterval(monitorSystem, 3000);
+    const interval = setInterval(() => monitorSystem(false), 3000);
     return () => clearInterval(interval);
   }, [activeTab, currentDriverId]);
+
 
   useEffect(() => {
     if (activeTab === 'kitchen') setShouldBlinkKitchen(false);
@@ -265,7 +280,17 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
           </div>
         </header>
 
-        <section className="flex-1 overflow-y-auto p-8">
+        <section className={`flex-1 overflow-y-auto p-8 transition-all duration-500 ${(activeTab === 'kitchen' && shouldBlinkKitchen) ||
+          (activeTab === 'driver' && shouldBlinkDriver) ||
+          (activeTab === 'tables' && (isAlerting || shouldBlinkTables)) ||
+          (activeTab === 'logistics' && shouldBlinkLogistics)
+          ? 'animate-notify-turquoise bg-blue-50/50' : ''
+          }`} onClick={() => {
+            if (activeTab === 'kitchen') setShouldBlinkKitchen(false);
+            if (activeTab === 'driver') setShouldBlinkDriver(false);
+            if (activeTab === 'tables') setShouldBlinkTables(false);
+            if (activeTab === 'logistics') setShouldBlinkLogistics(false);
+          }}>
           {children}
         </section>
       </main>
