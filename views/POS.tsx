@@ -50,6 +50,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
 
   useEffect(() => {
     refreshAllData();
+    const interval = setInterval(() => refreshAllData(), 3000);
 
     const handleRealtimeUpdate = () => {
       console.log('Realtime update received in POS, refreshing data...');
@@ -61,6 +62,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
     socket.on('orderStatusChanged', handleRealtimeUpdate);
 
     return () => {
+      clearInterval(interval);
       socket.off('newOrder', handleRealtimeUpdate);
       socket.off('tableStatusChanged', handleRealtimeUpdate);
       socket.off('orderStatusChanged', handleRealtimeUpdate);
