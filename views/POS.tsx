@@ -531,7 +531,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
           </div>
         </div>
 
-        <div className="w-80 lg:w-80 xl:w-96 bg-white rounded-3xl border border-slate-100 shadow-sm flex flex-col shrink-0 overflow-hidden relative border-l-4 border-l-blue-600/10">
+        <div className="w-80 lg:w-80 xl:w-96 bg-white rounded-3xl border border-slate-100 shadow-sm flex flex-col shrink-0 overflow-y-auto overflow-x-hidden relative border-l-4 border-l-blue-600/10">
           {isLoadingOrder && (
             <div className="absolute inset-0 z-20 bg-white/80 backdrop-blur-sm flex items-center justify-center animate-in fade-in duration-300">
               <div className="flex flex-col items-center gap-4">
@@ -697,7 +697,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto min-h-0 p-4 lg:p-6 xl:p-8 space-y-3 xl:space-y-4 font-receipt text-[11px]">
+          <div className="min-h-[150px] p-4 lg:p-6 xl:p-8 space-y-3 xl:space-y-4 font-receipt text-[11px]">
             {groupedCart.length > 0 ? groupedCart.map(([id, data]) => (
               <div key={id} className={`flex justify-between items-center border-b border-dotted pb-2 ${(currentOrderStatus === OrderStatus.PREPARING || currentOrderStatus === OrderStatus.PARTIALLY_READY) ? 'animate-moderate-blink text-orange-600' : ''}`}>
                 <div className="flex-1">
