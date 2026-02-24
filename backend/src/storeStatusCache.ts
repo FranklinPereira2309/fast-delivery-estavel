@@ -8,7 +8,7 @@ export interface StoreStatus {
 }
 
 let cachedSettings = {
-    isManuallyClosed: true, // Fail-closed by default
+    isManuallyClosed: true, // Começar fechado por segurança
     operatingHours: "[]"
 };
 
@@ -29,8 +29,8 @@ export const loadSettingsToCache = async () => {
     try {
         const settings = await prisma.businessSettings.findUnique({ where: { key: 'main' } });
         if (settings) {
-            cachedSettings.isManuallyClosed = settings.isManuallyClosed;
-            cachedSettings.operatingHours = settings.operatingHours;
+            cachedSettings.isManuallyClosed = (settings as any).isManuallyClosed ?? true;
+            cachedSettings.operatingHours = (settings as any).operatingHours ?? "[]";
             // Initially set lastCalculatedStatus without emitting since no clients are connected yet
             lastCalculatedStatus = calculateCurrentStoreStatus().status;
         }
@@ -55,7 +55,7 @@ const calculateCurrentStoreStatus = (): StoreStatus => {
     try {
         const hours = JSON.parse(cachedSettings.operatingHours);
         if (!Array.isArray(hours) || hours.length === 0) {
-            return { status: 'online', is_manually_closed: false, next_status_change: null };
+            return { status: 'offline', is_manually_closed: false, next_status_change: null };
         }
 
         const options: Intl.DateTimeFormatOptions = {
@@ -81,12 +81,14 @@ const calculateCurrentStoreStatus = (): StoreStatus => {
         const currentDayNum = dayMap[dayOfWeek] ?? new Date().getDay();
 
         const currentTimeInt = hour * 60 + minute;
-        const nowObj = new Date(); // Used for relative date calculation later, but we use 'hour'/'minute' for status check
+
+        // Log para depuração (apenas console do servidor)
+        console.log(`[DEBUG StoreStatus] Dia: ${currentDayNum}, Hora SP: ${hour}:${minute}, TotalMin: ${currentTimeInt}`);
 
         const todayConfig = hours.find(h => h.dayOfWeek === currentDayNum);
 
         if (!todayConfig || !todayConfig.isOpen) {
-            return { status: 'offline', is_manually_closed: false, next_status_change: getNextOpenTime(hours, nowObj) };
+            return { status: 'offline', is_manually_closed: false, next_status_change: getNextOpenTime(hours, new Date()) };
         }
 
         const openParts = todayConfig.openTime.split(':').map(Number);
@@ -110,10 +112,10 @@ const calculateCurrentStoreStatus = (): StoreStatus => {
 
         if (isOpenNow) {
             // It's open! Calculate next_status_change (closing time)
-            const nextChangeDate = new Date();
-            // Reset to SP time today
-            const spToday = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
-            nextChangeDate.setTime(spToday.getTime());
+
+            // Get SP time parts again to create the closing date object
+            const spString = new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" });
+            const nextChangeDate = new Date(spString);
 
             if (closeTimeInt < openTimeInt && currentTimeInt >= openTimeInt) {
                 // Closes tomorrow
@@ -124,7 +126,7 @@ const calculateCurrentStoreStatus = (): StoreStatus => {
             return { status: 'online', is_manually_closed: false, next_status_change: nextChangeDate.toISOString() };
         } else {
             // It's closed.
-            return { status: 'offline', is_manually_closed: false, next_status_change: getNextOpenTime(hours, new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }))) };
+            return { status: 'offline', is_manually_closed: false, next_status_change: getNextOpenTime(hours, new Date()) };
         }
 
     } catch (e) {
