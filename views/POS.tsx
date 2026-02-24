@@ -309,7 +309,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
         clientAddress: isAvulso ? avulsoData.address : (selectedClient?.addresses[0] || undefined),
         clientPhone: isAvulso ? avulsoData.phone : (selectedClient?.phone || undefined),
         items: [...cart],
-        total: cart.reduce((acc, item) => acc + (item.price * item.quantity), 0),
+        total: cartTotal,
         status: OrderStatus.PREPARING,
         type: SaleType.COUNTER,
         createdAt: new Date().toISOString(),
@@ -358,7 +358,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
         clientAddress: finalAddress,
         clientPhone: finalPhone,
         items: [...cart],
-        total: cart.reduce((acc, item) => acc + (item.price * item.quantity), 0),
+        total: cartTotal,
         status: OrderStatus.PREPARING,
         type: saleType,
         createdAt: editingOrderId ? orders.find(o => o.id === editingOrderId)?.createdAt || new Date().toISOString() : new Date().toISOString(),
@@ -381,7 +381,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       clientAddress: finalAddress,
       clientPhone: finalPhone,
       items: [...cart],
-      total: cart.reduce((acc, item) => acc + (item.quantity * item.price), 0),
+      total: cartTotal,
       status: OrderStatus.DELIVERED,
       type: saleType,
       createdAt: (existingTableOrderId || editingOrderId) ? orders.find(o => o.id === (existingTableOrderId || editingOrderId))?.createdAt || new Date().toISOString() : new Date().toISOString(),
@@ -448,6 +448,17 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
     });
     return Object.entries(grouped);
   }, [cart, products]);
+
+  const deliveryFeeValue = useMemo(() => {
+    if (!businessSettings?.deliveryFee) return 0;
+    const clean = businessSettings.deliveryFee.replace('R$', '').replace(',', '.').trim();
+    return parseFloat(clean) || 0;
+  }, [businessSettings]);
+
+  const cartTotal = useMemo(() => {
+    const itemsTotal = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+    return saleType === SaleType.OWN_DELIVERY ? itemsTotal + deliveryFeeValue : itemsTotal;
+  }, [cart, saleType, deliveryFeeValue]);
 
   const groupedPrintingItems = useMemo(() => {
     if (!printingOrder) return [];
@@ -724,7 +735,16 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
           </div>
 
           <div className="p-4 lg:p-6 xl:p-8 bg-slate-50 border-t border-slate-100 shrink-0">
-            <div className="flex justify-between items-end mb-3 xl:mb-6 font-receipt"><span className="font-black text-slate-400 uppercase text-[10px] tracking-widest">VALOR FINAL</span><span className="text-2xl xl:text-4xl font-black text-blue-600 tracking-tighter">R$ {cart.reduce((acc, item) => acc + (item.price * item.quantity), 0).toFixed(2)}</span></div>
+            {saleType === SaleType.OWN_DELIVERY && (
+              <div className="flex justify-between items-center mb-2 font-receipt text-[10px] text-slate-500 uppercase tracking-widest">
+                <span>Taxa de Entrega:</span>
+                <span>R$ {deliveryFeeValue.toFixed(2)}</span>
+              </div>
+            )}
+            <div className="flex justify-between items-end mb-3 xl:mb-6 font-receipt">
+              <span className="font-black text-slate-400 uppercase text-[10px] tracking-widest">VALOR FINAL</span>
+              <span className="text-2xl xl:text-4xl font-black text-blue-600 tracking-tighter">R$ {cartTotal.toFixed(2)}</span>
+            </div>
 
             {saleType === SaleType.TABLE && tableNumberInput && (
               <div className="flex gap-2 mb-2">
@@ -808,7 +828,13 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                 </div>
               ))}
             </div>
-            <div className="flex justify-between items-end border-t border-dashed pt-4 mb-6">
+            {printingOrder.type === SaleType.OWN_DELIVERY && (
+              <div className="flex justify-between items-center border-t border-dashed pt-4 mb-2 text-[10px] uppercase font-black">
+                <span>Taxa Entrega:</span>
+                <span>R$ {deliveryFeeValue.toFixed(2)}</span>
+              </div>
+            )}
+            <div className={`flex justify-between items-end ${printingOrder.type === SaleType.OWN_DELIVERY ? '' : 'border-t border-dashed pt-4'} mb-6`}>
               <span className="font-black text-[9px] uppercase tracking-widest">TOTAL:</span>
               <span className="text-2xl font-black">R$ {printingOrder.total.toFixed(2)}</span>
             </div>

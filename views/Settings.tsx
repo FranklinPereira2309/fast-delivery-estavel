@@ -439,9 +439,24 @@ interface SettingsProps {
     onGoToSalesMonitor: () => void;
 }
 
-const Settings: React.FC<SettingsProps> = ({ settings, setSettings, onReset, onGoToSalesMonitor }) => {
+const Settings: React.FC<SettingsProps> = ({ settings, setSettings, onReset }) => {
     const [activeSubTab, setActiveSubTab] = useState<'EMPRESA' | 'HORARIOS' | 'GARCONS' | 'USUARIOS' | 'FROTA' | 'AUDITORIA' | 'AVANCADO'>('EMPRESA');
     const [isSavedAlertOpen, setIsSavedAlertOpen] = useState(false);
+    const [storeStatus, setStoreStatus] = useState<{ status: string, is_manually_closed: boolean } | null>(null);
+
+    useEffect(() => {
+        const fetchStatus = async () => {
+            try {
+                const s = await db.getStoreOperationalStatus();
+                setStoreStatus(s);
+            } catch (e) {
+                console.error("Error fetching store status in Settings:", e);
+            }
+        };
+        fetchStatus();
+        const interval = setInterval(fetchStatus, 30000);
+        return () => clearInterval(interval);
+    }, []);
 
     const handleSaveSettings = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -490,7 +505,14 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings, onReset, onG
                                 <h3 className="text-2xl font-black text-slate-800 uppercase tracking-tighter">Identidade do Negócio</h3>
                                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Aparecerá nos cupons e relatórios do sistema</p>
                             </div>
-                            <button onClick={onGoToSalesMonitor} className="bg-slate-100 hover:bg-blue-50 text-blue-600 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border border-blue-100">Configurar Monitor</button>
+                            {storeStatus && (
+                                <div className={`flex items-center gap-3 px-6 py-3 rounded-2xl border transition-all ${storeStatus.status === 'online' ? 'bg-emerald-50 border-emerald-100' : 'bg-red-50 border-red-100'}`}>
+                                    <div className={`w-2 h-2 rounded-full ${storeStatus.status === 'online' ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`}></div>
+                                    <span className={`text-[10px] font-black uppercase tracking-widest ${storeStatus.status === 'online' ? 'text-emerald-600' : 'text-red-600'}`}>
+                                        Loja {storeStatus.status === 'online' ? 'Online' : 'Offline'}
+                                    </span>
+                                </div>
+                            )}
                         </div>
                         <form onSubmit={handleSaveSettings} className="space-y-8">
                             <div className="grid grid-cols-2 gap-8">
