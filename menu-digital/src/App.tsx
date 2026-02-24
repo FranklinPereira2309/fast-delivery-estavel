@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route, useSearchParams } from 'react-router-dom'
 import Home from './components/Home';
 import CartModal from './components/CartModal';
 import { CartItem } from './types';
-import { verifyTable, socket } from './api';
+import { verifyTable, socket, fetchStoreStatus, StoreStatus } from './api';
 
 function AppContent() {
   const [searchParams] = useSearchParams();
@@ -16,6 +16,15 @@ function AppContent() {
   const [isValidating, setIsValidating] = useState(true);
   const [tableError, setTableError] = useState<string | null>(null);
   const [clientName, setClientName] = useState<string | null>(null);
+
+  // Status da Loja
+  const [storeStatus, setStoreStatus] = useState<StoreStatus>({ status: 'online', is_manually_closed: false, next_status_change: null });
+  const [minutesToClose, setMinutesToClose] = useState<number | null>(null);
+
+  const fetchStatus = useCallback(async () => {
+    const status = await fetchStoreStatus();
+    setStoreStatus(status);
+  }, []);
 
   // Extracted logic to allow re-fetching the table data manually
   const fetchTableData = useCallback(async () => {
@@ -39,22 +48,43 @@ function AppContent() {
   // Atualizar mesa e verificar no início
   useEffect(() => {
     fetchTableData();
+    fetchStatus();
 
     const handleTableStatus = (data: any) => {
       if (data.tableNumber === Number(tableParam)) {
-        console.log('Recebemos evento de mudança de status da mesa via socket.io. Atualizando...');
         fetchTableData();
       }
     };
 
+    const handleStoreStatus = (status: StoreStatus) => {
+      setStoreStatus(status);
+    };
+
     socket.on('tableStatusChanged', handleTableStatus);
     socket.on('newOrder', handleTableStatus);
+    socket.on('store_status_changed', handleStoreStatus);
 
     return () => {
       socket.off('tableStatusChanged', handleTableStatus);
       socket.off('newOrder', handleTableStatus);
+      socket.off('store_status_changed', handleStoreStatus);
     };
-  }, [fetchTableData, tableParam]);
+  }, [fetchTableData, fetchStatus, tableParam]);
+
+  useEffect(() => {
+    if (storeStatus.status === 'online' && storeStatus.next_status_change) {
+      const checkTime = () => {
+        const diffMs = new Date(storeStatus.next_status_change!).getTime() - new Date().getTime();
+        const diffMins = Math.floor(diffMs / 60000);
+        setMinutesToClose(diffMins > 0 && diffMins <= 30 ? diffMins : null);
+      };
+      checkTime();
+      const interval = setInterval(checkTime, 60000);
+      return () => clearInterval(interval);
+    } else {
+      setMinutesToClose(null);
+    }
+  }, [storeStatus]);
 
   const addToCart = (item: CartItem) => {
     setCart(prev => {
@@ -112,6 +142,16 @@ function AppContent() {
         </div>
       </header>
 
+      {/* Banner de Status da Loja */}
+      {(storeStatus.status === 'offline' || minutesToClose !== null) && (
+        <div className={`text-center py-2 text-xs font-black uppercase tracking-widest text-white px-4 ${storeStatus.status === 'offline' ? 'bg-red-600 bg-opacity-90 backdrop-blur-md sticky top-[72px] z-30' : 'bg-orange-500 bg-opacity-90 backdrop-blur-md sticky top-[72px] z-30'}`}>
+          {storeStatus.status === 'offline'
+            ? (storeStatus.is_manually_closed ? 'Fechado Temporariamente' : 'Não estamos aceitando pedidos')
+            : `Atenção: A loja fechará em ${minutesToClose} minutos!`
+          }
+        </div>
+      )}
+
       <main className="h-[calc(100vh-80px)] overflow-y-auto hide-scrollbar">
         <Routes>
           <Route path="/" element={<Home cart={cart} addToCart={addToCart} updateQuantity={updateQuantity} />} />
@@ -144,6 +184,7 @@ function AppContent() {
         clearCart={clearCart}
         initialClientName={clientName || undefined}
         onOrderSuccess={fetchTableData}
+        storeStatus={storeStatus}
       />
     </div>
   );

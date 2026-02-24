@@ -22,6 +22,22 @@ export interface OrderPayload {
     clientLng?: number;
 }
 
+export interface StoreStatus {
+    status: 'online' | 'offline';
+    is_manually_closed: boolean;
+    next_status_change: string | null;
+}
+
+export const fetchStoreStatus = async (): Promise<StoreStatus> => {
+    try {
+        const response = await axios.get(`${API_URL}/store-status`);
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching store status', error);
+        return { status: 'online', is_manually_closed: false, next_status_change: null };
+    }
+};
+
 export const fetchProducts = async (): Promise<Product[]> => {
     try {
         const response = await axios.get(`${API_URL}/products`);

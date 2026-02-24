@@ -201,4 +201,6 @@ model BusinessSettings {
   restaurantLat   Float?
   restaurantLng   Float?
   geofenceRadius  Int    @default(30)
+  isManuallyClosed Boolean @default(false)
+  operatingHours  String @default("[]")
 }

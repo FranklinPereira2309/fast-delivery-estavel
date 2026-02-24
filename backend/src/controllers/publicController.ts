@@ -1,6 +1,11 @@
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { getIO } from '../socket';
+import { getStoreStatus } from '../storeStatusCache';
+
+export const getStoreStatusEndpoint = (req: Request, res: Response) => {
+    res.json(getStoreStatus());
+};
 
 const prisma = new PrismaClient();
 
@@ -98,6 +103,13 @@ export const createOrder = async (req: Request, res: Response) => {
             if (distance > settings.geofenceRadius) {
                 return res.status(403).json({ message: "Você está longe do restaurante! Não é possível realizar pedidos no momento. Se estiver tendo problemas fale com os garçons?!" });
             }
+        }
+        // ----------------------------------
+
+        // --- Verificação de Status da Loja ---
+        const storeStatus = getStoreStatus();
+        if (storeStatus.status === 'offline') {
+            return res.status(403).json({ message: 'O restaurante está fechado neste momento e não está aceitando pedidos.' });
         }
         // ----------------------------------
 

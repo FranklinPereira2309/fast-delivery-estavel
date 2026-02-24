@@ -13,6 +13,8 @@ export interface BusinessSettings {
   restaurantLat?: number;
   restaurantLng?: number;
   geofenceRadius?: number;
+  isManuallyClosed: boolean;
+  operatingHours: string;
 }
 
 const DEFAULT_SETTINGS: BusinessSettings = {
@@ -22,7 +24,9 @@ const DEFAULT_SETTINGS: BusinessSettings = {
   phone: '(11) 98888-7777',
   deliveryFee: 'R$ 8,00',
   tableCount: 10,
-  geofenceRadius: 30
+  geofenceRadius: 30,
+  isManuallyClosed: false,
+  operatingHours: '[]'
 };
 
 class APIDBService {

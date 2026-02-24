@@ -15,6 +15,7 @@ import auditRoutes from './routes/auditRoutes';
 import tableRoutes from './routes/tableRoutes';
 import publicRoutes from './routes/publicRoutes';
 import { initSocket } from './socket';
+import { loadSettingsToCache } from './storeStatusCache';
 import http from 'http';
 
 const app = express();
@@ -46,4 +47,5 @@ app.get('/health', (req, res) => {
 
 server.listen(port, () => {
     console.log(`Server running on port ${port}`);
+    loadSettingsToCache();
 });

@@ -344,6 +344,86 @@ const FleetManagement: React.FC = () => {
     );
 };
 
+// Sub-componente para Horário de Funcionamento
+const OperatingHoursSettings: React.FC<{ settings: BusinessSettings, setSettings: (s: BusinessSettings) => void, onSave: (e: React.FormEvent) => void }> = ({ settings, setSettings, onSave }) => {
+    let hours: any[] = [];
+    try {
+        hours = JSON.parse(settings.operatingHours);
+    } catch { }
+
+    const daysOfWeek = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+
+    // Inicializar se vazio
+    if (!Array.isArray(hours) || hours.length === 0) {
+        hours = daysOfWeek.map((day, ix) => ({ dayOfWeek: ix, isOpen: true, openTime: '18:00', closeTime: '23:59' }));
+    }
+
+    const updateHour = (ix: number, field: string, value: any) => {
+        const newHours = [...hours];
+        newHours[ix] = { ...newHours[ix], [field]: value };
+        setSettings({ ...settings, operatingHours: JSON.stringify(newHours) });
+    };
+
+    return (
+        <form onSubmit={onSave} className="bg-white p-10 rounded-[3rem] shadow-sm border border-slate-100 max-w-4xl space-y-8 animate-in fade-in">
+            <div className="flex justify-between items-start mb-10">
+                <div>
+                    <h3 className="text-2xl font-black text-slate-800 uppercase tracking-tighter">Horário de Funcionamento</h3>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Defina quando sua loja recebe pedidos</p>
+                </div>
+            </div>
+
+            <div className={`p-6 rounded-3xl border-2 transition-all flex items-center justify-between ${settings.isManuallyClosed ? 'bg-red-50 border-red-200' : 'bg-blue-50 border-blue-200'}`}>
+                <div>
+                    <h4 className={`text-lg font-black uppercase tracking-tight ${settings.isManuallyClosed ? 'text-red-800' : 'text-blue-800'}`}>
+                        {settings.isManuallyClosed ? 'Loja Fechada Manualmente' : 'Controle Manual: Loja Aberta'}
+                    </h4>
+                    <p className={`text-[10px] font-bold uppercase tracking-widest ${settings.isManuallyClosed ? 'text-red-500' : 'text-blue-500'}`}>
+                        {settings.isManuallyClosed ? 'Nenhum pedido digital será aceito até que você reabra.' : 'Seguindo a programação normal de dias e horários.'}
+                    </p>
+                </div>
+                <button
+                    type="button"
+                    onClick={() => setSettings({ ...settings, isManuallyClosed: !settings.isManuallyClosed })}
+                    className={`px-8 py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest transition-all shadow-xl ${settings.isManuallyClosed ? 'bg-red-600 text-white hover:bg-red-700 shadow-red-200' : 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-200'}`}
+                >
+                    {settings.isManuallyClosed ? 'Reabrir Loja Agora' : 'Fechar Loja Temporariamente'}
+                </button>
+            </div>
+
+            <div className="pt-6 border-t border-slate-100 space-y-4">
+                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Programação Semanal</h4>
+                {hours.map((config, ix) => (
+                    <div key={ix} className="flex items-center gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                        <div className="w-32 flex items-center gap-3">
+                            <input type="checkbox" checked={config.isOpen} onChange={e => updateHour(ix, 'isOpen', e.target.checked)} className="w-5 h-5 rounded-md text-blue-600" />
+                            <span className={`font-black uppercase text-sm ${config.isOpen ? 'text-slate-800' : 'text-slate-400 line-through'}`}>{daysOfWeek[config.dayOfWeek]}</span>
+                        </div>
+                        <div className="flex items-center gap-4 flex-1">
+                            {config.isOpen ? (
+                                <>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Abre:</span>
+                                        <input type="time" value={config.openTime} onChange={e => updateHour(ix, 'openTime', e.target.value)} className="p-3 bg-white border-none rounded-xl font-bold text-sm shadow-sm" />
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Fecha:</span>
+                                        <input type="time" value={config.closeTime} onChange={e => updateHour(ix, 'closeTime', e.target.value)} className="p-3 bg-white border-none rounded-xl font-bold text-sm shadow-sm" />
+                                    </div>
+                                </>
+                            ) : (
+                                <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Fechado o dia todo</span>
+                            )}
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            <button type="submit" className="w-full md:w-auto bg-blue-600 text-white px-12 py-5 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-blue-700 transition-all shadow-2xl shadow-blue-100">Salvar Horários</button>
+        </form>
+    );
+};
+
 interface SettingsProps {
     settings: BusinessSettings;
     setSettings: (s: BusinessSettings) => void;
@@ -352,7 +432,7 @@ interface SettingsProps {
 }
 
 const Settings: React.FC<SettingsProps> = ({ settings, setSettings, onReset, onGoToSalesMonitor }) => {
-    const [activeSubTab, setActiveSubTab] = useState<'EMPRESA' | 'GARCONS' | 'USUARIOS' | 'FROTA' | 'AUDITORIA' | 'AVANCADO'>('EMPRESA');
+    const [activeSubTab, setActiveSubTab] = useState<'EMPRESA' | 'HORARIOS' | 'GARCONS' | 'USUARIOS' | 'FROTA' | 'AUDITORIA' | 'AVANCADO'>('EMPRESA');
     const [isSavedAlertOpen, setIsSavedAlertOpen] = useState(false);
 
     const handleSaveSettings = async (e: React.FormEvent) => {
@@ -363,6 +443,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings, onReset, onG
 
     const menuItems = [
         { id: 'EMPRESA', label: 'Empresa', icon: Icons.Dashboard },
+        { id: 'HORARIOS', label: 'Horários', icon: Icons.Clock },
         { id: 'GARCONS', label: 'Garçons', icon: Icons.CRM },
         { id: 'USUARIOS', label: 'Usuários', icon: Icons.POS },
         { id: 'FROTA', label: 'Frota/Entregadores', icon: Icons.Logistics },
@@ -474,6 +555,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings, onReset, onG
                     </div>
                 )}
 
+                {activeSubTab === 'HORARIOS' && <OperatingHoursSettings settings={settings} setSettings={setSettings} onSave={handleSaveSettings} />}
                 {activeSubTab === 'GARCONS' && <WaiterManagement />}
                 {activeSubTab === 'USUARIOS' && <UserManagementInternal />}
                 {activeSubTab === 'FROTA' && <FleetManagement />}

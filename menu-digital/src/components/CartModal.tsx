@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { CartItem } from '../types';
-import { submitOrder } from '../api';
+import { submitOrder, StoreStatus } from '../api';
 
 interface CartModalProps {
     isOpen: boolean;
@@ -11,9 +11,10 @@ interface CartModalProps {
     clearCart: () => void;
     initialClientName?: string;
     onOrderSuccess?: () => void;
+    storeStatus: StoreStatus;
 }
 
-const CartModal: React.FC<CartModalProps> = ({ isOpen, onClose, cart, tableNumber, updateQuantity, clearCart, initialClientName, onOrderSuccess }) => {
+const CartModal: React.FC<CartModalProps> = ({ isOpen, onClose, cart, tableNumber, updateQuantity, clearCart, initialClientName, onOrderSuccess, storeStatus }) => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [observations, setObservations] = useState('');
     const [clientName, setClientName] = useState('');
@@ -27,6 +28,11 @@ const CartModal: React.FC<CartModalProps> = ({ isOpen, onClose, cart, tableNumbe
         setIsSubmitting(true);
 
         const executeOrder = async (lat?: number, lng?: number) => {
+            if (storeStatus.status === 'offline') {
+                alert("O restaurante está fechado neste momento e não está aceitando pedidos.");
+                setIsSubmitting(false);
+                return;
+            }
             try {
                 await submitOrder({
                     tableNumber: parseInt(tableNumber),
@@ -155,11 +161,11 @@ const CartModal: React.FC<CartModalProps> = ({ isOpen, onClose, cart, tableNumbe
                         <span className="text-3xl font-black text-blue-600 tracking-tighter">R$ {total.toFixed(2)}</span>
                     </div>
                     <button
-                        disabled={cart.length === 0 || isSubmitting}
+                        disabled={cart.length === 0 || isSubmitting || storeStatus.status === 'offline'}
                         onClick={handleSubmit}
-                        className="w-full bg-blue-600 disabled:bg-slate-300 disabled:text-slate-500 text-white py-4 rounded-2xl font-black uppercase text-sm shadow-xl shadow-blue-500/30 hover:bg-blue-700 active:scale-[0.98] transition-all flex justify-center items-center gap-2"
+                        className={`w-full py-4 rounded-2xl font-black uppercase text-sm shadow-xl transition-all flex justify-center items-center gap-2 ${storeStatus.status === 'offline' ? 'bg-slate-300 text-slate-500 cursor-not-allowed' : 'bg-blue-600 text-white shadow-blue-500/30 hover:bg-blue-700 active:scale-[0.98]'}`}
                     >
-                        {isSubmitting ? 'Enviando Pedido...' : 'Confirmar e Pedir'}
+                        {storeStatus.status === 'offline' ? 'Loja Fechada' : isSubmitting ? 'Enviando Pedido...' : 'Confirmar e Pedir'}
                     </button>
                 </div>
             </div>
