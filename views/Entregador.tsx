@@ -136,7 +136,7 @@ const Entregador: React.FC<EntregadorProps> = ({ currentUser }) => {
     }
 
     return (
-        <div className={`flex flex-col h-full gap-6 rounded-[2rem] p-2 transition-all duration-300 ${isAlerting ? 'animate-pulse ring-8 ring-fuchsia-500 bg-fuchsia-50/30' : ''}`} onClick={() => { if (isAlerting) dismissAlert(); }}>
+        <div className="flex flex-col h-full gap-6 rounded-[2rem] p-2 transition-all duration-300" onClick={() => { if (isAlerting) dismissAlert(); }}>
             <CustomAlert
                 isOpen={isAlertOpen}
                 title="NOVA ENTREGA!"
