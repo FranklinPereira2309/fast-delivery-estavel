@@ -1,4 +1,4 @@
-import { Client, Product, Order, User, AuditLog, InventoryItem, RecipeItem, DeliveryDriver, OrderStatus, SaleType, TableSession, OrderItem, Waiter } from '../types';
+import { Client, Product, Order, User, AuditLog, InventoryItem, RecipeItem, DeliveryDriver, OrderStatus, SaleType, TableSession, OrderItem, Waiter, InventoryMovement } from '../types';
 
 const API_URL = (import.meta as any).env.VITE_API_URL || 'http://localhost:3000/api';
 const AUTH_KEY = 'delivery_fast_auth';
@@ -214,6 +214,15 @@ class APIDBService {
 
   public async getAuditLogs(): Promise<AuditLog[]> {
     return this.request<AuditLog[]>('/audit');
+  }
+
+  public async getInventoryMovements(startDate?: string, endDate?: string): Promise<InventoryMovement[]> {
+    let path = '/inventory/movements';
+    const params = new URLSearchParams();
+    if (startDate) params.append('start', startDate);
+    if (endDate) params.append('end', endDate);
+    if (params.toString()) path += `?${params.toString()}`;
+    return this.request<InventoryMovement[]>(path);
   }
 }
 

@@ -71,9 +71,9 @@ const syncClientStats = async (tx: any, order: any, oldStatus?: string) => {
     return finalClientId;
 };
 
-const handleInventoryImpact = async (tx: any, items: any[], type: 'DECREMENT' | 'INCREMENT') => {
+const handleInventoryImpact = async (tx: any, items: any[], type: 'DECREMENT' | 'INCREMENT', orderId?: string) => {
     for (const item of items) {
-        if (!item.productId) continue; // Pula se o item pedir um produto invalido
+        if (!item.productId) continue;
         const product = await tx.product.findUnique({
             where: { id: item.productId },
             include: { recipe: { include: { inventoryItem: true } } }
@@ -81,13 +81,29 @@ const handleInventoryImpact = async (tx: any, items: any[], type: 'DECREMENT' | 
 
         if (product && product.recipe && Array.isArray(product.recipe)) {
             for (const r of product.recipe) {
-                if (!r.inventoryItemId) continue; // Pula se n tiver insumo linkado
+                if (!r.inventoryItemId) continue;
+                const quantityToChange = r.quantity * item.quantity * r.wasteFactor;
+
                 await tx.inventoryItem.update({
                     where: { id: r.inventoryItemId },
                     data: {
                         quantity: type === 'DECREMENT'
-                            ? { decrement: r.quantity * item.quantity * r.wasteFactor }
-                            : { increment: r.quantity * item.quantity * r.wasteFactor }
+                            ? { decrement: quantityToChange }
+                            : { increment: quantityToChange }
+                    }
+                });
+
+                // Get product name for cleaner reason
+                const productName = product.name || 'Produto';
+
+                // Log movement
+                await tx.inventoryMovement.create({
+                    data: {
+                        inventoryItemId: r.inventoryItemId,
+                        type: type === 'DECREMENT' ? 'OUTPUT' : 'INPUT',
+                        quantity: quantityToChange,
+                        reason: type === 'DECREMENT' ? `Venda: ${productName}` : `Estorno: ${productName}`,
+                        orderId: orderId
                     }
                 });
             }
@@ -122,9 +138,9 @@ export const saveOrder = async (req: Request, res: Response) => {
             // 1. Inventory Sync (Only on Finalization or Reversion)
             const itemsForInventory = order.items; // Use current items for stock calculation
             if (newStatus === 'DELIVERED' && oldStatus !== 'DELIVERED') {
-                await handleInventoryImpact(tx, itemsForInventory, 'DECREMENT');
+                await handleInventoryImpact(tx, itemsForInventory, 'DECREMENT', order.id);
             } else if (newStatus !== 'DELIVERED' && oldStatus === 'DELIVERED') {
-                await handleInventoryImpact(tx, itemsForInventory, 'INCREMENT');
+                await handleInventoryImpact(tx, itemsForInventory, 'INCREMENT', order.id);
             }
 
             // 2. Client Synchronization and Order Counting
@@ -239,7 +255,7 @@ export const deleteOrder = async (req: Request, res: Response) => {
             // 2. Se era um pedido Finalizado (DELIVERED), desfazemos os logs
             if (orderToDelete.status === 'DELIVERED') {
                 // Re-estoca os ingredientes virtualmente
-                await handleInventoryImpact(tx, orderToDelete.items, 'INCREMENT');
+                await handleInventoryImpact(tx, orderToDelete.items, 'INCREMENT', orderToDelete.id);
 
                 // Se tinha um ID próprio de CRM, abassa 1
                 if (orderToDelete.clientId && orderToDelete.clientId !== 'ANONYMOUS') {
@@ -296,9 +312,9 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
 
             // 1. Inventory Sync
             if (newStatus === 'DELIVERED' && oldStatus !== 'DELIVERED') {
-                await handleInventoryImpact(tx, oldOrder.items, 'DECREMENT');
+                await handleInventoryImpact(tx, oldOrder.items, 'DECREMENT', id as string);
             } else if (newStatus !== 'DELIVERED' && oldStatus === 'DELIVERED') {
-                await handleInventoryImpact(tx, oldOrder.items, 'INCREMENT');
+                await handleInventoryImpact(tx, oldOrder.items, 'INCREMENT', id as string);
             }
 
             // 2. Update status and driver

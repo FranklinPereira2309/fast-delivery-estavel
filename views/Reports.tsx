@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { db, BusinessSettings } from '../services/db';
-import { Order, OrderStatus, SaleType, Client, Product, DeliveryDriver } from '../types';
+import { Order, OrderStatus, SaleType, Client, Product, DeliveryDriver, InventoryMovement } from '../types';
 import { Icons } from '../constants';
 import CustomAlert from '../components/CustomAlert';
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
@@ -21,13 +21,17 @@ const Reports: React.FC = () => {
     const [salesOrigin, setSalesOrigin] = useState<'TODOS' | 'FISICO' | 'DIGITAL'>('TODOS');
 
     // Tab State
-    const [activeTab, setActiveTab] = useState<'SALES' | 'CLIENTS' | 'DRIVERS'>('SALES');
+    const [activeTab, setActiveTab] = useState<'SALES' | 'CLIENTS' | 'DRIVERS' | 'INVENTORY'>('SALES');
+
+    // Inventory Filters
+    const [inventoryStartDate, setInventoryStartDate] = useState(new Date().toISOString().split('T')[0]);
+    const [inventoryEndDate, setInventoryEndDate] = useState(new Date().toISOString().split('T')[0]);
 
     // Customer Filters
     const [clientSearch, setClientSearch] = useState('');
     const [selectedClient, setSelectedClient] = useState<Client | null>(null);
     const [showClientDropdown, setShowClientDropdown] = useState(false);
-    const [previewType, setPreviewType] = useState<'SALES' | 'CLIENTS' | 'CLIENT_ORDERS' | 'DRIVERS' | null>(null);
+    const [previewType, setPreviewType] = useState<'SALES' | 'CLIENTS' | 'CLIENT_ORDERS' | 'DRIVERS' | 'INVENTORY' | null>(null);
 
     // Driver Filters
     const [driverStartDate, setDriverStartDate] = useState(new Date().toISOString().split('T')[0]);
@@ -378,6 +382,79 @@ const Reports: React.FC = () => {
         }
     };
 
+    const generateInventoryPDF = async (downloadOnly = false) => {
+        if (!businessSettings) return;
+
+        try {
+            const pdfDoc = await PDFDocument.create();
+            const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+            const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+
+            const movements = await db.getInventoryMovements(inventoryStartDate, inventoryEndDate);
+
+            let page = pdfDoc.addPage([595.28, 841.89]);
+            const { width, height } = page.getSize();
+            let y = height - 50;
+
+            // Header
+            page.drawText('RELATÓRIO DE MOVIMENTAÇÃO DE ESTOQUE', { x: 50, y, size: 18, font: fontBold });
+            y -= 25;
+            page.drawText(businessSettings.name, { x: 50, y, size: 12, font: fontBold });
+            y -= 15;
+            page.drawText(`Período: ${new Date(inventoryStartDate + 'T00:00:00').toLocaleDateString('pt-BR')} a ${new Date(inventoryEndDate + 'T00:00:00').toLocaleDateString('pt-BR')}`, { x: 50, y, size: 10, font });
+
+            y -= 40;
+            // Table Header
+            page.drawRectangle({ x: 50, y: y - 5, width: width - 100, height: 20, color: rgb(0.95, 0.95, 0.95) });
+            page.drawText('DATA | HORA', { x: 55, y, size: 8, font: fontBold });
+            page.drawText('INSUMO', { x: 150, y, size: 8, font: fontBold });
+            page.drawText('TIPO', { x: 300, y, size: 8, font: fontBold });
+            page.drawText('QTD', { x: 350, y, size: 8, font: fontBold });
+            page.drawText('MOTIVO', { x: 400, y, size: 8, font: fontBold });
+            y -= 25;
+
+            for (const m of movements) {
+                if (y < 70) {
+                    page = pdfDoc.addPage([595.28, 841.89]);
+                    y = page.getHeight() - 50;
+                }
+                const dateObj = new Date(m.timestamp);
+                const dateStr = `${dateObj.toLocaleDateString('pt-BR')} ${dateObj.toLocaleTimeString('pt-BR').substring(0, 5)}`;
+
+                page.drawText(dateStr, { x: 55, y, size: 7, font });
+                page.drawText(m.inventoryItem?.name.substring(0, 30) || 'N/A', { x: 150, y, size: 7, font });
+
+                const isInput = m.type === 'INPUT';
+                page.drawText(isInput ? 'ENTRADA' : 'SAÍDA', {
+                    x: 300, y, size: 7, font: fontBold,
+                    color: isInput ? rgb(0.1, 0.5, 0.1) : rgb(0.7, 0.1, 0.1)
+                });
+
+                page.drawText(m.quantity.toString(), { x: 350, y, size: 7, font });
+                page.drawText(m.reason.substring(0, 35), { x: 400, y, size: 7, font });
+                y -= 15;
+            }
+
+            const pdfBytes = await pdfDoc.save();
+            const blob = new Blob([pdfBytes as any], { type: 'application/pdf' });
+            const url = URL.createObjectURL(blob);
+
+            if (downloadOnly) {
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `movimentacao_estoque_${inventoryStartDate}_${inventoryEndDate}.pdf`;
+                link.click();
+                URL.revokeObjectURL(url);
+            } else {
+                setPreviewType('INVENTORY');
+                setPdfPreviewUrl(url);
+            }
+        } catch (error) {
+            console.error('Erro ao gerar PDF de estoque:', error);
+            alert('Erro ao gerar relatório de estoque.');
+        }
+    };
+
     return (
         <div className="flex flex-col h-full gap-8 animate-in fade-in duration-500 overflow-y-auto pb-8">
 
@@ -386,6 +463,7 @@ const Reports: React.FC = () => {
                 <button onClick={() => setActiveTab('SALES')} className={`pb-4 text-[12px] font-black uppercase tracking-widest transition-all ${activeTab === 'SALES' ? 'text-blue-600 border-b-4 border-blue-600' : 'text-slate-400 hover:text-slate-600'}`}>Relatórios de Vendas</button>
                 <button onClick={() => setActiveTab('CLIENTS')} className={`pb-4 text-[12px] font-black uppercase tracking-widest transition-all ${activeTab === 'CLIENTS' ? 'text-blue-600 border-b-4 border-blue-600' : 'text-slate-400 hover:text-slate-600'}`}>Lista de Clientes</button>
                 <button onClick={() => setActiveTab('DRIVERS')} className={`pb-4 text-[12px] font-black uppercase tracking-widest transition-all ${activeTab === 'DRIVERS' ? 'text-blue-600 border-b-4 border-blue-600' : 'text-slate-400 hover:text-slate-600'}`}>Rotas de Entregadores</button>
+                <button onClick={() => setActiveTab('INVENTORY')} className={`pb-4 text-[12px] font-black uppercase tracking-widest transition-all ${activeTab === 'INVENTORY' ? 'text-blue-600 border-b-4 border-blue-600' : 'text-slate-400 hover:text-slate-600'}`}>Movimentação de Insumos</button>
             </div>
 
             <div className="flex-1">
@@ -593,6 +671,40 @@ const Reports: React.FC = () => {
                     </div>
                 )}
 
+                {/* CARD RELATÓRIO DE MOVIMENTAÇÃO DE INSUMOS */}
+                {activeTab === 'INVENTORY' && (
+                    <div className="bg-white p-10 rounded-[3rem] shadow-sm border border-slate-100 flex flex-col h-max max-w-4xl animate-in fade-in zoom-in-95">
+                        <div className="mb-8">
+                            <h3 className="text-2xl font-black text-slate-800 uppercase tracking-tighter flex items-center gap-3">
+                                <span className="p-3 bg-blue-50 text-blue-600 rounded-2xl"><Icons.Inventory /></span>
+                                Movimentação de Insumos
+                            </h3>
+                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-2 ml-14">Rastreabilidade completa de estoque (entradas e saídas)</p>
+                        </div>
+
+                        <div className="space-y-6">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Início</label>
+                                    <input type="date" value={inventoryStartDate} onChange={e => setInventoryStartDate(e.target.value)} className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-sm" />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Fim</label>
+                                    <input type="date" value={inventoryEndDate} onChange={e => setInventoryEndDate(e.target.value)} className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-sm" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <button
+                            onClick={() => generateInventoryPDF(false)}
+                            className="mt-8 w-full py-6 bg-slate-900 hover:bg-black text-white rounded-[2rem] font-black uppercase text-xs tracking-widest shadow-xl transition-all flex items-center justify-center gap-3"
+                        >
+                            <Icons.Print />
+                            Visualizar Relatório de Movimentação
+                        </button>
+                    </div>
+                )}
+
             </div>
 
             {/* MODAL DE PREVIEW DO PDF */}
@@ -611,6 +723,7 @@ const Reports: React.FC = () => {
                                         else if (previewType === 'CLIENTS') generateClientsPDF(true);
                                         else if (previewType === 'CLIENT_ORDERS') generateClientOrdersPDF(true);
                                         else if (previewType === 'DRIVERS') generateDriversPDF(true);
+                                        else if (previewType === 'INVENTORY') generateInventoryPDF(true);
                                     }}
                                     className="bg-slate-900 text-white px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all flex items-center gap-2"
                                 >

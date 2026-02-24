@@ -102,6 +102,18 @@ model InventoryItem {
   minStock  Float
   cost      Float
   recipes   RecipeItem[]
+  movements InventoryMovement[]
+}
+
+model InventoryMovement {
+  id              String        @id @default(uuid())
+  timestamp       DateTime      @default(now())
+  inventoryItemId String
+  inventoryItem   InventoryItem @relation(fields: [inventoryItemId], references: [id])
+  type            String        // INPUT, OUTPUT, ADJUSTMENT
+  quantity        Float
+  reason          String        // e.g., "Sale", "Manual Adjustment", "Restock"
+  orderId         String?       // Link to order if applicable
 }
 
 model RecipeItem {

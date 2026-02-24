@@ -146,3 +146,14 @@ export interface DeliveryDriver {
   };
   status: 'AVAILABLE' | 'BUSY' | 'OFFLINE';
 }
+
+export interface InventoryMovement {
+  id: string;
+  timestamp: string;
+  inventoryItemId: string;
+  inventoryItem?: InventoryItem;
+  type: 'INPUT' | 'OUTPUT' | 'ADJUSTMENT';
+  quantity: number;
+  reason: string;
+  orderId?: string;
+}
