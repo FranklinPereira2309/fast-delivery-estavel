@@ -150,17 +150,11 @@ const Entregador: React.FC<EntregadorProps> = ({ currentUser }) => {
                     <h2 className="text-lg md:text-2xl font-black text-slate-800 uppercase tracking-tighter truncate">Minhas Entregas</h2>
                     <p className="text-[9px] md:text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5 truncate">Olá, {driver.name}</p>
                 </div>
-                <div className="flex flex-col md:flex-row items-end md:items-center gap-2 shrink-0">
+                <div className="flex shrink-0">
                     <div className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 bg-slate-50 rounded-2xl border border-slate-100">
                         <span className={`w-2 h-2 md:w-2.5 md:h-2.5 rounded-full ${storeStatus.status === 'online' ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`}></span>
                         <span className={`text-[9px] md:text-[10px] font-black uppercase tracking-widest ${storeStatus.status === 'online' ? 'text-emerald-700' : 'text-red-600'}`}>
                             Loja {storeStatus.status === 'online' ? 'Aberta' : 'Fechada'}
-                        </span>
-                    </div>
-                    <div className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 bg-emerald-50 rounded-2xl border border-emerald-100">
-                        <span className={`w-2 h-2 md:w-2.5 md:h-2.5 rounded-full ${driver.status === 'AVAILABLE' ? 'bg-emerald-500 animate-pulse' : (driver.status === 'BUSY' ? 'bg-amber-500' : 'bg-slate-400')}`}></span>
-                        <span className="text-[9px] md:text-[10px] font-black text-emerald-700 uppercase tracking-widest">
-                            {driver.status === 'AVAILABLE' ? 'Entregador Disponível' : (driver.status === 'BUSY' ? 'Em Entrega' : 'Offline')}
                         </span>
                     </div>
                 </div>
