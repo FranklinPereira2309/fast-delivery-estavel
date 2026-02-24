@@ -224,6 +224,18 @@ class APIDBService {
     if (params.toString()) path += `?${params.toString()}`;
     return this.request<InventoryMovement[]>(path);
   }
+
+  // Chat
+  public async getChatHistory(driverId: string): Promise<any[]> {
+    return this.request<any[]>(`/chat/${driverId}`);
+  }
+
+  public async sendChatMessage(message: { driverId: string, content: string, senderName: string, isFromDriver: boolean }) {
+    return this.request('/chat', {
+      method: 'POST',
+      body: JSON.stringify(message)
+    });
+  }
 }
 
 export const db = new APIDBService();

@@ -14,6 +14,7 @@ import settingsRoutes from './routes/settingsRoutes';
 import auditRoutes from './routes/auditRoutes';
 import tableRoutes from './routes/tableRoutes';
 import publicRoutes from './routes/publicRoutes';
+import chatRoutes from './routes/chatRoutes';
 import { initSocket } from './socket';
 import { loadSettingsToCache } from './storeStatusCache';
 import http from 'http';
@@ -39,6 +40,7 @@ app.use('/api/settings', settingsRoutes);
 app.use('/api/audit', auditRoutes);
 app.use('/api/tables', tableRoutes);
 app.use('/api/public', publicRoutes); // Rotas abertas para clientes e cardápio digital
+app.use('/api/chat', chatRoutes);
 
 // Basic health check
 app.get('/health', (req, res) => {

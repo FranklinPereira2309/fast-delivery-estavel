@@ -216,3 +216,12 @@ model BusinessSettings {
   isManuallyClosed Boolean @default(false)
   operatingHours  String @default("[]")
 }
+
+model ChatMessage {
+  id           String   @id @default(uuid())
+  content      String
+  timestamp    DateTime @default(now())
+  driverId     String
+  isFromDriver Boolean
+  senderName   String
+}

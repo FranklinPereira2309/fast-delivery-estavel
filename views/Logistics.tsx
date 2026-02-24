@@ -3,6 +3,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { DeliveryDriver, Order, OrderStatus, OrderStatusLabels, SaleType, User, Product } from '../types';
 import { db, BusinessSettings } from '../services/db';
 import { Icons } from '../constants';
+import { socket } from '../services/socket';
 
 const Logistics: React.FC = () => {
   const [drivers, setDrivers] = useState<DeliveryDriver[]>([]);
@@ -12,21 +13,73 @@ const Logistics: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [printingOrder, setPrintingOrder] = useState<Order | null>(null);
 
-  const [activeTab, setActiveTab] = useState<'PENDING' | 'HISTORY'>('PENDING');
+  const [activeTab, setActiveTab] = useState<'PENDING' | 'HISTORY' | 'CHAT'>('PENDING');
   const [historyOrders, setHistoryOrders] = useState<Order[]>([]);
   const [historyStartDate, setHistoryStartDate] = useState(new Date().toISOString().split('T')[0]);
   const [historyEndDate, setHistoryEndDate] = useState(new Date().toISOString().split('T')[0]);
   const [historyDriverId, setHistoryDriverId] = useState<string>('TODOS');
   const [printingHistoryOrder, setPrintingHistoryOrder] = useState<Order | null>(null);
 
+  // Chat States
+  const [selectedDriver, setSelectedDriver] = useState<DeliveryDriver | null>(null);
+  const [messages, setMessages] = useState<any[]>([]);
+  const [newMessage, setNewMessage] = useState('');
+  const chatEndRef = React.useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     refreshData();
     const session = db.getCurrentSession();
     if (session) setCurrentUser(session.user);
 
-    const interval = setInterval(refreshData, 3000);
-    return () => clearInterval(interval);
-  }, []);
+    const interval = setInterval(refreshData, 5000);
+
+    socket.on('new_message', (msg: any) => {
+      if (selectedDriver && msg.driverId === selectedDriver.id) {
+        setMessages(prev => [...prev, msg]);
+      }
+    });
+
+    return () => {
+      clearInterval(interval);
+      socket.off('new_message');
+    };
+  }, [selectedDriver]);
+
+  useEffect(() => {
+    if (selectedDriver) {
+      socket.emit('join_chat', selectedDriver.id);
+      loadChatHistory(selectedDriver.id);
+    }
+  }, [selectedDriver]);
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const loadChatHistory = async (driverId: string) => {
+    const history = await db.getChatHistory(driverId);
+    setMessages(history);
+  };
+
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newMessage.trim() || !selectedDriver || !currentUser) return;
+
+    const msgData = {
+      driverId: selectedDriver.id,
+      content: newMessage,
+      senderName: 'Logística',
+      isFromDriver: false
+    };
+
+    try {
+      const savedMsg = await db.sendChatMessage(msgData);
+      socket.emit('send_message', savedMsg);
+      setNewMessage('');
+    } catch (e) {
+      console.error("Erro ao enviar mensagem:", e);
+    }
+  };
 
   const refreshData = async () => {
     const [allDrivers, allOrders, allProds, settings] = await Promise.all([
@@ -91,6 +144,12 @@ const Logistics: React.FC = () => {
           Entregas
         </button>
         <button
+          onClick={() => setActiveTab('CHAT')}
+          className={`px-6 py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all ${activeTab === 'CHAT' ? 'bg-slate-900 text-white shadow-xl' : 'text-slate-400 hover:bg-slate-50'}`}
+        >
+          Chat
+        </button>
+        <button
           onClick={() => setActiveTab('HISTORY')}
           className={`px-6 py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all ${activeTab === 'HISTORY' ? 'bg-slate-900 text-white shadow-xl' : 'text-slate-400 hover:bg-slate-50'}`}
         >
@@ -101,7 +160,7 @@ const Logistics: React.FC = () => {
       {activeTab === 'PENDING' ? (
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 overflow-y-auto pb-8">
           {readyOrders.length > 0 ? readyOrders.map(order => (
-            <div key={order.id} className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col gap-4 group hover:shadow-xl transition-all">
+            <div key={order.id} className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col gap-4 group hover:shadow-xl transition-all h-max">
               <div className="flex justify-between items-start">
                 <div>
                   <h4 className="font-black text-slate-800 uppercase text-lg">{order.id.split('-')[1] || order.id}</h4>
@@ -191,6 +250,95 @@ const Logistics: React.FC = () => {
             </div>
           )}
         </div>
+      ) : activeTab === 'CHAT' ? (
+        <div className="flex-1 flex bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden mb-8 animate-in fade-in duration-300 h-full">
+          {/* Sidebar de Motoristas */}
+          <div className="w-80 border-r border-slate-100 flex flex-col bg-slate-50/30">
+            <div className="p-6 border-b border-slate-100">
+              <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Entregadores ({drivers.length})</h3>
+            </div>
+            <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-2 custom-scrollbar">
+              {drivers.map(driver => (
+                <button
+                  key={driver.id}
+                  onClick={() => setSelectedDriver(driver)}
+                  className={`flex items-center gap-3 p-4 rounded-3xl transition-all ${selectedDriver?.id === driver.id ? 'bg-white shadow-md border border-slate-100 scale-[1.02]' : 'hover:bg-white/50'}`}
+                >
+                  <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-white font-black uppercase text-sm ${selectedDriver?.id === driver.id ? 'bg-blue-600 shadow-lg shadow-blue-500/20' : 'bg-slate-300'}`}>
+                    {driver.name.charAt(0)}
+                  </div>
+                  <div className="flex-1 text-left min-w-0">
+                    <p className="text-sm font-black text-slate-800 truncate">{driver.name}</p>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Conectado</span>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Área de Chat */}
+          <div className="flex-1 flex flex-col bg-white">
+            {selectedDriver ? (
+              <>
+                <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/10">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-blue-600 rounded-2xl flex items-center justify-center text-white font-black uppercase text-sm shadow-xl shadow-blue-500/10">
+                      {selectedDriver.name.charAt(0)}
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-black text-slate-800">{selectedDriver.name}</h4>
+                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Conversa Privada</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex-1 overflow-y-auto p-8 flex flex-col gap-4 custom-scrollbar bg-slate-50/20">
+                  {messages.length === 0 && (
+                    <div className="flex flex-col items-center justify-center h-full opacity-20 py-20">
+                      <Icons.Table className="w-16 h-16 mb-4" />
+                      <p className="text-xs font-black uppercase tracking-widest">Nenhuma mensagem neste chat</p>
+                    </div>
+                  )}
+                  {messages.map((msg, i) => (
+                    <div key={msg.id || i} className={`flex ${msg.isFromDriver ? 'justify-start' : 'justify-end'}`}>
+                      <div className={`max-w-[70%] p-5 rounded-[2rem] shadow-sm text-sm ${msg.isFromDriver ? 'bg-white border border-slate-100 text-slate-800 rounded-tl-none' : 'bg-slate-900 text-white rounded-tr-none'}`}>
+                        <p className="font-bold leading-relaxed">{msg.content}</p>
+                        <span className={`text-[9px] uppercase font-black tracking-widest opacity-50 block mt-2 ${msg.isFromDriver ? 'text-left' : 'text-right'}`}>
+                          {new Date(msg.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                  <div ref={chatEndRef} />
+                </div>
+
+                <form onSubmit={handleSendMessage} className="p-6 bg-white border-t border-slate-100 flex gap-4">
+                  <input
+                    type="text"
+                    value={newMessage}
+                    onChange={e => setNewMessage(e.target.value)}
+                    placeholder={`Mensagem para ${selectedDriver.name}...`}
+                    className="flex-1 bg-slate-50 border-none rounded-2xl px-6 text-sm font-bold focus:ring-4 focus:ring-blue-500/10 transition-all outline-none"
+                  />
+                  <button type="submit" className="px-8 bg-blue-600 text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl shadow-blue-500/20 active:scale-95 transition-all">
+                    Enviar
+                  </button>
+                </form>
+              </>
+            ) : (
+              <div className="flex-1 flex flex-col items-center justify-center text-slate-300 p-12 text-center">
+                <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mb-6">
+                  <Icons.CRM className="w-12 h-12 text-slate-200" />
+                </div>
+                <h3 className="text-lg font-black text-slate-800 uppercase tracking-tighter mb-2">Central de Mensagens</h3>
+                <p className="text-xs font-bold text-slate-400 max-w-xs leading-relaxed uppercase">Selecione um entregador ao lado para iniciar ou retomar uma conversa em tempo real.</p>
+              </div>
+            )}
+          </div>
+        </div>
       ) : (
         <div className="flex flex-col gap-6 h-full overflow-hidden">
           <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex gap-4 items-end flex-wrap">
@@ -267,88 +415,83 @@ const Logistics: React.FC = () => {
               )}
           </div>
         </div>
-      )
-      }
+      )}
 
       {/* CUPOM DE ENTREGA AGRUPADO */}
-      {
-        printingOrder && businessSettings && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
-            <div className="relative w-full max-w-[80mm] bg-white p-8 border border-dashed shadow-2xl font-receipt text-[11px] text-black print-container is-receipt animate-in zoom-in duration-200">
-              <div className="text-center mb-6 border-b border-dashed pb-4">
-                <h2 className="font-black text-sm uppercase tracking-tighter">{businessSettings.name}</h2>
-                <p className="text-[9px] font-bold mt-1 uppercase">Comprovante de Pagamento</p>
-              </div>
+      {printingOrder && businessSettings && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
+          <div className="relative w-full max-w-[80mm] bg-white p-8 border border-dashed shadow-2xl font-receipt text-[11px] text-black print-container is-receipt animate-in zoom-in duration-200">
+            <div className="text-center mb-6 border-b border-dashed pb-4">
+              <h2 className="font-black text-sm uppercase tracking-tighter">{businessSettings.name}</h2>
+              <p className="text-[9px] font-bold mt-1 uppercase">Comprovante de Pagamento</p>
+            </div>
 
-              <div className="space-y-1 mb-4">
-                <p>DATA: {new Date(printingOrder.createdAt).toLocaleString('pt-BR')}</p>
-                <p>CLIENTE: {printingOrder.clientName}</p>
-                {printingOrder.clientPhone && <p>FONE: {printingOrder.clientPhone}</p>}
-                {printingOrder.clientAddress && (
-                  <p className="font-bold border-t border-dashed mt-2 pt-1 uppercase leading-tight">ENTREGA: {printingOrder.clientAddress}</p>
-                )}
-                {printingOrder.tableNumber && <p className="font-black">MESA: {printingOrder.tableNumber}</p>}
-                <p>MÉTODO: {printingOrder.paymentMethod || 'DINHEIRO'}</p>
-              </div>
+            <div className="space-y-1 mb-4">
+              <p>DATA: {new Date(printingOrder.createdAt).toLocaleString('pt-BR')}</p>
+              <p>CLIENTE: {printingOrder.clientName}</p>
+              {printingOrder.clientPhone && <p>FONE: {printingOrder.clientPhone}</p>}
+              {printingOrder.clientAddress && (
+                <p className="font-bold border-t border-dashed mt-2 pt-1 uppercase leading-tight">ENTREGA: {printingOrder.clientAddress}</p>
+              )}
+              {printingOrder.tableNumber && <p className="font-black">MESA: {printingOrder.tableNumber}</p>}
+              <p>MÉTODO: {printingOrder.paymentMethod || 'DINHEIRO'}</p>
+            </div>
 
-              <div className="border-t border-dashed my-3 py-3">
-                {groupedPrintingItems.map(([id, data]) => (
-                  <div key={id} className="flex justify-between font-black uppercase py-0.5">
-                    <span>{data.quantity}x {data.name.substring(0, 18)}</span>
-                    <span>R$ {(data.quantity * data.price).toFixed(2)}</span>
-                  </div>
-                ))}
-              </div>
+            <div className="border-t border-dashed my-3 py-3">
+              {groupedPrintingItems.map(([id, data]) => (
+                <div key={id} className="flex justify-between font-black uppercase py-0.5">
+                  <span>{data.quantity}x {data.name.substring(0, 18)}</span>
+                  <span>R$ {(data.quantity * data.price).toFixed(2)}</span>
+                </div>
+              ))}
+            </div>
 
-              <div className="flex justify-between items-end border-t border-dashed pt-4 mb-6">
-                <span className="font-black text-[9px] uppercase tracking-widest">TOTAL:</span>
-                <span className="text-2xl font-black">R$ {printingOrder.total.toFixed(2)}</span>
-              </div>
+            <div className="flex justify-between items-end border-t border-dashed pt-4 mb-6">
+              <span className="font-black text-[9px] uppercase tracking-widest">TOTAL:</span>
+              <span className="text-2xl font-black">R$ {printingOrder.total.toFixed(2)}</span>
+            </div>
 
-              <div className="flex gap-2 no-print">
-                <button onClick={() => window.print()} className="flex-1 bg-slate-900 text-white py-4 rounded-2xl font-black uppercase text-[10px] shadow-xl">Imprimir</button>
-                <button onClick={() => setPrintingOrder(null)} className="flex-1 bg-slate-100 text-slate-600 py-4 rounded-2xl font-black uppercase text-[10px]">Fechar</button>
-              </div>
+            <div className="flex gap-2 no-print">
+              <button onClick={() => window.print()} className="flex-1 bg-slate-900 text-white py-4 rounded-2xl font-black uppercase text-[10px] shadow-xl">Imprimir</button>
+              <button onClick={() => setPrintingOrder(null)} className="flex-1 bg-slate-100 text-slate-600 py-4 rounded-2xl font-black uppercase text-[10px]">Fechar</button>
             </div>
           </div>
-        )
-      }
+        </div>
+      )}
 
       {/* CUPOM DE HISTÓRICO RESUMIDO */}
-      {
-        printingHistoryOrder && businessSettings && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
-            <div className="relative w-full max-w-[80mm] bg-white p-8 border border-dashed shadow-2xl font-receipt text-[11px] text-black print-container is-receipt animate-in zoom-in duration-200">
-              <div className="text-center mb-6 border-b border-dashed pb-4">
-                <h2 className="font-black text-sm uppercase tracking-tighter">{businessSettings.name}</h2>
-                <p className="text-[9px] font-bold mt-1 uppercase">Cópia de Comprovante</p>
-              </div>
+      {printingHistoryOrder && businessSettings && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
+          <div className="relative w-full max-w-[80mm] bg-white p-8 border border-dashed shadow-2xl font-receipt text-[11px] text-black print-container is-receipt animate-in zoom-in duration-200">
+            <div className="text-center mb-6 border-b border-dashed pb-4">
+              <h2 className="font-black text-sm uppercase tracking-tighter">{businessSettings.name}</h2>
+              <p className="text-[9px] font-bold mt-1 uppercase">Cópia de Comprovante</p>
+            </div>
 
-              <div className="space-y-1 mb-4">
-                <p>DATA: {new Date(printingHistoryOrder.createdAt).toLocaleString('pt-BR')}</p>
-                <p>CLIENTE: {printingHistoryOrder.clientName}</p>
-                {printingHistoryOrder.clientPhone && <p>FONE: {printingHistoryOrder.clientPhone}</p>}
-                {printingHistoryOrder.clientAddress && (
-                  <p className="font-bold border-t border-dashed mt-2 pt-1 uppercase leading-tight">ENTREGA: {printingHistoryOrder.clientAddress}</p>
-                )}
-                <p>MÉTODO: {printingHistoryOrder.paymentMethod || 'DINHEIRO'}</p>
-                <p className="font-bold border-t border-dashed mt-2 pt-1 uppercase">ENTREGADOR: {getDriverName(printingHistoryOrder.driverId)}</p>
-              </div>
+            <div className="space-y-1 mb-4">
+              <p>DATA: {new Date(printingHistoryOrder.createdAt).toLocaleString('pt-BR')}</p>
+              <p>CLIENTE: {printingHistoryOrder.clientName}</p>
+              {printingHistoryOrder.clientPhone && <p>FONE: {printingHistoryOrder.clientPhone}</p>}
+              {printingHistoryOrder.clientAddress && (
+                <p className="font-bold border-t border-dashed mt-2 pt-1 uppercase leading-tight">ENTREGA: {printingHistoryOrder.clientAddress}</p>
+              )}
+              <p>MÉTODO: {printingHistoryOrder.paymentMethod || 'DINHEIRO'}</p>
+              <p className="font-bold border-t border-dashed mt-2 pt-1 uppercase">ENTREGADOR: {getDriverName(printingHistoryOrder.driverId)}</p>
+            </div>
 
-              <div className="flex justify-between items-end border-t border-dashed pt-4 mb-6">
-                <span className="font-black text-[9px] uppercase tracking-widest">TOTAL:</span>
-                <span className="text-2xl font-black">R$ {printingHistoryOrder.total.toFixed(2)}</span>
-              </div>
+            <div className="flex justify-between items-end border-t border-dashed pt-4 mb-6">
+              <span className="font-black text-[9px] uppercase tracking-widest">TOTAL:</span>
+              <span className="text-2xl font-black">R$ {printingHistoryOrder.total.toFixed(2)}</span>
+            </div>
 
-              <div className="flex gap-2 no-print">
-                <button onClick={() => window.print()} className="flex-1 bg-slate-900 text-white py-4 rounded-2xl font-black uppercase text-[10px] shadow-xl">Imprimir</button>
-                <button onClick={() => setPrintingHistoryOrder(null)} className="flex-1 bg-slate-100 text-slate-600 py-4 rounded-2xl font-black uppercase text-[10px]">Fechar</button>
-              </div>
+            <div className="flex gap-2 no-print">
+              <button onClick={() => window.print()} className="flex-1 bg-slate-900 text-white py-4 rounded-2xl font-black uppercase text-[10px] shadow-xl">Imprimir</button>
+              <button onClick={() => setPrintingHistoryOrder(null)} className="flex-1 bg-slate-100 text-slate-600 py-4 rounded-2xl font-black uppercase text-[10px]">Fechar</button>
             </div>
           </div>
-        )
-      }
-    </div >
+        </div>
+      )}
+    </div>
   );
 };
 
