@@ -47,7 +47,8 @@ const Logistics: React.FC = () => {
 
   const assignDriver = async (orderId: string, driverId: string) => {
     if (!currentUser) return;
-    await db.updateOrderStatus(orderId, OrderStatus.OUT_FOR_DELIVERY, currentUser, driverId);
+    // O status continua Ready (Pronto), apenas atribuímos o motorista para que ele possa aceitar/recusar no APP
+    await db.updateOrderStatus(orderId, OrderStatus.READY, currentUser, driverId);
     refreshData();
   };
 
@@ -135,7 +136,7 @@ const Logistics: React.FC = () => {
                 </button>
               </div>
 
-              {order.status === OrderStatus.READY ? (
+              {order.status === OrderStatus.READY && !order.driverId ? (
                 <div className="mt-4 space-y-3">
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Vincular Entregador:</p>
                   <div className="flex flex-col gap-2 max-h-40 overflow-y-auto pr-1">
@@ -157,7 +158,7 @@ const Logistics: React.FC = () => {
                     )}
                   </div>
                 </div>
-              ) : order.status === OrderStatus.OUT_FOR_DELIVERY ? (
+              ) : (order.status === OrderStatus.OUT_FOR_DELIVERY || (order.status === OrderStatus.READY && order.driverId)) ? (
                 <div className="mt-4 space-y-4">
                   <div className="flex items-center gap-3 p-4 bg-blue-50 border border-blue-100 rounded-2xl">
                     <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-black uppercase shadow-md">{getDriverName(order.driverId).charAt(0)}</div>
@@ -166,9 +167,15 @@ const Logistics: React.FC = () => {
                       <p className="text-[9px] text-blue-400 font-black uppercase mt-0.5">Veículo: {drivers.find(d => d.id === order.driverId)?.vehicle.plate || 'N/A'}</p>
                     </div>
                   </div>
-                  <div className="p-3 bg-slate-50 border border-slate-100 rounded-xl text-center">
-                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Aguardando confirmação do Entregador no APP...</p>
-                  </div>
+                  {order.status === OrderStatus.READY && order.driverId ? (
+                    <div className="p-3 bg-amber-50 border border-amber-100 rounded-xl text-center">
+                      <p className="text-[9px] font-black text-amber-600 uppercase tracking-widest">Aguardando aceite do entregador no APP...</p>
+                    </div>
+                  ) : (
+                    <div className="p-3 bg-blue-100 border border-blue-200 rounded-xl text-center">
+                      <p className="text-[9px] font-black text-blue-800 uppercase tracking-widest">Entregador em Rota...</p>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="mt-4 p-4 bg-emerald-50 border border-emerald-100 rounded-2xl text-center">

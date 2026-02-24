@@ -300,11 +300,14 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
             }
 
             // 2. Update status and driver
+            // Se driverId vier como '', seta explicitamente para null (desvincula)
+            const resolvedDriverId = driverId === '' ? null : (driverId !== undefined ? driverId : undefined);
+
             const order = await tx.order.update({
                 where: { id: id as string },
                 data: {
                     status,
-                    driverId: driverId || undefined
+                    driverId: resolvedDriverId
                 },
                 include: { items: true }
             });

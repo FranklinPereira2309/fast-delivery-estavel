@@ -55,10 +55,10 @@ const Entregador: React.FC<EntregadorProps> = ({ currentUser }) => {
         setProducts(allProds);
         setBusinessSettings(settings);
 
-        // Filter only OUT_FOR_DELIVERY assigned to this driver
+        // Filter OUT_FOR_DELIVERY AND READY assigned to this driver
         const driverOrders = allOrders.filter(o =>
             o.type === SaleType.OWN_DELIVERY &&
-            o.status === OrderStatus.OUT_FOR_DELIVERY &&
+            (o.status === OrderStatus.OUT_FOR_DELIVERY || o.status === OrderStatus.READY) &&
             o.driverId === currentDriver.id
         ).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 
@@ -80,9 +80,9 @@ const Entregador: React.FC<EntregadorProps> = ({ currentUser }) => {
         previousOrderCount.current = driverOrders.length;
     };
 
-    const updateDeliveryStatus = async (orderId: string, status: OrderStatus) => {
+    const updateDeliveryStatus = async (orderId: string, status: OrderStatus, forceDriverId?: string | null) => {
         if (!currentUser) return;
-        await db.updateOrderStatus(orderId, status, currentUser);
+        await db.updateOrderStatus(orderId, status, currentUser, forceDriverId !== undefined ? forceDriverId : currentUser.id);
         refreshData();
     };
 
@@ -220,15 +220,38 @@ const Entregador: React.FC<EntregadorProps> = ({ currentUser }) => {
                             </div>
 
                             <div className="mt-2 z-10 shrink-0">
-                                <button
-                                    onClick={() => updateDeliveryStatus(order.id, OrderStatus.DELIVERED)}
-                                    className="w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all shadow-xl shadow-emerald-500/20 active:scale-95 flex items-center justify-center gap-2"
-                                >
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                    </svg>
-                                    Confirmar Entrega Realizada
-                                </button>
+                                {order.status === OrderStatus.READY ? (
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => updateDeliveryStatus(order.id, OrderStatus.OUT_FOR_DELIVERY, order.driverId)}
+                                            className="flex-1 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-xl shadow-blue-500/20 active:scale-95 flex items-center justify-center gap-1"
+                                        >
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                            </svg>
+                                            Aceitar
+                                        </button>
+                                        <button
+                                            onClick={() => updateDeliveryStatus(order.id, OrderStatus.READY, '')}
+                                            className="flex-1 py-4 bg-red-100 hover:bg-red-200 text-red-600 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-1"
+                                        >
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                            Recusar
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <button
+                                        onClick={() => updateDeliveryStatus(order.id, OrderStatus.DELIVERED)}
+                                        className="w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all shadow-xl shadow-emerald-500/20 active:scale-95 flex items-center justify-center gap-2"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                        </svg>
+                                        Confirmar Entrega Realizada
+                                    </button>
+                                )}
                             </div>
                         </div>
                     )) : (

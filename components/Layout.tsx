@@ -21,6 +21,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
   const [shouldBlinkKitchen, setShouldBlinkKitchen] = useState(false);
   const [shouldBlinkTables, setShouldBlinkTables] = useState(false);
   const [shouldBlinkDriver, setShouldBlinkDriver] = useState(false);
+  const [currentDriverId, setCurrentDriverId] = useState<string | null>(null);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
   const { isAlerting } = useDigitalAlert();
   const lastOrdersMap = useRef<Record<string, { status: OrderStatus, itemCount: number }>>({});
@@ -49,6 +50,16 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
   ];
 
   useEffect(() => {
+    // Busca o ID caso o usuário seja um entregador
+    const checkDriverProfile = async () => {
+      const drivers = await db.getDrivers();
+      const myDriver = drivers.find(d => d.email?.toLowerCase() === currentUser.email.toLowerCase());
+      if (myDriver) {
+        setCurrentDriverId(myDriver.id);
+      }
+    };
+    checkDriverProfile();
+
     const monitorSystem = async () => {
       const orders = await db.getOrders();
 
@@ -95,11 +106,14 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
       setShouldBlinkPOS(hasBillingTables && activeTab !== 'pos');
 
       // 3. Checagem de Logística (Pedidos prontos para entrega) e Entregador (Pedidos em rota)
-      const hasReadyDelivery = orders.some(o => o.status === OrderStatus.READY && o.type === SaleType.OWN_DELIVERY);
-      const hasDispatchedDelivery = orders.some(o => o.status === OrderStatus.OUT_FOR_DELIVERY && o.type === SaleType.OWN_DELIVERY);
+      // Logística brilha se houver pedido READY mas AINDA SEM entregador (exige vinculação)
+      const hasReadyDelivery = orders.some(o => o.status === OrderStatus.READY && o.type === SaleType.OWN_DELIVERY && !o.driverId);
+
+      // Entregador brilha APENAS se houver pedido READY com O SEU driverId atribuído (esperando o Aceite)
+      const hasAssignedDelivery = currentDriverId ? orders.some(o => o.status === OrderStatus.READY && o.type === SaleType.OWN_DELIVERY && o.driverId === currentDriverId) : false;
 
       setShouldBlinkLogistics(hasReadyDelivery && activeTab !== 'logistics');
-      setShouldBlinkDriver(hasDispatchedDelivery && activeTab !== 'driver');
+      setShouldBlinkDriver(hasAssignedDelivery && activeTab !== 'driver');
 
       // 4. Checagem de Mesas (Pedidos digitais pendentes)
       const hasPendingDigital = tableSessions.some(s => s.hasPendingDigital);
@@ -111,17 +125,18 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
         if (hasNewOrder && !alertState.kitchen && activeTab !== 'kitchen') audioAlert.play();
         if (hasPendingDigital && !alertState.tables && activeTab !== 'tables') audioAlert.play();
         if (hasReadyDelivery && !alertState.logistics && activeTab !== 'logistics') audioAlert.play();
-        if (hasDispatchedDelivery && !alertState.driver && activeTab !== 'driver') audioAlert.play();
+        // Toca SOM EXCLUSIVO para o ENTREGADOR SELECIONADO para aceitar corrida
+        if (hasAssignedDelivery && !alertState.driver && activeTab !== 'driver') audioAlert.play();
       }
       alertState.kitchen = hasNewOrder;
       alertState.tables = hasPendingDigital;
       alertState.logistics = hasReadyDelivery;
-      alertState.driver = hasDispatchedDelivery;
+      alertState.driver = hasAssignedDelivery;
     };
 
     const interval = setInterval(monitorSystem, 3000);
     return () => clearInterval(interval);
-  }, [activeTab]);
+  }, [activeTab, currentDriverId]);
 
   useEffect(() => {
     if (activeTab === 'kitchen') setShouldBlinkKitchen(false);
