@@ -8,11 +8,11 @@ export interface StoreStatus {
 }
 
 let cachedSettings = {
-    isManuallyClosed: false,
+    isManuallyClosed: true, // Fail-closed by default
     operatingHours: "[]"
 };
 
-let lastCalculatedStatus: 'online' | 'offline' = 'online';
+let lastCalculatedStatus: 'online' | 'offline' = 'offline';
 
 export const updateCacheAndEmit = (isManuallyClosed: boolean, operatingHours: string) => {
     cachedSettings.isManuallyClosed = isManuallyClosed;
@@ -58,11 +58,32 @@ const calculateCurrentStoreStatus = (): StoreStatus => {
             return { status: 'online', is_manually_closed: false, next_status_change: null };
         }
 
-        const nowObj = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
-        const dayOfWeek = nowObj.getDay(); // 0 = Sunday
-        const currentTimeInt = nowObj.getHours() * 60 + nowObj.getMinutes();
+        const options: Intl.DateTimeFormatOptions = {
+            timeZone: "America/Sao_Paulo",
+            hour: 'numeric',
+            minute: 'numeric',
+            second: 'numeric',
+            weekday: 'short',
+            year: 'numeric',
+            month: 'numeric',
+            day: 'numeric',
+            hour12: false
+        };
+        const formatter = new Intl.DateTimeFormat('en-US', options);
+        const parts = formatter.formatToParts(new Date());
+        const getPart = (type: string) => parts.find(p => p.type === type)?.value;
 
-        const todayConfig = hours.find(h => h.dayOfWeek === dayOfWeek);
+        // Current time in Sao Paulo
+        const hour = parseInt(getPart('hour') || '0');
+        const minute = parseInt(getPart('minute') || '0');
+        const dayOfWeek = new Date().toLocaleDateString('en-US', { timeZone: 'America/Sao_Paulo', weekday: 'short' });
+        const dayMap: Record<string, number> = { 'Sun': 0, 'Mon': 1, 'Tue': 2, 'Wed': 3, 'Thu': 4, 'Fri': 5, 'Sat': 6 };
+        const currentDayNum = dayMap[dayOfWeek] ?? new Date().getDay();
+
+        const currentTimeInt = hour * 60 + minute;
+        const nowObj = new Date(); // Used for relative date calculation later, but we use 'hour'/'minute' for status check
+
+        const todayConfig = hours.find(h => h.dayOfWeek === currentDayNum);
 
         if (!todayConfig || !todayConfig.isOpen) {
             return { status: 'offline', is_manually_closed: false, next_status_change: getNextOpenTime(hours, nowObj) };
@@ -89,24 +110,26 @@ const calculateCurrentStoreStatus = (): StoreStatus => {
 
         if (isOpenNow) {
             // It's open! Calculate next_status_change (closing time)
-            const nextChangeDate = new Date(nowObj);
+            const nextChangeDate = new Date();
+            // Reset to SP time today
+            const spToday = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+            nextChangeDate.setTime(spToday.getTime());
+
             if (closeTimeInt < openTimeInt && currentTimeInt >= openTimeInt) {
                 // Closes tomorrow
                 nextChangeDate.setDate(nextChangeDate.getDate() + 1);
             }
             nextChangeDate.setHours(closeParts[0], closeParts[1], 0, 0);
 
-            // Format to ISO with offset -03:00 to be safe, or just use ISOString which is UTC.
-            // Let's ensure the ISO string reflects the local time intent so frontend can parse easily.
-            // standard ISO string is UTC, so we will just return it. The frontend `new Date(utcString)` will translate correctly to user's timezone.
             return { status: 'online', is_manually_closed: false, next_status_change: nextChangeDate.toISOString() };
         } else {
             // It's closed.
-            return { status: 'offline', is_manually_closed: false, next_status_change: getNextOpenTime(hours, nowObj) };
+            return { status: 'offline', is_manually_closed: false, next_status_change: getNextOpenTime(hours, new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }))) };
         }
 
     } catch (e) {
-        return { status: 'online', is_manually_closed: false, next_status_change: null };
+        console.error("Store status calculation error:", e);
+        return { status: 'offline', is_manually_closed: false, next_status_change: null };
     }
 };
 

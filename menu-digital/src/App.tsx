@@ -22,8 +22,13 @@ function AppContent() {
   const [minutesToClose, setMinutesToClose] = useState<number | null>(null);
 
   const fetchStatus = useCallback(async () => {
-    const status = await fetchStoreStatus();
-    setStoreStatus(status);
+    try {
+      const status = await fetchStoreStatus();
+      setStoreStatus(status);
+    } catch (e) {
+      console.error("Failed to fetch store status, defaulting to offline", e);
+      setStoreStatus({ status: 'offline', is_manually_closed: false, next_status_change: null });
+    }
   }, []);
 
   // Extracted logic to allow re-fetching the table data manually
@@ -135,10 +140,18 @@ function AppContent() {
       <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-100 p-4 pt-6 flex justify-between items-center">
         <div>
           <h1 className="text-xl font-black text-slate-900 tracking-tighter uppercase">Delivery Fast</h1>
-          <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-            Mesa {tableNumber} {clientName ? `• ${clientName}` : '• Disponível'}
-          </p>
+          <div className="flex flex-col gap-0.5 mt-0.5">
+            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
+              Mesa {tableNumber} {clientName ? `• ${clientName}` : '• Disponível'}
+            </p>
+            <p className={`text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 ${storeStatus.status === 'online' ? 'text-emerald-600' : 'text-red-600'}`}>
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 002 2 2 2 0 012 2v.683a3.7 3.7 0 01-2 3.317c-.504.252-1 .5-1.5.5M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" />
+              </svg>
+              {storeStatus.status === 'online' ? 'Loja Online' : 'Loja Offline'}
+              <span className={`w-1.5 h-1.5 rounded-full ${storeStatus.status === 'online' ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`}></span>
+            </p>
+          </div>
         </div>
       </header>
 
