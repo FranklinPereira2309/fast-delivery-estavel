@@ -9,12 +9,14 @@ const setGlobalAlert = (val: boolean) => {
     listeners.forEach(fn => fn(val));
 };
 
-const handleNewOrder = () => {
-    setGlobalAlert(true);
-};
-
 // Binds to socket globally ONCE
-socket.on('newOrder', handleNewOrder);
+socket.on('newOrder', (data: { type?: string }) => {
+    // Only alert for TABLE type (includes Digital Menu and manual table orders)
+    // Ignore DELIVERY or TAKEAWAY for this specific module-wide alert
+    if (data.type === 'TABLE') {
+        setGlobalAlert(true);
+    }
+});
 
 export const useDigitalAlert = () => {
     const [isAlerting, setIsAlerting] = useState(globalIsAlerting);

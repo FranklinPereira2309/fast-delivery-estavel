@@ -208,7 +208,7 @@ export const saveOrder = async (req: Request, res: Response) => {
 
         if (isNewItemsAdded) {
             try {
-                getIO().emit('newOrder', { action: 'refresh', id: order.id });
+                getIO().emit('newOrder', { action: 'refresh', id: order.id, type: order.type, tableNumber: order.tableNumber });
             } catch (e) {
                 console.error('Socket error emitting newOrder:', e);
             }

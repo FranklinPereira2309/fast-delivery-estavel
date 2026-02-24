@@ -165,7 +165,7 @@ export const saveTableSession = async (req: Request, res: Response) => {
 
         if (isNewItemsAdded) {
             try {
-                getIO().emit('newOrder', { action: 'refresh', tableNumber: data.tableNumber });
+                getIO().emit('newOrder', { action: 'refresh', tableNumber: data.tableNumber, type: 'TABLE' });
             } catch (e) {
                 console.error('Socket error emitting newOrder:', e);
             }
