@@ -133,13 +133,13 @@ const Entregador: React.FC<EntregadorProps> = ({ currentUser }) => {
             />
 
             <div className="flex justify-between items-center bg-white p-4 md:p-6 rounded-3xl shadow-sm border border-slate-100 mb-2">
-                <div>
-                    <h2 className="text-xl md:text-2xl font-black text-slate-800 uppercase tracking-tighter">Minhas Entregas</h2>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Olá, {driver.name}</p>
+                <div className="flex-1 min-w-0">
+                    <h2 className="text-lg md:text-2xl font-black text-slate-800 uppercase tracking-tighter truncate">Minhas Entregas</h2>
+                    <p className="text-[9px] md:text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5 truncate">Olá, {driver.name}</p>
                 </div>
-                <div className="flex items-center gap-2 px-4 py-2 bg-emerald-50 rounded-2xl border border-emerald-100">
-                    <span className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse"></span>
-                    <span className="text-[10px] font-black text-emerald-700 uppercase tracking-widest">Online</span>
+                <div className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 bg-emerald-50 rounded-2xl border border-emerald-100 shrink-0">
+                    <span className="w-2 h-2 md:w-2.5 md:h-2.5 bg-emerald-500 rounded-full animate-pulse"></span>
+                    <span className="text-[9px] md:text-[10px] font-black text-emerald-700 uppercase tracking-widest">Online</span>
                 </div>
             </div>
 
@@ -161,8 +161,8 @@ const Entregador: React.FC<EntregadorProps> = ({ currentUser }) => {
             {activeTab === 'PENDING' ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 overflow-y-auto pb-8">
                     {myOrders.length > 0 ? myOrders.map(order => (
-                        <div key={order.id} className="bg-white p-4 md:p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col gap-4 group hover:shadow-xl transition-all relative overflow-hidden">
-                            <div className="absolute top-0 right-0 w-16 h-16 bg-blue-50 rounded-bl-full -z-0"></div>
+                        <div key={order.id} className="bg-white p-4 md:p-6 rounded-[2rem] shadow-sm border border-slate-100 flex flex-col gap-3 group hover:shadow-xl transition-all relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-12 h-12 bg-blue-50/50 rounded-bl-full -z-0"></div>
 
                             <div className="flex justify-between items-start z-10">
                                 <div>
@@ -174,32 +174,34 @@ const Entregador: React.FC<EntregadorProps> = ({ currentUser }) => {
                                 </div>
                             </div>
 
-                            <div className="bg-slate-50 p-4 rounded-xl flex flex-col gap-2 z-10 border border-slate-100 flex-1 overflow-y-auto min-h-0">
+                            <div className="bg-slate-50/50 p-4 rounded-2xl flex flex-col gap-2 z-10 border border-slate-100/50 flex-1 overflow-y-auto min-h-0">
                                 <div className="flex items-center gap-2">
-                                    <Icons.Logistics />
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Local de Destino:</p>
+                                    <div className="scale-75 origin-left">
+                                        <Icons.Logistics />
+                                    </div>
+                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Destino:</p>
                                 </div>
                                 <a
                                     href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(order.clientAddress || '')}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="text-sm font-bold text-slate-700 leading-tight hover:text-blue-600 hover:underline cursor-pointer flex items-start gap-1"
+                                    className="text-xs md:text-sm font-black text-slate-700 leading-tight hover:text-blue-600 hover:underline cursor-pointer flex items-start gap-1 p-1 -m-1"
                                     title="Abrir no Google Maps"
                                 >
                                     {order.clientAddress || 'Endereço não informado'}
                                     {order.clientAddress && (
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-blue-400 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                                         </svg>
                                     )}
                                 </a>
 
                                 {order.clientPhone && (
-                                    <div className="flex items-center gap-2 mt-2 pt-3 border-t border-slate-200">
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                                    <div className="flex items-center gap-2 mt-1 pt-2 border-t border-slate-200/50">
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                                         </svg>
-                                        <p className="text-xs font-black text-blue-600 tracking-wider hover:underline cursor-pointer">{order.clientPhone}</p>
+                                        <p className="text-[11px] font-black text-emerald-600 tracking-wider hover:underline cursor-pointer p-1 -m-1">{order.clientPhone}</p>
                                     </div>
                                 )}
                             </div>
@@ -224,32 +226,32 @@ const Entregador: React.FC<EntregadorProps> = ({ currentUser }) => {
                                     <div className="flex gap-2">
                                         <button
                                             onClick={() => updateDeliveryStatus(order.id, OrderStatus.OUT_FOR_DELIVERY, order.driverId)}
-                                            className="flex-1 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-xl shadow-blue-500/20 active:scale-95 flex items-center justify-center gap-1"
+                                            className="flex-1 py-5 md:py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl text-[11px] md:text-[10px] font-black uppercase tracking-widest transition-all shadow-xl shadow-blue-500/20 active:scale-95 flex items-center justify-center gap-2"
                                         >
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 md:h-4 md:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                                             </svg>
                                             Aceitar
                                         </button>
                                         <button
                                             onClick={() => updateDeliveryStatus(order.id, OrderStatus.READY, '')}
-                                            className="flex-1 py-4 bg-red-100 hover:bg-red-200 text-red-600 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-1"
+                                            className="px-6 md:flex-1 py-5 md:py-4 bg-red-50 hover:bg-red-100 text-red-600 rounded-2xl text-[11px] md:text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-2 border border-red-100"
                                         >
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 md:h-4 md:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
                                             </svg>
-                                            Recusar
+                                            <span className="hidden md:inline">Recusar</span>
                                         </button>
                                     </div>
                                 ) : (
                                     <button
                                         onClick={() => updateDeliveryStatus(order.id, OrderStatus.DELIVERED)}
-                                        className="w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all shadow-xl shadow-emerald-500/20 active:scale-95 flex items-center justify-center gap-2"
+                                        className="w-full py-5 md:py-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl text-[12px] md:text-[11px] font-black uppercase tracking-widest transition-all shadow-xl shadow-emerald-500/20 active:scale-95 flex items-center justify-center gap-3"
                                     >
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 md:h-5 md:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                                         </svg>
-                                        Confirmar Entrega Realizada
+                                        Finalizar Entrega
                                     </button>
                                 )}
                             </div>

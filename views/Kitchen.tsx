@@ -144,7 +144,7 @@ const Kitchen: React.FC = () => {
         <button onClick={() => setViewTab('HISTORICO')} className={`pb-4 text-xl font-black uppercase transition-all ${viewTab === 'HISTORICO' ? 'text-blue-600 border-b-4 border-blue-600' : 'text-slate-400 hover:text-slate-600'}`}>Histórico de Itens</button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
         {orders.length > 0 ? orders.map(order => (
           <div
             key={order.id}
@@ -169,63 +169,66 @@ const Kitchen: React.FC = () => {
               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tight truncate">{order.clientName}</p>
             </div>
 
-            <div className="p-6 flex-1 space-y-4 max-h-[400px] overflow-y-auto">
-              <div className="flex justify-between items-center mb-2">
+            <div className="p-4 md:p-6 flex-1 flex flex-col min-h-0">
+              <div className="flex justify-between items-center mb-3">
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                   {viewTab === 'FILA' ? 'Itens Pendentes' : 'Itens Produzidos'}
                 </p>
               </div>
 
-              {order.items.filter(it => viewTab === 'FILA' ? !it.isReady : it.isReady).map((item, idx) => {
-                const product = products.find(p => p.id === item.productId);
-                const isSelected = (selectedItems[order.id] || []).includes(item.uid);
+              <div className="space-y-3 overflow-y-auto pr-1 custom-scrollbar max-h-[350px] md:max-h-[450px]">
 
-                return (
-                  <div key={item.uid} className="space-y-2 animate-in fade-in duration-300">
-                    <label className={`block cursor-pointer bg-white p-4 rounded-2xl border transition-all shadow-sm ${isSelected ? 'border-blue-600 ring-2 ring-blue-50' : 'border-slate-100 hover:border-blue-200'
-                      }`}>
-                      <div className="flex items-center gap-3">
-                        {viewTab === 'FILA' && (
-                          <input
-                            type="checkbox"
-                            checked={isSelected}
-                            onChange={() => toggleItemSelection(order.id, item.uid)}
-                            className="w-4 h-4 rounded-md border-slate-300 text-blue-600 focus:ring-blue-500"
-                          />
-                        )}
-                        <div className="flex-1">
-                          <p className="font-black text-slate-800 uppercase text-xs">
-                            <span className="text-blue-600 text-sm">{item.quantity}x</span> {product?.name}
-                          </p>
-                          {item.observations && (
-                            <p className="inline-block text-[10px] text-orange-600 font-bold bg-orange-100/50 px-2 py-1 rounded-md mt-1 mb-1 border border-orange-200">
-                              Obs: {item.observations}
+                {order.items.filter(it => viewTab === 'FILA' ? !it.isReady : it.isReady).map((item, idx) => {
+                  const product = products.find(p => p.id === item.productId);
+                  const isSelected = (selectedItems[order.id] || []).includes(item.uid);
+
+                  return (
+                    <div key={item.uid} className="space-y-2 animate-in fade-in duration-300">
+                      <label className={`block cursor-pointer bg-white p-5 md:p-4 rounded-2xl border transition-all shadow-sm ${isSelected ? 'border-blue-600 ring-2 ring-blue-50' : 'border-slate-100 hover:border-blue-200'
+                        }`}>
+                        <div className="flex items-center gap-3">
+                          {viewTab === 'FILA' && (
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => toggleItemSelection(order.id, item.uid)}
+                              className="w-4 h-4 rounded-md border-slate-300 text-blue-600 focus:ring-blue-500"
+                            />
+                          )}
+                          <div className="flex-1">
+                            <p className="font-black text-slate-800 uppercase text-xs">
+                              <span className="text-blue-600 text-sm">{item.quantity}x</span> {product?.name}
                             </p>
-                          )}
-                          {product?.recipe && product.recipe.length > 0 && (
-                            <div className="mt-2 pl-2 border-l-2 border-slate-200">
-                              <p className="text-[8px] font-black text-slate-400 uppercase mb-1">Ficha Técnica:</p>
-                              <ul className="space-y-0.5">
-                                {product.recipe.map((rec, i) => {
-                                  const inv = inventory.find(invIt => invIt.id === rec.inventoryItemId);
-                                  return (
-                                    <li key={i} className="text-[9px] font-bold text-slate-500 uppercase list-inside list-disc">
-                                      {inv?.name || 'Ingrediente Desconhecido'} ({(rec.quantity * item.quantity).toFixed(2)}{inv?.unit})
-                                    </li>
-                                  );
-                                })}
-                              </ul>
-                            </div>
-                          )}
-                          {item.isReady && (
-                            <p className="text-[8px] text-emerald-500 font-black uppercase mt-2">Pronto em: {new Date(item.readyAt!).toLocaleTimeString()}</p>
-                          )}
+                            {item.observations && (
+                              <p className="inline-block text-[10px] text-orange-600 font-bold bg-orange-100/50 px-2 py-1 rounded-md mt-1 mb-1 border border-orange-200">
+                                Obs: {item.observations}
+                              </p>
+                            )}
+                            {product?.recipe && product.recipe.length > 0 && (
+                              <div className="mt-2 pl-2 border-l-2 border-slate-200">
+                                <p className="text-[8px] font-black text-slate-400 uppercase mb-1">Ficha Técnica:</p>
+                                <ul className="space-y-0.5">
+                                  {product.recipe.map((rec, i) => {
+                                    const inv = inventory.find(invIt => invIt.id === rec.inventoryItemId);
+                                    return (
+                                      <li key={i} className="text-[9px] font-bold text-slate-500 uppercase list-inside list-disc">
+                                        {inv?.name || 'Ingrediente Desconhecido'} ({(rec.quantity * item.quantity).toFixed(2)}{inv?.unit})
+                                      </li>
+                                    );
+                                  })}
+                                </ul>
+                              </div>
+                            )}
+                            {item.isReady && (
+                              <p className="text-[8px] text-emerald-500 font-black uppercase mt-2">Pronto em: {new Date(item.readyAt!).toLocaleTimeString()}</p>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    </label>
-                  </div>
-                );
-              })}
+                      </label>
+                    </div>
+                  );
+                })}
+              </div>
 
               {viewTab === 'FILA' && order.items.some(it => it.isReady) && (
                 <div className="pt-4 border-t border-slate-100">
@@ -238,13 +241,13 @@ const Kitchen: React.FC = () => {
             </div>
 
             {viewTab === 'FILA' && (
-              <div className="p-6 bg-white border-t border-slate-50">
+              <div className="p-4 md:p-6 bg-slate-50/50 border-t border-slate-100 shrink-0">
                 {!order.items.every(it => it.isReady) && (
                   <button
                     onClick={() => markSelectedAsReady(order)}
-                    className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-black text-xs uppercase rounded-2xl shadow-xl shadow-blue-100 transition-all active:scale-95 flex items-center justify-center gap-2"
+                    className="w-full py-5 md:py-4 bg-blue-600 hover:bg-blue-700 text-white font-black text-sm md:text-xs uppercase rounded-2xl shadow-xl shadow-blue-200 transition-all active:scale-95 flex items-center justify-center gap-3"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 md:h-4 md:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
                     Concluir Selecionados
                   </button>
                 )}
