@@ -73,13 +73,15 @@ const syncClientStats = async (tx: any, order: any, oldStatus?: string) => {
 
 const handleInventoryImpact = async (tx: any, items: any[], type: 'DECREMENT' | 'INCREMENT') => {
     for (const item of items) {
+        if (!item.productId) continue; // Pula se o item pedir um produto invalido
         const product = await tx.product.findUnique({
             where: { id: item.productId },
             include: { recipe: { include: { inventoryItem: true } } }
         });
 
-        if (product?.recipe) {
+        if (product && product.recipe && Array.isArray(product.recipe)) {
             for (const r of product.recipe) {
+                if (!r.inventoryItemId) continue; // Pula se n tiver insumo linkado
                 await tx.inventoryItem.update({
                     where: { id: r.inventoryItemId },
                     data: {
