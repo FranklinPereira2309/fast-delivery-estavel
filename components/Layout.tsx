@@ -280,17 +280,12 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
           </div>
         </header>
 
-        <section className={`flex-1 overflow-y-auto p-8 transition-all duration-500 ${(activeTab === 'kitchen' && shouldBlinkKitchen) ||
-          (activeTab === 'driver' && shouldBlinkDriver) ||
-          (activeTab === 'tables' && (isAlerting || shouldBlinkTables)) ||
-          (activeTab === 'logistics' && shouldBlinkLogistics)
-          ? 'animate-notify-turquoise bg-blue-50/50' : ''
-          }`} onClick={() => {
-            if (activeTab === 'kitchen') setShouldBlinkKitchen(false);
-            if (activeTab === 'driver') setShouldBlinkDriver(false);
-            if (activeTab === 'tables') setShouldBlinkTables(false);
-            if (activeTab === 'logistics') setShouldBlinkLogistics(false);
-          }}>
+        <section className="flex-1 overflow-y-auto p-8" onClick={() => {
+          if (activeTab === 'kitchen') setShouldBlinkKitchen(false);
+          if (activeTab === 'driver') setShouldBlinkDriver(false);
+          if (activeTab === 'tables') setShouldBlinkTables(false);
+          if (activeTab === 'logistics') setShouldBlinkLogistics(false);
+        }}>
           {children}
         </section>
       </main>

@@ -17,6 +17,7 @@ const Kitchen: React.FC = () => {
 
   // Controle de seleção local por pedido: { orderId: [uids selecionados] }
   const [selectedItems, setSelectedItems] = useState<Record<string, string[]>>({});
+  const [acknowledgedOrders, setAcknowledgedOrders] = useState<Set<string>>(new Set());
 
   const lastOrdersCount = useRef<number>(0);
 
@@ -66,6 +67,10 @@ const Kitchen: React.FC = () => {
   };
 
   const toggleItemSelection = (orderId: string, itemUid: string) => {
+    // Acknowledge order on any interaction
+    if (!acknowledgedOrders.has(orderId)) {
+      setAcknowledgedOrders(prev => new Set(prev).add(orderId));
+    }
     setSelectedItems(prev => {
       const current = prev[orderId] || [];
       const next = current.includes(itemUid)
@@ -148,8 +153,13 @@ const Kitchen: React.FC = () => {
         {orders.length > 0 ? orders.map(order => (
           <div
             key={order.id}
+            onClick={() => {
+              if (!acknowledgedOrders.has(order.id)) {
+                setAcknowledgedOrders(prev => new Set(prev).add(order.id));
+              }
+            }}
             className={`bg-white rounded-[2rem] border-2 transition-all flex flex-col overflow-hidden shadow-sm hover:shadow-xl ${viewTab === 'FILA' ? 'border-blue-100' : 'border-slate-100 opacity-90'
-              }`}
+              } ${viewTab === 'FILA' && !acknowledgedOrders.has(order.id) ? 'animate-moderate-blink border-blue-400' : ''}`}
           >
             <div className={`p-6 flex flex-col ${viewTab === 'FILA' ? 'bg-blue-50' : 'bg-slate-50'}`}>
               <div className="flex justify-between items-start">
