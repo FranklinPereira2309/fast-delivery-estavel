@@ -85,9 +85,10 @@ const calculateCurrentStoreStatus = (): StoreStatus => {
         // Log para depuração (apenas console do servidor)
         console.log(`[DEBUG StoreStatus] Dia: ${currentDayNum}, Hora SP: ${hour}:${minute}, TotalMin: ${currentTimeInt}`);
 
-        const todayConfig = hours.find(h => h.dayOfWeek === currentDayNum);
+        const todayConfig = hours.find((h: any) => h.dayOfWeek === currentDayNum);
 
         if (!todayConfig || !todayConfig.isOpen) {
+            console.log(`[DEBUG StoreStatus] Loja fechada hoje (config ou isOpen=false)`);
             return { status: 'offline', is_manually_closed: false, next_status_change: getNextOpenTime(hours, new Date()) };
         }
 
@@ -112,6 +113,7 @@ const calculateCurrentStoreStatus = (): StoreStatus => {
 
         if (isOpenNow) {
             // It's open! Calculate next_status_change (closing time)
+            console.log(`[DEBUG StoreStatus] Loja ABERTA. Próximo fechamento: ${todayConfig.closeTime}`);
 
             // Get SP time parts again to create the closing date object
             const spString = new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" });
@@ -126,6 +128,7 @@ const calculateCurrentStoreStatus = (): StoreStatus => {
             return { status: 'online', is_manually_closed: false, next_status_change: nextChangeDate.toISOString() };
         } else {
             // It's closed.
+            console.log(`[DEBUG StoreStatus] Loja fechada (fora do horário). Próxima abertura: ${todayConfig.openTime}`);
             return { status: 'offline', is_manually_closed: false, next_status_change: getNextOpenTime(hours, new Date()) };
         }
 
@@ -136,26 +139,30 @@ const calculateCurrentStoreStatus = (): StoreStatus => {
 };
 
 const getNextOpenTime = (hours: any[], nowObj: Date): string | null => {
-    for (let i = 0; i < 7; i++) {
-        const checkDate = new Date(nowObj);
-        checkDate.setDate(checkDate.getDate() + i);
-        const dayOfWeek = checkDate.getDay();
-        const config = hours.find(h => h.dayOfWeek === dayOfWeek);
+    try {
+        for (let i = 0; i < 7; i++) {
+            const checkDate = new Date(nowObj.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+            checkDate.setDate(checkDate.getDate() + i);
+            const dayOfWeek = checkDate.getDay();
+            const config = hours.find(h => h.dayOfWeek === dayOfWeek);
 
-        if (config && config.isOpen) {
-            const openParts = config.openTime.split(':').map(Number);
-            const openTimeInt = openParts[0] * 60 + openParts[1];
+            if (config && config.isOpen) {
+                const openParts = config.openTime.split(':').map(Number);
+                const openTimeInt = openParts[0] * 60 + openParts[1];
 
-            if (i === 0) {
-                const currentTimeInt = nowObj.getHours() * 60 + nowObj.getMinutes();
-                if (currentTimeInt >= openTimeInt) {
-                    continue;
+                if (i === 0) {
+                    const currentTimeInt = nowObj.getHours() * 60 + nowObj.getMinutes();
+                    if (currentTimeInt >= openTimeInt) {
+                        continue;
+                    }
                 }
-            }
 
-            checkDate.setHours(openParts[0], openParts[1], 0, 0);
-            return checkDate.toISOString();
+                checkDate.setHours(openParts[0], openParts[1], 0, 0);
+                return checkDate.toISOString();
+            }
         }
+    } catch (e) {
+        console.error("Error calculating next open time:", e);
     }
     return null;
 }
@@ -164,7 +171,8 @@ const getNextOpenTime = (hours: any[], nowObj: Date): string | null => {
 setInterval(() => {
     const current = calculateCurrentStoreStatus();
     if (current.status !== lastCalculatedStatus) {
+        console.log(`[AUTO-STATUS] Changing status from ${lastCalculatedStatus} to ${current.status}`);
         lastCalculatedStatus = current.status;
         getIO().emit('store_status_changed', current);
     }
-}, 60000);
+}, 30000); // Check every 30 seconds for better precision

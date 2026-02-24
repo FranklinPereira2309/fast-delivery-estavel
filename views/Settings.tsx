@@ -353,10 +353,18 @@ const OperatingHoursSettings: React.FC<{ settings: BusinessSettings, setSettings
 
     const daysOfWeek = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
 
-    // Inicializar se vazio
-    if (!Array.isArray(hours) || hours.length === 0) {
-        hours = daysOfWeek.map((day, ix) => ({ dayOfWeek: ix, isOpen: true, openTime: '18:00', closeTime: '23:59' }));
-    }
+    // Inicializar no estado ao montar ou se mudar para vazio
+    useEffect(() => {
+        let currentHours: any[] = [];
+        try {
+            currentHours = JSON.parse(settings.operatingHours);
+        } catch { }
+
+        if (!Array.isArray(currentHours) || currentHours.length === 0) {
+            const defaults = daysOfWeek.map((day, ix) => ({ dayOfWeek: ix, isOpen: true, openTime: '18:00', closeTime: '23:59' }));
+            setSettings({ ...settings, operatingHours: JSON.stringify(defaults) });
+        }
+    }, []);
 
     const updateHour = (ix: number, field: string, value: any) => {
         const newHours = [...hours];
