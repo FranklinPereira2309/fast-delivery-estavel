@@ -117,6 +117,12 @@ const Entregador: React.FC<EntregadorProps> = ({ currentUser }) => {
         return Object.entries(grouped);
     }, [printingOrder, products]);
 
+    const deliveryFeeValue = useMemo(() => {
+        if (!businessSettings?.deliveryFee) return 0;
+        const clean = businessSettings.deliveryFee.replace('R$', '').replace(',', '.').trim();
+        return parseFloat(clean) || 0;
+    }, [businessSettings]);
+
     if (!currentUser) return null;
 
     if (!driver) {
@@ -370,6 +376,11 @@ const Entregador: React.FC<EntregadorProps> = ({ currentUser }) => {
                             ))}
                         </div>
 
+                        <div className="flex justify-between items-center border-b border-dashed border-slate-200 pb-2 mb-2 text-[10px] uppercase font-black">
+                            <span className="text-slate-400">Taxa Entrega:</span>
+                            <span className="text-slate-900 font-black">R$ {deliveryFeeValue.toFixed(2)}</span>
+                        </div>
+
                         <div className="flex justify-between items-end border-b border-dashed border-slate-200 pb-4 mb-6">
                             <span className="font-black text-[10px] uppercase text-slate-400">TOTAL DA CONTA:</span>
                             <span className="text-2xl font-black text-slate-900">R$ {printingOrder.total.toFixed(2)}</span>
@@ -400,6 +411,11 @@ const Entregador: React.FC<EntregadorProps> = ({ currentUser }) => {
                             )}
                             <p>MÉTODO: {printingHistoryOrder.paymentMethod || 'DINHEIRO'}</p>
                             <p className="font-bold border-t border-dashed mt-2 pt-1 uppercase">ENTREGADOR: {driver.name}</p>
+                        </div>
+
+                        <div className="flex justify-between items-center border-t border-dashed pt-4 mb-2 text-[10px] uppercase font-black">
+                            <span>Taxa Entrega:</span>
+                            <span>R$ {deliveryFeeValue.toFixed(2)}</span>
                         </div>
 
                         <div className="flex justify-between items-end border-t border-dashed pt-4 mb-6">
