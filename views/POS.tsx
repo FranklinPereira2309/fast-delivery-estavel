@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Product, OrderItem, SaleType, Order, OrderStatus, OrderStatusLabels, User, Client, DeliveryDriver, TableSession } from '../types';
 import { db, BusinessSettings } from '../services/db';
+import { socket } from '../services/socket';
 import { Icons, PLACEHOLDER_FOOD_IMAGE, formatImageUrl } from '../constants';
 import CustomAlert from '../components/CustomAlert';
 
@@ -49,6 +50,21 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
 
   useEffect(() => {
     refreshAllData();
+
+    const handleRealtimeUpdate = () => {
+      console.log('Realtime update received in POS, refreshing data...');
+      refreshAllData();
+    };
+
+    socket.on('newOrder', handleRealtimeUpdate);
+    socket.on('tableStatusChanged', handleRealtimeUpdate);
+    socket.on('orderStatusChanged', handleRealtimeUpdate);
+
+    return () => {
+      socket.off('newOrder', handleRealtimeUpdate);
+      socket.off('tableStatusChanged', handleRealtimeUpdate);
+      socket.off('orderStatusChanged', handleRealtimeUpdate);
+    };
   }, []);
 
   const refreshAllData = async () => {

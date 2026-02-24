@@ -266,6 +266,13 @@ export const deleteOrder = async (req: Request, res: Response) => {
         });
 
         res.json({ message: 'Pedido removido e histórico consolidado.' });
+
+        try {
+            getIO().emit('orderStatusChanged', { action: 'delete', id });
+        } catch (e) {
+            console.error('Socket error emitting orderStatusChanged:', e);
+        }
+
     } catch (error: any) {
         res.status(500).json({ error: error.message });
     }
@@ -312,6 +319,12 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
             return order;
         });
 
+        try {
+            getIO().emit('orderStatusChanged', { action: 'statusUpdate', id, status });
+        } catch (e) {
+            console.error('Socket error emitting orderStatusChanged:', e);
+        }
+
         res.json(mapOrderResponse(result));
     } catch (error: any) {
         res.status(500).json({ error: error.message });
@@ -341,6 +354,12 @@ export const updateOrderPaymentMethod = async (req: Request, res: Response) => {
                     details: `Forma de pagamento do pedido ${id} alterada para ${paymentMethod}.`
                 }
             });
+        }
+
+        try {
+            getIO().emit('orderStatusChanged', { action: 'paymentUpdate', id });
+        } catch (e) {
+            console.error('Socket error emitting orderStatusChanged:', e);
         }
 
         res.json(mapOrderResponse(order));
