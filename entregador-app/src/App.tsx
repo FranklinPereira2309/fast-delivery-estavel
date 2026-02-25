@@ -596,7 +596,7 @@ const App: React.FC = () => {
             </div>
             <div className="flex justify-between items-center mb-6 px-1 text-[10px] font-black uppercase tracking-widest text-slate-400">
               <span>TAXA ENTREGA:</span>
-              <span className="text-slate-900">R$ {deliveryFeeValue.toFixed(2)}</span>
+              <span className="text-slate-900">R$ {(printingOrder.deliveryFee || 0).toFixed(2)}</span>
             </div>
             <div className="flex justify-between items-end mb-8 px-1">
               <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">VALOR FINAL:</span>
@@ -624,7 +624,7 @@ const App: React.FC = () => {
             </div>
             <div className="flex justify-between items-center border-t border-dashed pt-4 mb-2 text-[10px] uppercase font-black">
               <span>Taxa Entrega:</span>
-              <span>R$ {deliveryFeeValue.toFixed(2)}</span>
+              <span>R$ {(printingHistoryOrder.deliveryFee || 0).toFixed(2)}</span>
             </div>
             <div className="flex justify-between items-end border-t border-dashed pt-4 mb-6">
               <span className="font-black text-[9px] uppercase tracking-widest">TOTAL:</span>
