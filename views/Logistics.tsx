@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { DeliveryDriver, Order, OrderStatus, OrderStatusLabels, SaleType, User, Product } from '../types';
 import { db, BusinessSettings } from '../services/db';
 import { Icons } from '../constants';
-import { socket } from '../services/socket';
+import { socket, chatUnreadManager } from '../services/socket';
 import CustomAlert from '../components/CustomAlert';
 
 const BlinkCSS = () => (
@@ -232,7 +232,7 @@ const Logistics: React.FC = () => {
 
   // Chat States
   const [selectedDriver, setSelectedDriver] = useState<DeliveryDriver | null>(null);
-  const [unreadDrivers, setUnreadDrivers] = useState<Set<string>>(new Set());
+  const [unreadDrivers, setUnreadDrivers] = useState<Set<string>>(chatUnreadManager.getUnreads());
   const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const chatEndRef = React.useRef<HTMLDivElement>(null);
@@ -247,10 +247,11 @@ const Logistics: React.FC = () => {
     socket.on('new_message', (msg: any) => {
       if (selectedDriver && msg.driverId === selectedDriver.id) {
         setMessages(prev => [...prev, msg]);
-      } else {
-        setUnreadDrivers(prev => new Set(prev).add(msg.driverId));
+        chatUnreadManager.removeUnread(msg.driverId);
       }
     });
+
+    const unsubscribe = chatUnreadManager.subscribe(setUnreadDrivers);
 
     socket.on('drivers_updated', refreshData);
     socket.on('order_auto_rejected_global', refreshData);
@@ -260,6 +261,7 @@ const Logistics: React.FC = () => {
       socket.off('new_message');
       socket.off('drivers_updated');
       socket.off('order_auto_rejected_global');
+      unsubscribe();
     };
   }, [selectedDriver]);
 
@@ -273,11 +275,7 @@ const Logistics: React.FC = () => {
   useEffect(() => {
     if (selectedDriver) {
       loadChatHistory(selectedDriver.id);
-      setUnreadDrivers(prev => {
-        const next = new Set(prev);
-        next.delete(selectedDriver.id);
-        return next;
-      });
+      chatUnreadManager.removeUnread(selectedDriver.id);
     }
   }, [selectedDriver]);
 

@@ -5,7 +5,7 @@ import { db } from '../services/db';
 import { User, Order, OrderStatus, TableSession, SaleType } from '../types';
 import { useDigitalAlert } from '../hooks/useDigitalAlert';
 import { audioAlert } from '../services/audioAlert';
-import { socket } from '../services/socket';
+import { socket, chatUnreadManager } from '../services/socket';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -136,14 +136,17 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
 
     const interval = setInterval(() => monitorSystem(false), 3000);
 
-    // Chat Monitoring for Module Level Blink
-    const onNewMessage = (msg: any) => {
+    // Chat Monitoring for Module Level Blink via Global Manager
+    const unsubscribe = chatUnreadManager.subscribe((unreads) => {
       if (activeTab !== 'logistics') {
-        setShouldBlinkLogisticsChat(true);
+        setShouldBlinkLogisticsChat(unreads.size > 0);
       }
-    };
+    });
 
-    socket.on('new_message', onNewMessage);
+    // Initial check
+    if (activeTab !== 'logistics') {
+      setShouldBlinkLogisticsChat(chatUnreadManager.getUnreads().size > 0);
+    }
 
     const joinAllRooms = async () => {
       const drivers = await db.getDrivers();
@@ -153,7 +156,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
 
     return () => {
       clearInterval(interval);
-      socket.off('new_message', onNewMessage);
+      unsubscribe();
     };
   }, [activeTab]);
 

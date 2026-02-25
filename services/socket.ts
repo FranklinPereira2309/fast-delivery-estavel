@@ -18,3 +18,34 @@ socket.on('connect', () => {
 socket.on('disconnect', () => {
     console.log('Frontend PDV desconectado do Socket.io.');
 });
+
+// Global Unread State Management
+const unreadDrivers = new Set<string>();
+const unreadSubscribers = new Set<(unreads: Set<string>) => void>();
+
+export const chatUnreadManager = {
+    getUnreads: () => new Set(unreadDrivers),
+    addUnread: (driverId: string) => {
+        unreadDrivers.add(driverId);
+        unreadSubscribers.forEach(cb => cb(new Set(unreadDrivers)));
+    },
+    removeUnread: (driverId: string) => {
+        unreadDrivers.delete(driverId);
+        unreadSubscribers.forEach(cb => cb(new Set(unreadDrivers)));
+    },
+    clearUnreads: () => {
+        unreadDrivers.clear();
+        unreadSubscribers.forEach(cb => cb(new Set(unreadDrivers)));
+    },
+    subscribe: (callback: (unreads: Set<string>) => void) => {
+        unreadSubscribers.add(callback);
+        return () => unreadSubscribers.delete(callback);
+    }
+};
+
+// Initial listener for global unreads
+socket.on('new_message', (msg: any) => {
+    if (msg.isFromDriver) {
+        chatUnreadManager.addUnread(msg.driverId);
+    }
+});
