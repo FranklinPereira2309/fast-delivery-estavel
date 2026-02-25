@@ -81,10 +81,6 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
     setProducts(p);
     setOrders(o);
     setBusinessSettings(s);
-    if (s && manualDeliveryFee === null) {
-      const clean = s.deliveryFee.replace('R$', '').replace(',', '.').trim();
-      setManualDeliveryFee(parseFloat(clean) || 0);
-    }
     setClients(c);
     setPendingTables(ts.filter(t => t.status === 'billing'));
     setPendingCounterOrders(o.filter(order => order.type === SaleType.COUNTER && order.status === OrderStatus.READY));
@@ -166,6 +162,10 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
         address: order.clientAddress || '',
         cep: ''
       });
+    }
+
+    if (order.deliveryFee !== undefined) {
+      setManualDeliveryFee(order.deliveryFee);
     }
 
     setTimeout(() => setIsLoadingOrder(false), 500);
@@ -435,6 +435,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
     setEditingOrderId(null);
     setIsAvulso(false);
     setAvulsoData({ name: '', phone: '', address: '', cep: '' });
+    setManualDeliveryFee(null);
   };
 
   const getFriendlySaleType = (type: SaleType | string) => {
