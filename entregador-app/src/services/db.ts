@@ -7,6 +7,7 @@ export interface BusinessSettings {
     name: string;
     phone: string;
     address: string;
+    deliveryFee: string;
 }
 
 class DriverDBService {

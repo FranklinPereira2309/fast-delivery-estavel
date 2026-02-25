@@ -318,6 +318,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
         status: OrderStatus.PREPARING,
         type: SaleType.COUNTER,
         createdAt: new Date().toISOString(),
+        deliveryFee: (saleType === SaleType.OWN_DELIVERY) ? deliveryFeeValue : undefined,
         paymentMethod: undefined,
         isOriginDigitalMenu: false
       };
@@ -368,6 +369,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
         status: OrderStatus.PREPARING,
         type: saleType,
         createdAt: editingOrderId ? orders.find(o => o.id === editingOrderId)?.createdAt || new Date().toISOString() : new Date().toISOString(),
+        deliveryFee: (saleType === SaleType.OWN_DELIVERY) ? deliveryFeeValue : undefined,
         paymentMethod: paymentMethod,
         driverId: existingOrder?.driverId,
         isOriginDigitalMenu: false
@@ -396,6 +398,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       createdAt: existingOrderId ? orders.find(o => o.id === existingOrderId)?.createdAt || new Date().toISOString() : new Date().toISOString(),
       paymentMethod: paymentMethod,
       driverId: existingOrder?.driverId,
+      deliveryFee: (saleType === SaleType.OWN_DELIVERY) ? deliveryFeeValue : undefined,
       tableNumber: isTableSale ? finalTableNum! : undefined,
       waiterId: isTableSale ? orders.find(o => o.id === existingTableOrderId)?.waiterId : undefined,
       isOriginDigitalMenu: isTableSale ? (tableSessionToClose?.isOriginDigitalMenu || false) : false

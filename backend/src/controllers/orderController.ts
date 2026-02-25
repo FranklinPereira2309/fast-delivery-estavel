@@ -178,6 +178,7 @@ export const saveOrder = async (req: Request, res: Response) => {
                     assignedAt: (driverId && driverId !== oldDriverId) ? new Date() : (driverId === null ? null : undefined),
                     waiterId: waiterId,
                     total: order.total,
+                    deliveryFee: order.deliveryFee,
                     isOriginDigitalMenu: order.isOriginDigitalMenu !== undefined ? order.isOriginDigitalMenu : false, // Fix: Preserve Origin into Update
                     items: {
                         deleteMany: {},
@@ -200,6 +201,7 @@ export const saveOrder = async (req: Request, res: Response) => {
                     clientAddress: order.clientAddress,
                     clientPhone: order.clientPhone,
                     total: order.total,
+                    deliveryFee: order.deliveryFee,
                     status: order.status,
                     type: order.type,
                     paymentMethod: order.paymentMethod,

@@ -54,6 +54,21 @@ export interface User {
   createdAt: string;
 }
 
+export interface BusinessSettings {
+  key: string;
+  name: string;
+  cnpj: string;
+  address: string;
+  phone: string;
+  deliveryFee: string;
+  tableCount: number;
+  restaurantLat?: number;
+  restaurantLng?: number;
+  geofenceRadius: number;
+  isManuallyClosed: boolean;
+  operatingHours: string;
+}
+
 export interface Waiter {
   id: string;
   name: string;
@@ -118,6 +133,7 @@ export interface Order {
   createdAt: string;
   paymentMethod?: string;
   driverId?: string;
+  deliveryFee?: number;
   tableNumber?: number;
   waiterId?: string;
   isOriginDigitalMenu?: boolean;

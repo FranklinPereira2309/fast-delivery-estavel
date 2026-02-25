@@ -142,6 +142,7 @@ model Order {
   driverId      String?
   driver        DeliveryDriver? @relation(fields: [driverId], references: [id])
   assignedAt    DateTime?
+  deliveryFee   Float?
   tableNumber   Int?
   waiterId      String?
   waiter        Waiter?     @relation(fields: [waiterId], references: [id])

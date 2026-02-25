@@ -102,6 +102,7 @@ const SalesMonitor: React.FC = () => {
                 <th className="px-8 py-6">Status Atual</th>
                 <th className="px-8 py-6">Identificação / Mesa</th>
                 <th className="px-8 py-6">Itens</th>
+                <th className="px-8 py-6">Taxa</th>
                 <th className="px-8 py-6 text-right">Controle</th>
               </tr>
             </thead>
@@ -141,6 +142,11 @@ const SalesMonitor: React.FC = () => {
                           return acc;
                         }, {})).map((group: any) => `${group.q}x ${group.name}`).join(', ')}
                       </div>
+                    </td>
+                    <td className="px-8 py-5">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                        {order.deliveryFee ? `R$ ${order.deliveryFee.toFixed(2)}` : '--'}
+                      </p>
                     </td>
                     <td className="px-8 py-5 text-right">
                       <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-all">
@@ -254,7 +260,17 @@ const SalesMonitor: React.FC = () => {
                 </div>
               ))}
             </div>
-            <div className="flex justify-between items-end border-t border-dashed pt-4 mb-6">
+            <div className="flex justify-between items-end border-t border-dashed pt-4 mb-1">
+              <span className="font-black text-[9px] uppercase tracking-widest">SUBTOTAL:</span>
+              <span className="text-sm font-black">R$ {(printingOrder.total - (printingOrder.deliveryFee || 0)).toFixed(2)}</span>
+            </div>
+            {printingOrder.deliveryFee !== undefined && printingOrder.deliveryFee > 0 && (
+              <div className="flex justify-between items-end mb-1">
+                <span className="font-black text-[9px] uppercase tracking-widest">TAXA ENTREGA:</span>
+                <span className="text-sm font-black">R$ {printingOrder.deliveryFee.toFixed(2)}</span>
+              </div>
+            )}
+            <div className="flex justify-between items-end border-t border-dashed pt-2 mb-6">
               <span className="font-black text-[9px] uppercase tracking-widest">TOTAL:</span>
               <span className="text-2xl font-black">R$ {printingOrder.total.toFixed(2)}</span>
             </div>

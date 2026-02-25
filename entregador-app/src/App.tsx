@@ -245,8 +245,9 @@ const App: React.FC = () => {
   }, [printingOrder, products]);
 
   const deliveryFeeValue = useMemo(() => {
-    if (!businessSettings?.phone) return 0; // Mock check
-    return 8.00; // Default Fee
+    if (!businessSettings?.deliveryFee) return 0;
+    const clean = businessSettings.deliveryFee.replace('R$', '').replace(',', '.').trim();
+    return parseFloat(clean) || 0;
   }, [businessSettings]);
 
   if (isLoading) return null;
@@ -492,7 +493,7 @@ const App: React.FC = () => {
               </div>
             </div>
             {historyOrders.filter(o => {
-              const date = o.createdAt.split('T')[0];
+              const date = new Date(o.createdAt).toLocaleDateString('en-CA');
               return date >= historyStartDate && date <= historyEndDate;
             }).map(order => (
               <div key={order.id} className="bg-white p-5 rounded-[2rem] shadow-sm border border-slate-50 flex flex-col gap-3 group">
