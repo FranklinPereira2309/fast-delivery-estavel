@@ -264,8 +264,14 @@ const Logistics: React.FC = () => {
   }, [selectedDriver]);
 
   useEffect(() => {
+    // Entrar em todas as salas de chat para receber notificações globais
+    drivers.forEach(d => {
+      socket.emit('join_chat', d.id);
+    });
+  }, [drivers]);
+
+  useEffect(() => {
     if (selectedDriver) {
-      socket.emit('join_chat', selectedDriver.id);
       loadChatHistory(selectedDriver.id);
       setUnreadDrivers(prev => {
         const next = new Set(prev);
