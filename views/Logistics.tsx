@@ -6,13 +6,13 @@ import { Icons } from '../constants';
 import { socket } from '../services/socket';
 import CustomAlert from '../components/CustomAlert';
 
-const CheckoutTimer: React.FC<{ assignedAt: string }> = ({ assignedAt }) => {
+const CheckoutTimer: React.FC<{ assignedAt: string, timeoutMinutes: number }> = ({ assignedAt, timeoutMinutes }) => {
   const [timeLeft, setTimeLeft] = useState<string>('--:--');
 
   useEffect(() => {
     const calculate = () => {
       const start = new Date(assignedAt).getTime();
-      const limit = start + 5 * 60 * 1000;
+      const limit = start + timeoutMinutes * 60 * 1000;
       const now = new Date().getTime();
       const diff = limit - now;
 
@@ -26,7 +26,7 @@ const CheckoutTimer: React.FC<{ assignedAt: string }> = ({ assignedAt }) => {
     calculate();
     const interval = setInterval(calculate, 1000);
     return () => clearInterval(interval);
-  }, [assignedAt]);
+  }, [assignedAt, timeoutMinutes]);
 
   return (
     <div className="flex items-center gap-1.5 px-3 py-1 bg-amber-50 rounded-full border border-amber-100">
@@ -431,7 +431,7 @@ const Logistics: React.FC = () => {
                   </div>
                   {order.status === OrderStatus.READY && order.driverId ? (
                     <div className="mt-4 space-y-3">
-                      <CheckoutTimer assignedAt={order.assignedAt!} />
+                      <CheckoutTimer assignedAt={order.assignedAt!} timeoutMinutes={businessSettings?.orderTimeoutMinutes || 5} />
                       <div className="p-3 bg-amber-50 border border-amber-100 rounded-xl text-center">
                         <p className="text-[9px] font-black text-amber-600 uppercase tracking-widest">Aguardando aceite do entregador no APP...</p>
                       </div>

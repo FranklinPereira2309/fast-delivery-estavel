@@ -67,6 +67,7 @@ export interface BusinessSettings {
   geofenceRadius: number;
   isManuallyClosed: boolean;
   operatingHours: string;
+  orderTimeoutMinutes: number;
 }
 
 export interface Waiter {

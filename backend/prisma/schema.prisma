@@ -217,6 +217,7 @@ model BusinessSettings {
   geofenceRadius  Int    @default(30)
   isManuallyClosed Boolean @default(false)
   operatingHours  String @default("[]")
+  orderTimeoutMinutes Int @default(5)
 }
 
 model ChatMessage {

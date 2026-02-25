@@ -8,11 +8,33 @@ export const startOrderTimeoutService = () => {
     setInterval(async () => {
         try {
             const now = new Date();
-            const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
+            const settings = await prisma.businessSettings.findUnique({ where: { key: 'main' } });
+            const timeoutMinutes = (settings as any)?.orderTimeoutMinutes || 5;
+            const timeoutMs = timeoutMinutes * 60 * 1000;
+            const fiveMinutesAgo = new Date(now.getTime() - timeoutMs);
 
-            console.log(`[OrderTimeoutService] Checking for timed out orders. Now: ${now.toISOString()}, FiveMinutesAgo: ${fiveMinutesAgo.toISOString()}`);
+            console.log(`[OrderTimeoutService] Checking for timed out orders (Timeout: ${timeoutMinutes} min). Now: ${now.toISOString()}, Limit: ${fiveMinutesAgo.toISOString()}`);
 
-            // Find orders READY, with driver assigned more than 5 minutes ago
+            // Reliability check: Find orders with driver but NULL assignedAt
+            const missingTimestampOrders = await (prisma.order as any).findMany({
+                where: {
+                    status: 'READY',
+                    driverId: { notIn: [null, ''] },
+                    assignedAt: null
+                }
+            });
+
+            if (missingTimestampOrders.length > 0) {
+                console.log(`[OrderTimeoutService] Fixing ${missingTimestampOrders.length} orders missing assignedAt timestamp.`);
+                for (const order of missingTimestampOrders) {
+                    await (prisma.order as any).update({
+                        where: { id: order.id },
+                        data: { assignedAt: new Date() }
+                    });
+                }
+            }
+
+            // Find orders READY, with driver assigned more than timeoutMinutes ago
             // Using 'any' casting as some environment types might not have synced yet
             const timedOutOrders = await (prisma.order as any).findMany({
                 where: {

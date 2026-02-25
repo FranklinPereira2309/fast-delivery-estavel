@@ -375,6 +375,10 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings, onReset }) =
                                     <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Taxa de Entrega (Ex: R$ 8,00)</h4>
                                     <input type="text" className="w-full p-4 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-blue-50 transition-all font-bold text-sm" value={settings.deliveryFee} onChange={e => setSettings({ ...settings, deliveryFee: e.target.value })} />
                                 </div>
+                                <div className="space-y-2">
+                                    <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Tempo de Rejeição Automática (Minutos)</h4>
+                                    <input type="number" className="w-full p-4 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-blue-50 transition-all font-bold text-sm" value={settings.orderTimeoutMinutes} onChange={e => setSettings({ ...settings, orderTimeoutMinutes: parseInt(e.target.value) || 0 })} />
+                                </div>
                                 <div className="space-y-2 col-span-2">
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Endereço Completo</label>
                                     <input type="text" className="w-full p-4 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-blue-50 transition-all font-bold text-sm" value={settings.address} onChange={e => setSettings({ ...settings, address: e.target.value })} />

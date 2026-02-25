@@ -112,6 +112,7 @@ export interface Order {
     clientPhone?: string;
     items: OrderItem[];
     total: number;
+    deliveryFee?: number;
     status: OrderStatus;
     type: SaleType;
     createdAt: string;
@@ -156,4 +157,20 @@ export interface InventoryMovement {
     quantity: number;
     reason: string;
     orderId?: string;
+}
+
+export interface BusinessSettings {
+    key: string;
+    name: string;
+    cnpj: string;
+    address: string;
+    phone: string;
+    deliveryFee: string;
+    tableCount: number;
+    restaurantLat?: number;
+    restaurantLng?: number;
+    geofenceRadius: number;
+    isManuallyClosed: boolean;
+    operatingHours: string;
+    orderTimeoutMinutes: number;
 }

@@ -333,10 +333,12 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
 
             if (resolvedDriverId && resolvedDriverId !== oldOrder.driverId) {
                 updateData.assignedAt = new Date();
-                console.log(`[OrderController] Resetting assignedAt for order ${id} to ${updateData.assignedAt}`);
+                console.log(`[OrderController] SETTING assignedAt for order ${id} to ${updateData.assignedAt.toISOString()} (Driver: ${resolvedDriverId})`);
             } else if (resolvedDriverId === null) {
                 updateData.assignedAt = null;
-                console.log(`[OrderController] Clearing assignedAt for order ${id}`);
+                console.log(`[OrderController] CLEARING assignedAt for order ${id}`);
+            } else {
+                console.log(`[OrderController] KEEPING assignedAt for order ${id} as ${oldOrder.assignedAt?.toISOString()}`);
             }
 
             const order = await tx.order.update({

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { DeliveryDriver, Order, OrderStatus, OrderStatusLabels, SaleType, User, Product } from './types';
-import { db, BusinessSettings } from './services/db';
+import { db } from './services/db';
 import { socket } from './services/socket';
 import { Icons } from './constants';
 
@@ -40,7 +40,6 @@ const App: React.FC = () => {
   const [driver, setDriver] = useState<DeliveryDriver | null>(null);
   const [myOrders, setMyOrders] = useState<Order[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
-  const [businessSettings, setBusinessSettings] = useState<BusinessSettings | null>(null);
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [printingOrder, setPrintingOrder] = useState<Order | null>(null);
 
@@ -142,7 +141,7 @@ const App: React.FC = () => {
       const currentDriver = await db.getDriverProfile(currentUser.email);
       setDriver(currentDriver);
 
-      const [allOrders, allProds, settings, status] = await Promise.all([
+      const [allOrders, allProds, _settings, status] = await Promise.all([
         db.getOrders(),
         db.getProducts(),
         db.getSettings(),
@@ -150,7 +149,6 @@ const App: React.FC = () => {
       ]);
 
       setProducts(allProds);
-      setBusinessSettings(settings);
       setStoreStatus(status);
 
       const driverOrders = allOrders.filter(o =>
@@ -235,11 +233,6 @@ const App: React.FC = () => {
     return Object.entries(grouped);
   }, [printingOrder, products]);
 
-  const deliveryFeeValue = useMemo(() => {
-    if (!businessSettings?.deliveryFee) return 0;
-    const clean = businessSettings.deliveryFee.replace('R$', '').replace(',', '.').trim();
-    return parseFloat(clean) || 0;
-  }, [businessSettings]);
 
   if (isLoading) return null;
 
