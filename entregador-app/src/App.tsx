@@ -4,6 +4,32 @@ import { db, BusinessSettings } from './services/db';
 import { socket } from './services/socket';
 import { Icons } from './constants';
 
+const playNotificationSound = () => {
+  try {
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+
+    oscillator.type = 'sine';
+    // Soft chime-like frequency sequence
+    const now = audioContext.currentTime;
+    oscillator.frequency.setValueAtTime(880, now);
+    oscillator.frequency.exponentialRampToValueAtTime(440, now + 0.5);
+
+    gainNode.gain.setValueAtTime(0, now);
+    gainNode.gain.linearRampToValueAtTime(0.1, now + 0.1);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+
+    oscillator.start(now);
+    oscillator.stop(now + 0.5);
+  } catch (e) {
+    console.error("Audio error:", e);
+  }
+};
+
 const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -136,12 +162,32 @@ const App: React.FC = () => {
 
       if (previousOrderCount.current > -1 && driverOrders.length > previousOrderCount.current) {
         setIsAlertOpen(true);
+        playNotificationSound();
       }
       previousOrderCount.current = driverOrders.length;
     } catch (e) {
       console.error("Erro ao atualizar dados:", e);
     }
   };
+
+  // Auto-rejection logic: 5 minutes
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = new Date();
+      myOrders.forEach(order => {
+        if (order.status === OrderStatus.READY) {
+          const createdTime = new Date(order.createdAt);
+          const diffInMinutes = (now.getTime() - createdTime.getTime()) / 60000;
+          if (diffInMinutes >= 5) {
+            console.log(`Auto-rejecting order ${order.id} due to timeout (5 mins)`);
+            updateDeliveryStatus(order.id, OrderStatus.READY, ''); // DriverId '' means null/unassigned
+          }
+        }
+      });
+    }, 10000); // Check every 10 seconds
+
+    return () => clearInterval(interval);
+  }, [myOrders]);
 
   const loadChatHistory = async () => {
     if (!driver) return;
@@ -349,18 +395,40 @@ const App: React.FC = () => {
                 </div>
 
                 <div className="bg-slate-50/80 p-4 rounded-2xl flex flex-col gap-1 border border-slate-100">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Icons.Logistics className="w-3.5 h-3.5 text-blue-500" />
-                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Destino do Pedido</span>
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="flex items-center gap-2">
+                      <Icons.Logistics className="w-3.5 h-3.5 text-blue-500" />
+                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Destino do Pedido</span>
+                    </div>
+                    {order.clientPhone && (
+                      <a
+                        href={`tel:${order.clientPhone}`}
+                        className="p-2 bg-white rounded-xl shadow-sm border border-slate-100 text-blue-600 hover:scale-110 active:scale-95 transition-all"
+                        title="Ligar para o Cliente"
+                      >
+                        <Icons.Chat className="w-3.5 h-3.5" />
+                      </a>
+                    )}
                   </div>
-                  <p className="text-xs font-bold text-slate-700 leading-snug">{order.clientAddress}</p>
-                  <a
-                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(order.clientAddress || '')}`}
-                    target="_blank" rel="noopener noreferrer"
-                    className="text-[10px] font-black text-blue-600 uppercase mt-2 hover:underline inline-flex items-center gap-1"
-                  >
-                    Abrir no GPS <Icons.Map className="w-3 h-3" />
-                  </a>
+                  <p className="text-xs font-bold text-slate-700 leading-snug mb-2">{order.clientAddress}</p>
+
+                  <div className="flex items-center gap-3 mt-1">
+                    <a
+                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(order.clientAddress || '')}`}
+                      target="_blank" rel="noopener noreferrer"
+                      className="text-[10px] font-black text-blue-600 uppercase hover:underline inline-flex items-center gap-1"
+                    >
+                      Abrir no GPS <Icons.Map className="w-3 h-3" />
+                    </a>
+                    {order.clientPhone && (
+                      <a
+                        href={`tel:${order.clientPhone}`}
+                        className="text-[10px] font-black text-emerald-600 uppercase hover:underline inline-flex items-center gap-1"
+                      >
+                        Ligar para Cliente <Icons.Chat className="w-3 h-3" />
+                      </a>
+                    )}
+                  </div>
                 </div>
 
                 <div className="flex justify-between items-center pt-2">
@@ -373,12 +441,20 @@ const App: React.FC = () => {
                       <Icons.Print className="w-5 h-5" />
                     </button>
                     {order.status === OrderStatus.READY ? (
-                      <button
-                        onClick={() => updateDeliveryStatus(order.id, OrderStatus.OUT_FOR_DELIVERY, driver.id)}
-                        className="px-6 py-3 bg-blue-600 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-blue-500/30 active:scale-95 transition-all"
-                      >
-                        Aceitar
-                      </button>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => updateDeliveryStatus(order.id, OrderStatus.READY, '')}
+                          className="px-4 py-3 bg-slate-100 text-slate-500 rounded-2xl font-black uppercase text-[10px] tracking-widest active:scale-95 transition-all"
+                        >
+                          Rejeitar
+                        </button>
+                        <button
+                          onClick={() => updateDeliveryStatus(order.id, OrderStatus.OUT_FOR_DELIVERY, driver.id)}
+                          className="px-6 py-3 bg-blue-600 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-blue-500/30 active:scale-95 transition-all"
+                        >
+                          Aceitar
+                        </button>
+                      </div>
                     ) : (
                       <button
                         onClick={() => updateDeliveryStatus(order.id, OrderStatus.DELIVERED)}
