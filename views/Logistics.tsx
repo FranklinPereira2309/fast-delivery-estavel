@@ -6,6 +6,19 @@ import { Icons } from '../constants';
 import { socket } from '../services/socket';
 import CustomAlert from '../components/CustomAlert';
 
+const BlinkCSS = () => (
+  <style>{`
+        @keyframes blink {
+            0% { opacity: 1; }
+            50% { opacity: 0.3; }
+            100% { opacity: 1; }
+        }
+        .animate-blink {
+            animation: blink 0.8s infinite;
+        }
+    `}</style>
+);
+
 const CheckoutTimer: React.FC<{ assignedAt: string, timeoutMinutes: number }> = ({ assignedAt, timeoutMinutes }) => {
   const [timeLeft, setTimeLeft] = useState<string>('--:--');
 
@@ -219,6 +232,7 @@ const Logistics: React.FC = () => {
 
   // Chat States
   const [selectedDriver, setSelectedDriver] = useState<DeliveryDriver | null>(null);
+  const [unreadDrivers, setUnreadDrivers] = useState<Set<string>>(new Set());
   const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const chatEndRef = React.useRef<HTMLDivElement>(null);
@@ -233,6 +247,8 @@ const Logistics: React.FC = () => {
     socket.on('new_message', (msg: any) => {
       if (selectedDriver && msg.driverId === selectedDriver.id) {
         setMessages(prev => [...prev, msg]);
+      } else {
+        setUnreadDrivers(prev => new Set(prev).add(msg.driverId));
       }
     });
 
@@ -251,6 +267,11 @@ const Logistics: React.FC = () => {
     if (selectedDriver) {
       socket.emit('join_chat', selectedDriver.id);
       loadChatHistory(selectedDriver.id);
+      setUnreadDrivers(prev => {
+        const next = new Set(prev);
+        next.delete(selectedDriver.id);
+        return next;
+      });
     }
   }, [selectedDriver]);
 
@@ -338,6 +359,7 @@ const Logistics: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full gap-6">
+      <BlinkCSS />
       <div className="flex items-center gap-4 bg-white p-2 rounded-3xl w-max shadow-sm border border-slate-100 flex-shrink-0">
         <button
           onClick={() => setActiveTab('PENDING')}
@@ -347,7 +369,7 @@ const Logistics: React.FC = () => {
         </button>
         <button
           onClick={() => setActiveTab('CHAT')}
-          className={`px-6 py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all ${activeTab === 'CHAT' ? 'bg-slate-900 text-white shadow-xl' : 'text-slate-400 hover:bg-slate-50'}`}
+          className={`px-6 py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all ${activeTab === 'CHAT' ? 'bg-slate-900 text-white shadow-xl' : 'text-slate-400 hover:bg-slate-50'} ${unreadDrivers.size > 0 && activeTab !== 'CHAT' ? 'animate-blink bg-amber-100 !text-amber-600' : ''}`}
         >
           Chat
         </button>
@@ -473,7 +495,7 @@ const Logistics: React.FC = () => {
                 <button
                   key={driver.id}
                   onClick={() => setSelectedDriver(driver)}
-                  className={`flex items-center gap-3 p-4 rounded-3xl transition-all ${selectedDriver?.id === driver.id ? 'bg-white shadow-md border border-slate-100 scale-[1.02]' : 'hover:bg-white/50'}`}
+                  className={`flex items-center gap-3 p-4 rounded-3xl transition-all ${selectedDriver?.id === driver.id ? 'bg-white shadow-md border border-slate-100 scale-[1.02]' : 'hover:bg-white/50'} ${unreadDrivers.has(driver.id) ? 'animate-blink border-amber-200 bg-amber-50/50' : ''}`}
                 >
                   <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-white font-black uppercase text-sm ${selectedDriver?.id === driver.id ? 'bg-blue-600 shadow-lg shadow-blue-500/20' : 'bg-slate-300'}`}>
                     {driver.name.charAt(0)}

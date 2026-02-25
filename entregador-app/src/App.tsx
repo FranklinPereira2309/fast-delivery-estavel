@@ -30,6 +30,19 @@ const playNotificationSound = () => {
   }
 };
 
+const BlinkCSS = () => (
+  <style>{`
+        @keyframes blink {
+            0% { opacity: 1; }
+            50% { opacity: 0.3; }
+            100% { opacity: 1; }
+        }
+        .animate-blink {
+            animation: blink 0.8s infinite;
+        }
+    `}</style>
+);
+
 const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -57,6 +70,7 @@ const App: React.FC = () => {
 
   // Chat states
   const [messages, setMessages] = useState<any[]>([]);
+  const [hasUnreadChat, setHasUnreadChat] = useState(false);
   const [newMessage, setNewMessage] = useState('');
   const chatEndRef = useRef<HTMLDivElement>(null);
 
@@ -106,7 +120,7 @@ const App: React.FC = () => {
       socket.off('order_auto_rejected_global');
       socket.off('connect', onReconnect);
     };
-  }, [currentUser, driver]);
+  }, [currentUser, driver, activeTab]);
 
   useEffect(() => {
     if (driver) {
@@ -120,10 +134,14 @@ const App: React.FC = () => {
             if (prev.find(m => m.id === msg.id)) return prev;
             return [...prev, msg];
           });
+          if (activeTab !== 'CHAT') {
+            setHasUnreadChat(true);
+            playNotificationSound();
+          }
         }
       });
     }
-  }, [driver]);
+  }, [driver, activeTab]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -145,6 +163,13 @@ const App: React.FC = () => {
     setCurrentUser(null);
     setDriver(null);
     setMyOrders([]);
+  };
+
+  const handleTabChange = (tab: 'PENDING' | 'HISTORY' | 'CHAT') => {
+    setActiveTab(tab);
+    if (tab === 'CHAT') {
+      setHasUnreadChat(false);
+    }
   };
 
   const refreshData = async () => {
@@ -555,24 +580,30 @@ const App: React.FC = () => {
         )}
       </main>
 
+      <BlinkCSS />
       {/* NAVIGATION BAR - MOBILE STYLE - FIXED AT BOTTOM */}
       <nav className="shrink-0 bg-white/95 backdrop-blur-xl border-t border-slate-100 px-6 py-4 flex justify-between items-center z-30 shadow-[0_-10px_30px_-15px_rgba(0,0,0,0.1)] pb-safe">
         <button
-          onClick={() => setActiveTab('PENDING')}
+          onClick={() => handleTabChange('PENDING')}
           className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'PENDING' ? 'text-blue-600 scale-110' : 'text-slate-300'}`}
         >
           <Icons.Logistics className="w-6 h-6" />
           <span className="text-[9px] font-black uppercase tracking-widest">Início</span>
         </button>
         <button
-          onClick={() => setActiveTab('CHAT')}
-          className={`flex flex-col items-center gap-1 transition-all relative ${activeTab === 'CHAT' ? 'text-blue-600 scale-110' : 'text-slate-300'}`}
+          onClick={() => handleTabChange('CHAT')}
+          className={`flex flex-col items-center gap-1 transition-all relative ${activeTab === 'CHAT' ? 'text-blue-600 scale-110' : 'text-slate-300'} ${hasUnreadChat && activeTab !== 'CHAT' ? 'animate-blink' : ''}`}
         >
-          <Icons.Chat className="w-6 h-6" />
-          <span className="text-[9px] font-black uppercase tracking-widest">Chat</span>
+          <div className="relative">
+            <Icons.Chat className={`w-6 h-6 ${hasUnreadChat && activeTab !== 'CHAT' ? 'text-amber-500' : ''}`} />
+            {hasUnreadChat && activeTab !== 'CHAT' && (
+              <span className="absolute -top-1 -right-1 w-2 h-2 bg-amber-500 rounded-full border border-white" />
+            )}
+          </div>
+          <span className={`text-[9px] font-black uppercase tracking-widest ${hasUnreadChat && activeTab !== 'CHAT' ? 'text-amber-600' : ''}`}>Chat</span>
         </button>
         <button
-          onClick={() => setActiveTab('HISTORY')}
+          onClick={() => handleTabChange('HISTORY')}
           className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'HISTORY' ? 'text-blue-600 scale-110' : 'text-slate-300'}`}
         >
           <Icons.History className="w-6 h-6" />
