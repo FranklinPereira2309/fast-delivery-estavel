@@ -6,6 +6,36 @@ import { Icons } from '../constants';
 import { socket } from '../services/socket';
 import CustomAlert from '../components/CustomAlert';
 
+const CheckoutTimer: React.FC<{ assignedAt: string }> = ({ assignedAt }) => {
+  const [timeLeft, setTimeLeft] = useState<string>('--:--');
+
+  useEffect(() => {
+    const calculate = () => {
+      const start = new Date(assignedAt).getTime();
+      const limit = start + 5 * 60 * 1000;
+      const now = new Date().getTime();
+      const diff = limit - now;
+
+      if (diff <= 0) return setTimeLeft('00:00');
+
+      const mins = Math.floor(diff / 60000);
+      const secs = Math.floor((diff % 60000) / 1000);
+      setTimeLeft(`${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`);
+    };
+
+    calculate();
+    const interval = setInterval(calculate, 1000);
+    return () => clearInterval(interval);
+  }, [assignedAt]);
+
+  return (
+    <div className="flex items-center gap-1.5 px-3 py-1 bg-amber-50 rounded-full border border-amber-100">
+      <div className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse" />
+      <span className="text-[9px] font-black text-amber-600 uppercase tracking-widest">Expira em: {timeLeft}</span>
+    </div>
+  );
+};
+
 const FleetManagement: React.FC<{ refreshLogistics: () => void }> = ({ refreshLogistics }) => {
   const [drivers, setDrivers] = useState<DeliveryDriver[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -400,8 +430,11 @@ const Logistics: React.FC = () => {
                     </div>
                   </div>
                   {order.status === OrderStatus.READY && order.driverId ? (
-                    <div className="p-3 bg-amber-50 border border-amber-100 rounded-xl text-center">
-                      <p className="text-[9px] font-black text-amber-600 uppercase tracking-widest">Aguardando aceite do entregador no APP...</p>
+                    <div className="mt-4 space-y-3">
+                      <CheckoutTimer assignedAt={order.assignedAt!} />
+                      <div className="p-3 bg-amber-50 border border-amber-100 rounded-xl text-center">
+                        <p className="text-[9px] font-black text-amber-600 uppercase tracking-widest">Aguardando aceite do entregador no APP...</p>
+                      </div>
                     </div>
                   ) : (
                     <div className="p-3 bg-blue-100 border border-blue-200 rounded-xl text-center">
@@ -590,83 +623,88 @@ const Logistics: React.FC = () => {
               )}
           </div>
         </div>
-      )}
+      )
+      }
 
       {/* CUPOM DE ENTREGA AGRUPADO */}
-      {printingOrder && businessSettings && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
-          <div className="relative w-full max-w-[80mm] bg-white p-8 border border-dashed shadow-2xl font-receipt text-[11px] text-black print-container is-receipt animate-in zoom-in duration-200">
-            <div className="text-center mb-6 border-b border-dashed pb-4">
-              <h2 className="font-black text-sm uppercase tracking-tighter">{businessSettings.name}</h2>
-              <p className="text-[9px] font-bold mt-1 uppercase">Comprovante de Pagamento</p>
-            </div>
+      {
+        printingOrder && businessSettings && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
+            <div className="relative w-full max-w-[80mm] bg-white p-8 border border-dashed shadow-2xl font-receipt text-[11px] text-black print-container is-receipt animate-in zoom-in duration-200">
+              <div className="text-center mb-6 border-b border-dashed pb-4">
+                <h2 className="font-black text-sm uppercase tracking-tighter">{businessSettings.name}</h2>
+                <p className="text-[9px] font-bold mt-1 uppercase">Comprovante de Pagamento</p>
+              </div>
 
-            <div className="space-y-1 mb-4">
-              <p>DATA: {new Date(printingOrder.createdAt).toLocaleString('pt-BR')}</p>
-              <p>CLIENTE: {printingOrder.clientName}</p>
-              {printingOrder.clientPhone && <p>FONE: {printingOrder.clientPhone}</p>}
-              {printingOrder.clientAddress && (
-                <p className="font-bold border-t border-dashed mt-2 pt-1 uppercase leading-tight">ENTREGA: {printingOrder.clientAddress}</p>
-              )}
-              {printingOrder.tableNumber && <p className="font-black">MESA: {printingOrder.tableNumber}</p>}
-              <p>MÉTODO: {printingOrder.paymentMethod || 'DINHEIRO'}</p>
-            </div>
+              <div className="space-y-1 mb-4">
+                <p>DATA: {new Date(printingOrder.createdAt).toLocaleString('pt-BR')}</p>
+                <p>CLIENTE: {printingOrder.clientName}</p>
+                {printingOrder.clientPhone && <p>FONE: {printingOrder.clientPhone}</p>}
+                {printingOrder.clientAddress && (
+                  <p className="font-bold border-t border-dashed mt-2 pt-1 uppercase leading-tight">ENTREGA: {printingOrder.clientAddress}</p>
+                )}
+                {printingOrder.tableNumber && <p className="font-black">MESA: {printingOrder.tableNumber}</p>}
+                <p>MÉTODO: {printingOrder.paymentMethod || 'DINHEIRO'}</p>
+              </div>
 
-            <div className="border-t border-dashed my-3 py-3">
-              {groupedPrintingItems.map(([id, data]) => (
-                <div key={id} className="flex justify-between font-black uppercase py-0.5">
-                  <span>{data.quantity}x {data.name.substring(0, 18)}</span>
-                  <span>R$ {(data.quantity * data.price).toFixed(2)}</span>
-                </div>
-              ))}
-            </div>
+              <div className="border-t border-dashed my-3 py-3">
+                {groupedPrintingItems.map(([id, data]) => (
+                  <div key={id} className="flex justify-between font-black uppercase py-0.5">
+                    <span>{data.quantity}x {data.name.substring(0, 18)}</span>
+                    <span>R$ {(data.quantity * data.price).toFixed(2)}</span>
+                  </div>
+                ))}
+              </div>
 
-            <div className="flex justify-between items-end border-t border-dashed pt-4 mb-6">
-              <span className="font-black text-[9px] uppercase tracking-widest">TOTAL:</span>
-              <span className="text-2xl font-black">R$ {printingOrder.total.toFixed(2)}</span>
-            </div>
+              <div className="flex justify-between items-end border-t border-dashed pt-4 mb-6">
+                <span className="font-black text-[9px] uppercase tracking-widest">TOTAL:</span>
+                <span className="text-2xl font-black">R$ {printingOrder.total.toFixed(2)}</span>
+              </div>
 
-            <div className="flex gap-2 no-print">
-              <button onClick={() => window.print()} className="flex-1 bg-slate-900 text-white py-4 rounded-2xl font-black uppercase text-[10px] shadow-xl">Imprimir</button>
-              <button onClick={() => setPrintingOrder(null)} className="flex-1 bg-slate-100 text-slate-600 py-4 rounded-2xl font-black uppercase text-[10px]">Fechar</button>
+              <div className="flex gap-2 no-print">
+                <button onClick={() => window.print()} className="flex-1 bg-slate-900 text-white py-4 rounded-2xl font-black uppercase text-[10px] shadow-xl">Imprimir</button>
+                <button onClick={() => setPrintingOrder(null)} className="flex-1 bg-slate-100 text-slate-600 py-4 rounded-2xl font-black uppercase text-[10px]">Fechar</button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
       {/* CUPOM DE HISTÓRICO RESUMIDO */}
-      {printingHistoryOrder && businessSettings && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
-          <div className="relative w-full max-w-[80mm] bg-white p-8 border border-dashed shadow-2xl font-receipt text-[11px] text-black print-container is-receipt animate-in zoom-in duration-200">
-            <div className="text-center mb-6 border-b border-dashed pb-4">
-              <h2 className="font-black text-sm uppercase tracking-tighter">{businessSettings.name}</h2>
-              <p className="text-[9px] font-bold mt-1 uppercase">Cópia de Comprovante</p>
-            </div>
+      {
+        printingHistoryOrder && businessSettings && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
+            <div className="relative w-full max-w-[80mm] bg-white p-8 border border-dashed shadow-2xl font-receipt text-[11px] text-black print-container is-receipt animate-in zoom-in duration-200">
+              <div className="text-center mb-6 border-b border-dashed pb-4">
+                <h2 className="font-black text-sm uppercase tracking-tighter">{businessSettings.name}</h2>
+                <p className="text-[9px] font-bold mt-1 uppercase">Cópia de Comprovante</p>
+              </div>
 
-            <div className="space-y-1 mb-4">
-              <p>DATA: {new Date(printingHistoryOrder.createdAt).toLocaleString('pt-BR')}</p>
-              <p>CLIENTE: {printingHistoryOrder.clientName}</p>
-              {printingHistoryOrder.clientPhone && <p>FONE: {printingHistoryOrder.clientPhone}</p>}
-              {printingHistoryOrder.clientAddress && (
-                <p className="font-bold border-t border-dashed mt-2 pt-1 uppercase leading-tight">ENTREGA: {printingHistoryOrder.clientAddress}</p>
-              )}
-              <p>MÉTODO: {printingHistoryOrder.paymentMethod || 'DINHEIRO'}</p>
-              <p className="font-bold border-t border-dashed mt-2 pt-1 uppercase">ENTREGADOR: {getDriverName(printingHistoryOrder.driverId)}</p>
-            </div>
+              <div className="space-y-1 mb-4">
+                <p>DATA: {new Date(printingHistoryOrder.createdAt).toLocaleString('pt-BR')}</p>
+                <p>CLIENTE: {printingHistoryOrder.clientName}</p>
+                {printingHistoryOrder.clientPhone && <p>FONE: {printingHistoryOrder.clientPhone}</p>}
+                {printingHistoryOrder.clientAddress && (
+                  <p className="font-bold border-t border-dashed mt-2 pt-1 uppercase leading-tight">ENTREGA: {printingHistoryOrder.clientAddress}</p>
+                )}
+                <p>MÉTODO: {printingHistoryOrder.paymentMethod || 'DINHEIRO'}</p>
+                <p className="font-bold border-t border-dashed mt-2 pt-1 uppercase">ENTREGADOR: {getDriverName(printingHistoryOrder.driverId)}</p>
+              </div>
 
-            <div className="flex justify-between items-end border-t border-dashed pt-4 mb-6">
-              <span className="font-black text-[9px] uppercase tracking-widest">TOTAL:</span>
-              <span className="text-2xl font-black">R$ {printingHistoryOrder.total.toFixed(2)}</span>
-            </div>
+              <div className="flex justify-between items-end border-t border-dashed pt-4 mb-6">
+                <span className="font-black text-[9px] uppercase tracking-widest">TOTAL:</span>
+                <span className="text-2xl font-black">R$ {printingHistoryOrder.total.toFixed(2)}</span>
+              </div>
 
-            <div className="flex gap-2 no-print">
-              <button onClick={() => window.print()} className="flex-1 bg-slate-900 text-white py-4 rounded-2xl font-black uppercase text-[10px] shadow-xl">Imprimir</button>
-              <button onClick={() => setPrintingHistoryOrder(null)} className="flex-1 bg-slate-100 text-slate-600 py-4 rounded-2xl font-black uppercase text-[10px]">Fechar</button>
+              <div className="flex gap-2 no-print">
+                <button onClick={() => window.print()} className="flex-1 bg-slate-900 text-white py-4 rounded-2xl font-black uppercase text-[10px] shadow-xl">Imprimir</button>
+                <button onClick={() => setPrintingHistoryOrder(null)} className="flex-1 bg-slate-100 text-slate-600 py-4 rounded-2xl font-black uppercase text-[10px]">Fechar</button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )
+      }
+    </div >
   );
 };
 

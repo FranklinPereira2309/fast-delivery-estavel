@@ -54,6 +54,7 @@ const App: React.FC = () => {
   const [historyEndDate, setHistoryEndDate] = useState(new Date().toISOString().split('T')[0]);
   const [printingHistoryOrder, setPrintingHistoryOrder] = useState<Order | null>(null);
   const [storeStatus, setStoreStatus] = useState<{ status: 'online' | 'offline' }>({ status: 'offline' });
+  const [customAlertMessage, setCustomAlertMessage] = useState<string | null>(null);
 
   // Chat states
   const [messages, setMessages] = useState<any[]>([]);
@@ -78,6 +79,14 @@ const App: React.FC = () => {
 
     socket.on('store_status_changed', (data: any) => {
       setStoreStatus(data);
+    });
+
+    socket.on('order_auto_rejected', (data: any) => {
+      setCustomAlertMessage(data.message);
+      setIsAlertOpen(true);
+      // Play sound twice for better alert
+      playNotificationSound();
+      setTimeout(playNotificationSound, 600);
     });
 
     return () => {
@@ -170,25 +179,7 @@ const App: React.FC = () => {
     }
   };
 
-  // Auto-rejection logic: 5 minutes
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const now = new Date();
-      myOrders.forEach(order => {
-        if (order.status === OrderStatus.READY) {
-          // Use assignedAt for precise timing, fallback to createdAt
-          const referenceTime = order.assignedAt ? new Date(order.assignedAt) : new Date(order.createdAt);
-          const diffInMinutes = (now.getTime() - referenceTime.getTime()) / 60000;
-          if (diffInMinutes >= 5) {
-            console.log(`Auto-rejecting order ${order.id} due to timeout (5 mins since assignment)`);
-            updateDeliveryStatus(order.id, OrderStatus.READY, ''); // DriverId '' means null/unassigned
-          }
-        }
-      });
-    }, 10000); // Check every 10 seconds
 
-    return () => clearInterval(interval);
-  }, [myOrders]);
 
   const loadChatHistory = async () => {
     if (!driver) return;
@@ -323,10 +314,10 @@ const App: React.FC = () => {
             <Icons.Alert className="w-6 h-6" />
           </div>
           <div className="flex-1">
-            <h4 className="font-black text-sm uppercase tracking-tight">NOVA ENTREGA!</h4>
-            <p className="text-[10px] font-bold opacity-80 uppercase leading-tight">Você recebeu uma nova rota de entrega.</p>
+            <h4 className="font-black text-sm uppercase tracking-tight">{customAlertMessage ? 'AVISO!' : 'NOVA ENTREGA!'}</h4>
+            <p className="text-[10px] font-bold opacity-80 uppercase leading-tight">{customAlertMessage || 'Você recebeu uma nova rota de entrega.'}</p>
           </div>
-          <button onClick={() => setIsAlertOpen(false)} className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
+          <button onClick={() => { setIsAlertOpen(false); setCustomAlertMessage(null); }} className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
             <Icons.Check className="w-4 h-4" />
           </button>
         </div>

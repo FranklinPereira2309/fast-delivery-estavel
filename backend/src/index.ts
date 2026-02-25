@@ -16,6 +16,7 @@ import tableRoutes from './routes/tableRoutes';
 import publicRoutes from './routes/publicRoutes';
 import chatRoutes from './routes/chatRoutes';
 import { initSocket } from './socket';
+import { startOrderTimeoutService } from './services/orderTimeoutService';
 import { loadSettingsToCache } from './storeStatusCache';
 import http from 'http';
 
@@ -50,4 +51,5 @@ app.get('/health', (req, res) => {
 server.listen(port, () => {
     console.log(`Server running on port ${port}`);
     loadSettingsToCache();
+    startOrderTimeoutService();
 });
