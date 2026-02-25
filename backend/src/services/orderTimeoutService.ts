@@ -10,24 +10,27 @@ export const startOrderTimeoutService = () => {
             const now = new Date();
             const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
 
+            console.log(`[OrderTimeoutService] Checking for timed out orders. Now: ${now.toISOString()}, FiveMinutesAgo: ${fiveMinutesAgo.toISOString()}`);
+
             // Find orders READY, with driver assigned more than 5 minutes ago
-            const timedOutOrders = await prisma.order.findMany({
+            // Using 'any' casting as some environment types might not have synced yet
+            const timedOutOrders = await (prisma.order as any).findMany({
                 where: {
                     status: 'READY',
-                    driverId: { not: null },
+                    driverId: { notIn: [null, ''] },
                     assignedAt: { lt: fiveMinutesAgo }
                 }
             });
 
             if (timedOutOrders.length > 0) {
-                console.log(`Found ${timedOutOrders.length} timed out orders. Reverting assignment...`);
+                console.log(`[OrderTimeoutService] Found ${timedOutOrders.length} timed out orders:`, timedOutOrders.map(o => ({ id: o.id, assignedAt: o.assignedAt })));
 
                 for (const order of timedOutOrders) {
                     const oldDriverId = order.driverId;
 
                     await prisma.$transaction(async (tx) => {
                         // Revert order assignment
-                        await tx.order.update({
+                        await (tx.order as any).update({
                             where: { id: order.id },
                             data: {
                                 driverId: null,

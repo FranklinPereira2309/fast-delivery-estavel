@@ -331,11 +331,12 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
                 driverId: resolvedDriverId
             };
 
-            // Se está atribuindo um driver agora, ou trocando, reseta o timer
             if (resolvedDriverId && resolvedDriverId !== oldOrder.driverId) {
                 updateData.assignedAt = new Date();
+                console.log(`[OrderController] Resetting assignedAt for order ${id} to ${updateData.assignedAt}`);
             } else if (resolvedDriverId === null) {
                 updateData.assignedAt = null;
+                console.log(`[OrderController] Clearing assignedAt for order ${id}`);
             }
 
             const order = await tx.order.update({
