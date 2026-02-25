@@ -1,31 +1,56 @@
 
 import prisma from '../prisma';
 import { getIO } from '../socket';
+import fs from 'fs';
+import path from 'path';
+
+const LOG_FILE = path.join(process.cwd(), 'logs', 'timeout_service.log');
+
+const logToFile = (message: string) => {
+    const timestamp = new Date().toISOString();
+    const formattedMessage = `[${timestamp}] ${message}\n`;
+    try {
+        fs.appendFileSync(LOG_FILE, formattedMessage);
+    } catch (e) {
+        console.error('Failed to write to log file:', e);
+    }
+};
 
 export const startOrderTimeoutService = () => {
-    console.log('Starting Order Timeout Service (5 minutes)...');
+    logToFile('Order Timeout Service initialized.');
+    console.log('Starting Order Timeout Service...');
 
     setInterval(async () => {
         try {
             const now = new Date();
             const settings = await prisma.businessSettings.findUnique({ where: { key: 'main' } });
-            const timeoutMinutes = (settings as any)?.orderTimeoutMinutes || 5;
+
+            // Robust parsing of timeout
+            let timeoutMinutes = 5;
+            if (settings && (settings as any).orderTimeoutMinutes) {
+                timeoutMinutes = Number((settings as any).orderTimeoutMinutes);
+            }
+
+            if (isNaN(timeoutMinutes) || timeoutMinutes <= 0) {
+                timeoutMinutes = 5;
+            }
+
             const timeoutMs = timeoutMinutes * 60 * 1000;
-            const fiveMinutesAgo = new Date(now.getTime() - timeoutMs);
+            const limitTime = new Date(now.getTime() - timeoutMs);
 
-            console.log(`[OrderTimeoutService] Checking for timed out orders (Timeout: ${timeoutMinutes} min). Now: ${now.toISOString()}, Limit: ${fiveMinutesAgo.toISOString()}`);
+            logToFile(`Checking for timed out orders. Timeout: ${timeoutMinutes} min. Now: ${now.toISOString()}, Limit: ${limitTime.toISOString()}`);
 
-            // Reliability check: Find orders with driver but NULL assignedAt
+            // 1. Reliability check: Assigned but no timestamp
             const missingTimestampOrders = await (prisma.order as any).findMany({
                 where: {
                     status: 'READY',
-                    driverId: { notIn: [null, ''] },
+                    driverId: { not: null, notIn: [''] },
                     assignedAt: null
                 }
             });
 
             if (missingTimestampOrders.length > 0) {
-                console.log(`[OrderTimeoutService] Found ${missingTimestampOrders.length} orders missing assignedAt. IDs: ${missingTimestampOrders.map((o: any) => o.id).join(', ')}`);
+                logToFile(`Found ${missingTimestampOrders.length} orders missing assignedAt. Fixing...`);
                 for (const order of missingTimestampOrders) {
                     await (prisma.order as any).update({
                         where: { id: order.id },
@@ -34,75 +59,81 @@ export const startOrderTimeoutService = () => {
                 }
             }
 
-            // Find orders READY, with driver assigned more than timeoutMinutes ago
+            // 2. Main check: Timed out orders
             const timedOutOrders = await (prisma.order as any).findMany({
                 where: {
                     status: 'READY',
-                    driverId: { notIn: [null, ''] },
-                    assignedAt: { lt: fiveMinutesAgo }
+                    driverId: { not: null, notIn: [''] },
+                    assignedAt: { lt: limitTime }
                 }
             });
 
-            console.log(`[OrderTimeoutService] Query found ${timedOutOrders.length} timed out orders.`);
-
             if (timedOutOrders.length > 0) {
-                console.log(`[OrderTimeoutService] Processing timed out orders:`, timedOutOrders.map((o: any) => ({ id: o.id, assignedAt: o.assignedAt })));
+                logToFile(`Found ${timedOutOrders.length} timed out orders. IDs: ${timedOutOrders.map((o: any) => o.id).join(', ')}`);
 
                 for (const order of timedOutOrders) {
                     const oldDriverId = order.driverId;
+                    logToFile(`Processing timeout for Order ${order.id} (Driver ${oldDriverId})...`);
 
-                    await prisma.$transaction(async (tx) => {
-                        // Revert order assignment
-                        await (tx.order as any).update({
-                            where: { id: order.id },
-                            data: {
-                                driverId: null,
-                                assignedAt: null
+                    try {
+                        await prisma.$transaction(async (tx) => {
+                            // Revert order assignment
+                            await (tx.order as any).update({
+                                where: { id: order.id },
+                                data: {
+                                    driverId: null,
+                                    assignedAt: null
+                                }
+                            });
+
+                            // Restore driver status to AVAILABLE
+                            if (oldDriverId) {
+                                await (tx.deliveryDriver as any).update({
+                                    where: { id: oldDriverId },
+                                    data: { status: 'AVAILABLE' }
+                                });
                             }
+
+                            // Log action
+                            const systemUser = await tx.user.findFirst();
+                            await tx.auditLog.create({
+                                data: {
+                                    action: 'AUTO_REJECTION',
+                                    userId: systemUser?.id || 'SYSTEM', // Fallback to SYSTEM if no user, but constraint might still fail
+                                    userName: 'Sistema',
+                                    details: `Pedido ${order.id} inativado por falta de interação do entregador ${oldDriverId}. (Vínculo removido e motorista liberado)`
+                                }
+                            });
                         });
 
-                        // Restore driver status to AVAILABLE
+                        // Notify Driver (Directly)
                         if (oldDriverId) {
-                            await (tx.deliveryDriver as any).update({
-                                where: { id: oldDriverId },
-                                data: { status: 'AVAILABLE' }
+                            getIO().to(`chat_${oldDriverId}`).emit('order_auto_rejected', {
+                                orderId: order.id,
+                                message: 'A entrega foi inativada por falta de interação'
+                            });
+
+                            // Notificar Broadcast Global
+                            getIO().emit('order_auto_rejected_global', {
+                                orderId: order.id,
+                                driverId: oldDriverId,
+                                message: 'A entrega foi inativada por falta de interação'
                             });
                         }
 
-                        // Log action
-                        await tx.auditLog.create({
-                            data: {
-                                action: 'AUTO_REJECTION',
-                                userId: 'SYSTEM',
-                                userName: 'Sistema',
-                                details: `Pedido ${order.id} inativado por falta de interação do entregador ${oldDriverId}. (Vínculo removido e motorista liberado)`
-                            }
-                        });
-                    });
+                        // Global update
+                        getIO().emit('orderStatusChanged', { action: 'statusUpdate', id: order.id, status: 'READY' });
+                        getIO().emit('drivers_updated');
 
-                    // Emit to the specific driver room
-                    if (oldDriverId) {
-                        console.log(`[OrderTimeoutService] Notifying driver ${oldDriverId} about auto-rejection.`);
-                        getIO().to(`chat_${oldDriverId}`).emit('order_auto_rejected', {
-                            orderId: order.id,
-                            message: 'A entrega foi inativada por falta de interação'
-                        });
-
-                        // Global fallback for redundancy
-                        getIO().emit('order_auto_rejected_global', {
-                            orderId: order.id,
-                            driverId: oldDriverId,
-                            message: 'A entrega foi inativada por falta de interação'
-                        });
+                        logToFile(`Order ${order.id} successfully timed out and released.`);
+                    } catch (innerError: any) {
+                        logToFile(`FAILED to process timeout for order ${order.id}: ${innerError.message}`);
                     }
-
-                    // Global refresh for Logistics/POS
-                    getIO().emit('orderStatusChanged', { action: 'statusUpdate', id: order.id, status: 'READY' });
-                    getIO().emit('drivers_updated'); // Notify logistics to refresh driver list
                 }
             }
-        } catch (error) {
+        } catch (error: any) {
+            logToFile(`CRITICAL Error in Order Timeout Service: ${error.message}`);
             console.error('Error in Order Timeout Service:', error);
         }
-    }, 30000); // Run every 30 seconds
+    }, 15000); // Check every 15 seconds for more responsiveness
 };
