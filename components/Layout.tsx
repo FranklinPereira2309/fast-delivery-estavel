@@ -5,6 +5,7 @@ import { db } from '../services/db';
 import { User, Order, OrderStatus, TableSession, SaleType } from '../types';
 import { useDigitalAlert } from '../hooks/useDigitalAlert';
 import { audioAlert } from '../services/audioAlert';
+import { socket } from '../services/socket';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -20,6 +21,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
   const [shouldBlinkLogistics, setShouldBlinkLogistics] = useState(false);
   const [shouldBlinkKitchen, setShouldBlinkKitchen] = useState(false);
   const [shouldBlinkTables, setShouldBlinkTables] = useState(false);
+  const [shouldBlinkLogisticsChat, setShouldBlinkLogisticsChat] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
   const { isAlerting } = useDigitalAlert();
   const lastOrdersMap = useRef<Record<string, { status: OrderStatus, itemCount: number }>>({});
@@ -133,14 +135,36 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
     checkData();
 
     const interval = setInterval(() => monitorSystem(false), 3000);
-    return () => clearInterval(interval);
+
+    // Chat Monitoring for Module Level Blink
+    const onNewMessage = (msg: any) => {
+      if (activeTab !== 'logistics') {
+        setShouldBlinkLogisticsChat(true);
+      }
+    };
+
+    socket.on('new_message', onNewMessage);
+
+    const joinAllRooms = async () => {
+      const drivers = await db.getDrivers();
+      drivers.forEach(d => socket.emit('join_chat', d.id));
+    };
+    joinAllRooms();
+
+    return () => {
+      clearInterval(interval);
+      socket.off('new_message', onNewMessage);
+    };
   }, [activeTab]);
 
 
   useEffect(() => {
     if (activeTab === 'kitchen') setShouldBlinkKitchen(false);
     if (activeTab === 'sales-monitor') setShouldBlinkMonitor(false);
-    if (activeTab === 'logistics') setShouldBlinkLogistics(false);
+    if (activeTab === 'logistics') {
+      setShouldBlinkLogistics(false);
+      setShouldBlinkLogisticsChat(false);
+    }
     if (activeTab === 'tables') setShouldBlinkTables(false);
   }, [activeTab]);
 
@@ -178,7 +202,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
             const isTables = item.id === 'tables';
             const blinkClass = (isMonitor && shouldBlinkMonitor) ||
               (isPOS && shouldBlinkPOS) ||
-              (isLogistics && shouldBlinkLogistics) ||
+              (isLogistics && (shouldBlinkLogistics || shouldBlinkLogisticsChat)) ||
               (isKitchen && shouldBlinkKitchen) ||
               (isTables && (isAlerting || shouldBlinkTables))
               ? 'animate-notify-turquoise border-none' : '';
