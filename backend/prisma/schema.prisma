@@ -55,6 +55,11 @@ enum SessionStatus {
   billing
 }
 
+enum RejectionType {
+  AUTO
+  MANUAL
+}
+
 model User {
   id          String   @id @default(uuid())
   name        String
@@ -147,6 +152,7 @@ model Order {
   waiterId      String?
   waiter        Waiter?     @relation(fields: [waiterId], references: [id])
   isOriginDigitalMenu Boolean @default(false)
+  rejections   OrderRejection[]
 }
 
 model OrderItem {
@@ -192,6 +198,7 @@ model DeliveryDriver {
   vehicleType  VehicleType
   status       DriverStatus @default(AVAILABLE)
   orders       Order[]
+  rejections   OrderRejection[]
 }
 
 model AuditLog {
@@ -227,4 +234,15 @@ model ChatMessage {
   driverId     String
   isFromDriver Boolean
   senderName   String
+}
+
+model OrderRejection {
+  id          String        @id @default(uuid())
+  timestamp   DateTime      @default(now())
+  orderId     String
+  order       Order         @relation(fields: [orderId], references: [id])
+  driverId    String
+  driver      DeliveryDriver @relation(fields: [driverId], references: [id])
+  type        RejectionType
+  reason      String?
 }

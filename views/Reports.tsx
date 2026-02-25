@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { db, BusinessSettings } from '../services/db';
-import { Order, OrderStatus, SaleType, Client, Product, DeliveryDriver, InventoryMovement } from '../types';
+import { Order, OrderStatus, SaleType, Client, Product, DeliveryDriver, InventoryMovement, OrderRejection } from '../types';
 import { Icons } from '../constants';
 import CustomAlert from '../components/CustomAlert';
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
@@ -12,6 +12,7 @@ const Reports: React.FC = () => {
     const [drivers, setDrivers] = useState<DeliveryDriver[]>([]);
     const [businessSettings, setBusinessSettings] = useState<BusinessSettings | null>(null);
     const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
+    const [rejections, setRejections] = useState<OrderRejection[]>([]);
 
     // Sales Filters
     const [salesStartDate, setSalesStartDate] = useState(new Date().toISOString().split('T')[0]);
@@ -43,16 +44,18 @@ const Reports: React.FC = () => {
     }, []);
 
     const fetchData = async () => {
-        const [o, c, s, d] = await Promise.all([
+        const [o, c, s, d, r] = await Promise.all([
             db.getOrders(),
             db.getClients(),
             db.getSettings(),
-            db.getDrivers()
+            db.getDrivers(),
+            db.getRejections()
         ]);
         setOrders(o);
         setClients(c);
         setBusinessSettings(s);
         setDrivers(d);
+        setRejections(r);
     };
 
     const getFriendlySaleType = (type: SaleType | string) => {
@@ -313,6 +316,18 @@ const Reports: React.FC = () => {
 
             const totalDeliveries = filteredOrders.length;
             const totalRevenue = filteredOrders.reduce((sum, o) => sum + o.total, 0);
+            const totalDeliveryFees = filteredOrders.reduce((sum, o) => sum + (o.deliveryFee || 0), 0);
+            const totalProductsValue = totalRevenue - totalDeliveryFees;
+
+            const filteredRejections = rejections.filter(r => {
+                const rejDate = r.timestamp.split('T')[0];
+                const inDate = rejDate >= driverStartDate && rejDate <= driverEndDate;
+                const inDriver = selectedDriverId === 'TODOS' || r.driverId === selectedDriverId;
+                return inDate && inDriver;
+            });
+
+            const autoRejectionsCount = filteredRejections.filter(r => r.type === 'AUTO').length;
+            const manualRejectionsCount = filteredRejections.filter(r => r.type === 'MANUAL').length;
 
             let page = pdfDoc.addPage([595.28, 841.89]);
             const { width, height } = page.getSize();
@@ -335,15 +350,23 @@ const Reports: React.FC = () => {
             y -= 20;
             page.drawText(`Faturamento Vinculado: R$ ${totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, { x: 50, y, size: 10, font });
             y -= 15;
+            page.drawText(`Valor em Produtos: R$ ${totalProductsValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, { x: 50, y, size: 10, font });
+            y -= 15;
+            page.drawText(`Total de Taxas de Entrega: R$ ${totalDeliveryFees.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, { x: 50, y, size: 10, font });
+            y -= 15;
             page.drawText(`Total de Entregas Finalizadas: ${totalDeliveries}`, { x: 50, y, size: 10, font });
+            y -= 15;
+            page.drawText(`Rejeições: ${filteredRejections.length} (Auto: ${autoRejectionsCount}, Manual: ${manualRejectionsCount})`, { x: 50, y, size: 10, font: fontBold, color: rgb(0.8, 0, 0) });
 
             y -= 40;
             // Table Header
             page.drawRectangle({ x: 50, y: y - 5, width: width - 100, height: 20, color: rgb(0.95, 0.95, 0.95) });
-            page.drawText('DATA | HORA', { x: 55, y, size: 8, font: fontBold });
-            page.drawText('CLIENTE', { x: 180, y, size: 8, font: fontBold });
-            page.drawText('ENTREGADOR', { x: 350, y, size: 8, font: fontBold });
-            page.drawText('TOTAL', { x: 500, y, size: 8, font: fontBold });
+            page.drawText('DATA | HORA', { x: 55, y, size: 7, font: fontBold });
+            page.drawText('CLIENTE', { x: 160, y, size: 7, font: fontBold });
+            page.drawText('ENTREGADOR', { x: 280, y, size: 7, font: fontBold });
+            page.drawText('TAXA', { x: 380, y, size: 7, font: fontBold });
+            page.drawText('PROD.', { x: 440, y, size: 7, font: fontBold });
+            page.drawText('TOTAL', { x: 500, y, size: 7, font: fontBold });
             y -= 25;
 
             for (const o of filteredOrders) {
@@ -355,11 +378,45 @@ const Reports: React.FC = () => {
                 const dateStr = `${dateObj.toLocaleDateString('pt-BR')} ${dateObj.toLocaleTimeString('pt-BR').substring(0, 5)}`;
                 const dName = drivers.find(d => d.id === o.driverId)?.name || 'N/A';
 
-                page.drawText(dateStr, { x: 55, y, size: 8, font });
-                page.drawText(o.clientName.substring(0, 30), { x: 180, y, size: 8, font });
-                page.drawText(dName.substring(0, 25), { x: 350, y, size: 8, font });
-                page.drawText(`R$ ${o.total.toFixed(2)}`, { x: 500, y, size: 8, font: fontBold });
+                page.drawText(dateStr, { x: 55, y, size: 7, font });
+                page.drawText(o.clientName.substring(0, 25), { x: 160, y, size: 7, font });
+                page.drawText(dName.substring(0, 20), { x: 280, y, size: 7, font });
+                page.drawText(`R$ ${(o.deliveryFee || 0).toFixed(2)}`, { x: 380, y, size: 7, font });
+                page.drawText(`R$ ${(o.total - (o.deliveryFee || 0)).toFixed(2)}`, { x: 440, y, size: 7, font });
+                page.drawText(`R$ ${o.total.toFixed(2)}`, { x: 500, y, size: 7, font: fontBold });
                 y -= 20;
+            }
+
+            if (filteredRejections.length > 0) {
+                if (y < 120) {
+                    page = pdfDoc.addPage([595.28, 841.89]);
+                    y = page.getHeight() - 50;
+                }
+                y -= 20;
+                page.drawText('DETALHAMENTO de REJEIÇÕES', { x: 50, y, size: 10, font: fontBold, color: rgb(0.8, 0, 0) });
+                y -= 15;
+                page.drawRectangle({ x: 50, y: y - 5, width: width - 100, height: 15, color: rgb(0.98, 0.9, 0.9) });
+                page.drawText('DATA | HORA', { x: 55, y, size: 7, font: fontBold });
+                page.drawText('ENTREGADOR', { x: 180, y, size: 7, font: fontBold });
+                page.drawText('TIPO', { x: 350, y, size: 7, font: fontBold });
+                page.drawText('MOTIVO', { x: 420, y, size: 7, font: fontBold });
+                y -= 15;
+
+                for (const r of filteredRejections) {
+                    if (y < 40) {
+                        page = pdfDoc.addPage([595.28, 841.89]);
+                        y = page.getHeight() - 50;
+                    }
+                    const dateObj = new Date(r.timestamp);
+                    const dateStr = `${dateObj.toLocaleDateString('pt-BR')} ${dateObj.toLocaleTimeString('pt-BR').substring(0, 5)}`;
+                    const dName = drivers.find(d => d.id === r.driverId)?.name || 'N/A';
+
+                    page.drawText(dateStr, { x: 55, y, size: 7, font });
+                    page.drawText(dName.substring(0, 30), { x: 180, y, size: 7, font });
+                    page.drawText(r.type, { x: 350, y, size: 7, font });
+                    page.drawText((r.reason || '').substring(0, 40), { x: 420, y, size: 7, font });
+                    y -= 12;
+                }
             }
 
             const pdfBytes = await pdfDoc.save();

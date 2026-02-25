@@ -65,3 +65,8 @@ export const deleteDriver = async (req: Request, res: Response) => {
     await prisma.deliveryDriver.delete({ where: { id: id as string } });
     res.json({ message: 'Motorista removido' });
 };
+
+export const getRejections = async (req: Request, res: Response) => {
+    const rejections = await prisma.orderRejection.findMany();
+    res.json(rejections);
+};

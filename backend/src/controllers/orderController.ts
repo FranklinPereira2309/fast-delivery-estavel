@@ -337,6 +337,18 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
             } else if (resolvedDriverId === null) {
                 updateData.assignedAt = null;
                 console.log(`[OrderController] CLEARING assignedAt for order ${id}`);
+
+                // Track Manual Rejection if there was a driver assigned
+                if (oldOrder.driverId) {
+                    await tx.orderRejection.create({
+                        data: {
+                            orderId: id as string,
+                            driverId: oldOrder.driverId,
+                            type: 'MANUAL',
+                            reason: 'Motorista removeu o vínculo manualmente'
+                        }
+                    });
+                }
             } else {
                 console.log(`[OrderController] KEEPING assignedAt for order ${id} as ${oldOrder.assignedAt?.toISOString()}`);
             }

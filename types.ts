@@ -174,3 +174,14 @@ export interface InventoryMovement {
   reason: string;
   orderId?: string;
 }
+
+export type RejectionType = 'AUTO' | 'MANUAL';
+
+export interface OrderRejection {
+  id: string;
+  timestamp: string;
+  orderId: string;
+  driverId: string;
+  type: RejectionType;
+  reason?: string;
+}

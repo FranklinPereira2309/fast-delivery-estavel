@@ -104,6 +104,18 @@ export const startOrderTimeoutService = () => {
                                     details: `Pedido ${order.id} inativado por falta de interação do entregador ${oldDriverId}. (Vínculo removido e motorista liberado)`
                                 }
                             });
+
+                            // Track Auto Rejection
+                            if (oldDriverId) {
+                                await tx.orderRejection.create({
+                                    data: {
+                                        orderId: order.id,
+                                        driverId: oldDriverId,
+                                        type: 'AUTO',
+                                        reason: 'Falta de interação (Timeout)'
+                                    }
+                                });
+                            }
                         });
 
                         // Notify Driver (Directly)

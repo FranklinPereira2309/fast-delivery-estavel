@@ -1,4 +1,4 @@
-import { Client, Product, Order, User, AuditLog, InventoryItem, RecipeItem, DeliveryDriver, OrderStatus, SaleType, TableSession, OrderItem, Waiter, InventoryMovement } from '../types';
+import { Client, Product, Order, User, AuditLog, InventoryItem, RecipeItem, DeliveryDriver, OrderStatus, SaleType, TableSession, OrderItem, Waiter, InventoryMovement, OrderRejection } from '../types';
 
 const API_URL = (import.meta as any).env.VITE_API_URL || 'http://localhost:3000/api';
 const AUTH_KEY = 'delivery_fast_auth';
@@ -235,6 +235,10 @@ class APIDBService {
       method: 'POST',
       body: JSON.stringify(message)
     });
+  }
+
+  public async getRejections(): Promise<OrderRejection[]> {
+    return this.request<OrderRejection[]>('/drivers/rejections');
   }
 }
 
