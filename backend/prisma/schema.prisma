@@ -141,6 +141,7 @@ model Order {
   paymentMethod String?
   driverId      String?
   driver        DeliveryDriver? @relation(fields: [driverId], references: [id])
+  assignedAt    DateTime?
   tableNumber   Int?
   waiterId      String?
   waiter        Waiter?     @relation(fields: [waiterId], references: [id])

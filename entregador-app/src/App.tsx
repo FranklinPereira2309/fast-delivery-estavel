@@ -176,10 +176,11 @@ const App: React.FC = () => {
       const now = new Date();
       myOrders.forEach(order => {
         if (order.status === OrderStatus.READY) {
-          const createdTime = new Date(order.createdAt);
-          const diffInMinutes = (now.getTime() - createdTime.getTime()) / 60000;
+          // Use assignedAt for precise timing, fallback to createdAt
+          const referenceTime = order.assignedAt ? new Date(order.assignedAt) : new Date(order.createdAt);
+          const diffInMinutes = (now.getTime() - referenceTime.getTime()) / 60000;
           if (diffInMinutes >= 5) {
-            console.log(`Auto-rejecting order ${order.id} due to timeout (5 mins)`);
+            console.log(`Auto-rejecting order ${order.id} due to timeout (5 mins since assignment)`);
             updateDeliveryStatus(order.id, OrderStatus.READY, ''); // DriverId '' means null/unassigned
           }
         }
@@ -221,7 +222,8 @@ const App: React.FC = () => {
 
   const updateDeliveryStatus = async (orderId: string, status: OrderStatus, forceDriverId?: string | null) => {
     if (!currentUser) return;
-    await db.updateOrderStatus(orderId, status, currentUser, forceDriverId || undefined);
+    // Fix: Allow empty string to pass through for de-assignment
+    await db.updateOrderStatus(orderId, status, currentUser, forceDriverId === undefined ? undefined : (forceDriverId as string));
     refreshData();
   };
 

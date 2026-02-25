@@ -117,6 +117,7 @@ export interface Order {
     createdAt: string;
     paymentMethod?: string;
     driverId?: string;
+    assignedAt?: string;
     tableNumber?: number;
     waiterId?: string;
     isOriginDigitalMenu?: boolean;

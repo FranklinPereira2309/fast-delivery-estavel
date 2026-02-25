@@ -133,6 +133,7 @@ export const saveOrder = async (req: Request, res: Response) => {
             }
 
             const oldStatus = existingOrder?.status;
+            const oldDriverId = existingOrder?.driverId;
             const newStatus = order.status;
 
             // 1. Inventory Sync (Only on Finalization or Reversion)
@@ -174,6 +175,7 @@ export const saveOrder = async (req: Request, res: Response) => {
                     clientPhone: order.clientPhone,
                     paymentMethod: order.paymentMethod,
                     driverId: driverId,
+                    assignedAt: (driverId && driverId !== oldDriverId) ? new Date() : (driverId === null ? null : undefined),
                     waiterId: waiterId,
                     total: order.total,
                     isOriginDigitalMenu: order.isOriginDigitalMenu !== undefined ? order.isOriginDigitalMenu : false, // Fix: Preserve Origin into Update
@@ -202,6 +204,7 @@ export const saveOrder = async (req: Request, res: Response) => {
                     type: order.type,
                     paymentMethod: order.paymentMethod,
                     driverId: driverId,
+                    assignedAt: driverId ? new Date() : null,
                     tableNumber: order.tableNumber,
                     waiterId: waiterId,
                     isOriginDigitalMenu: order.isOriginDigitalMenu !== undefined ? order.isOriginDigitalMenu : false, // Fix: Preserve Origin into Creation
@@ -321,12 +324,21 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
             // Se driverId vier como '', seta explicitamente para null (desvincula)
             const resolvedDriverId = driverId === '' ? null : (driverId !== undefined ? driverId : undefined);
 
+            const updateData: any = {
+                status,
+                driverId: resolvedDriverId
+            };
+
+            // Se está atribuindo um driver agora, ou trocando, reseta o timer
+            if (resolvedDriverId && resolvedDriverId !== oldOrder.driverId) {
+                updateData.assignedAt = new Date();
+            } else if (resolvedDriverId === null) {
+                updateData.assignedAt = null;
+            }
+
             const order = await tx.order.update({
                 where: { id: id as string },
-                data: {
-                    status,
-                    driverId: resolvedDriverId
-                },
+                data: updateData,
                 include: { items: true }
             });
 
