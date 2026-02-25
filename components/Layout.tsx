@@ -152,17 +152,17 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
       <aside className={`${isSidebarCollapsed ? 'w-20' : 'w-64'} bg-slate-900 text-white flex flex-col shadow-xl shrink-0 transition-all duration-300 ease-in-out`}>
         <div
           onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-          className="p-4 flex items-center justify-between overflow-hidden cursor-pointer hover:bg-slate-800/50 transition-colors group/logo"
+          className="px-3 py-4 flex items-center justify-between overflow-hidden cursor-pointer hover:bg-slate-800/10 transition-colors group/logo"
           title={isSidebarCollapsed ? "Expandir Menu" : "Recolher Menu"}
         >
           {!isSidebarCollapsed && (
             <h1 className="text-xl font-bold tracking-tight flex items-center gap-2 animate-in fade-in slide-in-from-left-2 duration-300">
-              <span className="p-2 bg-blue-600 rounded-lg shrink-0 group-hover/logo:scale-110 transition-transform">DF</span>
+              <span className="p-3 bg-blue-600 rounded-xl shrink-0 group-hover/logo:scale-110 transition-transform shadow-lg shadow-blue-900/50">DF</span>
               <span className="truncate">Delivery Fast</span>
             </h1>
           )}
           {isSidebarCollapsed && (
-            <div className="p-2 bg-blue-600 rounded-lg mx-auto group-hover/logo:scale-110 transition-transform">
+            <div className="w-full p-3 bg-blue-600 rounded-xl flex items-center justify-center group-hover/logo:scale-110 transition-transform shadow-lg shadow-blue-900/50">
               <span className="text-white font-black">DF</span>
             </div>
           )}
