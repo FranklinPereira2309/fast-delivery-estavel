@@ -656,6 +656,11 @@ const Logistics: React.FC = () => {
                 ))}
               </div>
 
+              <div className="flex justify-between items-center py-1">
+                <span className="text-[9px] uppercase font-bold">TAXA ENTREGA:</span>
+                <span className="font-bold">R$ {(printingOrder.deliveryFee || 0).toFixed(2)}</span>
+              </div>
+
               <div className="flex justify-between items-end border-t border-dashed pt-4 mb-6">
                 <span className="font-black text-[9px] uppercase tracking-widest">TOTAL:</span>
                 <span className="text-2xl font-black">R$ {printingOrder.total.toFixed(2)}</span>
@@ -689,6 +694,11 @@ const Logistics: React.FC = () => {
                 )}
                 <p>MÉTODO: {printingHistoryOrder.paymentMethod || 'DINHEIRO'}</p>
                 <p className="font-bold border-t border-dashed mt-2 pt-1 uppercase">ENTREGADOR: {getDriverName(printingHistoryOrder.driverId)}</p>
+              </div>
+
+              <div className="flex justify-between items-center py-1">
+                <span className="text-[9px] uppercase font-bold">TAXA ENTREGA:</span>
+                <span className="font-bold">R$ {(printingHistoryOrder.deliveryFee || 0).toFixed(2)}</span>
               </div>
 
               <div className="flex justify-between items-end border-t border-dashed pt-4 mb-6">
