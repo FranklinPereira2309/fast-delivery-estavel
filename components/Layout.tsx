@@ -48,13 +48,6 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
   ];
 
   useEffect(() => {
-    const checkData = async () => {
-      // Primeiro 'run' silencioso para evitar alerta de login
-      await monitorSystem(true);
-      isDataInitialized.current = true;
-    };
-    checkData();
-
     const monitorSystem = async (silent = false) => {
       const orders = await db.getOrders();
 
@@ -131,6 +124,13 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
 
       isFirstRun.current = false;
     };
+
+    const checkData = async () => {
+      // Primeiro 'run' silencioso para evitar alerta de login
+      await monitorSystem(true);
+      isDataInitialized.current = true;
+    };
+    checkData();
 
     const interval = setInterval(() => monitorSystem(false), 3000);
     return () => clearInterval(interval);
