@@ -1,0 +1,37 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-slate-50 text-slate-800 antialiased font-sans overflow-x-hidden;
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  @apply bg-slate-200 rounded-full;
+}
+
+/* Glassmorphism utility */
+.glass {
+  @apply bg-white/80 backdrop-blur-md border border-white/20;
+}
+
+/* Receipt Font */
+@font-face {
+  font-family: 'Receipt';
+  src: local('Courier New'), local('Courier'), monospace;
+}
+
+.font-receipt {
+  font-family: 'Receipt', monospace;
+}

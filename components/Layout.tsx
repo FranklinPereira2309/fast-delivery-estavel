@@ -20,14 +20,12 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
   const [shouldBlinkLogistics, setShouldBlinkLogistics] = useState(false);
   const [shouldBlinkKitchen, setShouldBlinkKitchen] = useState(false);
   const [shouldBlinkTables, setShouldBlinkTables] = useState(false);
-  const [shouldBlinkDriver, setShouldBlinkDriver] = useState(false);
-  const [currentDriverId, setCurrentDriverId] = useState<string | null>(null);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
   const { isAlerting } = useDigitalAlert();
   const lastOrdersMap = useRef<Record<string, { status: OrderStatus, itemCount: number }>>({});
   const isFirstRun = useRef(true);
   const isDataInitialized = useRef(false);
-  const prevAlertStates = useRef({ kitchen: false, tables: false, driver: false, logistics: false });
+  const prevAlertStates = useRef({ kitchen: false, tables: false, logistics: false });
 
   const allNavItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Icons.Dashboard },
@@ -44,25 +42,18 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
     { id: 'crm', label: 'Clientes (CRM)', icon: Icons.CRM },
     { id: 'inventory', label: 'Estoque / Cardápio', icon: Icons.Inventory },
     { id: 'logistics', label: 'Logística', icon: Icons.Logistics },
-    { id: 'driver', label: 'Entregador', icon: Icons.Driver },
     { id: 'qrcodes', label: 'QR Codes das Mesas', icon: Icons.Dashboard }, // Consider adding a specific icon later if needed
     { id: 'reports', label: 'Relatórios', icon: Icons.Print },
     { id: 'settings', label: 'Configurações', icon: Icons.Settings },
   ];
 
   useEffect(() => {
-    // Busca o ID caso o usuário seja um entregador
-    const checkDriverProfile = async () => {
-      const drivers = await db.getDrivers();
-      const myDriver = drivers.find(d => d.email?.toLowerCase() === currentUser.email.toLowerCase());
-      if (myDriver) {
-        setCurrentDriverId(myDriver.id);
-      }
+    const checkData = async () => {
       // Primeiro 'run' silencioso para evitar alerta de login
       await monitorSystem(true);
       isDataInitialized.current = true;
     };
-    checkDriverProfile();
+    checkData();
 
     const monitorSystem = async (silent = false) => {
       const orders = await db.getOrders();
@@ -109,16 +100,12 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
         setShouldBlinkPOS(hasBillingTables && activeTab !== 'pos');
       }
 
-      // 3. Checagem de Logística (Pedidos prontos para entrega) e Entregador (Pedidos em rota)
+      // 3. Checagem de Logística (Pedidos prontos para entrega)
       // Logística brilha se houver pedido READY mas AINDA SEM entregador (exige vinculação)
       const hasReadyDelivery = orders.some(o => o.status === OrderStatus.READY && o.type === SaleType.OWN_DELIVERY && !o.driverId);
 
-      // Entregador brilha APENAS se houver pedido READY com O SEU driverId atribuído (esperando o Aceite)
-      const hasAssignedDelivery = currentDriverId ? orders.some(o => o.status === OrderStatus.READY && o.type === SaleType.OWN_DELIVERY && o.driverId === currentDriverId) : false;
-
       if (!silent && !isFirstRun.current) {
         setShouldBlinkLogistics(hasReadyDelivery);
-        setShouldBlinkDriver(hasAssignedDelivery);
       }
 
       // 4. Checagem de Mesas (Pedidos digitais pendentes)
@@ -133,16 +120,13 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
         if (hasNewOrder && !alertState.kitchen) audioAlert.play();
         if (hasPendingDigital && !alertState.tables) audioAlert.play();
         if (hasReadyDelivery && !alertState.logistics) audioAlert.play();
-        // Toca SOM EXCLUSIVO para o ENTREGADOR SELECIONADO para aceitar corrida
-        if (hasAssignedDelivery && !alertState.driver) audioAlert.play();
       }
 
       // Sincroniza estados anteriores para o próximo loop
       prevAlertStates.current = {
         kitchen: hasNewOrder,
         tables: hasPendingDigital,
-        logistics: hasReadyDelivery,
-        driver: hasAssignedDelivery
+        logistics: hasReadyDelivery
       };
 
       isFirstRun.current = false;
@@ -150,13 +134,12 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
 
     const interval = setInterval(() => monitorSystem(false), 3000);
     return () => clearInterval(interval);
-  }, [activeTab, currentDriverId]);
+  }, [activeTab]);
 
 
   useEffect(() => {
     if (activeTab === 'kitchen') setShouldBlinkKitchen(false);
     if (activeTab === 'sales-monitor') setShouldBlinkMonitor(false);
-    if (activeTab === 'driver') setShouldBlinkDriver(false);
     if (activeTab === 'logistics') setShouldBlinkLogistics(false);
     if (activeTab === 'tables') setShouldBlinkTables(false);
   }, [activeTab]);
@@ -200,13 +183,6 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
             const isLogistics = item.id === 'logistics';
             const isKitchen = item.id === 'kitchen';
             const isTables = item.id === 'tables';
-            const isDriver = item.id === 'driver';
-
-            let blinkClass = '';
-            if (isMonitor && shouldBlinkMonitor) blinkClass = 'animate-notify-turquoise border-none';
-            if (isPOS && shouldBlinkPOS) blinkClass = 'animate-notify-turquoise border-none';
-            if (isLogistics && shouldBlinkLogistics) blinkClass = 'animate-notify-turquoise border-none';
-            if (isDriver && shouldBlinkDriver) blinkClass = 'animate-notify-turquoise border-none';
             if (isKitchen && shouldBlinkKitchen) blinkClass = 'animate-notify-turquoise border-none';
             if (isTables && (isAlerting || shouldBlinkTables)) blinkClass = 'animate-notify-turquoise border-none';
 
@@ -282,7 +258,6 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
 
         <section className="flex-1 overflow-y-auto p-8" onClick={() => {
           if (activeTab === 'kitchen') setShouldBlinkKitchen(false);
-          if (activeTab === 'driver') setShouldBlinkDriver(false);
           if (activeTab === 'tables') setShouldBlinkTables(false);
           if (activeTab === 'logistics') setShouldBlinkLogistics(false);
         }}>

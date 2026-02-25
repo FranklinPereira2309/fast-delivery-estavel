@@ -8,7 +8,6 @@ import Kitchen from './views/Kitchen';
 import CRM from './views/CRM';
 import Inventory from './views/Inventory';
 import Logistics from './views/Logistics';
-import Entregador from './views/Entregador';
 import SalesMonitor from './views/SalesMonitor';
 import Reports from './views/Reports';
 import Settings from './views/Settings';
@@ -131,7 +130,6 @@ const App: React.FC = () => {
       case 'crm': return <CRM currentUser={currentUser} />;
       case 'inventory': return <Inventory />;
       case 'logistics': return <Logistics />;
-      case 'driver': return <Entregador currentUser={currentUser} />;
       case 'reports': return <Reports />;
       case 'qrcodes': return <QRCodes />;
       case 'settings':
