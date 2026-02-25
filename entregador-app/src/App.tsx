@@ -20,7 +20,11 @@ const App: React.FC = () => {
 
   const [activeTab, setActiveTab] = useState<'PENDING' | 'HISTORY' | 'CHAT'>('PENDING');
   const [historyOrders, setHistoryOrders] = useState<Order[]>([]);
-  const [historyStartDate, setHistoryStartDate] = useState(new Date().toISOString().split('T')[0]);
+  const [historyStartDate, setHistoryStartDate] = useState(() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 30);
+    return d.toISOString().split('T')[0];
+  });
   const [historyEndDate, setHistoryEndDate] = useState(new Date().toISOString().split('T')[0]);
   const [printingHistoryOrder, setPrintingHistoryOrder] = useState<Order | null>(null);
   const [storeStatus, setStoreStatus] = useState<{ status: 'online' | 'offline' }>({ status: 'offline' });
@@ -310,7 +314,13 @@ const App: React.FC = () => {
                 <div>
                   <h3 className="text-blue-400 text-[10px] font-black uppercase tracking-[0.2em] mb-1">Entregas de Hoje</h3>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-4xl font-black text-white">{historyOrders.filter(o => o.createdAt.split('T')[0] === new Date().toISOString().split('T')[0]).length}</span>
+                    <span className="text-4xl font-black text-white">
+                      {historyOrders.filter(o => {
+                        const orderDate = new Date(o.createdAt).toLocaleDateString('en-CA'); // YYYY-MM-DD format regardless of TZ
+                        const todayDate = new Date().toLocaleDateString('en-CA');
+                        return orderDate === todayDate;
+                      }).length}
+                    </span>
                     <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Concluídas</span>
                   </div>
                 </div>

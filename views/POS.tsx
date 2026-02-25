@@ -351,6 +351,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       }
 
       // For Delivery, always send to kitchen first
+      const existingOrder = editingOrderId ? orders.find(o => o.id === editingOrderId) : null;
       const orderData: Order = {
         id: editingOrderId || `PED-${Date.now()}`,
         clientId: finalClientId,
@@ -363,7 +364,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
         type: saleType,
         createdAt: editingOrderId ? orders.find(o => o.id === editingOrderId)?.createdAt || new Date().toISOString() : new Date().toISOString(),
         paymentMethod: paymentMethod,
-        driverId: undefined,
+        driverId: existingOrder?.driverId,
         isOriginDigitalMenu: false
       };
 
@@ -374,8 +375,11 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       return;
     }
 
+    const existingOrderId = existingTableOrderId || editingOrderId;
+    const existingOrder = existingOrderId ? orders.find(o => o.id === existingOrderId) : null;
+
     const orderData: Order = {
-      id: existingTableOrderId || editingOrderId || `PED-${Date.now()}`,
+      id: existingOrderId || `PED-${Date.now()}`,
       clientId: finalClientId,
       clientName: finalClientName,
       clientAddress: finalAddress,
@@ -384,8 +388,9 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       total: cartTotal,
       status: OrderStatus.DELIVERED,
       type: saleType,
-      createdAt: (existingTableOrderId || editingOrderId) ? orders.find(o => o.id === (existingTableOrderId || editingOrderId))?.createdAt || new Date().toISOString() : new Date().toISOString(),
+      createdAt: existingOrderId ? orders.find(o => o.id === existingOrderId)?.createdAt || new Date().toISOString() : new Date().toISOString(),
       paymentMethod: paymentMethod,
+      driverId: existingOrder?.driverId,
       tableNumber: isTableSale ? finalTableNum! : undefined,
       waiterId: isTableSale ? orders.find(o => o.id === existingTableOrderId)?.waiterId : undefined,
       isOriginDigitalMenu: isTableSale ? (tableSessionToClose?.isOriginDigitalMenu || false) : false
