@@ -25,7 +25,7 @@ export const startOrderTimeoutService = () => {
             });
 
             if (missingTimestampOrders.length > 0) {
-                console.log(`[OrderTimeoutService] Fixing ${missingTimestampOrders.length} orders missing assignedAt timestamp.`);
+                console.log(`[OrderTimeoutService] Found ${missingTimestampOrders.length} orders missing assignedAt. IDs: ${missingTimestampOrders.map((o: any) => o.id).join(', ')}`);
                 for (const order of missingTimestampOrders) {
                     await (prisma.order as any).update({
                         where: { id: order.id },
@@ -35,7 +35,6 @@ export const startOrderTimeoutService = () => {
             }
 
             // Find orders READY, with driver assigned more than timeoutMinutes ago
-            // Using 'any' casting as some environment types might not have synced yet
             const timedOutOrders = await (prisma.order as any).findMany({
                 where: {
                     status: 'READY',
@@ -44,8 +43,10 @@ export const startOrderTimeoutService = () => {
                 }
             });
 
+            console.log(`[OrderTimeoutService] Query found ${timedOutOrders.length} timed out orders.`);
+
             if (timedOutOrders.length > 0) {
-                console.log(`[OrderTimeoutService] Found ${timedOutOrders.length} timed out orders:`, timedOutOrders.map((o: any) => ({ id: o.id, assignedAt: o.assignedAt })));
+                console.log(`[OrderTimeoutService] Processing timed out orders:`, timedOutOrders.map((o: any) => ({ id: o.id, assignedAt: o.assignedAt })));
 
                 for (const order of timedOutOrders) {
                     const oldDriverId = order.driverId;
@@ -81,8 +82,16 @@ export const startOrderTimeoutService = () => {
 
                     // Emit to the specific driver room
                     if (oldDriverId) {
+                        console.log(`[OrderTimeoutService] Notifying driver ${oldDriverId} about auto-rejection.`);
                         getIO().to(`chat_${oldDriverId}`).emit('order_auto_rejected', {
                             orderId: order.id,
+                            message: 'A entrega foi inativada por falta de interação'
+                        });
+
+                        // Global fallback for redundancy
+                        getIO().emit('order_auto_rejected_global', {
+                            orderId: order.id,
+                            driverId: oldDriverId,
                             message: 'A entrega foi inativada por falta de interação'
                         });
                     }

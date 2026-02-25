@@ -237,11 +237,13 @@ const Logistics: React.FC = () => {
     });
 
     socket.on('drivers_updated', refreshData);
+    socket.on('order_auto_rejected_global', refreshData);
 
     return () => {
       clearInterval(interval);
       socket.off('new_message');
       socket.off('drivers_updated');
+      socket.off('order_auto_rejected_global');
     };
   }, [selectedDriver]);
 

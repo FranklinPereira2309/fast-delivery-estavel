@@ -80,21 +80,33 @@ const App: React.FC = () => {
       setStoreStatus(data);
     });
 
-    socket.on('order_auto_rejected', (data: any) => {
-      setCustomAlertMessage(data.message);
-      setIsAlertOpen(true);
-      refreshData();
-      // Play sound twice for better alert
-      playNotificationSound();
-      setTimeout(playNotificationSound, 600);
+    socket.on('order_auto_rejected_global', (data: any) => {
+      if (driver && data.driverId === driver.id) {
+        setCustomAlertMessage(data.message);
+        setIsAlertOpen(true);
+        refreshData();
+        playNotificationSound();
+        setTimeout(playNotificationSound, 600);
+      }
     });
+
+    const onReconnect = () => {
+      if (driver) {
+        socket.emit('join_chat', driver.id);
+      }
+    };
+
+    socket.on('connect', onReconnect);
 
     return () => {
       clearInterval(interval);
       socket.off('store_status_changed');
       socket.off('new_message');
+      socket.off('order_auto_rejected');
+      socket.off('order_auto_rejected_global');
+      socket.off('connect', onReconnect);
     };
-  }, [currentUser]);
+  }, [currentUser, driver]);
 
   useEffect(() => {
     if (driver) {
