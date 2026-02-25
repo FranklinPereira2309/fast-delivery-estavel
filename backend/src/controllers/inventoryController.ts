@@ -9,11 +9,16 @@ export const getAllInventory = async (req: Request, res: Response) => {
 export const getInventoryMovements = async (req: Request, res: Response) => {
     const { start, end } = req.query;
     try {
+        let endDate = end ? new Date(end as string) : undefined;
+        if (endDate) {
+            endDate.setHours(23, 59, 59, 999);
+        }
+
         const movements = await prisma.inventoryMovement.findMany({
             where: {
                 timestamp: {
                     gte: start ? new Date(start as string) : undefined,
-                    lte: end ? new Date(end as string) : undefined,
+                    lte: endDate,
                 }
             },
             include: { inventoryItem: true },
