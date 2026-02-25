@@ -183,6 +183,10 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
             const isLogistics = item.id === 'logistics';
             const isKitchen = item.id === 'kitchen';
             const isTables = item.id === 'tables';
+            let blinkClass = '';
+            if (isMonitor && shouldBlinkMonitor) blinkClass = 'animate-notify-turquoise border-none';
+            if (isPOS && shouldBlinkPOS) blinkClass = 'animate-notify-turquoise border-none';
+            if (isLogistics && shouldBlinkLogistics) blinkClass = 'animate-notify-turquoise border-none';
             if (isKitchen && shouldBlinkKitchen) blinkClass = 'animate-notify-turquoise border-none';
             if (isTables && (isAlerting || shouldBlinkTables)) blinkClass = 'animate-notify-turquoise border-none';
 
