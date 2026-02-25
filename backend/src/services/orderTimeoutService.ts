@@ -23,7 +23,7 @@ export const startOrderTimeoutService = () => {
             });
 
             if (timedOutOrders.length > 0) {
-                console.log(`[OrderTimeoutService] Found ${timedOutOrders.length} timed out orders:`, timedOutOrders.map(o => ({ id: o.id, assignedAt: o.assignedAt })));
+                console.log(`[OrderTimeoutService] Found ${timedOutOrders.length} timed out orders:`, timedOutOrders.map((o: any) => ({ id: o.id, assignedAt: o.assignedAt })));
 
                 for (const order of timedOutOrders) {
                     const oldDriverId = order.driverId;
