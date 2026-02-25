@@ -236,9 +236,12 @@ const Logistics: React.FC = () => {
       }
     });
 
+    socket.on('drivers_updated', refreshData);
+
     return () => {
       clearInterval(interval);
       socket.off('new_message');
+      socket.off('drivers_updated');
     };
   }, [selectedDriver]);
 

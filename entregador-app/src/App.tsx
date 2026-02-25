@@ -83,6 +83,7 @@ const App: React.FC = () => {
     socket.on('order_auto_rejected', (data: any) => {
       setCustomAlertMessage(data.message);
       setIsAlertOpen(true);
+      refreshData();
       // Play sound twice for better alert
       playNotificationSound();
       setTimeout(playNotificationSound, 600);

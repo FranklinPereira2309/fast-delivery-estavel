@@ -60,13 +60,21 @@ export const startOrderTimeoutService = () => {
                             }
                         });
 
+                        // Restore driver status to AVAILABLE
+                        if (oldDriverId) {
+                            await (tx.deliveryDriver as any).update({
+                                where: { id: oldDriverId },
+                                data: { status: 'AVAILABLE' }
+                            });
+                        }
+
                         // Log action
                         await tx.auditLog.create({
                             data: {
                                 action: 'AUTO_REJECTION',
                                 userId: 'SYSTEM',
                                 userName: 'Sistema',
-                                details: `Pedido ${order.id} inativado por falta de interação do entregador ${oldDriverId} (Timeout 5min).`
+                                details: `Pedido ${order.id} inativado por falta de interação do entregador ${oldDriverId}. (Vínculo removido e motorista liberado)`
                             }
                         });
                     });
@@ -81,6 +89,7 @@ export const startOrderTimeoutService = () => {
 
                     // Global refresh for Logistics/POS
                     getIO().emit('orderStatusChanged', { action: 'statusUpdate', id: order.id, status: 'READY' });
+                    getIO().emit('drivers_updated'); // Notify logistics to refresh driver list
                 }
             }
         } catch (error) {
