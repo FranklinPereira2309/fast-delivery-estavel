@@ -266,7 +266,7 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-slate-50 overflow-hidden select-none">
+    <div className="flex flex-col h-[100dvh] bg-slate-50 overflow-hidden select-none">
       {/* NOVELTY ALERT */}
       {isAlertOpen && (
         <div className="fixed top-6 left-6 right-6 z-[100] bg-blue-600 text-white p-6 rounded-[2rem] shadow-2xl flex items-center gap-4 animate-in slide-in-from-top duration-500">
@@ -479,8 +479,8 @@ const App: React.FC = () => {
         )}
       </main>
 
-      {/* NAVIGATION BAR - MOBILE STYLE */}
-      <nav className="shrink-0 bg-white/90 backdrop-blur-xl border-t border-slate-100 px-6 py-4 flex justify-between items-center z-30 shadow-[0_-10px_30px_-15px_rgba(0,0,0,0.1)] pb-safe">
+      {/* NAVIGATION BAR - MOBILE STYLE - FIXED AT BOTTOM */}
+      <nav className="shrink-0 bg-white/95 backdrop-blur-xl border-t border-slate-100 px-6 py-4 flex justify-between items-center z-30 shadow-[0_-10px_30px_-15px_rgba(0,0,0,0.1)] pb-safe">
         <button
           onClick={() => setActiveTab('PENDING')}
           className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'PENDING' ? 'text-blue-600 scale-110' : 'text-slate-300'}`}
