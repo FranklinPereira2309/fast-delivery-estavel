@@ -303,7 +303,27 @@ const App: React.FC = () => {
       <main className="flex-1 overflow-y-auto p-4 pb-24 relative custom-scrollbar">
         {activeTab === 'PENDING' && (
           <div className="flex flex-col gap-4 animate-in slide-in-from-right duration-300">
-            <div className="flex justify-between items-center mb-1">
+            {/* RESUMO DE HOJE */}
+            <div className="bg-slate-900 p-6 rounded-[2.5rem] shadow-xl shadow-slate-200 mb-2 relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-blue-500/20 transition-all duration-700" />
+              <div className="relative flex justify-between items-center">
+                <div>
+                  <h3 className="text-blue-400 text-[10px] font-black uppercase tracking-[0.2em] mb-1">Entregas de Hoje</h3>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-4xl font-black text-white">{historyOrders.filter(o => o.createdAt.split('T')[0] === new Date().toISOString().split('T')[0]).length}</span>
+                    <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Concluídas</span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setActiveTab('HISTORY')}
+                  className="bg-white/10 hover:bg-white/20 text-white px-5 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all backdrop-blur-md border border-white/10 active:scale-95"
+                >
+                  Ver Histórico
+                </button>
+              </div>
+            </div>
+
+            <div className="flex justify-between items-center mb-1 mt-2">
               <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest pl-1">Entregas Pendentes ({myOrders.length})</h3>
             </div>
             {myOrders.length > 0 ? myOrders.map(order => (
@@ -441,8 +461,8 @@ const App: React.FC = () => {
                 placeholder="Sua mensagem..."
                 className="flex-1 bg-slate-50 border-none rounded-2xl px-4 text-sm font-bold focus:ring-2 focus:ring-blue-500/20 transition-all outline-none"
               />
-              <button type="submit" className="w-12 h-12 bg-blue-600 text-white rounded-2xl shadow-lg flex items-center justify-center active:scale-90 transition-all">
-                <Icons.Check className="w-5 h-5 -rotate-90" />
+              <button type="submit" className="w-12 h-12 bg-blue-600 text-white rounded-2xl shadow-lg shadow-blue-500/30 flex items-center justify-center active:scale-90 transition-all">
+                <Icons.Send className="w-5 h-5 -rotate-12" />
               </button>
             </form>
           </div>
