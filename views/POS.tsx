@@ -38,6 +38,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
   const [pendingTables, setPendingTables] = useState<TableSession[]>([]);
   const [pendingCounterOrders, setPendingCounterOrders] = useState<Order[]>([]);
   const [isLoadingOrder, setIsLoadingOrder] = useState(false);
+  const [manualDeliveryFee, setManualDeliveryFee] = useState<number | null>(null);
   const [currentOrderStatus, setCurrentOrderStatus] = useState<OrderStatus | null>(null);
 
   const [alertConfig, setAlertConfig] = useState<{ isOpen: boolean, title: string, message: string, onConfirm: () => void, type: 'INFO' | 'DANGER' }>({
@@ -80,6 +81,10 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
     setProducts(p);
     setOrders(o);
     setBusinessSettings(s);
+    if (s && manualDeliveryFee === null) {
+      const clean = s.deliveryFee.replace('R$', '').replace(',', '.').trim();
+      setManualDeliveryFee(parseFloat(clean) || 0);
+    }
     setClients(c);
     setPendingTables(ts.filter(t => t.status === 'billing'));
     setPendingCounterOrders(o.filter(order => order.type === SaleType.COUNTER && order.status === OrderStatus.READY));
@@ -455,10 +460,11 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
   }, [cart, products]);
 
   const deliveryFeeValue = useMemo(() => {
+    if (manualDeliveryFee !== null) return manualDeliveryFee;
     if (!businessSettings?.deliveryFee) return 0;
     const clean = businessSettings.deliveryFee.replace('R$', '').replace(',', '.').trim();
     return parseFloat(clean) || 0;
-  }, [businessSettings]);
+  }, [businessSettings, manualDeliveryFee]);
 
   const cartTotal = useMemo(() => {
     const itemsTotal = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
@@ -741,9 +747,18 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
 
           <div className="p-4 lg:p-6 xl:p-8 bg-slate-50 border-t border-slate-100 shrink-0">
             {saleType === SaleType.OWN_DELIVERY && (
-              <div className="flex justify-between items-center mb-2 font-receipt text-[10px] text-slate-500 uppercase tracking-widest">
-                <span>Taxa de Entrega:</span>
-                <span>R$ {deliveryFeeValue.toFixed(2)}</span>
+              <div className="flex justify-between items-center mb-3 bg-blue-50/50 p-3 rounded-2xl border border-blue-100/50">
+                <span className="text-[10px] font-black text-blue-600/60 uppercase tracking-widest">Taxa de Entrega</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-black text-blue-600/40">R$</span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={deliveryFeeValue}
+                    onChange={(e) => setManualDeliveryFee(parseFloat(e.target.value) || 0)}
+                    className="w-20 bg-transparent border-b border-blue-200 focus:border-blue-600 outline-none text-right font-black text-blue-600 text-sm"
+                  />
+                </div>
               </div>
             )}
             <div className="flex justify-between items-end mb-3 xl:mb-6 font-receipt">

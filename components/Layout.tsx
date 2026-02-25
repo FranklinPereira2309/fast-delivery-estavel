@@ -150,31 +150,24 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
     <div className="flex h-screen bg-slate-50 overflow-hidden">
       {/* Sidebar */}
       <aside className={`${isSidebarCollapsed ? 'w-20' : 'w-64'} bg-slate-900 text-white flex flex-col shadow-xl shrink-0 transition-all duration-300 ease-in-out`}>
-        <div className="p-4 flex items-center justify-between overflow-hidden">
+        <div
+          onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+          className="p-4 flex items-center justify-between overflow-hidden cursor-pointer hover:bg-slate-800/50 transition-colors group/logo"
+          title={isSidebarCollapsed ? "Expandir Menu" : "Recolher Menu"}
+        >
           {!isSidebarCollapsed && (
             <h1 className="text-xl font-bold tracking-tight flex items-center gap-2 animate-in fade-in slide-in-from-left-2 duration-300">
-              <span className="p-2 bg-blue-600 rounded-lg shrink-0">DF</span>
+              <span className="p-2 bg-blue-600 rounded-lg shrink-0 group-hover/logo:scale-110 transition-transform">DF</span>
               <span className="truncate">Delivery Fast</span>
             </h1>
           )}
           {isSidebarCollapsed && (
-            <div className="p-2 bg-blue-600 rounded-lg mx-auto">
+            <div className="p-2 bg-blue-600 rounded-lg mx-auto group-hover/logo:scale-110 transition-transform">
               <span className="text-white font-black">DF</span>
             </div>
           )}
         </div>
 
-        <div className="px-3 mb-2">
-          <button
-            onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-            className="w-full p-2 hover:bg-slate-800 text-slate-400 hover:text-white rounded-lg transition-all flex items-center justify-center gap-2"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 transition-transform duration-300 ${isSidebarCollapsed ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
-            </svg>
-            {!isSidebarCollapsed && <span className="text-[10px] font-black uppercase tracking-widest">Recolher</span>}
-          </button>
-        </div>
 
         <nav className="flex-1 mt-2 px-3 space-y-1 overflow-y-auto scrollbar-hide">
           {navItems.map((item) => {
