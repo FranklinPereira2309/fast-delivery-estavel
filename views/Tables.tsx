@@ -6,7 +6,7 @@ import { TableSession, Product, User, OrderItem, Order, OrderStatus, SaleType, W
 import { Icons, PLACEHOLDER_FOOD_IMAGE, formatImageUrl } from '../constants';
 import CustomAlert from '../components/CustomAlert';
 import { useDigitalAlert } from '../hooks/useDigitalAlert';
-import { validateEmail, validateCPF, validateCNPJ, maskPhone, maskDocument } from '../services/validationUtils';
+import { validateEmail, validateCPF, validateCNPJ, maskPhone, maskDocument, toTitleCase } from '../services/validationUtils';
 
 interface TablesProps {
   currentUser: User;
@@ -42,6 +42,7 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
   const [clientSearch, setClientSearch] = useState('');
   const [showClientList, setShowClientList] = useState(false);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [errors, setErrors] = useState<Record<string, boolean>>({});
 
   const [alertConfig, setAlertConfig] = useState<{ isOpen: boolean, title: string, message: string, onConfirm: () => void, onCancel?: () => void, type: 'INFO' | 'DANGER' | 'SUCCESS' }>({
     isOpen: false, title: '', message: '', onConfirm: () => { }, type: 'INFO'
@@ -298,32 +299,41 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
   };
 
   const startBillingRequest = (sess: TableSession) => {
+    const newErrors: Record<string, boolean> = {};
     const hasClient = isUnregisteredClient ? manualClientName.trim() : selectedClient;
 
     if (!hasClient) {
+      if (isUnregisteredClient) newErrors.manualClientName = true;
       showAlert('Cliente Necessário', 'Identifique o cliente para fechar a conta.', 'INFO');
       return;
     }
 
-    if (manualClientEmail && !validateEmail(manualClientEmail)) {
-      showAlert('Email Inválido', 'Por favor, insira um endereço de email válido.', 'DANGER');
-      return;
+    if (isUnregisteredClient && manualClientEmail && !validateEmail(manualClientEmail)) {
+      newErrors.manualClientEmail = true;
+    }
+
+    if (isUnregisteredClient && manualClientPhone) {
+      const cleanPhone = manualClientPhone.replace(/\D/g, '');
+      if (cleanPhone.length < 11) newErrors.manualClientPhone = true;
     }
 
     if (manualClientDocument) {
       const cleanDoc = manualClientDocument.replace(/\D/g, '');
-      if (cleanDoc.length <= 11) {
-        if (!validateCPF(cleanDoc)) {
-          showAlert('CPF Inválido', 'O CPF informado não é válido.', 'DANGER');
-          return;
-        }
+      if (cleanDoc.length === 11) {
+        if (!validateCPF(cleanDoc)) newErrors.manualClientDocument = true;
+      } else if (cleanDoc.length === 14) {
+        if (!validateCNPJ(cleanDoc)) newErrors.manualClientDocument = true;
       } else {
-        if (!validateCNPJ(cleanDoc)) {
-          showAlert('CNPJ Inválido', 'O CNPJ informado não é válido.', 'DANGER');
-          return;
-        }
+        newErrors.manualClientDocument = true;
       }
     }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return showAlert("Dados Inválidos", "Verifique os campos destacados em vermelho.", "DANGER");
+    }
+
+    setErrors({});
 
     if (!isUnregisteredClient && !selectedClient) {
       return showAlert("Identificação Requerida", "Por favor, selecione um cliente da base ou use a opção 'Avulso'.", "DANGER");
@@ -596,12 +606,60 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
                       {isUnregisteredClient ? (
                         <div className="space-y-3 animate-in zoom-in-95">
                           <div className="flex gap-2">
-                            <input type="text" placeholder="Nome Completo" value={manualClientName} onChange={e => setManualClientName(e.target.value)} className="flex-1 p-4 bg-white border border-slate-200 rounded-2xl text-[11px] font-black uppercase outline-none focus:ring-4 focus:ring-blue-50 transition-all" />
-                            <input type="text" placeholder="Telefone" value={manualClientPhone} onChange={e => setManualClientPhone(maskPhone(e.target.value))} className="w-1/3 p-4 bg-white border border-slate-200 rounded-2xl text-[11px] font-black uppercase outline-none focus:ring-4 focus:ring-blue-50 transition-all" />
+                            <div className="flex-1 space-y-1">
+                              <label className={`text-[9px] font-black uppercase tracking-widest ml-1 ${errors.manualClientName ? 'text-red-500' : 'text-slate-400'}`}>Nome Completo *</label>
+                              <input
+                                type="text"
+                                placeholder="Nome do Cliente"
+                                value={manualClientName}
+                                onChange={e => {
+                                  setManualClientName(toTitleCase(e.target.value));
+                                  if (errors.manualClientName) setErrors(prev => ({ ...prev, manualClientName: false }));
+                                }}
+                                className={`w-full p-4 bg-white border-2 rounded-2xl text-[11px] font-black uppercase outline-none focus:ring-4 focus:ring-blue-50 transition-all ${errors.manualClientName ? 'border-red-500 animate-shake' : 'border-slate-200'}`}
+                              />
+                            </div>
+                            <div className="w-1/3 space-y-1">
+                              <label className={`text-[9px] font-black uppercase tracking-widest ml-1 ${errors.manualClientPhone ? 'text-red-500' : 'text-slate-400'}`}>Telefone *</label>
+                              <input
+                                type="text"
+                                placeholder="(00) 9 0000-0000"
+                                value={manualClientPhone}
+                                onChange={e => {
+                                  setManualClientPhone(maskPhone(e.target.value));
+                                  if (errors.manualClientPhone) setErrors(prev => ({ ...prev, manualClientPhone: false }));
+                                }}
+                                className={`w-full p-4 bg-white border-2 rounded-2xl text-[11px] font-black uppercase outline-none focus:ring-4 focus:ring-blue-50 transition-all ${errors.manualClientPhone ? 'border-red-500 animate-shake' : 'border-slate-200'}`}
+                              />
+                            </div>
                           </div>
                           <div className="flex gap-2">
-                            <input type="email" placeholder="Email" value={manualClientEmail} onChange={e => setManualClientEmail(e.target.value)} className="flex-1 p-4 bg-white border border-slate-200 rounded-2xl text-[11px] font-black uppercase outline-none focus:ring-4 focus:ring-blue-50 transition-all" />
-                            <input type="text" placeholder="CPF/CNPJ" value={manualClientDocument} onChange={e => setManualClientDocument(maskDocument(e.target.value))} className="flex-1 p-4 bg-white border border-slate-200 rounded-2xl text-[11px] font-black uppercase outline-none focus:ring-4 focus:ring-blue-50 transition-all" />
+                            <div className="flex-1 space-y-1">
+                              <label className={`text-[9px] font-black uppercase tracking-widest ml-1 ${errors.manualClientEmail ? 'text-red-500' : 'text-slate-400'}`}>E-mail</label>
+                              <input
+                                type="email"
+                                placeholder="Email"
+                                value={manualClientEmail}
+                                onChange={e => {
+                                  setManualClientEmail(e.target.value);
+                                  if (errors.manualClientEmail) setErrors(prev => ({ ...prev, manualClientEmail: false }));
+                                }}
+                                className={`w-full p-4 bg-white border-2 rounded-2xl text-[11px] font-black uppercase outline-none focus:ring-4 focus:ring-blue-50 transition-all ${errors.manualClientEmail ? 'border-red-500 animate-shake' : 'border-slate-200'}`}
+                              />
+                            </div>
+                            <div className="flex-1 space-y-1">
+                              <label className={`text-[9px] font-black uppercase tracking-widest ml-1 ${errors.manualClientDocument ? 'text-red-500' : 'text-slate-400'}`}>CPF / CNPJ</label>
+                              <input
+                                type="text"
+                                placeholder="000.000.000-00"
+                                value={manualClientDocument}
+                                onChange={e => {
+                                  setManualClientDocument(maskDocument(e.target.value));
+                                  if (errors.manualClientDocument) setErrors(prev => ({ ...prev, manualClientDocument: false }));
+                                }}
+                                className={`w-full p-4 bg-white border-2 rounded-2xl text-[11px] font-black uppercase outline-none focus:ring-4 focus:ring-blue-50 transition-all ${errors.manualClientDocument ? 'border-red-500 animate-shake' : 'border-slate-200'}`}
+                              />
+                            </div>
                           </div>
                           <div className="flex gap-2 items-start">
                             <div className="w-1/3 relative shrink-0">

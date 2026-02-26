@@ -65,11 +65,20 @@ export const maskPhone = (value: string): string => {
             .replace(/(\d{2})(\d)/, '($1) $2')
             .replace(/(\d{4})(\d)/, '$1-$2');
     } else {
+        // Format: (00) 9 0000-0000
         return cleanValue
-            .replace(/(\d{2})(\d)/, '($1) $2')
-            .replace(/(\d{5})(\d)/, '$1-$2')
-            .slice(0, 15);
+            .replace(/(\d{2})(\d)(\d{4})(\d{4})/, '($1) $2 $3-$4')
+            .slice(0, 16);
     }
+};
+
+export const toTitleCase = (text: string): string => {
+    if (!text) return '';
+    return text
+        .toLowerCase()
+        .split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
 };
 
 export const maskDocument = (value: string): string => {

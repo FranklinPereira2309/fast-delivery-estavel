@@ -5,7 +5,7 @@ import { db, BusinessSettings } from '../services/db';
 import { socket } from '../services/socket';
 import { Icons, PLACEHOLDER_FOOD_IMAGE, formatImageUrl } from '../constants';
 import CustomAlert from '../components/CustomAlert';
-import { validateEmail, validateCPF, validateCNPJ, maskPhone, maskDocument, validateCreditCard, getCardBrand, maskCardNumber, maskExpiry } from '../services/validationUtils';
+import { validateEmail, validateCPF, validateCNPJ, maskPhone, maskDocument, validateCreditCard, getCardBrand, maskCardNumber, maskExpiry, toTitleCase } from '../services/validationUtils';
 
 interface POSProps {
   currentUser: User;
@@ -68,6 +68,8 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
   const [alertConfig, setAlertConfig] = useState<{ isOpen: boolean, title: string, message: string, onConfirm: () => void, type: 'INFO' | 'DANGER' }>({
     isOpen: false, title: '', message: '', onConfirm: () => { }, type: 'INFO'
   });
+
+  const [errors, setErrors] = useState<Record<string, boolean>>({});
 
   const showAlert = (title: string, message: string, type: 'INFO' | 'DANGER' = 'INFO') => {
     setAlertConfig({ isOpen: true, title, message, onConfirm: () => setAlertConfig(prev => ({ ...prev, isOpen: false })), type });
@@ -863,35 +865,69 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                   </div>
                 </div>
               ) : (
-                <div className="space-y-6">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Telefone</label>
-                      <input type="text" className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl text-xs font-black outline-none focus:border-blue-500 transition-all" placeholder="(00) 00000-0000" value={avulsoData.phone} onChange={(e) => {
-                        const val = maskPhone(e.target.value);
-                        setAvulsoData({ ...avulsoData, phone: val });
-                        const match = clients.find(c => c.phone === val);
-                        if (match) {
-                          setSelectedClient(match);
-                          setClientSearch(match.name);
-                          setIsAvulso(false);
-                        }
-                      }} />
+                <div className="space-y-4">
+                  <div className="flex gap-2">
+                    <div className="flex-1 space-y-1.5">
+                      <label className={`text-[9px] font-black uppercase tracking-widest ml-1 ${errors.avulsoName ? 'text-red-500' : 'text-slate-400'}`}>Nome Completo *</label>
+                      <input
+                        type="text"
+                        className={`w-full p-4 bg-slate-50 border-2 rounded-2xl text-xs font-black outline-none focus:border-blue-500 transition-all ${errors.avulsoName ? 'border-red-500 animate-shake' : 'border-slate-100'}`}
+                        placeholder="Nome do Cliente"
+                        value={avulsoData.name}
+                        onChange={(e) => {
+                          setAvulsoData({ ...avulsoData, name: toTitleCase(e.target.value) });
+                          if (errors.avulsoName) setErrors(prev => ({ ...prev, avulsoName: false }));
+                        }}
+                      />
                     </div>
-                    <div className="space-y-1.5">
-                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Nome Completo</label>
-                      <input type="text" className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl text-xs font-black outline-none focus:border-blue-500 transition-all" placeholder="Nome do Cliente" value={avulsoData.name} onChange={(e) => setAvulsoData({ ...avulsoData, name: e.target.value })} />
+                    <div className="w-1/3 space-y-1.5">
+                      <label className={`text-[9px] font-black uppercase tracking-widest ml-1 ${errors.avulsoPhone ? 'text-red-500' : 'text-slate-400'}`}>Telefone *</label>
+                      <input
+                        type="text"
+                        className={`w-full p-4 bg-slate-50 border-2 rounded-2xl text-xs font-black outline-none focus:border-blue-500 transition-all ${errors.avulsoPhone ? 'border-red-500 animate-shake' : 'border-slate-100'}`}
+                        placeholder="(00) 9 0000-0000"
+                        value={avulsoData.phone}
+                        onChange={(e) => {
+                          const val = maskPhone(e.target.value);
+                          setAvulsoData({ ...avulsoData, phone: val });
+                          if (errors.avulsoPhone) setErrors(prev => ({ ...prev, avulsoPhone: false }));
+                          const match = clients.find(c => c.phone === val);
+                          if (match) {
+                            setSelectedClient(match);
+                            setClientSearch(match.name);
+                            setIsAvulso(false);
+                          }
+                        }}
+                      />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">E-mail</label>
-                      <input type="email" className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl text-xs font-black outline-none focus:border-blue-500 transition-all" placeholder="exemplo@email.com" value={avulsoData.email} onChange={(e) => setAvulsoData({ ...avulsoData, email: e.target.value })} />
+                      <label className={`text-[9px] font-black uppercase tracking-widest ml-1 ${errors.avulsoEmail ? 'text-red-500' : 'text-slate-400'}`}>E-mail</label>
+                      <input
+                        type="email"
+                        className={`w-full p-4 bg-slate-50 border-2 rounded-2xl text-xs font-black outline-none focus:border-blue-500 transition-all ${errors.avulsoEmail ? 'border-red-500 animate-shake' : 'border-slate-100'}`}
+                        placeholder="exemplo@email.com"
+                        value={avulsoData.email}
+                        onChange={(e) => {
+                          setAvulsoData({ ...avulsoData, email: e.target.value });
+                          if (errors.avulsoEmail) setErrors(prev => ({ ...prev, avulsoEmail: false }));
+                        }}
+                      />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">CPF / CNPJ</label>
-                      <input type="text" className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl text-xs font-black outline-none focus:border-blue-500 transition-all" placeholder="000.000.000-00" value={avulsoData.document} onChange={(e) => setAvulsoData({ ...avulsoData, document: maskDocument(e.target.value) })} />
+                      <label className={`text-[9px] font-black uppercase tracking-widest ml-1 ${errors.avulsoDocument ? 'text-red-500' : 'text-slate-400'}`}>CPF / CNPJ</label>
+                      <input
+                        type="text"
+                        className={`w-full p-4 bg-slate-50 border-2 rounded-2xl text-xs font-black outline-none focus:border-blue-500 transition-all ${errors.avulsoDocument ? 'border-red-500 animate-shake' : 'border-slate-100'}`}
+                        placeholder="000.000.000-00"
+                        value={avulsoData.document}
+                        onChange={(e) => {
+                          setAvulsoData({ ...avulsoData, document: maskDocument(e.target.value) });
+                          if (errors.avulsoDocument) setErrors(prev => ({ ...prev, avulsoDocument: false }));
+                        }}
+                      />
                     </div>
                   </div>
 
@@ -940,10 +976,32 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
 
                   <button
                     onClick={() => {
-                      if (!avulsoData.name || !avulsoData.phone) {
-                        return showAlert("Dados Faltantes", "Nome e Telefone são obrigatórios para cadastro avulso.", "DANGER");
+                      const newErrors: Record<string, boolean> = {};
+                      if (!avulsoData.name) newErrors.avulsoName = true;
+
+                      const cleanPhone = avulsoData.phone.replace(/\D/g, '');
+                      if (cleanPhone.length < 11) newErrors.avulsoPhone = true;
+
+                      if (avulsoData.email && !validateEmail(avulsoData.email)) newErrors.avulsoEmail = true;
+
+                      if (avulsoData.document) {
+                        const cleanDoc = avulsoData.document.replace(/\D/g, '');
+                        if (cleanDoc.length === 11) {
+                          if (!validateCPF(cleanDoc)) newErrors.avulsoDocument = true;
+                        } else if (cleanDoc.length === 14) {
+                          if (!validateCNPJ(cleanDoc)) newErrors.avulsoDocument = true;
+                        } else {
+                          newErrors.avulsoDocument = true;
+                        }
                       }
+
+                      if (Object.keys(newErrors).length > 0) {
+                        setErrors(newErrors);
+                        return showAlert("Dados Inválidos", "Verifique os campos destacados em vermelho.", "DANGER");
+                      }
+
                       setIsClientModalOpen(false);
+                      setErrors({});
                     }}
                     className="w-full py-5 bg-blue-600 hover:bg-blue-700 text-white rounded-3xl font-black uppercase tracking-widest shadow-xl shadow-blue-100 transition-all flex items-center justify-center gap-3"
                   >
@@ -969,7 +1027,8 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
             </div>
           </div>
         </div>
-      )}
+      )
+      }
 
       <div className="flex gap-2 lg:gap-4 xl:gap-6 flex-1 min-h-0">
         <div className="w-64 lg:w-72 flex flex-col gap-2 lg:gap-4 shrink-0">
@@ -1203,147 +1262,153 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       </div>
 
       {/* MODAL DE OBSERVAÇÃO PARA CARRINHO */}
-      {selectedProductForCart !== null && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in zoom-in duration-200">
-          <div className="bg-white rounded-[2rem] shadow-2xl p-8 w-full max-w-sm border border-white/20">
-            <h3 className="text-lg font-black text-slate-800 uppercase mb-2 tracking-tighter text-center">Adicionar ao Carrinho</h3>
-            <p className="text-center text-[10px] font-bold text-slate-400 uppercase mb-6">{selectedProductForCart.name}</p>
-            <div className="space-y-6">
-              <div>
-                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 block">Deseja adicionar alguma observação?</label>
-                <input autoFocus type="text" placeholder="Ex: Sem sal, bem passado..." value={cartObservation} onChange={(e) => setCartObservation(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && confirmAddToCart()} className="w-full p-4 bg-slate-100 rounded-2xl border-none focus:ring-2 focus:ring-blue-600 font-bold text-sm outline-none placeholder:font-normal" maxLength={60} />
-              </div>
-              <div className="flex gap-2">
-                <button onClick={() => setSelectedProductForCart(null)} className="flex-1 py-4 font-black text-[10px] uppercase text-slate-400 hover:text-slate-600 transition-colors">Cancelar</button>
-                <button onClick={confirmAddToCart} className="flex-1 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-black text-[10px] uppercase shadow-xl hover:shadow-blue-200 transition-all active:scale-95">Adicionar ✓</button>
+      {
+        selectedProductForCart !== null && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in zoom-in duration-200">
+            <div className="bg-white rounded-[2rem] shadow-2xl p-8 w-full max-w-sm border border-white/20">
+              <h3 className="text-lg font-black text-slate-800 uppercase mb-2 tracking-tighter text-center">Adicionar ao Carrinho</h3>
+              <p className="text-center text-[10px] font-bold text-slate-400 uppercase mb-6">{selectedProductForCart.name}</p>
+              <div className="space-y-6">
+                <div>
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 block">Deseja adicionar alguma observação?</label>
+                  <input autoFocus type="text" placeholder="Ex: Sem sal, bem passado..." value={cartObservation} onChange={(e) => setCartObservation(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && confirmAddToCart()} className="w-full p-4 bg-slate-100 rounded-2xl border-none focus:ring-2 focus:ring-blue-600 font-bold text-sm outline-none placeholder:font-normal" maxLength={60} />
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={() => setSelectedProductForCart(null)} className="flex-1 py-4 font-black text-[10px] uppercase text-slate-400 hover:text-slate-600 transition-colors">Cancelar</button>
+                  <button onClick={confirmAddToCart} className="flex-1 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-black text-[10px] uppercase shadow-xl hover:shadow-blue-200 transition-all active:scale-95">Adicionar ✓</button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
-      {printingOrder && businessSettings && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
-          <div className="relative w-full max-w-[80mm] bg-white p-8 border border-dashed shadow-2xl font-receipt text-[11px] text-black is-receipt animate-in zoom-in duration-200">
-            {isNfceVisual ? (
-              // NFC-e (DANFE) Layout
-              <div className="space-y-4">
-                <div className="text-center border-b border-dashed pb-4">
-                  <h2 className="font-black text-xs uppercase">DANFE NFC-e</h2>
-                  <p className="text-[8px] font-bold">Documento Auxiliar da Nota Fiscal de Consumidor Eletrônica</p>
-                </div>
-
-                <div className="text-[9px] space-y-1">
-                  <div className="flex justify-between">
-                    <span>NFC-e nº: {printingOrder.nfeNumber?.split('-')[1] || '000001'}</span>
-                    <span>Série: 001</span>
+      {
+        printingOrder && businessSettings && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
+            <div className="relative w-full max-w-[80mm] bg-white p-8 border border-dashed shadow-2xl font-receipt text-[11px] text-black is-receipt animate-in zoom-in duration-200">
+              {isNfceVisual ? (
+                // NFC-e (DANFE) Layout
+                <div className="space-y-4">
+                  <div className="text-center border-b border-dashed pb-4">
+                    <h2 className="font-black text-xs uppercase">DANFE NFC-e</h2>
+                    <p className="text-[8px] font-bold">Documento Auxiliar da Nota Fiscal de Consumidor Eletrônica</p>
                   </div>
-                  <p>Emissão: {new Date(printingOrder.createdAt).toLocaleString('pt-BR')}</p>
-                  <p>Protocolo: {Math.floor(Math.random() * 100000000000000)}</p>
-                </div>
 
-                <div className="border-t border-b border-dashed py-2">
-                  <table className="w-full text-left">
-                    <thead>
-                      <tr className="text-[8px] uppercase">
-                        <th>Item</th>
-                        <th className="text-right">Vl. Total</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {groupedPrintingItems.map(([id, data]) => (
-                        <tr key={id} className="text-[9px] uppercase font-black">
-                          <td>{data.quantity}x {data.product?.name.substring(0, 15)}</td>
-                          <td className="text-right">R$ {(data.quantity * data.price).toFixed(2)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
-                <div className="flex justify-between font-black uppercase text-xs">
-                  <span>Valor Total R$</span>
-                  <span>{printingOrder.total.toFixed(2)}</span>
-                </div>
-
-                <div className="text-center space-y-2 mt-4 flex flex-col items-center">
-                  <div className="w-32 h-32 bg-slate-50 border-2 border-slate-100 flex items-center justify-center">
-                    <Icons.Print className="w-20 h-20 opacity-20" />
-                  </div>
-                  <p className="text-[8px] font-bold uppercase tracking-tighter">Consulta via QR Code ou Chave de Acesso</p>
-                  <p className="text-[7px] break-all font-mono opacity-60">35240212345678000190650010000000011000000012</p>
-                </div>
-
-                <div className="text-center text-[7px] italic border-t border-dashed pt-2">
-                  <p>PRODUTOS E SERVIÇOS TRIBUTADOS PELO ICMS NO DESTINO</p>
-                </div>
-              </div>
-            ) : (
-              // Standard Sales Coupon Layout
-              <>
-                <div className="text-center mb-6 border-b border-dashed pb-4">
-                  <h2 className="font-black text-sm uppercase tracking-tighter">{businessSettings.name}</h2>
-                  <p className="text-[9px] font-bold mt-1 uppercase">Comprovante de Pagamento</p>
-                </div>
-                <div className="space-y-1 mb-4">
-                  <p>DATA: {new Date(printingOrder.createdAt).toLocaleString('pt-BR')}</p>
-                  <p>CLIENTE: {printingOrder.clientName}</p>
-                  {printingOrder.clientDocument && <p>CPF/CNPJ: {printingOrder.clientDocument}</p>}
-                  {printingOrder.clientEmail && <p>E-MAIL: {printingOrder.clientEmail}</p>}
-                  {printingOrder.clientPhone && <p>FONE: {printingOrder.clientPhone}</p>}
-                  {printingOrder.clientAddress && (
-                    <p className="font-bold border-t border-dashed mt-2 pt-1 uppercase leading-tight">ENTREGA: {printingOrder.clientAddress}</p>
-                  )}
-                  {printingOrder.tableNumber && <p className="font-black">MESA: {printingOrder.tableNumber}</p>}
-                  <p>MÉTODO: {printingOrder.paymentMethod || 'DINHEIRO'}</p>
-                </div>
-                <div className="border-t border-dashed my-3 py-3">
-                  {groupedPrintingItems.map(([id, data]) => (
-                    <div key={id} className="flex justify-between font-black uppercase py-0.5">
-                      <span>{data.quantity}x {data.product?.name.substring(0, 18)}</span>
-                      <span>R$ {(data.quantity * data.price).toFixed(2)}</span>
+                  <div className="text-[9px] space-y-1">
+                    <div className="flex justify-between">
+                      <span>NFC-e nº: {printingOrder.nfeNumber?.split('-')[1] || '000001'}</span>
+                      <span>Série: 001</span>
                     </div>
-                  ))}
-                </div>
-                {printingOrder.type === SaleType.OWN_DELIVERY && (
-                  <div className="flex justify-between items-center border-t border-dashed pt-4 mb-2 text-[10px] uppercase font-black">
-                    <span>Taxa Entrega:</span>
-                    <span>R$ {deliveryFeeValue.toFixed(2)}</span>
+                    <p>Emissão: {new Date(printingOrder.createdAt).toLocaleString('pt-BR')}</p>
+                    <p>Protocolo: {Math.floor(Math.random() * 100000000000000)}</p>
                   </div>
-                )}
-                <div className={`flex justify-between items-end ${printingOrder.type === SaleType.OWN_DELIVERY ? '' : 'border-t border-dashed pt-4'} mb-6`}>
-                  <span className="font-black text-[9px] uppercase tracking-widest">TOTAL:</span>
-                  <span className="text-2xl font-black">R$ {printingOrder.total.toFixed(2)}</span>
+
+                  <div className="border-t border-b border-dashed py-2">
+                    <table className="w-full text-left">
+                      <thead>
+                        <tr className="text-[8px] uppercase">
+                          <th>Item</th>
+                          <th className="text-right">Vl. Total</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {groupedPrintingItems.map(([id, data]) => (
+                          <tr key={id} className="text-[9px] uppercase font-black">
+                            <td>{data.quantity}x {data.product?.name.substring(0, 15)}</td>
+                            <td className="text-right">R$ {(data.quantity * data.price).toFixed(2)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <div className="flex justify-between font-black uppercase text-xs">
+                    <span>Valor Total R$</span>
+                    <span>{printingOrder.total.toFixed(2)}</span>
+                  </div>
+
+                  <div className="text-center space-y-2 mt-4 flex flex-col items-center">
+                    <div className="w-32 h-32 bg-slate-50 border-2 border-slate-100 flex items-center justify-center">
+                      <Icons.Print className="w-20 h-20 opacity-20" />
+                    </div>
+                    <p className="text-[8px] font-bold uppercase tracking-tighter">Consulta via QR Code ou Chave de Acesso</p>
+                    <p className="text-[7px] break-all font-mono opacity-60">35240212345678000190650010000000011000000012</p>
+                  </div>
+
+                  <div className="text-center text-[7px] italic border-t border-dashed pt-2">
+                    <p>PRODUTOS E SERVIÇOS TRIBUTADOS PELO ICMS NO DESTINO</p>
+                  </div>
                 </div>
-              </>
-            )}
+              ) : (
+                // Standard Sales Coupon Layout
+                <>
+                  <div className="text-center mb-6 border-b border-dashed pb-4">
+                    <h2 className="font-black text-sm uppercase tracking-tighter">{businessSettings.name}</h2>
+                    <p className="text-[9px] font-bold mt-1 uppercase">Comprovante de Pagamento</p>
+                  </div>
+                  <div className="space-y-1 mb-4">
+                    <p>DATA: {new Date(printingOrder.createdAt).toLocaleString('pt-BR')}</p>
+                    <p>CLIENTE: {printingOrder.clientName}</p>
+                    {printingOrder.clientDocument && <p>CPF/CNPJ: {printingOrder.clientDocument}</p>}
+                    {printingOrder.clientEmail && <p>E-MAIL: {printingOrder.clientEmail}</p>}
+                    {printingOrder.clientPhone && <p>FONE: {printingOrder.clientPhone}</p>}
+                    {printingOrder.clientAddress && (
+                      <p className="font-bold border-t border-dashed mt-2 pt-1 uppercase leading-tight">ENTREGA: {printingOrder.clientAddress}</p>
+                    )}
+                    {printingOrder.tableNumber && <p className="font-black">MESA: {printingOrder.tableNumber}</p>}
+                    <p>MÉTODO: {printingOrder.paymentMethod || 'DINHEIRO'}</p>
+                  </div>
+                  <div className="border-t border-dashed my-3 py-3">
+                    {groupedPrintingItems.map(([id, data]) => (
+                      <div key={id} className="flex justify-between font-black uppercase py-0.5">
+                        <span>{data.quantity}x {data.product?.name.substring(0, 18)}</span>
+                        <span>R$ {(data.quantity * data.price).toFixed(2)}</span>
+                      </div>
+                    ))}
+                  </div>
+                  {printingOrder.type === SaleType.OWN_DELIVERY && (
+                    <div className="flex justify-between items-center border-t border-dashed pt-4 mb-2 text-[10px] uppercase font-black">
+                      <span>Taxa Entrega:</span>
+                      <span>R$ {deliveryFeeValue.toFixed(2)}</span>
+                    </div>
+                  )}
+                  <div className={`flex justify-between items-end ${printingOrder.type === SaleType.OWN_DELIVERY ? '' : 'border-t border-dashed pt-4'} mb-6`}>
+                    <span className="font-black text-[9px] uppercase tracking-widest">TOTAL:</span>
+                    <span className="text-2xl font-black">R$ {printingOrder.total.toFixed(2)}</span>
+                  </div>
+                </>
+              )}
 
-            <div className="flex flex-col gap-2 no-print">
-              <div className="flex gap-2">
-                <button onClick={() => window.print()} className="flex-[2] bg-slate-900 text-white py-4 rounded-2xl font-black uppercase text-[10px] shadow-xl">Imprimir</button>
-                <button onClick={() => setPrintingOrder(null)} className="flex-1 bg-slate-100 text-slate-600 py-4 rounded-2xl font-black uppercase text-[10px]">Fechar</button>
+              <div className="flex flex-col gap-2 no-print">
+                <div className="flex gap-2">
+                  <button onClick={() => window.print()} className="flex-[2] bg-slate-900 text-white py-4 rounded-2xl font-black uppercase text-[10px] shadow-xl">Imprimir</button>
+                  <button onClick={() => setPrintingOrder(null)} className="flex-1 bg-slate-100 text-slate-600 py-4 rounded-2xl font-black uppercase text-[10px]">Fechar</button>
+                </div>
+
               </div>
-
             </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
       {/* NFC-e Feedback Overlay */}
-      {isNfceFeedbackOpen && (
-        <div className="fixed top-8 left-1/2 -translate-x-1/2 z-[200] animate-in slide-in-from-top-full duration-500">
-          <div className="bg-emerald-600 text-white px-8 py-4 rounded-3xl shadow-2xl flex items-center gap-4">
-            <div className="bg-white/20 p-2 rounded-xl">
-              <Icons.View className="w-6 h-6" />
-            </div>
-            <div>
-              <p className="font-black uppercase text-xs tracking-widest">NFC-e Emitida com Sucesso</p>
-              <p className="text-[10px] font-bold opacity-80 uppercase">A nota fiscal foi processada e enviada para a SEFAZ.</p>
+      {
+        isNfceFeedbackOpen && (
+          <div className="fixed top-8 left-1/2 -translate-x-1/2 z-[200] animate-in slide-in-from-top-full duration-500">
+            <div className="bg-emerald-600 text-white px-8 py-4 rounded-3xl shadow-2xl flex items-center gap-4">
+              <div className="bg-white/20 p-2 rounded-xl">
+                <Icons.View className="w-6 h-6" />
+              </div>
+              <div>
+                <p className="font-black uppercase text-xs tracking-widest">NFC-e Emitida com Sucesso</p>
+                <p className="text-[10px] font-bold opacity-80 uppercase">A nota fiscal foi processada e enviada para a SEFAZ.</p>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )
+      }
+    </div >
   );
 };
 

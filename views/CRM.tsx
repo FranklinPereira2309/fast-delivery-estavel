@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Client, User } from '../types';
 import { db } from '../services/db';
 import CustomAlert from '../components/CustomAlert';
-import { validateEmail, validateCPF, validateCNPJ, maskPhone, maskDocument } from '../services/validationUtils';
+import { validateEmail, validateCPF, validateCNPJ, maskPhone, maskDocument, toTitleCase } from '../services/validationUtils';
 
 interface CRMProps {
   currentUser: User;
@@ -53,6 +53,8 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
     uf: ''
   });
 
+  const [errors, setErrors] = useState<Record<string, boolean>>({});
+
   useEffect(() => {
     refreshClients();
   }, []);
@@ -64,9 +66,12 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
 
   const openAddModal = () => {
     setEditingClient(null);
+    setErrors({});
     setFormData({
       name: '',
       phone: '',
+      email: '',
+      document: '',
       cep: '',
       logradouro: '',
       numero: '',
@@ -80,6 +85,7 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
 
   const openEditModal = (client: Client) => {
     setEditingClient(client);
+    setErrors({});
     const addr = client.addresses[0] || '';
     setFormData({
       name: client.name,
@@ -159,36 +165,41 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name || !formData.phone) {
-      showAlert('Campos Obrigatórios', 'Nome e Telefone são obrigatórios.', 'INFO');
+    const newErrors: Record<string, boolean> = {};
+
+    if (!formData.name) newErrors.name = true;
+
+    const cleanPhone = formData.phone.replace(/\D/g, '');
+    if (cleanPhone.length < 11) newErrors.phone = true;
+
+    if (formData.document) {
+      const cleanDoc = formData.document.replace(/\D/g, '');
+      if (cleanDoc.length === 11) {
+        if (!validateCPF(cleanDoc)) newErrors.document = true;
+      } else if (cleanDoc.length === 14) {
+        if (!validateCNPJ(cleanDoc)) newErrors.document = true;
+      } else {
+        newErrors.document = true;
+      }
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      showAlert('Campos Inválidos', 'Verifique os campos destacados em vermelho.', 'DANGER');
       return;
     }
 
     if (formData.email && !validateEmail(formData.email)) {
+      setErrors({ email: true });
       showAlert('Email Inválido', 'Por favor, insira um endereço de email válido.', 'DANGER');
       return;
-    }
-
-    if (formData.document) {
-      const cleanDoc = formData.document.replace(/\D/g, '');
-      if (cleanDoc.length <= 11) {
-        if (!validateCPF(cleanDoc)) {
-          showAlert('CPF Inválido', 'O CPF informado não é válido.', 'DANGER');
-          return;
-        }
-      } else {
-        if (!validateCNPJ(cleanDoc)) {
-          showAlert('CNPJ Inválido', 'O CNPJ informado não é válido.', 'DANGER');
-          return;
-        }
-      }
     }
 
     const fullAddress = `${formData.logradouro}, ${formData.numero}${formData.complemento ? ' - ' + formData.complemento : ''}, ${formData.bairro}, ${formData.cidade} - ${formData.uf} (CEP: ${formData.cep})`;
 
     const clientData: Client = {
       id: editingClient?.id || Date.now().toString(),
-      name: formData.name,
+      name: toTitleCase(formData.name),
       phone: formData.phone,
       email: formData.email || undefined,
       document: formData.document || undefined,
@@ -200,6 +211,7 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
     await db.saveClient(clientData);
     refreshClients();
     setIsModalOpen(false);
+    setErrors({});
   };
 
   const filtered = clients.filter(c =>
@@ -314,48 +326,60 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
             <form onSubmit={handleSave} className="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-500 uppercase">Nome Completo *</label>
+                  <label className={`text-xs font-bold uppercase ${errors.name ? 'text-red-500' : 'text-slate-500'}`}>Nome Completo *</label>
                   <input
                     type="text"
                     required
-                    className="w-full p-3 bg-slate-100 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all font-medium"
+                    className={`w-full p-3 bg-slate-100 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all font-medium ${errors.name ? 'ring-2 ring-red-500 animate-shake' : ''}`}
                     placeholder="Ex: João da Silva"
                     value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    onChange={(e) => {
+                      setFormData({ ...formData, name: toTitleCase(e.target.value) });
+                      if (errors.name) setErrors(prev => ({ ...prev, name: false }));
+                    }}
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-500 uppercase">Telefone / WhatsApp *</label>
+                  <label className={`text-xs font-bold uppercase ${errors.phone ? 'text-red-500' : 'text-slate-500'}`}>Telefone / WhatsApp *</label>
                   <input
                     type="text"
                     required
-                    className="w-full p-3 bg-slate-100 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all font-medium"
-                    placeholder="Ex: (11) 99999-9999"
+                    className={`w-full p-3 bg-slate-100 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all font-medium ${errors.phone ? 'ring-2 ring-red-500 animate-shake' : ''}`}
+                    placeholder="Ex: (11) 9 9999-9999"
                     value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: maskPhone(e.target.value) })}
+                    onChange={(e) => {
+                      setFormData({ ...formData, phone: maskPhone(e.target.value) });
+                      if (errors.phone) setErrors(prev => ({ ...prev, phone: false }));
+                    }}
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-500 uppercase">Email</label>
+                  <label className={`text-xs font-bold uppercase ${errors.email ? 'text-red-500' : 'text-slate-500'}`}>Email</label>
                   <input
                     type="email"
-                    className="w-full p-3 bg-slate-100 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all font-medium"
+                    className={`w-full p-3 bg-slate-100 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all font-medium ${errors.email ? 'ring-2 ring-red-500 animate-shake' : ''}`}
                     placeholder="Ex: joao@email.com"
                     value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    onChange={(e) => {
+                      setFormData({ ...formData, email: e.target.value });
+                      if (errors.email) setErrors(prev => ({ ...prev, email: false }));
+                    }}
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-500 uppercase">CPF / CNPJ</label>
+                  <label className={`text-xs font-bold uppercase ${errors.document ? 'text-red-500' : 'text-slate-500'}`}>CPF / CNPJ</label>
                   <input
                     type="text"
-                    className="w-full p-3 bg-slate-100 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all font-medium"
+                    className={`w-full p-3 bg-slate-100 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all font-medium ${errors.document ? 'ring-2 ring-red-500 animate-shake' : ''}`}
                     placeholder="000.000.000-00 ou 00.000.000/0000-00"
                     value={formData.document}
-                    onChange={(e) => setFormData({ ...formData, document: maskDocument(e.target.value) })}
+                    onChange={(e) => {
+                      setFormData({ ...formData, document: maskDocument(e.target.value) });
+                      if (errors.document) setErrors(prev => ({ ...prev, document: false }));
+                    }}
                   />
                 </div>
               </div>
