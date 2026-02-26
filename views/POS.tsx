@@ -54,6 +54,8 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
   const [isSplitPayment, setIsSplitPayment] = useState(false);
   const [paymentMethod2, setPaymentMethod2] = useState<string>('');
   const [splitAmount1, setSplitAmount1] = useState<string>('');
+  const [emitNfce, setEmitNfce] = useState<boolean>(false);
+  const [isNfceFeedbackOpen, setIsNfceFeedbackOpen] = useState(false);
   const [paymentData, setPaymentData] = useState({
     receivedAmount: '',
     cardHolder: '',
@@ -327,6 +329,12 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
     }
 
     await commitOrder();
+
+    if (emitNfce) {
+      setIsNfceFeedbackOpen(true);
+      setTimeout(() => setIsNfceFeedbackOpen(false), 5000);
+    }
+
     setIsPaymentModalOpen(false);
   };
 
@@ -348,9 +356,10 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       }
     }
 
-    if (saleType !== SaleType.COUNTER && !selectedClient && !avulsoData.name) {
-      showAlert('Cliente Necessário', 'Para entregas ou mesas, identifique o cliente.', 'INFO');
-      return;
+    // Rule: Balcão and Delivery must have a client. Tables too if they are being finalized.
+    if (!selectedClient && !avulsoData.name) {
+      if (saleType === SaleType.OWN_DELIVERY) return showAlert('Identificar Cliente', 'Para Entregas, identifique o cliente.', 'INFO');
+      if (saleType === SaleType.COUNTER) return showAlert('Identificar Cliente', 'Para vendas de Balcão, identifique o cliente.', 'INFO');
     }
 
     if (isCounterSale && !editingOrderId) {
@@ -483,6 +492,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
     setIsSplitPayment(false);
     setPaymentMethod2('');
     setSplitAmount1('');
+    setEmitNfce(false);
   };
 
   const getFriendlySaleType = (type: SaleType | string) => {
@@ -545,7 +555,13 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       {isPaymentModalOpen && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
           <div className="bg-white w-[600px] max-w-[95vw] rounded-[3rem] shadow-2xl overflow-hidden border border-slate-100 flex flex-col max-h-[90vh]">
-            <div className="p-8 lg:p-10 border-b border-slate-50 shrink-0">
+            <div className="p-8 lg:p-10 border-b border-slate-50 shrink-0 relative">
+              <button
+                onClick={() => setIsPaymentModalOpen(false)}
+                className="absolute right-8 top-8 w-12 h-12 flex items-center justify-center bg-slate-100 rounded-full text-slate-400 hover:bg-red-50 hover:text-red-500 transition-all font-black text-2xl z-10"
+              >
+                ×
+              </button>
               <div className="flex items-center justify-between mb-4 px-2">
                 <button
                   onClick={() => {
@@ -717,16 +733,26 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
               )}
             </div>
 
-            <div className="p-8 lg:p-10 bg-slate-50 border-t border-slate-100 shrink-0 flex gap-4">
-              <button
-                onClick={() => setIsPaymentModalOpen(false)}
-                className="flex-1 py-6 bg-white border border-slate-200 text-slate-500 rounded-[2rem] font-black uppercase text-lg tracking-widest hover:bg-red-50 hover:text-red-500 hover:border-red-100 transition-all"
-              >
-                Cancelar
-              </button>
+            <div className="p-8 lg:p-10 bg-slate-50 border-t border-slate-100 shrink-0 flex flex-col gap-4">
+              <div className="flex items-center justify-between px-4 py-2 bg-white rounded-2xl border border-slate-100">
+                <div className="flex items-center gap-3">
+                  <Icons.View className="w-5 h-5 text-blue-600" />
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-tight">Emitir NFC-e Fiscal?</p>
+                    <p className="text-[8px] font-bold text-slate-400 uppercase">Nota Fiscal de Consumidor Eletrônica</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setEmitNfce(!emitNfce)}
+                  className={`w-12 h-6 rounded-full transition-all relative ${emitNfce ? 'bg-blue-600' : 'bg-slate-200'}`}
+                >
+                  <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${emitNfce ? 'left-7' : 'left-1'}`}></div>
+                </button>
+              </div>
+
               <button
                 onClick={processPaymentAndFinalize}
-                className="flex-[2] py-6 bg-blue-600 hover:bg-blue-700 text-white rounded-[2rem] font-black uppercase text-lg tracking-widest shadow-2xl shadow-blue-200 transition-all flex items-center justify-center gap-4 group"
+                className="w-full py-6 bg-blue-600 hover:bg-blue-700 text-white rounded-[2rem] font-black uppercase text-lg tracking-widest shadow-2xl shadow-blue-200 transition-all flex items-center justify-center gap-4 group"
               >
                 <span>Finalizar Pedido</span>
                 <Icons.View className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
@@ -1230,6 +1256,8 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
             <div className="space-y-1 mb-4">
               <p>DATA: {new Date(printingOrder.createdAt).toLocaleString('pt-BR')}</p>
               <p>CLIENTE: {printingOrder.clientName}</p>
+              {printingOrder.clientDocument && <p>CPF/CNPJ: {printingOrder.clientDocument}</p>}
+              {printingOrder.clientEmail && <p>E-MAIL: {printingOrder.clientEmail}</p>}
               {printingOrder.clientPhone && <p>FONE: {printingOrder.clientPhone}</p>}
               {printingOrder.clientAddress && (
                 <p className="font-bold border-t border-dashed mt-2 pt-1 uppercase leading-tight">ENTREGA: {printingOrder.clientAddress}</p>
@@ -1258,6 +1286,21 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
             <div className="flex gap-2 no-print">
               <button onClick={() => window.print()} className="flex-1 bg-slate-900 text-white py-4 rounded-2xl font-black uppercase text-[10px] shadow-xl">Imprimir</button>
               <button onClick={() => setPrintingOrder(null)} className="flex-1 bg-slate-100 text-slate-600 py-4 rounded-2xl font-black uppercase text-[10px]">Fechar</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* NFC-e Feedback Overlay */}
+      {isNfceFeedbackOpen && (
+        <div className="fixed top-8 left-1/2 -translate-x-1/2 z-[200] animate-in slide-in-from-top-full duration-500">
+          <div className="bg-emerald-600 text-white px-8 py-4 rounded-3xl shadow-2xl flex items-center gap-4">
+            <div className="bg-white/20 p-2 rounded-xl">
+              <Icons.View className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="font-black uppercase text-xs tracking-widest">NFC-e Emitida com Sucesso</p>
+              <p className="text-[10px] font-bold opacity-80 uppercase">A nota fiscal foi processada e enviada para a SEFAZ.</p>
             </div>
           </div>
         </div>
