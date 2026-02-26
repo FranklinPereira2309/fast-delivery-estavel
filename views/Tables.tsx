@@ -298,7 +298,9 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
   };
 
   const startBillingRequest = (sess: TableSession) => {
-    if (!manualClientName.trim()) {
+    const hasClient = isUnregisteredClient ? manualClientName.trim() : selectedClient;
+
+    if (!hasClient) {
       showAlert('Cliente Necessário', 'Identifique o cliente para fechar a conta.', 'INFO');
       return;
     }
