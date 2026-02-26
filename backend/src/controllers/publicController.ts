@@ -1,13 +1,11 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
 import { getIO } from '../socket';
 import { getStoreStatus } from '../storeStatusCache';
+import prisma from '../prisma';
 
 export const getStoreStatusEndpoint = (req: Request, res: Response) => {
     res.json(getStoreStatus());
 };
-
-const prisma = new PrismaClient();
 
 export const getProducts = async (req: Request, res: Response) => {
     try {
