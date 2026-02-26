@@ -184,6 +184,10 @@ export const saveOrder = async (req: Request, res: Response) => {
                     clientEmail: order.clientEmail || null,
                     clientDocument: order.clientDocument || null,
                     isOriginDigitalMenu: order.isOriginDigitalMenu !== undefined ? order.isOriginDigitalMenu : false, // Fix: Preserve Origin into Update
+                    nfeStatus: order.nfeStatus || null,
+                    nfeNumber: order.nfeNumber || null,
+                    nfeUrl: order.nfeUrl || null,
+                    nfeError: order.nfeError || null,
                     items: {
                         deleteMany: {},
                         create: order.items.map((item: any) => ({
@@ -216,6 +220,10 @@ export const saveOrder = async (req: Request, res: Response) => {
                     clientEmail: order.clientEmail || null,
                     clientDocument: order.clientDocument || null,
                     isOriginDigitalMenu: order.isOriginDigitalMenu !== undefined ? order.isOriginDigitalMenu : false, // Fix: Preserve Origin into Creation
+                    nfeStatus: order.nfeStatus || null,
+                    nfeNumber: order.nfeNumber || null,
+                    nfeUrl: order.nfeUrl || null,
+                    nfeError: order.nfeError || null,
                     items: {
                         create: order.items.map((item: any) => ({
                             id: item.uid,

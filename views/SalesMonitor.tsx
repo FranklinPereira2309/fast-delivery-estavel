@@ -150,7 +150,7 @@ const SalesMonitor: React.FC = () => {
                       </p>
                     </td>
                     <td className="px-8 py-5 text-right">
-                      <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                      <div className="flex justify-end gap-1 transition-all">
                         <button onClick={() => {
                           setPrintingOrder(order);
                           setIsNfceVisual(false);
