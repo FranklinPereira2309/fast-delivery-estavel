@@ -589,7 +589,7 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
                 {activeModalTab === 'CHECKOUT' && (
                   <div className="flex flex-col items-center justify-center h-full">
                     <div className="text-center mb-8"><p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Valor Total da Conta</p><h4 className="text-6xl font-black text-slate-900 tracking-tighter">R$ {getSessForTable(selectedTable)?.items.reduce((acc, it) => acc + (it.price * it.quantity), 0).toFixed(2)}</h4></div>
-                    <div className="w-full max-w-md bg-slate-50 p-8 rounded-[2rem] border border-slate-100 space-y-6">
+                    <div className="w-full max-w-2xl bg-slate-50 p-8 rounded-[2rem] border border-slate-100 space-y-6">
                       <div className="flex items-center justify-between"><label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Identificação do Cliente</label><button onClick={() => { setIsUnregisteredClient(!isUnregisteredClient); setSelectedClient(null); setManualClientName(''); setManualClientPhone(''); setManualClientAddress(''); setManualClientCep(''); setClientSearch(''); setManualClientEmail(''); setManualClientDocument(''); }} className={`text-[9px] font-black uppercase px-2 py-1 rounded-lg transition-all ${isUnregisteredClient ? 'bg-blue-600 text-white shadow-md' : 'bg-slate-200 text-slate-500'}`}>{isUnregisteredClient ? 'Mudar para Base' : 'Cliente Avulso?'}</button></div>
                       {isUnregisteredClient ? (
                         <div className="space-y-3 animate-in zoom-in-95">
