@@ -19,6 +19,7 @@ const Kitchen: React.FC = () => {
   const [selectedItems, setSelectedItems] = useState<Record<string, string[]>>({});
   const [acknowledgedOrders, setAcknowledgedOrders] = useState<Set<string>>(new Set());
 
+  const prevItemCounts = useRef<Record<string, number>>({});
   const lastOrdersCount = useRef<number>(0);
 
   useEffect(() => {
@@ -49,6 +50,22 @@ const Kitchen: React.FC = () => {
       o.status !== OrderStatus.CANCELLED &&
       o.status !== OrderStatus.DELIVERED
     );
+
+    // Detectar novos itens em pedidos existentes para resetar o blink
+    activeOrders.forEach(order => {
+      const currentCount = order.items.length;
+      const prevCount = prevItemCounts.current[order.id] || 0;
+
+      if (currentCount > prevCount && !isFirstLoad) {
+        // Se aumentou o número de itens, remove do acknowledged para voltar a piscar
+        setAcknowledgedOrders(prev => {
+          const next = new Set(prev);
+          next.delete(order.id);
+          return next;
+        });
+      }
+      prevItemCounts.current[order.id] = currentCount;
+    });
 
     lastOrdersCount.current = activeOrders.length;
 

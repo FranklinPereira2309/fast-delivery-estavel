@@ -149,10 +149,12 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
             y -= 40;
             // Table Header
             page.drawRectangle({ x: 50, y: y - 5, width: width - 100, height: 20, color: rgb(0.95, 0.95, 0.95) });
-            page.drawText('DATA', { x: 55, y, size: 8, font: fontBold });
-            page.drawText('CLIENTE / MESA', { x: 120, y, size: 8, font: fontBold });
-            page.drawText('MOD.', { x: 450, y, size: 8, font: fontBold });
-            page.drawText('TOTAL', { x: 520, y, size: 8, font: fontBold });
+            page.drawText('DATA', { x: 55, y, size: 7, font: fontBold });
+            page.drawText('HORA', { x: 100, y, size: 7, font: fontBold });
+            page.drawText('CLIENTE / MESA', { x: 140, y, size: 7, font: fontBold });
+            page.drawText('FORMA PGTO', { x: 360, y, size: 7, font: fontBold });
+            page.drawText('MOD.', { x: 465, y, size: 7, font: fontBold });
+            page.drawText('TOTAL', { x: 520, y, size: 7, font: fontBold });
             y -= 25;
 
             for (const o of filteredOrders) {
@@ -160,11 +162,16 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
                     page = pdfDoc.addPage([595.28, 841.89]);
                     y = page.getHeight() - 50;
                 }
-                const dateStr = new Date(o.createdAt).toLocaleDateString('pt-BR');
-                page.drawText(dateStr, { x: 55, y, size: 8, font });
-                page.drawText(o.clientName.substring(0, 40), { x: 120, y, size: 8, font });
-                page.drawText(getFriendlySaleType(o.type), { x: 450, y, size: 8, font });
-                page.drawText(`R$ ${o.total.toFixed(2)}`, { x: 520, y, size: 8, font: fontBold });
+                const dateObj = new Date(o.createdAt);
+                const dateStr = dateObj.toLocaleDateString('pt-BR');
+                const timeStr = dateObj.toLocaleTimeString('pt-BR').substring(0, 5);
+
+                page.drawText(dateStr, { x: 55, y, size: 7, font });
+                page.drawText(timeStr, { x: 100, y, size: 7, font });
+                page.drawText(o.clientName.substring(0, 38), { x: 140, y, size: 7, font });
+                page.drawText((o.paymentMethod || 'DINHEIRO').substring(0, 20), { x: 360, y, size: 7, font });
+                page.drawText(getFriendlySaleType(o.type), { x: 465, y, size: 7, font });
+                page.drawText(`R$ ${o.total.toFixed(2)}`, { x: 520, y, size: 7, font: fontBold });
                 y -= 20;
             }
 

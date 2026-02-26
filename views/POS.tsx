@@ -521,6 +521,14 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
     setPaymentMethod2('');
     setSplitAmount1('');
     setEmitNfce(false);
+    setPaymentData({
+      receivedAmount: '',
+      cardHolder: '',
+      cardNumber: '',
+      cardExpiry: '',
+      cardCVV: '',
+      pixStatus: 'idle'
+    });
   };
 
   const handleOpenCash = async () => {
@@ -1219,6 +1227,8 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                     key={type}
                     onClick={() => {
                       if (editingOrderId) return showAlert("Bloqueado", "Finalize ou limpe o pedido atual antes de mudar o tipo.", "DANGER");
+                      if (saleType === SaleType.TABLE && tableNumber) return showAlert("Bloqueado", "Limpe a mesa atual antes de mudar a modalidade.", "DANGER");
+                      if (isPaymentModalOpen) return showAlert("Bloqueado", "Cancele o pagamento atual antes de mudar a modalidade.", "DANGER");
                       setSaleType(type);
                       if (type !== SaleType.TABLE) {
                         setTableNumber('');
