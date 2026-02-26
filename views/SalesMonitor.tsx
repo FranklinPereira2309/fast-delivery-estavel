@@ -176,7 +176,7 @@ const SalesMonitor: React.FC = () => {
                             setEditingPaymentMethod(false);
                             setNewPaymentMethod(order.paymentMethod || 'DINHEIRO');
                           }} className="p-2.5 text-emerald-600 hover:bg-emerald-50 rounded-2xl border border-emerald-100 shadow-sm transition-all active:scale-95" title="Reemitir Cupom Fiscal (NFC-e)">
-                            <Icons.QrCode className="w-5 h-5" />
+                            <Icons.Print className="w-5 h-5" />
                           </button>
                         )}
                       </div>
@@ -358,15 +358,6 @@ const SalesMonitor: React.FC = () => {
                 <button onClick={() => window.print()} className="flex-[2] bg-slate-900 text-white py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl">Imprimir</button>
                 <button onClick={() => setPrintingOrder(null)} className="flex-1 bg-slate-100 text-slate-600 py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest">Fechar</button>
               </div>
-
-              {printingOrder.nfeStatus === 'EMITTED' && (
-                <button
-                  onClick={() => setIsNfceVisual(!isNfceVisual)}
-                  className="w-full py-3 border-2 border-dashed border-slate-200 text-slate-400 rounded-xl font-black uppercase text-[8px] hover:border-blue-400 hover:text-blue-500 transition-all"
-                >
-                  {isNfceVisual ? 'Ver Comprovante Simples' : 'Ver DANFE NFC-e'}
-                </button>
-              )}
             </div>
           </div>
         </div>

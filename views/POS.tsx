@@ -1268,7 +1268,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
 
                 <div className="text-center space-y-2 mt-4 flex flex-col items-center">
                   <div className="w-32 h-32 bg-slate-50 border-2 border-slate-100 flex items-center justify-center">
-                    <Icons.QrCode className="w-20 h-20 opacity-20" />
+                    <Icons.Print className="w-20 h-20 opacity-20" />
                   </div>
                   <p className="text-[8px] font-bold uppercase tracking-tighter">Consulta via QR Code ou Chave de Acesso</p>
                   <p className="text-[7px] break-all font-mono opacity-60">35240212345678000190650010000000011000000012</p>
@@ -1324,14 +1324,6 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                 <button onClick={() => setPrintingOrder(null)} className="flex-1 bg-slate-100 text-slate-600 py-4 rounded-2xl font-black uppercase text-[10px]">Fechar</button>
               </div>
 
-              {printingOrder.nfeStatus === 'EMITTED' && (
-                <button
-                  onClick={() => setIsNfceVisual(!isNfceVisual)}
-                  className="w-full py-3 border-2 border-dashed border-slate-200 text-slate-400 rounded-xl font-black uppercase text-[8px] hover:border-blue-400 hover:text-blue-500 transition-all"
-                >
-                  {isNfceVisual ? 'Ver Comprovante Simples' : 'Ver DANFE NFC-e'}
-                </button>
-              )}
             </div>
           </div>
         </div>
