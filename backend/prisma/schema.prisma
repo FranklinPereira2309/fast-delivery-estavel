@@ -148,7 +148,7 @@ model Order {
   status        OrderStatus @default(PENDING)
   type          SaleType
   createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  updatedAt     DateTime    @default(now()) @updatedAt
   paymentMethod String?
   driverId      String?
   driver        DeliveryDriver? @relation(fields: [driverId], references: [id])
