@@ -14,6 +14,7 @@ function AppContent() {
 
   // Estados da API
   const [isValidating, setIsValidating] = useState(true);
+  const [isBilling, setIsBilling] = useState(false);
   const [tableError, setTableError] = useState<string | null>(null);
   const [clientName, setClientName] = useState<string | null>(null);
 
@@ -43,9 +44,17 @@ function AppContent() {
       const data = await verifyTable(tableParam);
       setTableNumber(tableParam);
       setClientName(data.clientName);
+      setTableError(null);
+      setIsBilling(false);
       setIsValidating(false);
     } catch (err: any) {
-      setTableError(err.message || 'Erro ao validar a mesa.');
+      if (err.status === 'billing') {
+        setIsBilling(true);
+        setTableError(null);
+      } else {
+        setTableError(err.message || 'Erro ao validar a mesa.');
+        setIsBilling(false);
+      }
       setIsValidating(false);
     }
   }, [tableParam]);
@@ -57,6 +66,12 @@ function AppContent() {
 
     const handleTableStatus = (data: any) => {
       if (data.tableNumber === Number(tableParam)) {
+        // If the table was in billing and now it's being refreshed (usually means reopened/available)
+        // we might want to do a full reload to clear state for the next customer.
+        if (isBilling) {
+          window.location.reload();
+          return;
+        }
         fetchTableData();
       }
     };
@@ -116,6 +131,35 @@ function AppContent() {
     return (
       <div className="min-h-screen flex items-center justify-center p-6 bg-slate-900 text-white text-center">
         <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+      </div>
+    );
+  }
+
+  if (isBilling) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-6 bg-slate-900 text-white text-center">
+        <div className="max-w-md w-full space-y-8 animate-in fade-in zoom-in duration-500">
+          <div className="relative mx-auto w-24 h-24">
+            <div className="absolute inset-0 bg-blue-500/20 rounded-full animate-ping"></div>
+            <div className="relative w-24 h-24 bg-blue-600 rounded-3xl flex items-center justify-center shadow-2xl shadow-blue-500/40">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 animate-spin-slow" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+          </div>
+          <div className="space-y-3">
+            <h1 className="text-2xl font-black uppercase tracking-tighter">Quase lá!</h1>
+            <p className="text-slate-400 text-lg leading-relaxed">
+              O fechamento da sua conta está em processamento. <br />
+              <span className="text-sm font-medium opacity-75">Por favor, aguarde um momento...</span>
+            </p>
+          </div>
+          <div className="flex justify-center gap-2">
+            <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+            <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+            <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce"></div>
+          </div>
+        </div>
       </div>
     );
   }
