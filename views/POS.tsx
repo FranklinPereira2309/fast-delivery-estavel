@@ -49,6 +49,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
   const [manualDeliveryFee, setManualDeliveryFee] = useState<number | null>(null);
   const [currentOrderStatus, setCurrentOrderStatus] = useState<OrderStatus | null>(null);
 
+  const [isClientModalOpen, setIsClientModalOpen] = useState(false);
   const [alertConfig, setAlertConfig] = useState<{ isOpen: boolean, title: string, message: string, onConfirm: () => void, type: 'INFO' | 'DANGER' }>({
     isOpen: false, title: '', message: '', onConfirm: () => { }, type: 'INFO'
   });
@@ -546,6 +547,204 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
     <div className="flex flex-col h-full gap-2 lg:gap-4 xl:gap-6">
       <CustomAlert {...alertConfig} onConfirm={alertConfig.onConfirm} />
 
+      {/* Client Selection Modal */}
+      {isClientModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="bg-white w-[500px] max-w-[95vw] rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-100 flex flex-col max-h-[90vh]">
+            <div className="p-8 border-b border-slate-50 shrink-0">
+              <div className="flex justify-between items-center mb-6">
+                <div>
+                  <h2 className="text-2xl font-black text-slate-800 uppercase tracking-tighter">Identificar Cliente</h2>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Venda: {getFriendlySaleType(saleType)}</p>
+                </div>
+                <button
+                  onClick={() => setIsClientModalOpen(false)}
+                  className="w-10 h-10 flex items-center justify-center bg-slate-100 rounded-full text-slate-400 hover:bg-red-50 hover:text-red-500 transition-all font-black text-xl"
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="flex gap-2 bg-slate-100 p-1.5 rounded-2xl mb-6">
+                <button
+                  onClick={() => {
+                    setIsAvulso(false);
+                    setSelectedClient(null);
+                    setClientSearch('');
+                  }}
+                  className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${!isAvulso ? 'bg-white text-blue-600 shadow-md' : 'text-slate-400'}`}
+                >
+                  Buscar Cliente
+                </button>
+                <button
+                  onClick={() => {
+                    setIsAvulso(true);
+                    setSelectedClient(null);
+                    setClientSearch('');
+                  }}
+                  className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${isAvulso ? 'bg-white text-blue-600 shadow-md' : 'text-slate-400'}`}
+                >
+                  Novo / Avulso
+                </button>
+              </div>
+            </div>
+
+            <div className="p-8 overflow-y-auto">
+              {!isAvulso ? (
+                <div className="space-y-4">
+                  <div className="relative">
+                    <input
+                      type="text"
+                      className="w-full p-5 bg-slate-50 border-2 border-slate-100 rounded-2xl text-xs font-black uppercase tracking-widest outline-none focus:border-blue-500 transition-all"
+                      placeholder="Buscar por Nome ou Telefone..."
+                      value={clientSearch}
+                      onChange={(e) => { setClientSearch(e.target.value); setShowClientList(true); }}
+                      autoFocus
+                    />
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300">
+                      <Icons.Search />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 mt-4">
+                    {clientSearch ? (
+                      clients.filter(c =>
+                        c.name.toLowerCase().includes(clientSearch.toLowerCase()) ||
+                        c.phone.includes(clientSearch)
+                      ).slice(0, 5).map(c => (
+                        <button
+                          key={c.id}
+                          onClick={() => {
+                            setSelectedClient(c);
+                            setClientSearch(c.name);
+                            setShowClientList(false);
+                            setIsClientModalOpen(false);
+                          }}
+                          className="w-full text-left p-4 bg-slate-50 hover:bg-blue-50 border border-slate-100 hover:border-blue-200 rounded-2xl transition-all group"
+                        >
+                          <div className="flex justify-between items-center">
+                            <p className="text-sm font-black text-slate-800 uppercase group-hover:text-blue-700">{c.name}</p>
+                            <span className="text-[10px] font-bold text-blue-500 bg-blue-100 px-2 py-0.5 rounded-full">{c.phone}</span>
+                          </div>
+                          <p className="text-[10px] text-slate-400 font-medium mt-1 uppercase truncate">{c.addresses[0] || 'Sem endereço cadastrado'}</p>
+                        </button>
+                      ))
+                    ) : (
+                      <div className="text-center py-10 opacity-40">
+                        <p className="text-[10px] text-slate-400 font-bold uppercase italic tracking-widest">Digite para buscar</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Telefone</label>
+                      <input type="text" className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl text-xs font-black outline-none focus:border-blue-500 transition-all" placeholder="(00) 00000-0000" value={avulsoData.phone} onChange={(e) => {
+                        const val = maskPhone(e.target.value);
+                        setAvulsoData({ ...avulsoData, phone: val });
+                        const match = clients.find(c => c.phone === val);
+                        if (match) {
+                          setSelectedClient(match);
+                          setClientSearch(match.name);
+                          setIsAvulso(false);
+                        }
+                      }} />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Nome Completo</label>
+                      <input type="text" className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl text-xs font-black outline-none focus:border-blue-500 transition-all" placeholder="Nome do Cliente" value={avulsoData.name} onChange={(e) => setAvulsoData({ ...avulsoData, name: e.target.value })} />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">E-mail</label>
+                      <input type="email" className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl text-xs font-black outline-none focus:border-blue-500 transition-all" placeholder="exemplo@email.com" value={avulsoData.email} onChange={(e) => setAvulsoData({ ...avulsoData, email: e.target.value })} />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">CPF / CNPJ</label>
+                      <input type="text" className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl text-xs font-black outline-none focus:border-blue-500 transition-all" placeholder="000.000.000-00" value={avulsoData.document} onChange={(e) => setAvulsoData({ ...avulsoData, document: maskDocument(e.target.value) })} />
+                    </div>
+                  </div>
+
+                  {(saleType === SaleType.OWN_DELIVERY || saleType === SaleType.THIRD_PARTY) && (
+                    <div className="space-y-1.5">
+                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Endereço de Entrega</label>
+                      <div className="flex gap-2">
+                        <div className="w-32 shrink-0 relative">
+                          <input
+                            type="text"
+                            placeholder="CEP"
+                            maxLength={8}
+                            value={avulsoData.cep}
+                            onChange={async e => {
+                              const cep = e.target.value.replace(/\D/g, '').slice(0, 8);
+                              setAvulsoData(prev => ({ ...prev, cep }));
+                              if (cep.length === 8) {
+                                setIsLoadingCep(true);
+                                try {
+                                  const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+                                  const data = await res.json();
+                                  if (!data.erro) {
+                                    const newAddress = `${data.logradouro}, , ${data.bairro}, ${data.localidade} - ${data.uf}`;
+                                    setAvulsoData(prev => ({ ...prev, address: newAddress }));
+                                  }
+                                } catch (err) {
+                                  console.error('ViaCep error:', err);
+                                } finally {
+                                  setIsLoadingCep(false);
+                                }
+                              }
+                            }}
+                            className={`w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl text-xs font-black outline-none focus:border-blue-500 transition-all ${isLoadingCep ? 'opacity-50' : ''}`}
+                          />
+                        </div>
+                        <input
+                          type="text"
+                          placeholder="Endereço Completo, Número, Bairro..."
+                          value={avulsoData.address}
+                          onChange={e => setAvulsoData({ ...avulsoData, address: e.target.value })}
+                          className="flex-1 p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl text-xs font-black outline-none focus:border-blue-500 transition-all"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  <button
+                    onClick={() => {
+                      if (!avulsoData.name || !avulsoData.phone) {
+                        return showAlert("Dados Faltantes", "Nome e Telefone são obrigatórios para cadastro avulso.", "DANGER");
+                      }
+                      setIsClientModalOpen(false);
+                    }}
+                    className="w-full py-5 bg-blue-600 hover:bg-blue-700 text-white rounded-3xl font-black uppercase tracking-widest shadow-xl shadow-blue-100 transition-all flex items-center justify-center gap-3"
+                  >
+                    Confirmar Identificação
+                    <Icons.View className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div className="p-8 bg-slate-50 flex gap-4 shrink-0">
+              <button
+                onClick={() => {
+                  setSelectedClient(null);
+                  setAvulsoData({ name: '', phone: '', address: '', cep: '', email: '', document: '' });
+                  setIsAvulso(false);
+                  setIsClientModalOpen(false);
+                }}
+                className="flex-1 py-4 bg-white border border-slate-200 text-slate-500 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-red-50 hover:text-red-500 hover:border-red-100 transition-all"
+              >
+                Limpar / Deslogar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="flex gap-2 lg:gap-4 xl:gap-6 flex-1 min-h-0">
         <div className="w-64 lg:w-72 flex flex-col gap-2 lg:gap-4 shrink-0">
           <div className="bg-orange-50 p-4 lg:p-6 rounded-[2rem] border border-orange-100 flex-1 flex flex-col overflow-hidden">
@@ -653,99 +852,36 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
 
               {saleType !== SaleType.TABLE && (
                 <div className="space-y-4 animate-in slide-in-from-top-2 duration-300">
-                  <div className="flex items-center justify-between px-2">
+                  <div className="flex items-center justify-between px-1">
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Identificação do Cliente</label>
-                    <button
-                      onClick={() => {
-                        setIsAvulso(!isAvulso);
-                        setSelectedClient(null);
-                        setClientSearch('');
-                      }}
-                      className={`text-[9px] font-black uppercase px-2 py-1 rounded-lg transition-all ${isAvulso ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-500'}`}>
-                      {isAvulso ? 'Cadastrado?' : 'Avulso?'}
-                    </button>
                   </div>
 
-                  {isAvulso ? (
-                    <div className="space-y-2 animate-in zoom-in-95">
-                      <div className="flex gap-2">
-                        <input type="text" className="flex-1 p-4 bg-slate-100 border-none rounded-2xl text-[11px] font-black uppercase outline-none" placeholder="Fone..." value={avulsoData.phone} onChange={(e) => {
-                          const val = maskPhone(e.target.value);
-                          setAvulsoData({ ...avulsoData, phone: val });
-                          const match = clients.find(c => c.phone === val);
-                          if (match) {
-                            setSelectedClient(match);
-                            setClientSearch(match.name);
-                            setShowClientList(false);
-                          }
-                        }} />
-                        <input type="text" className="flex-1 p-4 bg-slate-100 border-none rounded-2xl text-[11px] font-black uppercase outline-none" placeholder="Nome..." value={avulsoData.name} onChange={(e) => setAvulsoData({ ...avulsoData, name: e.target.value })} />
+                  <button
+                    onClick={() => setIsClientModalOpen(true)}
+                    className={`w-full p-4 rounded-2xl border-2 transition-all flex items-center justify-between group ${selectedClient || (isAvulso && avulsoData.name) ? 'bg-blue-50 border-blue-200 shadow-sm' : 'bg-slate-50 border-dashed border-slate-200 hover:border-blue-300'}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${selectedClient || (isAvulso && avulsoData.name) ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-400 group-hover:bg-blue-100 group-hover:text-blue-500'}`}>
+                        <Icons.User className="w-4 h-4" />
                       </div>
-                      <div className="flex gap-2 mt-2">
-                        <input type="email" className="flex-1 p-4 bg-slate-100 border-none rounded-2xl text-[11px] font-black uppercase outline-none" placeholder="Email..." value={avulsoData.email} onChange={(e) => setAvulsoData({ ...avulsoData, email: e.target.value })} />
-                        <input type="text" className="flex-1 p-4 bg-slate-100 border-none rounded-2xl text-[11px] font-black uppercase outline-none" placeholder="CPF/CNPJ..." value={avulsoData.document} onChange={(e) => setAvulsoData({ ...avulsoData, document: maskDocument(e.target.value) })} />
+                      <div className="text-left">
+                        <p className={`text-[10px] font-black uppercase tracking-tighter ${selectedClient || (isAvulso && avulsoData.name) ? 'text-blue-700' : 'text-slate-400'}`}>
+                          {selectedClient?.name || avulsoData.name || 'Clique para Identificar'}
+                        </p>
+                        <p className="text-[8px] font-bold text-slate-400 uppercase">
+                          {selectedClient?.phone || avulsoData.phone || 'Sem cliente vinculado'}
+                        </p>
                       </div>
-                      {(saleType === SaleType.OWN_DELIVERY || saleType === SaleType.THIRD_PARTY) && (
-                        <div className="flex gap-2 items-start">
-                          <div className="w-1/3 relative shrink-0">
-                            <input
-                              type="text"
-                              placeholder="CEP"
-                              maxLength={8}
-                              value={avulsoData.cep}
-                              onChange={async e => {
-                                const cep = e.target.value.replace(/\D/g, '').slice(0, 8);
-                                setAvulsoData(prev => ({ ...prev, cep }));
-                                if (cep.length === 8) {
-                                  setIsLoadingCep(true);
-                                  try {
-                                    const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
-                                    const data = await res.json();
-                                    if (!data.erro) {
-                                      const newAddress = `${data.logradouro}, , ${data.bairro}, ${data.localidade} - ${data.uf}`;
-                                      setAvulsoData(prev => ({ ...prev, address: newAddress }));
-                                    }
-                                  } catch (err) {
-                                    console.error('ViaCep error:', err);
-                                  } finally {
-                                    setIsLoadingCep(false);
-                                  }
-                                }
-                              }}
-                              className={`w-full p-3 bg-slate-100 border-none rounded-xl text-[10px] font-black uppercase outline-none focus:ring-2 focus:ring-blue-500 ${isLoadingCep ? 'opacity-50' : ''}`}
-                            />
-                            {isLoadingCep && (
-                              <div className="absolute right-2 top-1/2 -translate-y-1/2">
-                                <div className="w-3 h-3 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                              </div>
-                            )}
-                          </div>
-                          <textarea placeholder="Endereço de Entrega" value={avulsoData.address} onChange={e => setAvulsoData({ ...avulsoData, address: e.target.value })} className="flex-1 w-full p-3 bg-slate-100 border-none rounded-xl text-[10px] font-black uppercase outline-none focus:ring-2 focus:ring-blue-500 h-20 resize-none" />
-                        </div>
-                      )}
                     </div>
-                  ) : (
-                    <div className="relative">
-                      <input type="text" className="w-full p-4 bg-slate-100 border-none rounded-2xl text-[10px] font-black uppercase tracking-widest outline-none focus:ring-2 focus:ring-blue-500" placeholder="Buscar Cliente (CRM)..." value={clientSearch} onChange={(e) => { setClientSearch(e.target.value); setShowClientList(true); }} />
-                      {showClientList && clientSearch && (
-                        <div className="absolute z-30 w-full bg-white border border-slate-200 rounded-2xl shadow-2xl max-h-40 overflow-y-auto mt-2 p-2">
-                          {clients.filter(c => c.name.toLowerCase().includes(clientSearch.toLowerCase())).map(c => (
-                            <button key={c.id} onClick={() => { setSelectedClient(c); setClientSearch(c.name); setShowClientList(false); }} className="w-full text-left p-3 hover:bg-slate-50 border-b last:border-0 rounded-lg">
-                              <p className="text-[10px] font-black text-slate-800 uppercase tracking-tighter">{c.name}</p>
-                              <p className="text-[8px] text-slate-400 truncate">{c.addresses[0]}</p>
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                      {selectedClient && (
-                        <div className="mt-2 bg-blue-50 p-4 rounded-2xl border border-blue-100 flex flex-col gap-1">
-                          <div className="flex justify-between items-center">
-                            <span className="text-[10px] font-black text-blue-700 uppercase">{selectedClient.name}</span>
-                            <button onClick={() => setSelectedClient(null)} className="text-blue-400 font-black">×</button>
-                          </div>
-                          <p className="text-[8px] text-blue-500 font-bold uppercase truncate">{selectedClient.addresses[0]}</p>
-                        </div>
-                      )}
+                    <div className="text-slate-300 group-hover:text-blue-400 transition-colors">
+                      <Icons.View className="w-4 h-4" />
+                    </div>
+                  </button>
+
+                  {isAvulso && avulsoData.address && (
+                    <div className="px-3 py-2 bg-slate-50 rounded-xl border border-slate-100 flex items-start gap-2">
+                      <div className="mt-0.5 text-slate-400"><Icons.MapPin className="w-3 h-3" /></div>
+                      <p className="text-[8px] font-bold text-slate-500 uppercase leading-tight line-clamp-2">{avulsoData.address}</p>
                     </div>
                   )}
                 </div>
