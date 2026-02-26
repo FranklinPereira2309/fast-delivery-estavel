@@ -130,7 +130,6 @@ export interface TableSession {
 
 export interface Order {
   id: string;
-  orderId?: string;
   clientId?: string;
   clientName: string;
   clientAddress?: string;
