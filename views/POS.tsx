@@ -562,7 +562,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
               >
                 ×
               </button>
-              <div className="flex items-center justify-between mb-4 px-2">
+              <div className="flex items-center gap-4 mb-4 px-2">
                 <button
                   onClick={() => {
                     setIsSplitPayment(!isSplitPayment);
@@ -638,6 +638,11 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
               {/* Render Payment Details based on selection */}
               {(paymentMethod === 'DINHEIRO' || (isSplitPayment && paymentMethod2 === 'DINHEIRO')) && (
                 <div className="space-y-6 animate-in zoom-in-95 duration-200 mb-6">
+                  <div className="p-6 bg-blue-50/50 rounded-[2rem] border-2 border-blue-100 flex flex-col items-center justify-center">
+                    <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-1">Total da Compra</span>
+                    <span className="text-4xl font-black text-blue-700 tracking-tighter">R$ {cartTotal.toFixed(2)}</span>
+                  </div>
+
                   <div className="space-y-2">
                     <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Valor Recebido em Dinheiro (R$)</label>
                     <input
@@ -1102,43 +1107,8 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                 </div>
               )}
 
-              {/* HIDE PAYMENT METHODS UNLESS READY */}
-              <div
-                onClick={() => {
-                  if (cart.length === 0) return showAlert("Carrinho Vazio", "Adicione produtos antes de selecionar a forma de pagamento.", "INFO");
+              {/* HIDE REDUNDANT "Forma de Recebimento" button - Removed as per user request */}
 
-                  // Rule: Counter sales must be READY before payment
-                  if (saleType === SaleType.COUNTER && !editingOrderId) {
-                    return showAlert("Fluxo de Balcão", "Para vendas de Balcão, primeiro envie o pedido para a cozinha. O recebimento é habilitado após o pedido ficar 'PRONTO'.", "INFO");
-                  }
-
-                  setIsPaymentModalOpen(true);
-                }}
-                className={`w-full p-4 rounded-2xl flex items-center justify-between group transition-all shadow-lg shadow-blue-100 ${(saleType === SaleType.COUNTER && !editingOrderId)
-                  ? 'bg-slate-200 text-slate-400 cursor-not-allowed grayscale'
-                  : 'bg-blue-600 text-white cursor-pointer hover:bg-blue-700'
-                  }`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="bg-white/20 p-2 rounded-xl">
-                    {saleType === SaleType.COUNTER && !editingOrderId ? (
-                      <Icons.POS className="w-4 h-4 text-slate-400" /> // Using POS icon as fallback
-                    ) : (
-                      <Icons.CreditCard className="w-4 h-4 text-white" />
-                    )}
-                  </div>
-                  <div className="text-left">
-                    <p className="text-[10px] font-black uppercase tracking-tighter">Forma de Recebimento</p>
-                  </div>
-                </div>
-                {saleType === SaleType.COUNTER && !editingOrderId ? (
-                  <div className="bg-white/20 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest flex items-center gap-1">
-                    Bloqueado
-                  </div>
-                ) : (
-                  <div className="bg-white/20 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest">SELECIONAR</div>
-                )}
-              </div>
             </div>
           </div>
 
