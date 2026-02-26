@@ -58,6 +58,9 @@ const SalesMonitor: React.FC = () => {
 
     setOrders(sortedOrders);
     setBusinessSettings(s);
+    if (sortedOrders.some(o => o.nfeStatus)) {
+      console.log('Fiscal orders found in Monitor:', sortedOrders.filter(o => o.nfeStatus));
+    }
   };
 
   const getFriendlySaleType = (type: SaleType | string) => {
@@ -77,7 +80,7 @@ const SalesMonitor: React.FC = () => {
       const prod = products.find(p => p.id === item.productId);
       if (!grouped[item.productId]) {
         grouped[item.productId] = {
-          name: prod?.name || '...',
+          name: prod?.name || `Prod #${item.productId.substring(0, 4)}`,
           quantity: 0,
           price: item.price
         };
@@ -131,6 +134,12 @@ const SalesMonitor: React.FC = () => {
                         <span className="text-slate-200">•</span>
                         <span>{getFriendlySaleType(order.type)}</span>
                         <span className="text-blue-600 font-bold">R$ {order.total.toFixed(2)}</span>
+                        {order.nfeStatus === 'EMITTED' && (
+                          <span className="px-1.5 py-0.5 bg-emerald-100 text-emerald-700 text-[8px] font-black rounded-md flex items-center gap-1">
+                            <Icons.QrCode className="w-2 h-2" />
+                            NFC-E
+                          </span>
+                        )}
                       </div>
                     </td>
                     <td className="px-8 py-5">
@@ -150,13 +159,15 @@ const SalesMonitor: React.FC = () => {
                       </p>
                     </td>
                     <td className="px-8 py-5 text-right">
-                      <div className="flex justify-end gap-1 transition-all">
+                      <div className="flex justify-end gap-2 transition-all">
                         <button onClick={() => {
                           setPrintingOrder(order);
                           setIsNfceVisual(false);
                           setEditingPaymentMethod(false);
                           setNewPaymentMethod(order.paymentMethod || 'DINHEIRO');
-                        }} className="p-2 text-slate-300 hover:text-blue-500" title="Reemitir Cupom Simples"><Icons.Print className="w-4 h-4" /></button>
+                        }} className="p-2.5 text-blue-600 hover:bg-blue-50 rounded-2xl border border-blue-100 shadow-sm transition-all active:scale-95" title="Reemitir Cupom Simples">
+                          <Icons.Print className="w-5 h-5" />
+                        </button>
 
                         {order.nfeStatus === 'EMITTED' && (
                           <button onClick={() => {
@@ -164,7 +175,9 @@ const SalesMonitor: React.FC = () => {
                             setIsNfceVisual(true);
                             setEditingPaymentMethod(false);
                             setNewPaymentMethod(order.paymentMethod || 'DINHEIRO');
-                          }} className="p-2 text-slate-300 hover:text-emerald-500" title="Reemitir Cupom Fiscal (NFC-e)"><Icons.QrCode className="w-4 h-4" /></button>
+                          }} className="p-2.5 text-emerald-600 hover:bg-emerald-50 rounded-2xl border border-emerald-100 shadow-sm transition-all active:scale-95" title="Reemitir Cupom Fiscal (NFC-e)">
+                            <Icons.QrCode className="w-5 h-5" />
+                          </button>
                         )}
                       </div>
                     </td>

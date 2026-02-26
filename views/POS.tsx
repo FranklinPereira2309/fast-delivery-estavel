@@ -463,6 +463,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       nfeUrl: emitNfce ? `https://sefaz.gov.br/nfce/qrcode?p=${Date.now()}` : undefined
     };
 
+    console.log('Salvando pedido com metadados fiscais:', orderData);
     await db.saveOrder(orderData, currentUser);
 
     if (isTableSale) {
@@ -754,7 +755,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                 </div>
                 <button
                   onClick={() => setEmitNfce(!emitNfce)}
-                  className={`w-12 h-6 rounded-full transition-all relative ${emitNfce ? 'bg-blue-600' : 'bg-slate-200'}`}
+                  className={`w-12 h-6 rounded-full transition-all relative ${emitNfce ? 'bg-emerald-600 ring-4 ring-emerald-500/20' : 'bg-slate-200'}`}
                 >
                   <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${emitNfce ? 'left-7' : 'left-1'}`}></div>
                 </button>
