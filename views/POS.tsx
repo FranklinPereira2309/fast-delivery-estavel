@@ -5,7 +5,7 @@ import { db, BusinessSettings } from '../services/db';
 import { socket } from '../services/socket';
 import { Icons, PLACEHOLDER_FOOD_IMAGE, formatImageUrl } from '../constants';
 import CustomAlert from '../components/CustomAlert';
-import { validateEmail, validateCPF, validateCNPJ, maskPhone, maskDocument } from '../services/validationUtils';
+import { validateEmail, validateCPF, validateCNPJ, maskPhone, maskDocument, validateCreditCard, getCardBrand, maskCardNumber, maskExpiry } from '../services/validationUtils';
 
 interface POSProps {
   currentUser: User;
@@ -50,6 +50,15 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
   const [currentOrderStatus, setCurrentOrderStatus] = useState<OrderStatus | null>(null);
 
   const [isClientModalOpen, setIsClientModalOpen] = useState(false);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [paymentData, setPaymentData] = useState({
+    receivedAmount: '',
+    cardHolder: '',
+    cardNumber: '',
+    cardExpiry: '',
+    cardCVV: '',
+    pixStatus: 'idle' as 'idle' | 'generating' | 'waiting' | 'paid'
+  });
   const [alertConfig, setAlertConfig] = useState<{ isOpen: boolean, title: string, message: string, onConfirm: () => void, type: 'INFO' | 'DANGER' }>({
     isOpen: false, title: '', message: '', onConfirm: () => { }, type: 'INFO'
   });
@@ -260,6 +269,27 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
     await refreshAllData();
   };
 
+  const processPaymentAndFinalize = async () => {
+    if (paymentMethod === 'DINHEIRO') {
+      const received = parseFloat(paymentData.receivedAmount);
+      if (isNaN(received) || received < cartTotal) {
+        return showAlert("Valor Insuficiente", "O valor recebido deve ser igual ou maior que o total.", "DANGER");
+      }
+    }
+
+    if (paymentMethod === 'CRÉDITO' || paymentMethod === 'DÉBITO') {
+      if (!validateCreditCard(paymentData.cardNumber)) {
+        return showAlert("Cartão Inválido", "O número do cartão informado é inválido.", "DANGER");
+      }
+      if (!paymentData.cardExpiry || paymentData.cardExpiry.length < 5) {
+        return showAlert("Validade Inválida", "Informe a validade do cartão (MM/AA).", "DANGER");
+      }
+    }
+
+    await commitOrder();
+    setIsPaymentModalOpen(false);
+  };
+
   const handleFinalize = async () => {
     if (cart.length === 0) return;
 
@@ -268,7 +298,6 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
     const isDelivery = saleType === SaleType.OWN_DELIVERY;
     const finalTableNum = isTableSale ? parseInt(tableNumberInput) : null;
 
-    // Table Validation
     if (isTableSale) {
       if (isNaN(finalTableNum!)) return showAlert("Erro", "Por favor, informe o número da mesa.", "DANGER");
       const tableOrder = orders.find(o => o.id === `TABLE-${finalTableNum}`);
@@ -282,28 +311,25 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       return;
     }
 
-    if (!selectedClient && avulsoData.email && !validateEmail(avulsoData.email)) {
-      showAlert('Email Inválido', 'Por favor, insira um endereço de email válido.', 'DANGER');
+    if (isCounterSale && !editingOrderId) {
+      await commitOrder();
       return;
     }
 
-    if (!selectedClient && avulsoData.document) {
-      const cleanDoc = avulsoData.document.replace(/\D/g, '');
-      if (cleanDoc.length <= 11) {
-        if (!validateCPF(cleanDoc)) {
-          showAlert('CPF Inválido', 'O CPF informado não é válido.', 'DANGER');
-          return;
-        }
-      } else {
-        if (!validateCNPJ(cleanDoc)) {
-          showAlert('CNPJ Inválido', 'O CNPJ informado não é válido.', 'DANGER');
-          return;
-        }
-      }
+    if (isDelivery) {
+      await commitOrder();
+      return;
     }
 
-    // Busca a sessão da mesa diretamente no banco de garantir que pegamos os dados reais,
-    // mesmo que ela esteja apenas 'occupied' (e não 'billing' no pendingTables)
+    setIsPaymentModalOpen(true);
+  };
+
+  const commitOrder = async () => {
+    const isTableSale = saleType === SaleType.TABLE;
+    const isCounterSale = saleType === SaleType.COUNTER;
+    const isDelivery = saleType === SaleType.OWN_DELIVERY;
+    const finalTableNum = isTableSale ? parseInt(tableNumberInput) : null;
+
     let freshTableSession = isTableSale ? ((await db.getTableSessions()).find(t => t.tableNumber === finalTableNum)) : null;
     let tableSessionToClose = isTableSale ? (freshTableSession || pendingTables.find(t => t.tableNumber === finalTableNum)) : null;
 
@@ -312,7 +338,6 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       ? (tableSessionToClose?.clientName || `Mesa ${finalTableNum}`)
       : (isAvulso ? avulsoData.name : (selectedClient?.name || 'Consumidor Padrão'));
 
-    // Handle Unregistered/Avulso auto-save
     if (!isTableSale && isAvulso && avulsoData.name && avulsoData.phone) {
       try {
         const formattedPhone = avulsoData.phone.replace(/\D/g, '');
@@ -342,40 +367,6 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
 
     if (!finalClientId) finalClientId = 'ANONYMOUS';
 
-    // Counter Validation (New order must go to kitchen)
-    if (isCounterSale && !editingOrderId) {
-      // Just save and send to kitchen
-      const orderData: Order = {
-        id: `PED-${Date.now()}`,
-        clientId: finalClientId,
-        clientName: finalClientName,
-        clientAddress: isAvulso ? avulsoData.address : (selectedClient?.addresses[0] || undefined),
-        clientPhone: isAvulso ? avulsoData.phone : (selectedClient?.phone || undefined),
-        clientEmail: isAvulso ? avulsoData.email : (selectedClient?.email || undefined),
-        clientDocument: isAvulso ? avulsoData.document : (selectedClient?.document || undefined),
-        items: [...cart],
-        total: cartTotal,
-        status: OrderStatus.PREPARING,
-        type: SaleType.COUNTER,
-        createdAt: new Date().toISOString(),
-        deliveryFee: (saleType === SaleType.OWN_DELIVERY) ? deliveryFeeValue : undefined,
-        paymentMethod: undefined,
-        isOriginDigitalMenu: false
-      };
-      await db.saveOrder(orderData, currentUser);
-      showAlert("Enviado para Cozinha", `Pedido de balcão (${finalClientName}) enviado para preparo.`, "INFO");
-      clearState();
-      await refreshAllData();
-      return;
-    }
-
-    // Counter Validation (Must be Ready to take payment)
-    if (isCounterSale && editingOrderId) {
-      if (currentOrderStatus !== OrderStatus.READY) {
-        return showAlert("Não Pronto", "Este pedido ainda não está pronto para recebimento.", "DANGER");
-      }
-    }
-
     const finalAddress = isTableSale
       ? (pendingTables.find(t => t.tableNumber === finalTableNum)?.clientAddress || undefined)
       : (isAvulso ? avulsoData.address : (selectedClient?.addresses[0] || undefined));
@@ -393,45 +384,6 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       : (isAvulso ? avulsoData.document : (selectedClient?.document || undefined));
 
     const existingTableOrderId = isTableSale ? `TABLE-${finalTableNum}` : null;
-
-    // Delivery Validation
-    if (isDelivery) {
-      if (isAvulso) {
-        if (!avulsoData.name || !avulsoData.address || !avulsoData.phone) {
-          return showAlert("Dados Faltantes", "Para Delivery Avulso, preencha Nome, Endereço e Telefone.", "DANGER");
-        }
-      } else if (!selectedClient) {
-        return showAlert("Cliente Requerido", "Para Delivery, selecione um cliente cadastrado ou use a opção 'Avulso'.", "DANGER");
-      }
-
-      // For Delivery, always send to kitchen first
-      const existingOrder = editingOrderId ? orders.find(o => o.id === editingOrderId) : null;
-      const orderData: Order = {
-        id: editingOrderId || `PED-${Date.now()}`,
-        clientId: finalClientId,
-        clientName: finalClientName,
-        clientAddress: finalAddress,
-        clientPhone: finalPhone,
-        clientEmail: finalEmail,
-        clientDocument: finalDocument,
-        items: [...cart],
-        total: cartTotal,
-        status: OrderStatus.PREPARING,
-        type: saleType,
-        createdAt: editingOrderId ? orders.find(o => o.id === editingOrderId)?.createdAt || new Date().toISOString() : new Date().toISOString(),
-        deliveryFee: (saleType === SaleType.OWN_DELIVERY) ? deliveryFeeValue : undefined,
-        paymentMethod: paymentMethod,
-        driverId: existingOrder?.driverId,
-        isOriginDigitalMenu: false
-      };
-
-      await db.saveOrder(orderData, currentUser);
-      showAlert("Enviado para Cozinha", `Pedido de delivery (${finalClientName}) enviado para preparo.`, "INFO");
-      clearState();
-      await refreshAllData();
-      return;
-    }
-
     const existingOrderId = existingTableOrderId || editingOrderId;
     const existingOrder = existingOrderId ? orders.find(o => o.id === existingOrderId) : null;
 
@@ -445,7 +397,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       clientDocument: finalDocument,
       items: [...cart],
       total: cartTotal,
-      status: OrderStatus.DELIVERED,
+      status: (isCounterSale && !editingOrderId) || isDelivery ? OrderStatus.PREPARING : OrderStatus.DELIVERED,
       type: saleType,
       createdAt: existingOrderId ? orders.find(o => o.id === existingOrderId)?.createdAt || new Date().toISOString() : new Date().toISOString(),
       paymentMethod: paymentMethod,
@@ -458,13 +410,6 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
 
     await db.saveOrder(orderData, currentUser);
 
-    // UPDATE LOCAL ORDERS STATE
-    setOrders(prev => {
-      const exists = prev.some(o => o.id === orderData.id);
-      if (exists) return prev.map(o => o.id === orderData.id ? orderData : o);
-      return [orderData, ...prev];
-    });
-
     if (isTableSale) {
       await db.deleteTableSession(finalTableNum!);
       setPendingTables(prev => prev.filter(t => t.tableNumber !== finalTableNum));
@@ -472,8 +417,13 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       setPendingCounterOrders(prev => prev.filter(o => o.id !== editingOrderId));
     }
 
+    if (orderData.status === OrderStatus.PREPARING) {
+      showAlert("Sucesso", "Pedido enviado para a cozinha.", "INFO");
+    } else {
+      setPrintingOrder(orderData);
+    }
+
     clearState();
-    setPrintingOrder(orderData);
     await refreshAllData();
   };
 
@@ -499,7 +449,6 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
     }
   };
 
-  // Cálculo de itens agrupados para exibição na área de pagamentos e cupons
   const groupedCart = useMemo(() => {
     const grouped: Record<string, { product: Product | undefined, quantity: number, price: number }> = {};
     cart.forEach(item => {
@@ -546,6 +495,140 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
   return (
     <div className="flex flex-col h-full gap-2 lg:gap-4 xl:gap-6">
       <CustomAlert {...alertConfig} onConfirm={alertConfig.onConfirm} />
+
+      {/* Payment Selection Modal */}
+      {isPaymentModalOpen && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="bg-white w-[600px] max-w-[95vw] rounded-[3rem] shadow-2xl overflow-hidden border border-slate-100 flex flex-col max-h-[90vh]">
+            <div className="p-8 lg:p-10 border-b border-slate-50 shrink-0">
+              <div className="flex justify-between items-center mb-8">
+                <div>
+                  <h2 className="text-3xl font-black text-slate-800 uppercase tracking-tighter">Pagamento</h2>
+                  <p className="text-xs font-bold text-blue-600 uppercase tracking-widest mt-1">Total a Receber: R$ {cartTotal.toFixed(2)}</p>
+                </div>
+                <button onClick={() => setIsPaymentModalOpen(false)} className="w-12 h-12 flex items-center justify-center bg-slate-100 rounded-full text-slate-400 hover:bg-red-50 hover:text-red-500 transition-all font-black text-2xl">×</button>
+              </div>
+
+              <div className="grid grid-cols-4 gap-3 bg-slate-100 p-2 rounded-[2rem]">
+                {[
+                  { id: 'DINHEIRO', label: 'Dinheiro', icon: Icons.Dashboard },
+                  { id: 'PIX', label: 'PIX', icon: Icons.QrCode },
+                  { id: 'CRÉDITO', label: 'Crédito', icon: Icons.CreditCard },
+                  { id: 'DÉBITO', label: 'Débito', icon: Icons.CreditCard }
+                ].map(method => (
+                  <button
+                    key={method.id}
+                    onClick={() => setPaymentMethod(method.id)}
+                    className={`flex flex-col items-center gap-2 py-4 rounded-3xl transition-all ${paymentMethod === method.id ? 'bg-white text-blue-600 shadow-xl' : 'text-slate-400 hover:bg-slate-200'}`}
+                  >
+                    <method.icon className="w-5 h-5" />
+                    <span className="text-[9px] font-black uppercase tracking-widest">{method.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="p-8 lg:p-10 overflow-y-auto">
+              {paymentMethod === 'DINHEIRO' && (
+                <div className="space-y-6 animate-in zoom-in-95 duration-200">
+                  <div className="space-y-2">
+                    <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Valor Recebido (R$)</label>
+                    <input
+                      type="number"
+                      className="w-full p-6 bg-slate-50 border-2 border-slate-100 rounded-[2rem] text-2xl font-black outline-none focus:border-blue-500 transition-all"
+                      placeholder="0,00"
+                      value={paymentData.receivedAmount}
+                      onChange={e => setPaymentData({ ...paymentData, receivedAmount: e.target.value })}
+                      autoFocus
+                    />
+                  </div>
+                  {parseFloat(paymentData.receivedAmount) > cartTotal && (
+                    <div className="bg-green-50 p-6 rounded-[2rem] border border-green-100 flex items-center justify-between animate-in slide-in-from-top-2">
+                      <span className="text-sm font-black text-green-700 uppercase">Troco para o Cliente:</span>
+                      <span className="text-2xl font-black text-green-600">R$ {(parseFloat(paymentData.receivedAmount) - cartTotal).toFixed(2)}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {(paymentMethod === 'CRÉDITO' || paymentMethod === 'DÉBITO') && (
+                <div className="space-y-6 animate-in zoom-in-95 duration-200">
+                  <div className="space-y-2">
+                    <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Número do Cartão</label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        className="w-full p-6 bg-slate-50 border-2 border-slate-100 rounded-[2rem] text-xl font-black outline-none focus:border-blue-500 transition-all pr-20"
+                        placeholder="0000 0000 0000 0000"
+                        value={paymentData.cardNumber}
+                        onChange={e => setPaymentData({ ...paymentData, cardNumber: maskCardNumber(e.target.value) })}
+                      />
+                      <div className="absolute right-6 top-1/2 -translate-y-1/2 bg-white px-3 py-1.5 rounded-xl border border-slate-100 text-[10px] font-black text-blue-600 shadow-sm uppercase tracking-tighter">
+                        {getCardBrand(paymentData.cardNumber)}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Validade</label>
+                      <input
+                        type="text"
+                        className="w-full p-5 bg-slate-50 border-2 border-slate-100 rounded-[2rem] text-lg font-black outline-none focus:border-blue-500 transition-all text-center"
+                        placeholder="MM/AA"
+                        value={paymentData.cardExpiry}
+                        onChange={e => setPaymentData({ ...paymentData, cardExpiry: maskExpiry(e.target.value) })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">CVV</label>
+                      <input
+                        type="text"
+                        className="w-full p-5 bg-slate-50 border-2 border-slate-100 rounded-[2rem] text-lg font-black outline-none focus:border-blue-500 transition-all text-center"
+                        placeholder="000"
+                        maxLength={3}
+                        value={paymentData.cardCVV}
+                        onChange={e => setPaymentData({ ...paymentData, cardCVV: e.target.value.replace(/\D/g, '') })}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {paymentMethod === 'PIX' && (
+                <div className="flex flex-col items-center py-6 animate-in zoom-in-95 duration-200">
+                  <div className="w-48 h-48 bg-slate-50 rounded-[2.5rem] border-4 border-blue-50 flex items-center justify-center mb-6 relative group overflow-hidden shadow-inner">
+                    <div className="text-slate-200"><Icons.QrCode className="w-24 h-24" /></div>
+                    <div className="absolute inset-0 bg-white/60 backdrop-blur-sm flex items-center justify-center flex-col gap-2 p-4 text-center">
+                      <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-2"></div>
+                      <p className="text-[10px] font-black text-blue-800 uppercase leading-tight">Aguardando Pagamento em Tempo Real...</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText("00020126580014BR.GOV.BCB.PIX0136123e4567-e89b-12d3-a456-42661417400052040000530398654041.005802BR5913Fast Delivery6009Sao Paulo62070503***6304E2CA");
+                      showAlert("Copiado!", "Código PIX Copia e Cola copiado para a área de transferência.");
+                    }}
+                    className="px-8 py-4 bg-slate-100 text-slate-600 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-slate-200 transition-all flex items-center gap-2"
+                  >
+                    <Icons.View className="w-4 h-4" />
+                    PIX Copia e Cola
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div className="p-8 lg:p-10 bg-slate-50 border-t border-slate-100 shrink-0">
+              <button
+                onClick={processPaymentAndFinalize}
+                className="w-full py-6 bg-blue-600 hover:bg-blue-700 text-white rounded-[2rem] font-black uppercase text-lg tracking-widest shadow-2xl shadow-blue-200 transition-all flex items-center justify-center gap-4 group"
+              >
+                <span>Finalizar Pedido</span>
+                <Icons.View className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Client Selection Modal */}
       {isClientModalOpen && (
@@ -888,20 +971,21 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
               )}
 
               {/* HIDE PAYMENT METHODS UNLESS READY */}
-              {((saleType === SaleType.TABLE && (currentOrderStatus === OrderStatus.READY || orders.find(o => o.id === `TABLE-${tableNumber}`)?.status === OrderStatus.READY || pendingTables.some(t => t.tableNumber === tableNumber))) ||
-                (saleType === SaleType.COUNTER && editingOrderId && currentOrderStatus === OrderStatus.READY) ||
-                (saleType === SaleType.OWN_DELIVERY)) ? (
-                <select value={paymentMethod} onChange={e => setPaymentMethod(e.target.value)} className="w-full p-4 bg-slate-100 border-none rounded-2xl text-[10px] font-black uppercase tracking-widest outline-none focus:ring-2 focus:ring-blue-500 font-bold animate-in fade-in duration-300">
-                  <option value="DINHEIRO">Dinheiro Espécie</option>
-                  <option value="PIX">Pagamento Via PIX</option>
-                  <option value="CRÉDITO">Cartão de Crédito</option>
-                  <option value="DÉBITO">Cartão de Débito</option>
-                </select>
-              ) : (
-                <div className="p-4 bg-blue-50 text-blue-600 rounded-2xl text-[9px] font-black uppercase text-center border border-blue-100 italic">
-                  Informar pagamento após o preparo
+              <div
+                onClick={() => setIsPaymentModalOpen(true)}
+                className="w-full p-4 bg-blue-600 text-white rounded-2xl flex items-center justify-between group cursor-pointer hover:bg-blue-700 transition-all shadow-lg shadow-blue-100"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="bg-white/20 p-2 rounded-xl">
+                    <Icons.CreditCard className="w-4 h-4 text-white" />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-[10px] font-black uppercase tracking-tighter">Forma de Recebimento</p>
+                    <p className="text-[11px] font-bold text-blue-100 uppercase mt-0.5">{paymentMethod}</p>
+                  </div>
                 </div>
-              )}
+                <div className="bg-white/20 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest">Alterar</div>
+              </div>
             </div>
           </div>
 

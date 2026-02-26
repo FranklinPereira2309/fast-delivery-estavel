@@ -68,6 +68,11 @@ export interface BusinessSettings {
   isManuallyClosed: boolean;
   operatingHours: string;
   orderTimeoutMinutes: number;
+  // NFC-e Fields
+  ie?: string;
+  cscId?: string;
+  cscToken?: string;
+  isNfeProduction?: boolean;
 }
 
 export interface Waiter {
@@ -95,6 +100,10 @@ export interface Product {
   stock: number;
   imageUrl: string;
   recipe?: RecipeItem[];
+  // Tax Fields
+  ncm?: string;
+  cfop?: string;
+  cest?: string;
 }
 
 export interface OrderItem {
@@ -150,6 +159,11 @@ export interface Order {
   waiterId?: string;
   isOriginDigitalMenu?: boolean;
   updatedAt?: string;
+  // NFe Status
+  nfeStatus?: 'PENDING' | 'EMITTED' | 'ERROR';
+  nfeNumber?: string;
+  nfeUrl?: string;
+  nfeError?: string;
 }
 
 export interface AuditLog {

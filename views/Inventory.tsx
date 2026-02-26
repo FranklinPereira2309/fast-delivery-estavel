@@ -23,7 +23,8 @@ const Inventory: React.FC = () => {
   });
 
   const [prodFormData, setProdFormData] = useState({
-    name: '', price: 0, category: '', imageUrl: '', stock: 0
+    name: '', price: 0, category: '', imageUrl: '', stock: 0,
+    ncm: '', cfop: '', cest: ''
   });
 
   const [tempRecipe, setTempRecipe] = useState<RecipeItem[]>([]);
@@ -90,10 +91,19 @@ const Inventory: React.FC = () => {
   const openProdModal = (product?: Product) => {
     if (product) {
       setEditingProduct(product);
-      setProdFormData({ name: product.name, price: product.price, category: product.category, imageUrl: product.imageUrl || '', stock: product.stock });
+      setProdFormData({
+        name: product.name,
+        price: product.price,
+        category: product.category,
+        imageUrl: product.imageUrl || '',
+        stock: product.stock,
+        ncm: product.ncm || '',
+        cfop: product.cfop || '',
+        cest: product.cest || ''
+      });
     } else {
       setEditingProduct(null);
-      setProdFormData({ name: '', price: 0, category: 'Geral', imageUrl: '', stock: 0 });
+      setProdFormData({ name: '', price: 0, category: 'Geral', imageUrl: '', stock: 0, ncm: '', cfop: '', cest: '' });
     }
     setIsProdModalOpen(true);
   };
@@ -292,6 +302,24 @@ const Inventory: React.FC = () => {
                   <input type="text" value={prodFormData.imageUrl} onChange={e => setProdFormData({ ...prodFormData, imageUrl: e.target.value })} className="flex-1 p-4 bg-slate-100 border-none rounded-2xl text-[10px] font-bold" placeholder="URL da imagem..." />
                   <button type="button" onClick={() => fileInputRef.current?.click()} className="p-4 bg-blue-600 text-white rounded-2xl text-[10px] font-black">UP</button>
                   <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileUpload} />
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-slate-50 space-y-4">
+                <p className="text-[9px] font-black text-blue-600 uppercase tracking-[0.2em] mb-2">Informações Fiscais</p>
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">NCM</label>
+                    <input type="text" placeholder="00000000" value={prodFormData.ncm} onChange={e => setProdFormData({ ...prodFormData, ncm: e.target.value })} className="w-full p-3 bg-slate-50 border-none rounded-xl font-bold text-xs" />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">CFOP</label>
+                    <input type="text" placeholder="5102" value={prodFormData.cfop} onChange={e => setProdFormData({ ...prodFormData, cfop: e.target.value })} className="w-full p-3 bg-slate-50 border-none rounded-xl font-bold text-xs" />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">CEST</label>
+                    <input type="text" placeholder="0000000" value={prodFormData.cest} onChange={e => setProdFormData({ ...prodFormData, cest: e.target.value })} className="w-full p-3 bg-slate-50 border-none rounded-xl font-bold text-xs" />
+                  </div>
                 </div>
               </div>
               <div className="flex gap-4 pt-4">

@@ -91,3 +91,49 @@ export const maskDocument = (value: string): string => {
             .slice(0, 18);
     }
 };
+
+export const validateCreditCard = (number: string): boolean => {
+    const cleanNumber = number.replace(/\D/g, '');
+    if (cleanNumber.length < 13 || cleanNumber.length > 19) return false;
+
+    let sum = 0;
+    let shouldDouble = false;
+    for (let i = cleanNumber.length - 1; i >= 0; i--) {
+        let digit = parseInt(cleanNumber.charAt(i));
+        if (shouldDouble) {
+            digit *= 2;
+            if (digit > 9) digit -= 9;
+        }
+        sum += digit;
+        shouldDouble = !shouldDouble;
+    }
+    return (sum % 10) === 0;
+};
+
+export const getCardBrand = (number: string): string => {
+    const cleanNumber = number.replace(/\D/g, '');
+    const re: Record<string, RegExp> = {
+        visa: /^4/,
+        mastercard: /^5[1-5]/,
+        amex: /^3[47]/,
+        elo: /^(4011(78|79)|43(1274|8935)|45(1417|7393)|50(4175|6699|67|90)|627780|63(6297|6368))/,
+        hipercard: /^(606282|3841)/,
+        visa_electron: /^(4026|417500|4405|4508|4844|4913|4917)/,
+        maestro: /^(5018|5020|5038|6304|6759|6761|6763)/
+    };
+
+    for (const brand in re) {
+        if (re[brand].test(cleanNumber)) {
+            return brand.toUpperCase();
+        }
+    }
+    return 'DESCONHECIDO';
+};
+
+export const maskCardNumber = (value: string): string => {
+    return value.replace(/\D/g, '').replace(/(\d{4})(?=\d)/g, '$1 ').slice(0, 19);
+};
+
+export const maskExpiry = (value: string): string => {
+    return value.replace(/\D/g, '').replace(/(\d{2})(\d)/, '$1/$2').slice(0, 5);
+};

@@ -284,7 +284,7 @@ interface SettingsProps {
 }
 
 const Settings: React.FC<SettingsProps> = ({ settings, setSettings, onReset }) => {
-    const [activeSubTab, setActiveSubTab] = useState<'EMPRESA' | 'HORARIOS' | 'GARCONS' | 'USUARIOS' | 'AUDITORIA' | 'AVANCADO'>('EMPRESA');
+    const [activeSubTab, setActiveSubTab] = useState<'EMPRESA' | 'HORARIOS' | 'FISCAL' | 'GARCONS' | 'USUARIOS' | 'AUDITORIA' | 'AVANCADO'>('EMPRESA');
     const [isSavedAlertOpen, setIsSavedAlertOpen] = useState(false);
     const [storeStatus, setStoreStatus] = useState<{ status: string, is_manually_closed: boolean } | null>(null);
 
@@ -311,6 +311,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings, onReset }) =
     const menuItems = [
         { id: 'EMPRESA', label: 'Empresa', icon: Icons.Dashboard },
         { id: 'HORARIOS', label: 'Horários', icon: Icons.Clock },
+        { id: 'FISCAL', label: 'Fiscal (NFC-e)', icon: Icons.View },
         { id: 'GARCONS', label: 'Garçons', icon: Icons.CRM },
         { id: 'USUARIOS', label: 'Usuários', icon: Icons.POS },
         { id: 'AUDITORIA', label: 'Auditoria', icon: Icons.View },
@@ -437,6 +438,47 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings, onReset }) =
                 )}
 
                 {activeSubTab === 'HORARIOS' && <OperatingHoursSettings settings={settings} setSettings={setSettings} onSave={handleSaveSettings} />}
+
+                {activeSubTab === 'FISCAL' && (
+                    <div className="bg-white p-10 rounded-[3rem] shadow-sm border border-slate-100 max-w-4xl animate-in fade-in">
+                        <div className="mb-10">
+                            <h3 className="text-2xl font-black text-slate-800 uppercase tracking-tighter">Configurações Fiscais</h3>
+                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Credenciais para emissão de NFC-e (Nota Fiscal de Consumidor Eletrônica)</p>
+                        </div>
+                        <form onSubmit={handleSaveSettings} className="space-y-8">
+                            <div className="grid grid-cols-2 gap-8">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Inscrição Estadual (IE)</label>
+                                    <input type="text" className="w-full p-4 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-blue-50 transition-all font-bold text-sm" value={settings.ie || ''} onChange={e => setSettings({ ...settings, ie: e.target.value })} placeholder="Isento ou Número da IE" />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Ambiente de Emissão</label>
+                                    <select className="w-full p-4 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-blue-50 transition-all font-bold text-sm" value={settings.isNfeProduction ? 'true' : 'false'} onChange={e => setSettings({ ...settings, isNfeProduction: e.target.value === 'true' })}>
+                                        <option value="false">Homologação (Testes)</option>
+                                        <option value="true">Produção (Valor Fiscal)</option>
+                                    </select>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">ID do Código de Segurança (CSC ID)</label>
+                                    <input type="text" className="w-full p-4 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-blue-50 transition-all font-bold text-sm" value={settings.cscId || ''} onChange={e => setSettings({ ...settings, cscId: e.target.value })} placeholder="000001" />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Token CSC</label>
+                                    <input type="text" className="w-full p-4 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-blue-50 transition-all font-bold text-sm" value={settings.cscToken || ''} onChange={e => setSettings({ ...settings, cscToken: e.target.value })} placeholder="ABC-123-..." />
+                                </div>
+                            </div>
+                            <div className="p-6 bg-blue-50 rounded-3xl border border-blue-100 flex items-start gap-4">
+                                <div className="mt-1 text-blue-600"><Icons.View className="w-5 h-5" /></div>
+                                <div>
+                                    <p className="text-[10px] font-black text-blue-800 uppercase tracking-widest mb-1">Aviso Importante</p>
+                                    <p className="text-[11px] text-blue-700 font-bold leading-relaxed">Para emitir NFC-e, sua empresa deve estar credenciada na SEFAZ do seu estado e possuir um Certificado Digital (A1) instalado no servidor de mensageria.</p>
+                                </div>
+                            </div>
+                            <button type="submit" className="w-full md:w-auto bg-blue-600 text-white px-12 py-5 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-blue-700 transition-all shadow-2xl shadow-blue-100">Salvar Dados Fiscais</button>
+                        </form>
+                    </div>
+                )}
+
                 {activeSubTab === 'GARCONS' && <WaiterManagement />}
                 {activeSubTab === 'USUARIOS' && <UserManagementInternal />}
                 {activeSubTab === 'AUDITORIA' && <div className="bg-white p-8 rounded-[3rem] border border-slate-100"><AuditLogs /></div>}
