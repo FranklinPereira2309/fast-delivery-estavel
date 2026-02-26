@@ -51,6 +51,9 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
 
   const [isClientModalOpen, setIsClientModalOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [isSplitPayment, setIsSplitPayment] = useState(false);
+  const [paymentMethod2, setPaymentMethod2] = useState<string>('');
+  const [splitAmount1, setSplitAmount1] = useState<string>('');
   const [paymentData, setPaymentData] = useState({
     receivedAmount: '',
     cardHolder: '',
@@ -270,19 +273,56 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
   };
 
   const processPaymentAndFinalize = async () => {
-    if (paymentMethod === 'DINHEIRO') {
-      const received = parseFloat(paymentData.receivedAmount);
-      if (isNaN(received) || received < cartTotal) {
-        return showAlert("Valor Insuficiente", "O valor recebido deve ser igual ou maior que o total.", "DANGER");
-      }
-    }
+    const total = cartTotal;
 
-    if (paymentMethod === 'CRÉDITO' || paymentMethod === 'DÉBITO') {
-      if (!validateCreditCard(paymentData.cardNumber)) {
-        return showAlert("Cartão Inválido", "O número do cartão informado é inválido.", "DANGER");
+    if (!isSplitPayment) {
+      if (paymentMethod === 'DINHEIRO') {
+        const received = parseFloat(paymentData.receivedAmount);
+        if (isNaN(received) || received < total) {
+          return showAlert("Valor Insuficiente", "O valor recebido deve ser igual ou maior que o total.", "DANGER");
+        }
       }
-      if (!paymentData.cardExpiry || paymentData.cardExpiry.length < 5) {
-        return showAlert("Validade Inválida", "Informe a validade do cartão (MM/AA).", "DANGER");
+
+      if (paymentMethod === 'CRÉDITO' || paymentMethod === 'DÉBITO') {
+        if (!validateCreditCard(paymentData.cardNumber)) {
+          return showAlert("Cartão Inválido", "O número do cartão informado é inválido.", "DANGER");
+        }
+        if (!paymentData.cardExpiry || paymentData.cardExpiry.length < 5) {
+          return showAlert("Validade Inválida", "Informe a validade do cartão (MM/AA).", "DANGER");
+        }
+      }
+    } else {
+      const am1 = parseFloat(splitAmount1) || 0;
+      const am2 = total - am1;
+
+      if (am1 <= 0 || am1 >= total) {
+        return showAlert("Valor Inválido", "O valor do primeiro pagamento deve ser maior que zero e menor que o total.", "DANGER");
+      }
+
+      if (!paymentMethod2) {
+        return showAlert("Segundo Método", "Selecione a segunda forma de pagamento.", "DANGER");
+      }
+
+      // Check change for Cash in either slot
+      if (paymentMethod === 'DINHEIRO') {
+        const received = parseFloat(paymentData.receivedAmount);
+        if (isNaN(received) || received < am1) {
+          return showAlert("Valor Insuficiente", "O valor recebido em Dinheiro (Met. 1) deve ser >= " + am1.toFixed(2), "DANGER");
+        }
+      }
+
+      if (paymentMethod2 === 'DINHEIRO') {
+        const received = parseFloat(paymentData.receivedAmount); // Reuse receivedAmount for the cash portion
+        if (isNaN(received) || received < am2) {
+          return showAlert("Valor Insuficiente", "O valor recebido em Dinheiro (Met. 2) deve ser >= " + am2.toFixed(2), "DANGER");
+        }
+      }
+
+      // Basic card validation if either is card
+      if (paymentMethod === 'CRÉDITO' || paymentMethod === 'DÉBITO' || paymentMethod2 === 'CRÉDITO' || paymentMethod2 === 'DÉBITO') {
+        if (paymentData.cardNumber && !validateCreditCard(paymentData.cardNumber)) {
+          return showAlert("Cartão Inválido", "O número do cartão informado é inválido.", "DANGER");
+        }
       }
     }
 
@@ -291,7 +331,9 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
   };
 
   const handleFinalize = async () => {
-    if (cart.length === 0) return;
+    if (cart.length === 0) {
+      return showAlert("Carrinho Vazio", "Adicione produtos antes de finalizar.", "INFO");
+    }
 
     const isTableSale = saleType === SaleType.TABLE;
     const isCounterSale = saleType === SaleType.COUNTER;
@@ -400,7 +442,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       status: (isCounterSale && !editingOrderId) || isDelivery ? OrderStatus.PREPARING : OrderStatus.DELIVERED,
       type: saleType,
       createdAt: existingOrderId ? orders.find(o => o.id === existingOrderId)?.createdAt || new Date().toISOString() : new Date().toISOString(),
-      paymentMethod: paymentMethod,
+      paymentMethod: isSplitPayment ? `${paymentMethod} + ${paymentMethod2}` : paymentMethod,
       driverId: existingOrder?.driverId,
       deliveryFee: (saleType === SaleType.OWN_DELIVERY) ? deliveryFeeValue : undefined,
       tableNumber: isTableSale ? finalTableNum! : undefined,
@@ -438,6 +480,9 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
     setIsAvulso(false);
     setAvulsoData({ name: '', phone: '', address: '', cep: '', email: '', document: '' });
     setManualDeliveryFee(null);
+    setIsSplitPayment(false);
+    setPaymentMethod2('');
+    setSplitAmount1('');
   };
 
   const getFriendlySaleType = (type: SaleType | string) => {
@@ -501,15 +546,23 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
         <div className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
           <div className="bg-white w-[600px] max-w-[95vw] rounded-[3rem] shadow-2xl overflow-hidden border border-slate-100 flex flex-col max-h-[90vh]">
             <div className="p-8 lg:p-10 border-b border-slate-50 shrink-0">
-              <div className="flex justify-between items-center mb-8">
-                <div>
-                  <h2 className="text-3xl font-black text-slate-800 uppercase tracking-tighter">Pagamento</h2>
-                  <p className="text-xs font-bold text-blue-600 uppercase tracking-widest mt-1">Total a Receber: R$ {cartTotal.toFixed(2)}</p>
-                </div>
-                <button onClick={() => setIsPaymentModalOpen(false)} className="w-12 h-12 flex items-center justify-center bg-slate-100 rounded-full text-slate-400 hover:bg-red-50 hover:text-red-500 transition-all font-black text-2xl">×</button>
+              <div className="flex items-center justify-between mb-4 px-2">
+                <button
+                  onClick={() => {
+                    setIsSplitPayment(!isSplitPayment);
+                    if (!isSplitPayment) {
+                      setPaymentMethod2('PIX');
+                      setSplitAmount1((cartTotal / 2).toFixed(2));
+                    }
+                  }}
+                  className={`text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-full transition-all ${isSplitPayment ? 'bg-blue-600 text-white shadow-md' : 'bg-slate-100 text-slate-500'}`}
+                >
+                  {isSplitPayment ? '✓ Pagamento Dividido' : '+ Dividir Pagamento'}
+                </button>
+                {isSplitPayment && <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Selecione 02 Métodos</span>}
               </div>
 
-              <div className="grid grid-cols-4 gap-3 bg-slate-100 p-2 rounded-[2rem]">
+              <div className="grid grid-cols-4 gap-3 bg-slate-100 p-2 rounded-[2rem] mb-4">
                 {[
                   { id: 'DINHEIRO', label: 'Dinheiro', icon: Icons.Dashboard },
                   { id: 'PIX', label: 'PIX', icon: Icons.QrCode },
@@ -526,28 +579,75 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                   </button>
                 ))}
               </div>
+
+              {isSplitPayment && (
+                <div className="space-y-4 animate-in slide-in-from-top-2 duration-300">
+                  <div className="bg-blue-50/50 p-4 rounded-3xl border border-blue-100">
+                    <label className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-2 block">Quanto no 1º Método ({paymentMethod})?</label>
+                    <input
+                      type="number"
+                      className="w-full p-4 bg-white border-2 border-blue-100 rounded-2xl text-lg font-black outline-none focus:border-blue-500 transition-all"
+                      value={splitAmount1}
+                      onChange={e => setSplitAmount1(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-4 gap-3 bg-slate-100 p-2 rounded-[2rem]">
+                    {[
+                      { id: 'DINHEIRO', label: 'Dinheiro', icon: Icons.Dashboard },
+                      { id: 'PIX', label: 'PIX', icon: Icons.QrCode },
+                      { id: 'CRÉDITO', label: 'Crédito', icon: Icons.CreditCard },
+                      { id: 'DÉBITO', label: 'Débito', icon: Icons.CreditCard }
+                    ].map(method => (
+                      <button
+                        key={method.id}
+                        onClick={() => setPaymentMethod2(method.id)}
+                        className={`flex flex-col items-center gap-2 py-4 rounded-3xl transition-all ${paymentMethod2 === method.id ? 'bg-white text-blue-600 shadow-xl' : 'text-slate-400 hover:bg-slate-200'}`}
+                      >
+                        <method.icon className="w-5 h-5" />
+                        <span className="text-[9px] font-black uppercase tracking-widest">{method.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <div className="px-4 py-2 text-center">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                      2º Método ({paymentMethod2}): <span className="text-blue-600">R$ {(cartTotal - (parseFloat(splitAmount1) || 0)).toFixed(2)}</span>
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="p-8 lg:p-10 overflow-y-auto">
-              {paymentMethod === 'DINHEIRO' && (
-                <div className="space-y-6 animate-in zoom-in-95 duration-200">
+              {/* Render Payment Details based on selection */}
+              {(paymentMethod === 'DINHEIRO' || (isSplitPayment && paymentMethod2 === 'DINHEIRO')) && (
+                <div className="space-y-6 animate-in zoom-in-95 duration-200 mb-6">
                   <div className="space-y-2">
-                    <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Valor Recebido (R$)</label>
+                    <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Valor Recebido em Dinheiro (R$)</label>
                     <input
                       type="number"
                       className="w-full p-6 bg-slate-50 border-2 border-slate-100 rounded-[2rem] text-2xl font-black outline-none focus:border-blue-500 transition-all"
                       placeholder="0,00"
                       value={paymentData.receivedAmount}
                       onChange={e => setPaymentData({ ...paymentData, receivedAmount: e.target.value })}
-                      autoFocus
+                      autoFocus={!isSplitPayment}
                     />
                   </div>
-                  {parseFloat(paymentData.receivedAmount) > cartTotal && (
-                    <div className="bg-green-50 p-6 rounded-[2rem] border border-green-100 flex items-center justify-between animate-in slide-in-from-top-2">
-                      <span className="text-sm font-black text-green-700 uppercase">Troco para o Cliente:</span>
-                      <span className="text-2xl font-black text-green-600">R$ {(parseFloat(paymentData.receivedAmount) - cartTotal).toFixed(2)}</span>
-                    </div>
-                  )}
+                  {(() => {
+                    const amCash = !isSplitPayment
+                      ? cartTotal
+                      : (paymentMethod === 'DINHEIRO' ? parseFloat(splitAmount1) : (cartTotal - parseFloat(splitAmount1)));
+                    const received = parseFloat(paymentData.receivedAmount) || 0;
+                    if (received > amCash && amCash > 0) {
+                      return (
+                        <div className="bg-green-50 p-6 rounded-[2rem] border border-green-100 flex items-center justify-between animate-in slide-in-from-top-2">
+                          <span className="text-sm font-black text-green-700 uppercase">Troco para o Cliente:</span>
+                          <span className="text-2xl font-black text-green-600">R$ {(received - amCash).toFixed(2)}</span>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
                 </div>
               )}
 
@@ -821,7 +921,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                 }}
                 className="flex-1 py-4 bg-white border border-slate-200 text-slate-500 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-red-50 hover:text-red-500 hover:border-red-100 transition-all"
               >
-                Limpar / Deslogar
+                Limpar / Voltar
               </button>
             </div>
           </div>
@@ -972,7 +1072,10 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
 
               {/* HIDE PAYMENT METHODS UNLESS READY */}
               <div
-                onClick={() => setIsPaymentModalOpen(true)}
+                onClick={() => {
+                  if (cart.length === 0) return showAlert("Carrinho Vazio", "Adicione produtos antes de selecionar a forma de pagamento.", "INFO");
+                  setIsPaymentModalOpen(true);
+                }}
                 className="w-full p-4 bg-blue-600 text-white rounded-2xl flex items-center justify-between group cursor-pointer hover:bg-blue-700 transition-all shadow-lg shadow-blue-100"
               >
                 <div className="flex items-center gap-3">
@@ -981,10 +1084,9 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                   </div>
                   <div className="text-left">
                     <p className="text-[10px] font-black uppercase tracking-tighter">Forma de Recebimento</p>
-                    <p className="text-[11px] font-bold text-blue-100 uppercase mt-0.5">{paymentMethod}</p>
                   </div>
                 </div>
-                <div className="bg-white/20 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest">Alterar</div>
+                <div className="bg-white/20 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest">SELECIONAR</div>
               </div>
             </div>
           </div>
