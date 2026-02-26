@@ -54,7 +54,12 @@ const CartModal: React.FC<CartModalProps> = ({ isOpen, onClose, cart, tableNumbe
                 }, 3000);
             } catch (e: any) {
                 console.error(e);
-                alert(e.message || "Erro ao enviar o pedido.");
+                if (e.pin_required || e.message?.toLowerCase().includes('pin') || e.message?.toLowerCase().includes('sessão inválida')) {
+                    alert("Sessão expirada ou PIN necessário. A página será recarregada.");
+                    window.location.reload();
+                } else {
+                    alert(e.message || "Erro ao enviar o pedido.");
+                }
                 setIsSubmitting(false);
             }
         };

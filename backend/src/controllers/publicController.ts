@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { getIO } from '../socket';
 import { getStoreStatus } from '../storeStatusCache';
 import prisma from '../prisma';
+import crypto from 'crypto';
 
 export const getStoreStatusEndpoint = (req: Request, res: Response) => {
     res.json(getStoreStatus());
@@ -23,6 +24,7 @@ export const getProducts = async (req: Request, res: Response) => {
 export const verifyTable = async (req: Request, res: Response) => {
     const { id } = req.params;
     const tableNumber = parseInt(id as string);
+    const token = req.headers.authorization?.replace('Bearer ', '');
 
     if (isNaN(tableNumber)) {
         return res.status(400).json({ message: 'Invalid table number' });
@@ -36,27 +38,92 @@ export const verifyTable = async (req: Request, res: Response) => {
         }
 
         // 2. Busca a sessão atual da mesa
-        const session = await prisma.tableSession.findUnique({
+        let session = await prisma.tableSession.findUnique({
             where: { tableNumber }
         });
 
-        // Se estiver ocupada ou fechando conta, não deixamos acessar ou informamos o status
-        if (session && session.status === 'billing') {
+        // 3. Se a mesa estiver disponível (ou não houver sessão), criamos uma nova com PIN
+        if (!session || session.status === 'available') {
+            const pin = Math.floor(1000 + Math.random() * 9000).toString(); // PIN de 4 dígitos
+            const sessionToken = crypto.randomBytes(32).toString('hex');
+
+            session = await prisma.tableSession.upsert({
+                where: { tableNumber },
+                create: {
+                    tableNumber,
+                    status: 'available', // Começa como livre no banco, mas com PIN gerado
+                    pin,
+                    sessionToken
+                },
+                update: {
+                    pin,
+                    sessionToken,
+                    // Ao resetar para novo PIN, garantimos que status seja ocupada assim que o primeiro acesse
+                    // Na verdade, o primeiro acesso via QR Code já deve marcar como ocupada se for o dono.
+                }
+            });
+
+            return res.json({
+                tableNumber,
+                status: 'available',
+                pin, // Retorna o PIN apenas no primeiro acesso (quem gera)
+                sessionToken
+            });
+        }
+
+        // 4. Se estiver ocupada ou fechando conta, verificamos o token
+        if (session.status === 'billing') {
             return res.status(403).json({
                 message: 'Mesa bloqueada: fechamento de conta em andamento.',
                 status: 'billing'
             });
         }
 
+        // 5. Se estiver ocupada, verificamos se o token enviado é válido
+        if (session.sessionToken && token !== session.sessionToken) {
+            return res.status(401).json({
+                message: 'Mesa em Atendimento - Informe o Pin',
+                pin_required: true
+            });
+        }
+
         res.json({
             tableNumber,
-            status: session ? session.status : 'available',
-            clientName: session?.clientName || null
+            status: session.status,
+            clientName: session.clientName || null,
+            pin: session.pin // Para quem já tem o token, o PIN fica disponível
         });
 
     } catch (error) {
         console.error('Error verifying table:', error);
         res.status(500).json({ message: 'Error verifying table' });
+    }
+};
+
+export const validatePin = async (req: Request, res: Response) => {
+    const { tableNumber, pin } = req.body;
+
+    if (!tableNumber || !pin) {
+        return res.status(400).json({ message: 'Mesa ou PIN não informados.' });
+    }
+
+    try {
+        const session = await prisma.tableSession.findUnique({
+            where: { tableNumber: parseInt(tableNumber) }
+        });
+
+        if (!session || session.pin !== pin) {
+            return res.status(401).json({ message: 'PIN incorreto. Peça ao responsável pela mesa.' });
+        }
+
+        res.json({
+            message: 'PIN validado com sucesso.',
+            sessionToken: session.sessionToken
+        });
+
+    } catch (error) {
+        console.error('Error validating PIN:', error);
+        res.status(500).json({ message: 'Erro ao validar PIN.' });
     }
 };
 
@@ -84,6 +151,13 @@ export const createOrder = async (req: Request, res: Response) => {
     }
 
     try {
+        const token = req.headers.authorization?.replace('Bearer ', '');
+        const session = await prisma.tableSession.findUnique({ where: { tableNumber: parseInt(tableNumber) } });
+
+        if (!session || (session.sessionToken && token !== session.sessionToken)) {
+            return res.status(401).json({ message: 'Sessão inválida. Por favor, valide o PIN da mesa novamente.' });
+        }
+
         // --- Verificação de Geofencing ---
         const settings = await prisma.businessSettings.findFirst();
         if (settings && settings.restaurantLat && settings.restaurantLng && settings.geofenceRadius && settings.geofenceRadius > 0) {

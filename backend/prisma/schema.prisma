@@ -197,6 +197,8 @@ model TableSession {
   hasPendingDigital  Boolean       @default(false)
   pendingReviewItems String?       // To store stringified array of requested digital items before approval
   isOriginDigitalMenu Boolean      @default(false)
+  pin                String?
+  sessionToken       String?
 }
 
 model DeliveryDriver {

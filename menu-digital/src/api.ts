@@ -6,6 +6,20 @@ import { Product } from './types';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/public';
 const SOCKET_URL = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api/public', '') : 'http://localhost:3000';
 
+// Configuração do axios para incluir o token de sessão se existir
+axios.interceptors.request.use((config) => {
+    // Busca o token do localStorage baseado na mesa se possível, ou um global
+    // Para simplificar, vamos tentar buscar 'sessionToken_MesaX'
+    const tableNum = new URLSearchParams(window.location.search).get('mesa');
+    if (tableNum) {
+        const token = localStorage.getItem(`sessionToken_${tableNum}`);
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+    }
+    return config;
+});
+
 export const socket = io(SOCKET_URL, {
     autoConnect: true,
     reconnection: true,
@@ -48,14 +62,24 @@ export const fetchProducts = async (): Promise<Product[]> => {
     }
 };
 
-export const verifyTable = async (tableNumber: string): Promise<{ tableNumber: number, status: string, clientName: string | null }> => {
+export const verifyTable = async (tableNumber: string): Promise<{ tableNumber: number, status: string, clientName: string | null, pin?: string, sessionToken?: string }> => {
     try {
         const response = await axios.get(`${API_URL}/tables/${tableNumber}/verify`);
         return response.data;
     } catch (error: any) {
         console.error('Error verifying table', error);
-        // Propaga o erro caso a mesa não exista ou esteja bloqueada (403, 404)
+        // Propaga o erro caso a mesa não exista ou esteja bloqueada (403, 404, 401)
         throw error.response?.data || { message: 'Erro desconhecido' };
+    }
+};
+
+export const validatePin = async (tableNumber: string, pin: string): Promise<{ sessionToken: string }> => {
+    try {
+        const response = await axios.post(`${API_URL}/tables/validate-pin`, { tableNumber, pin });
+        return response.data;
+    } catch (error: any) {
+        console.error('Error validating PIN', error);
+        throw error.response?.data || { message: 'Erro ao validar PIN.' };
     }
 };
 

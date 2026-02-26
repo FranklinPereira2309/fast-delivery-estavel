@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route, useSearchParams } from 'react-router-dom'
 import Home from './components/Home';
 import CartModal from './components/CartModal';
 import { CartItem } from './types';
-import { verifyTable, socket, fetchStoreStatus, StoreStatus } from './api';
+import { verifyTable, socket, fetchStoreStatus, StoreStatus, validatePin } from './api';
 
 function AppContent() {
   const [searchParams] = useSearchParams();
@@ -17,6 +17,11 @@ function AppContent() {
   const [isBilling, setIsBilling] = useState(false);
   const [tableError, setTableError] = useState<string | null>(null);
   const [clientName, setClientName] = useState<string | null>(null);
+  const [isPinRequired, setIsPinRequired] = useState(false);
+  const [pinInput, setPinInput] = useState('');
+  const [pinError, setPinError] = useState<string | null>(null);
+  const [currentPin, setCurrentPin] = useState<string | null>(null);
+  const [showPinInfo, setShowPinInfo] = useState(false);
 
   // Status da Loja
   const [storeStatus, setStoreStatus] = useState<StoreStatus>({ status: 'online', is_manually_closed: false, next_status_change: null });
@@ -42,22 +47,52 @@ function AppContent() {
 
     try {
       const data = await verifyTable(tableParam);
+
+      // Se retornou token ou pin, salva (primeiro acesso)
+      if (data.sessionToken) {
+        localStorage.setItem(`sessionToken_${tableParam}`, data.sessionToken);
+      }
+      if (data.pin) {
+        setCurrentPin(data.pin);
+      }
+
       setTableNumber(tableParam);
       setClientName(data.clientName);
       setTableError(null);
+      setIsPinRequired(false);
       setIsBilling(false);
       setIsValidating(false);
     } catch (err: any) {
       if (err.status === 'billing') {
         setIsBilling(true);
         setTableError(null);
+        setIsPinRequired(false);
+      } else if (err.pin_required) {
+        setIsPinRequired(true);
+        setTableError(null);
+        setIsBilling(false);
       } else {
         setTableError(err.message || 'Erro ao validar a mesa.');
         setIsBilling(false);
+        setIsPinRequired(false);
       }
       setIsValidating(false);
     }
   }, [tableParam]);
+
+  const handlePinSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!tableParam || pinInput.length < 4) return;
+
+    try {
+      const { sessionToken } = await validatePin(tableParam, pinInput);
+      localStorage.setItem(`sessionToken_${tableParam}`, sessionToken);
+      setIsPinRequired(false);
+      fetchTableData();
+    } catch (err: any) {
+      setPinError(err.message || 'PIN incorreto');
+    }
+  };
 
   // Atualizar mesa e verificar no início
   useEffect(() => {
@@ -164,6 +199,49 @@ function AppContent() {
     );
   }
 
+  if (isPinRequired) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-6 bg-slate-900 text-white text-center">
+        <div className="max-w-md w-full space-y-8 animate-in fade-in zoom-in duration-500">
+          <div className="w-20 h-20 bg-blue-600 rounded-3xl mx-auto flex items-center justify-center shadow-2xl shadow-blue-500/40">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+          </div>
+          <div className="space-y-3">
+            <h1 className="text-2xl font-black uppercase tracking-tighter">Mesa em Atendimento</h1>
+            <p className="text-slate-400">Esta mesa já possui um atendimento iniciado. Informe o PIN para entrar.</p>
+          </div>
+
+          <form onSubmit={handlePinSubmit} className="space-y-4">
+            <input
+              type="text"
+              inputMode="numeric"
+              maxLength={4}
+              value={pinInput}
+              onChange={(e) => {
+                setPinInput(e.target.value.replace(/\D/g, ''));
+                setPinError(null);
+              }}
+              placeholder="Digite o PIN de 4 dígitos"
+              className="w-full bg-slate-800 border-2 border-slate-700 rounded-2xl py-4 px-6 text-center text-2xl font-black tracking-[1em] focus:border-blue-500 outline-none transition-all placeholder:text-sm placeholder:tracking-normal placeholder:font-medium"
+            />
+            {pinError && <p className="text-red-500 text-sm font-bold animate-shake">{pinError}</p>}
+            <button
+              type="submit"
+              disabled={pinInput.length < 4}
+              className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-black py-4 rounded-2xl transition-all shadow-xl shadow-blue-900/40 uppercase tracking-widest text-sm"
+            >
+              Validar Acesso
+            </button>
+          </form>
+
+          <p className="text-xs text-slate-500">O PIN é fornecido pela primeira pessoa que acessou a mesa.</p>
+        </div>
+      </div>
+    );
+  }
+
   if (tableError || !tableNumber) {
     return (
       <div className="min-h-screen flex items-center justify-center p-6 bg-slate-900 text-white text-center">
@@ -197,6 +275,28 @@ function AppContent() {
             </p>
           </div>
         </div>
+
+        {currentPin && (
+          <div className="relative">
+            <button
+              onClick={() => setShowPinInfo(!showPinInfo)}
+              className="p-3 bg-slate-100 text-slate-600 rounded-xl hover:bg-blue-50 hover:text-blue-600 transition-all flex items-center gap-2 group"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+              </svg>
+              <span className="text-[10px] font-black uppercase tracking-widest hidden sm:block">PIN: {currentPin}</span>
+            </button>
+
+            {showPinInfo && (
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-2xl border border-slate-100 p-4 z-50 animate-in fade-in slide-in-from-top-2">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Seu PIN de Acesso</p>
+                <div className="text-2xl font-black text-blue-600 tracking-widest">{currentPin}</div>
+                <p className="text-[9px] text-slate-500 mt-2 font-medium">Compartilhe este código com outras pessoas na sua mesa.</p>
+              </div>
+            )}
+          </div>
+        )}
       </header>
 
       {/* Banner de Status da Loja */}
