@@ -163,6 +163,7 @@ model Order {
   nfeNumber    String?
   nfeUrl       String?
   nfeError     String?
+  splitAmount1 Float?
 }
 
 model OrderItem {
@@ -257,4 +258,30 @@ model OrderRejection {
   driver      DeliveryDriver @relation(fields: [driverId], references: [id])
   type        RejectionType
   reason      String?
+}
+
+model CashSession {
+  id              String   @id @default(uuid())
+  openedAt        DateTime @default(now())
+  openedBy        String
+  openedByName    String
+  initialBalance  Float
+  closedAt        DateTime?
+  closedBy        String?
+  closedByName    String?
+  status          String   @default("OPEN")
+  
+  reportedCash    Float?
+  reportedPix     Float?
+  reportedCredit  Float?
+  reportedDebit   Float?
+  
+  systemCash      Float?
+  systemPix       Float?
+  systemCredit    Float?
+  systemDebit     Float?
+  
+  totalSales      Float?
+  difference      Float?
+  observations    String?
 }

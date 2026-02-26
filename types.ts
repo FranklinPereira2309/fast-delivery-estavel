@@ -164,6 +164,8 @@ export interface Order {
   nfeNumber?: string;
   nfeUrl?: string;
   nfeError?: string;
+  // Payment Breakdown for Cash Management
+  splitAmount1?: number;
 }
 
 export interface AuditLog {
@@ -208,4 +210,32 @@ export interface OrderRejection {
   driverId: string;
   type: RejectionType;
   reason?: string;
+}
+
+export interface CashSession {
+  id: string;
+  openedAt: string;
+  openedBy: string;
+  openedByName: string;
+  initialBalance: number;
+  closedAt?: string;
+  closedBy?: string;
+  closedByName?: string;
+  status: 'OPEN' | 'CLOSED';
+
+  // Recorded by User at closing
+  reportedCash?: number;
+  reportedPix?: number;
+  reportedCredit?: number;
+  reportedDebit?: number;
+
+  // Calculated by System
+  systemCash?: number;
+  systemPix?: number;
+  systemCredit?: number;
+  systemDebit?: number;
+
+  totalSales?: number;
+  difference?: number;
+  observations?: string;
 }

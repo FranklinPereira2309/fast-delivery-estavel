@@ -130,7 +130,7 @@ const App: React.FC = () => {
       case 'crm': return <CRM currentUser={currentUser} />;
       case 'inventory': return <Inventory />;
       case 'logistics': return <Logistics />;
-      case 'reports': return <Reports />;
+      case 'reports': return <Reports currentUser={currentUser} />;
       case 'qrcodes': return <QRCodes />;
       case 'settings':
         return (

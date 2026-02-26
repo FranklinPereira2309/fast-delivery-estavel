@@ -188,6 +188,7 @@ export const saveOrder = async (req: Request, res: Response) => {
                     nfeNumber: order.nfeNumber || null,
                     nfeUrl: order.nfeUrl || null,
                     nfeError: order.nfeError || null,
+                    splitAmount1: order.splitAmount1 !== undefined ? order.splitAmount1 : null,
                     items: {
                         deleteMany: {},
                         create: order.items.map((item: any) => ({
@@ -224,6 +225,7 @@ export const saveOrder = async (req: Request, res: Response) => {
                     nfeNumber: order.nfeNumber || null,
                     nfeUrl: order.nfeUrl || null,
                     nfeError: order.nfeError || null,
+                    splitAmount1: order.splitAmount1 !== undefined ? order.splitAmount1 : null,
                     items: {
                         create: order.items.map((item: any) => ({
                             id: item.uid,

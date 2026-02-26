@@ -1,12 +1,16 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { db, BusinessSettings } from '../services/db';
-import { Order, OrderStatus, SaleType, Client, Product, DeliveryDriver, InventoryMovement, OrderRejection } from '../types';
+import { Order, OrderStatus, SaleType, Client, Product, DeliveryDriver, InventoryMovement, OrderRejection, CashSession, User } from '../types';
 import { Icons } from '../constants';
 import CustomAlert from '../components/CustomAlert';
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 
-const Reports: React.FC = () => {
+interface ReportsProps {
+    currentUser: User | null;
+}
+
+const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
     const [orders, setOrders] = useState<Order[]>([]);
     const [clients, setClients] = useState<Client[]>([]);
     const [drivers, setDrivers] = useState<DeliveryDriver[]>([]);
@@ -22,7 +26,12 @@ const Reports: React.FC = () => {
     const [salesOrigin, setSalesOrigin] = useState<'TODOS' | 'FISICO' | 'DIGITAL'>('TODOS');
 
     // Tab State
-    const [activeTab, setActiveTab] = useState<'SALES' | 'CLIENTS' | 'DRIVERS' | 'INVENTORY'>('SALES');
+    const [activeTab, setActiveTab] = useState<'SALES' | 'CLIENTS' | 'DRIVERS' | 'INVENTORY' | 'CASH'>('SALES');
+
+    // Cash Filters
+    const [cashStartDate, setCashStartDate] = useState(new Date().toISOString().split('T')[0]);
+    const [cashEndDate, setCashEndDate] = useState(new Date().toISOString().split('T')[0]);
+    const [cashSessions, setCashSessions] = useState<CashSession[]>([]);
 
     // Inventory Filters
     const [inventoryStartDate, setInventoryStartDate] = useState(new Date().toISOString().split('T')[0]);
@@ -32,7 +41,7 @@ const Reports: React.FC = () => {
     const [clientSearch, setClientSearch] = useState('');
     const [selectedClient, setSelectedClient] = useState<Client | null>(null);
     const [showClientDropdown, setShowClientDropdown] = useState(false);
-    const [previewType, setPreviewType] = useState<'SALES' | 'CLIENTS' | 'CLIENT_ORDERS' | 'DRIVERS' | 'INVENTORY' | null>(null);
+    const [previewType, setPreviewType] = useState<'SALES' | 'CLIENTS' | 'CLIENT_ORDERS' | 'DRIVERS' | 'INVENTORY' | 'CASH' | null>(null);
 
     // Driver Filters
     const [driverStartDate, setDriverStartDate] = useState(new Date().toISOString().split('T')[0]);
@@ -56,6 +65,26 @@ const Reports: React.FC = () => {
         setBusinessSettings(s);
         setDrivers(d);
         setRejections(r);
+
+        // Fetch cash sessions for current period
+        const cs = await db.getCashSessions(cashStartDate, cashEndDate);
+        setCashSessions(cs);
+    };
+
+    const handleReopen = async (sessionId: string) => {
+        if (!currentUser || currentUser.role !== 'ADMIN') {
+            alert("Apenas administradores podem reabrir caixa.");
+            return;
+        }
+        if (!window.confirm("Deseja realmente reabrir este caixa? O fechamento atual será perdido.")) return;
+
+        try {
+            await db.reopenCashSession(sessionId, currentUser);
+            alert("Caixa reaberto com sucesso!");
+            fetchData();
+        } catch (error) {
+            alert("Erro ao reabrir caixa.");
+        }
     };
 
     const getFriendlySaleType = (type: SaleType | string) => {
@@ -439,6 +468,92 @@ const Reports: React.FC = () => {
         }
     };
 
+    const generateCashPDF = async (downloadOnly = false) => {
+        if (!businessSettings) return;
+
+        try {
+            const pdfDoc = await PDFDocument.create();
+            const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+            const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+
+            const filtered = await db.getCashSessions(cashStartDate, cashEndDate);
+
+            let page = pdfDoc.addPage([595.28, 841.89]);
+            const { width, height } = page.getSize();
+            let y = height - 50;
+
+            // Header
+            page.drawText('RELATÓRIO DE MOVIMENTAÇÃO DE CAIXA', { x: 50, y, size: 18, font: fontBold });
+            y -= 25;
+            page.drawText(businessSettings.name, { x: 50, y, size: 12, font: fontBold });
+            y -= 15;
+            page.drawText(`Período: ${new Date(cashStartDate + 'T00:00:00').toLocaleDateString('pt-BR')} a ${new Date(cashEndDate + 'T00:00:00').toLocaleDateString('pt-BR')}`, { x: 50, y, size: 10, font });
+
+            y -= 40;
+            // Table Header
+            page.drawRectangle({ x: 50, y: y - 5, width: width - 100, height: 20, color: rgb(0.95, 0.95, 0.95) });
+            page.drawText('ABERTURA', { x: 55, y, size: 8, font: fontBold });
+            page.drawText('FECHAMENTO', { x: 150, y, size: 8, font: fontBold });
+            page.drawText('S. INICIAL', { x: 250, y, size: 8, font: fontBold });
+            page.drawText('VENDAS', { x: 320, y, size: 8, font: fontBold });
+            page.drawText('DIF.', { x: 400, y, size: 8, font: fontBold });
+            page.drawText('STATUS', { x: 480, y, size: 8, font: fontBold });
+            y -= 25;
+
+            for (const s of filtered) {
+                if (y < 70) {
+                    page = pdfDoc.addPage([595.28, 841.89]);
+                    y = page.getHeight() - 50;
+                }
+
+                const openedAt = new Date(s.openedAt).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+                const closedAt = s.closedAt ? new Date(s.closedAt).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : 'ABERTO';
+
+                page.drawText(openedAt, { x: 55, y, size: 7, font });
+                page.drawText(closedAt, { x: 150, y, size: 7, font });
+                page.drawText(`R$ ${s.initialBalance.toFixed(2)}`, { x: 250, y, size: 7, font });
+                page.drawText(`R$ ${(s.totalSales || 0).toFixed(2)}`, { x: 320, y, size: 7, font });
+
+                const diff = s.difference || 0;
+                page.drawText(`R$ ${diff.toFixed(2)}`, {
+                    x: 400, y, size: 7, font,
+                    color: diff < 0 ? rgb(0.8, 0, 0) : (diff > 0 ? rgb(0, 0.5, 0) : rgb(0, 0, 0))
+                });
+
+                page.drawText(s.status === 'OPEN' ? 'ABERTO' : 'FECHADO', { x: 480, y, size: 7, font: fontBold });
+
+                y -= 20;
+
+                // Little detail block if closed
+                if (s.status === 'CLOSED') {
+                    y -= 5;
+                    page.drawRectangle({ x: 60, y: y - 25, width: 480, height: 25, color: rgb(0.98, 0.98, 0.98) });
+                    page.drawText(`Relatado: Dinheiro: R$ ${s.reportedCash?.toFixed(2)} | Pix: R$ ${s.reportedPix?.toFixed(2)} | Crédito: R$ ${s.reportedCredit?.toFixed(2)} | Débito: R$ ${s.reportedDebit?.toFixed(2)}`, { x: 70, y: y - 10, size: 6, font });
+                    page.drawText(`Sistema: Dinheiro: R$ ${s.systemCash?.toFixed(2)} | Pix: R$ ${s.systemPix?.toFixed(2)} | Crédito: R$ ${s.systemCredit?.toFixed(2)} | Débito: R$ ${s.systemDebit?.toFixed(2)}`, { x: 70, y: y - 20, size: 6, font });
+                    y -= 35;
+                }
+            }
+
+            const pdfBytes = await pdfDoc.save();
+            const blob = new Blob([pdfBytes as any], { type: 'application/pdf' });
+            const url = URL.createObjectURL(blob);
+
+            if (downloadOnly) {
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `relatorio_caixa_${cashStartDate}_${cashEndDate}.pdf`;
+                link.click();
+                URL.revokeObjectURL(url);
+            } else {
+                setPreviewType('CASH');
+                setPdfPreviewUrl(url);
+            }
+        } catch (error) {
+            console.error('Erro ao gerar PDF de caixa:', error);
+            alert('Erro ao gerar relatório.');
+        }
+    };
+
     const generateInventoryPDF = async (downloadOnly = false) => {
         if (!businessSettings) return;
 
@@ -521,6 +636,7 @@ const Reports: React.FC = () => {
                 <button onClick={() => setActiveTab('CLIENTS')} className={`pb-4 text-[12px] font-black uppercase tracking-widest transition-all ${activeTab === 'CLIENTS' ? 'text-blue-600 border-b-4 border-blue-600' : 'text-slate-400 hover:text-slate-600'}`}>Lista de Clientes</button>
                 <button onClick={() => setActiveTab('DRIVERS')} className={`pb-4 text-[12px] font-black uppercase tracking-widest transition-all ${activeTab === 'DRIVERS' ? 'text-blue-600 border-b-4 border-blue-600' : 'text-slate-400 hover:text-slate-600'}`}>Rotas de Entregadores</button>
                 <button onClick={() => setActiveTab('INVENTORY')} className={`pb-4 text-[12px] font-black uppercase tracking-widest transition-all ${activeTab === 'INVENTORY' ? 'text-blue-600 border-b-4 border-blue-600' : 'text-slate-400 hover:text-slate-600'}`}>Movimentação de Insumos</button>
+                <button onClick={() => setActiveTab('CASH')} className={`pb-4 text-[12px] font-black uppercase tracking-widest transition-all ${activeTab === 'CASH' ? 'text-blue-600 border-b-4 border-blue-600' : 'text-slate-400 hover:text-slate-600'}`}>Caixa</button>
             </div>
 
             <div className="flex-1">
@@ -762,6 +878,80 @@ const Reports: React.FC = () => {
                     </div>
                 )}
 
+                {/* CARD RELATÓRIO DE MOVIMENTAÇÃO DE CAIXA */}
+                {activeTab === 'CASH' && (
+                    <div className="bg-white p-10 rounded-[3rem] shadow-sm border border-slate-100 flex flex-col h-max max-w-4xl animate-in fade-in zoom-in-95">
+                        <div className="mb-8">
+                            <h3 className="text-2xl font-black text-slate-800 uppercase tracking-tighter flex items-center gap-3">
+                                <span className="p-3 bg-blue-50 text-blue-600 rounded-2xl"><Icons.Dashboard /></span>
+                                Movimentação de Caixa
+                            </h3>
+                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-2 ml-14">Histórico de aberturas, fechamentos e conciliação</p>
+                        </div>
+
+                        <div className="space-y-6">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Início</label>
+                                    <input type="date" value={cashStartDate} onChange={e => setCashStartDate(e.target.value)} className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-sm" />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Fim</label>
+                                    <input type="date" value={cashEndDate} onChange={e => setCashEndDate(e.target.value)} className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-sm" />
+                                </div>
+                            </div>
+                        </div>
+
+                        {cashSessions.length > 0 && (
+                            <div className="mt-8 overflow-x-auto border border-slate-100 rounded-3xl">
+                                <table className="w-full text-left">
+                                    <thead className="bg-slate-50 text-[10px] font-black text-slate-400 p-4 border-b border-slate-100">
+                                        <tr>
+                                            <th className="p-4 uppercase tracking-widest">Abertura</th>
+                                            <th className="p-4 uppercase tracking-widest">Fechamento</th>
+                                            <th className="p-4 uppercase tracking-widest">Vendas</th>
+                                            <th className="p-4 uppercase tracking-widest">Status</th>
+                                            <th className="p-4 uppercase tracking-widest text-right">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="text-[11px] font-bold text-slate-600 divide-y divide-slate-50">
+                                        {cashSessions.map(s => (
+                                            <tr key={s.id} className="hover:bg-slate-50/50 transition-colors">
+                                                <td className="p-4">{new Date(s.openedAt).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}</td>
+                                                <td className="p-4">{s.closedAt ? new Date(s.closedAt).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : '-'}</td>
+                                                <td className="p-4">R$ {s.totalSales?.toFixed(2) || '0,00'}</td>
+                                                <td className="p-4">
+                                                    <span className={`px-3 py-1 rounded-full text-[8px] uppercase tracking-widest font-black ${s.status === 'OPEN' ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-400'}`}>
+                                                        {s.status === 'OPEN' ? 'Aberto' : 'Fechado'}
+                                                    </span>
+                                                </td>
+                                                <td className="p-4 text-right">
+                                                    {s.status === 'CLOSED' && currentUser?.role === 'ADMIN' && (
+                                                        <button
+                                                            onClick={() => handleReopen(s.id)}
+                                                            className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all text-[8px] uppercase font-black"
+                                                        >
+                                                            Reabrir
+                                                        </button>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+
+                        <button
+                            onClick={() => generateCashPDF(false)}
+                            className="mt-8 w-full py-6 bg-slate-900 hover:bg-black text-white rounded-[2rem] font-black uppercase text-xs tracking-widest shadow-xl transition-all flex items-center justify-center gap-3"
+                        >
+                            <Icons.Print />
+                            Visualizar Histórico de Caixa
+                        </button>
+                    </div>
+                )}
+
             </div>
 
             {/* MODAL DE PREVIEW DO PDF */}
@@ -781,6 +971,7 @@ const Reports: React.FC = () => {
                                         else if (previewType === 'CLIENT_ORDERS') generateClientOrdersPDF(true);
                                         else if (previewType === 'DRIVERS') generateDriversPDF(true);
                                         else if (previewType === 'INVENTORY') generateInventoryPDF(true);
+                                        else if (previewType === 'CASH') generateCashPDF(true);
                                     }}
                                     className="bg-slate-900 text-white px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all flex items-center gap-2"
                                 >

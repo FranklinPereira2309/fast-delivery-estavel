@@ -1,4 +1,4 @@
-import { Client, Product, Order, User, AuditLog, InventoryItem, RecipeItem, DeliveryDriver, OrderStatus, SaleType, TableSession, OrderItem, Waiter, InventoryMovement, OrderRejection } from '../types';
+import { Client, Product, Order, User, AuditLog, InventoryItem, RecipeItem, DeliveryDriver, OrderStatus, SaleType, TableSession, OrderItem, Waiter, InventoryMovement, OrderRejection, CashSession } from '../types';
 
 const API_URL = (import.meta as any).env.VITE_API_URL || 'http://localhost:3000/api';
 const AUTH_KEY = 'delivery_fast_auth';
@@ -239,6 +239,45 @@ class APIDBService {
 
   public async getRejections(): Promise<OrderRejection[]> {
     return this.request<OrderRejection[]>('/drivers/rejections');
+  }
+
+  // Cash Session
+  public async getActiveCashSession(): Promise<CashSession | null> {
+    try {
+      return await this.request<CashSession>('/cash/status');
+    } catch (e) {
+      return null;
+    }
+  }
+
+  public async openCashSession(initialBalance: number, user: User): Promise<CashSession> {
+    return this.request<CashSession>('/cash/open', {
+      method: 'POST',
+      body: JSON.stringify({ initialBalance, user })
+    });
+  }
+
+  public async closeCashSession(sessionId: string, reports: { cash: number, pix: number, credit: number, debit: number, observations?: string }, user: User): Promise<CashSession> {
+    return this.request<CashSession>(`/cash/close`, {
+      method: 'POST',
+      body: JSON.stringify({ sessionId, ...reports, user })
+    });
+  }
+
+  public async getCashSessions(startDate?: string, endDate?: string): Promise<CashSession[]> {
+    let path = '/cash/list';
+    const params = new URLSearchParams();
+    if (startDate) params.append('start', startDate);
+    if (endDate) params.append('end', endDate);
+    if (params.toString()) path += `?${params.toString()}`;
+    return this.request<CashSession[]>(path);
+  }
+
+  public async reopenCashSession(sessionId: string, user: User): Promise<CashSession> {
+    return this.request<CashSession>('/cash/reopen', {
+      method: 'POST',
+      body: JSON.stringify({ sessionId, user })
+    });
   }
 }
 

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Product, OrderItem, SaleType, Order, OrderStatus, OrderStatusLabels, User, Client, DeliveryDriver, TableSession } from '../types';
+import { Product, OrderItem, SaleType, Order, OrderStatus, OrderStatusLabels, User, Client, DeliveryDriver, TableSession, CashSession } from '../types';
 import { db, BusinessSettings } from '../services/db';
 import { socket } from '../services/socket';
 import { Icons, PLACEHOLDER_FOOD_IMAGE, formatImageUrl } from '../constants';
@@ -71,6 +71,18 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
 
   const [errors, setErrors] = useState<Record<string, boolean>>({});
 
+  const [activeCashSession, setActiveCashSession] = useState<CashSession | null>(null);
+  const [isOpeningModalOpen, setIsOpeningModalOpen] = useState(false);
+  const [isClosingModalOpen, setIsClosingModalOpen] = useState(false);
+  const [initialBalanceInput, setInitialBalanceInput] = useState('0.00');
+  const [closingReport, setClosingReport] = useState({
+    cash: '',
+    pix: '',
+    credit: '',
+    debit: '',
+    observations: ''
+  });
+
   const showAlert = (title: string, message: string, type: 'INFO' | 'DANGER' = 'INFO') => {
     setAlertConfig({ isOpen: true, title, message, onConfirm: () => setAlertConfig(prev => ({ ...prev, isOpen: false })), type });
   };
@@ -97,12 +109,13 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
   }, []);
 
   const refreshAllData = async () => {
-    const [p, o, s, c, ts] = await Promise.all([
+    const [p, o, s, c, ts, cs] = await Promise.all([
       db.getProducts(),
       db.getOrders(),
       db.getSettings(),
       db.getClients(),
-      db.getTableSessions()
+      db.getTableSessions(),
+      db.getActiveCashSession()
     ]);
     setProducts(p);
     setOrders(o);
@@ -110,6 +123,12 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
     setClients(c);
     setPendingTables(ts.filter(t => t.status === 'billing'));
     setPendingCounterOrders(o.filter(order => order.type === SaleType.COUNTER && order.status === OrderStatus.READY));
+    setActiveCashSession(cs);
+
+    // Se não houver caixa aberto, forçar abertura
+    if (!cs && !isOpeningModalOpen) {
+      setIsOpeningModalOpen(true);
+    }
   };
 
   const confirmAddToCart = () => {
@@ -462,7 +481,8 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       isOriginDigitalMenu: isTableSale ? (tableSessionToClose?.isOriginDigitalMenu || false) : false,
       nfeStatus: emitNfce ? 'EMITTED' : undefined,
       nfeNumber: emitNfce ? `NFC-${Date.now()}` : undefined,
-      nfeUrl: emitNfce ? `https://sefaz.gov.br/nfce/qrcode?p=${Date.now()}` : undefined
+      nfeUrl: emitNfce ? `https://sefaz.gov.br/nfce/qrcode?p=${Date.now()}` : undefined,
+      splitAmount1: isSplitPayment ? parseFloat(splitAmount1.toString().replace(',', '.')) : undefined
     };
 
     console.log('Salvando pedido com metadados fiscais:', orderData);
@@ -501,6 +521,67 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
     setPaymentMethod2('');
     setSplitAmount1('');
     setEmitNfce(false);
+  };
+
+  const handleOpenCash = async () => {
+    try {
+      const balance = parseFloat(initialBalanceInput.replace(',', '.'));
+      const session = await db.openCashSession(balance, currentUser);
+      setActiveCashSession(session);
+      setIsOpeningModalOpen(false);
+      showAlert("Sucesso", "Caixa aberto com sucesso!", "INFO");
+    } catch (e: any) {
+      showAlert("Erro", e.message || "Erro ao abrir o caixa", "DANGER");
+    }
+  };
+
+  const handleCloseCash = async () => {
+    if (!activeCashSession) return;
+
+    // Validar preenchimento
+    if (!closingReport.cash || !closingReport.pix || !closingReport.credit || !closingReport.debit) {
+      showAlert("Atenção", "Por favor, preencha todos os campos de valores para o fechamento.", "DANGER");
+      return;
+    }
+
+    try {
+      const reports = {
+        cash: parseFloat(closingReport.cash.toString().replace(',', '.')),
+        pix: parseFloat(closingReport.pix.toString().replace(',', '.')),
+        credit: parseFloat(closingReport.credit.toString().replace(',', '.')),
+        debit: parseFloat(closingReport.debit.toString().replace(',', '.')),
+        observations: closingReport.observations
+      };
+
+      const session = await db.closeCashSession(activeCashSession.id, reports, currentUser);
+      setActiveCashSession(null);
+      setIsClosingModalOpen(false);
+
+      // Mostrar resumo
+      const diff = session.difference || 0;
+      const statusText = diff === 0 ? "em dia" : (diff > 0 ? `com SOBRA de R$ ${diff.toFixed(2)}` : `com FALTA de R$ ${Math.abs(diff).toFixed(2)}`);
+
+      showAlert("Caixa Fechado", `Caixa fechado com sucesso!\nO saldo está ${statusText}.`, diff === 0 ? "INFO" : "DANGER");
+
+      // Limpar campos
+      setClosingReport({ cash: '', pix: '', credit: '', debit: '', observations: '' });
+      refreshAllData();
+    } catch (e: any) {
+      showAlert("Erro", e.message || "Erro ao fechar o caixa", "DANGER");
+    }
+  };
+
+  const handleReopenCash = async (sessionId: string) => {
+    if (!currentUser || currentUser.role !== 'ADMIN') {
+      return showAlert("Acesso Negado", "Apenas administradores podem reabrir o caixa.", "DANGER");
+    }
+    try {
+      await db.reopenCashSession(sessionId, currentUser);
+      showAlert("Sucesso", "Caixa reaberto com sucesso.", "INFO");
+      refreshAllData();
+    } catch (e: any) {
+      showAlert("Erro", e.message || "Erro ao reabrir o caixa", "DANGER");
+    }
   };
 
   const getFriendlySaleType = (type: SaleType | string) => {
@@ -1071,6 +1152,33 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
               )}
             </div>
           </div>
+
+          {/* CASH REGISTER STATUS & CLOSING TRIGGER */}
+          <div className="bg-white p-4 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col gap-3">
+            <div className="flex items-center justify-between px-2">
+              <div className="flex items-center gap-2">
+                <div className={`w-2 h-2 rounded-full ${activeCashSession ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`}></div>
+                <span className="text-[10px] font-black text-slate-800 uppercase tracking-widest">Caixa Aberto</span>
+              </div>
+              <span className="text-[10px] font-bold text-slate-400">#{activeCashSession?.id.substring(0, 5)}</span>
+            </div>
+
+            <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100">
+              <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Abertura</p>
+              <p className="text-[10px] font-black text-slate-600 uppercase">
+                {activeCashSession ? new Date(activeCashSession.openedAt).toLocaleString('pt-BR') : '--/--/-- --:--'}
+              </p>
+            </div>
+
+            <button
+              onClick={() => setIsClosingModalOpen(true)}
+              disabled={!activeCashSession}
+              className="w-full py-4 bg-slate-900 border border-slate-800 hover:bg-orange-600 hover:border-orange-500 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest transition-all shadow-lg active:scale-95 disabled:opacity-30 flex items-center justify-center gap-2 group"
+            >
+              <Icons.Dashboard className="w-3 h-3 group-hover:rotate-12 transition-transform" />
+              Fechar Caixa
+            </button>
+          </div>
         </div>
 
         <div className="flex-1 flex flex-col min-w-0">
@@ -1408,6 +1516,127 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
           </div>
         )
       }
+
+      {/* MODAL DE ABERTURA DE CAIXA */}
+      {isOpeningModalOpen && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/90 backdrop-blur-xl animate-in fade-in duration-300">
+          <div className="bg-white w-[400px] rounded-[3rem] shadow-2xl overflow-hidden border border-slate-100 p-8 lg:p-10">
+            <div className="text-center mb-8">
+              <div className="w-20 h-20 bg-blue-50 rounded-[2rem] flex items-center justify-center mx-auto mb-6">
+                <Icons.Dashboard className="w-10 h-10 text-blue-600" />
+              </div>
+              <h2 className="text-xl font-black text-slate-800 uppercase tracking-tighter">Abertura de Caixa</h2>
+              <p className="text-[10px] font-bold text-slate-400 uppercase mt-2">Informe o saldo inicial para começar as operações</p>
+            </div>
+
+            <div className="space-y-6">
+              <div>
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 block">Saldo em Dinheiro (R$)</label>
+                <input
+                  autoFocus
+                  type="text"
+                  placeholder="0,00"
+                  value={initialBalanceInput}
+                  onChange={(e) => setInitialBalanceInput(e.target.value)}
+                  className="w-full p-5 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-blue-500 outline-none font-black text-xl text-center text-blue-600"
+                />
+              </div>
+
+              <button
+                onClick={handleOpenCash}
+                className="w-full py-5 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl transition-all active:scale-95"
+              >
+                Abrir Caixa ✓
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL DE FECHAMENTO DE CAIXA */}
+      {isClosingModalOpen && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/90 backdrop-blur-xl animate-in fade-in duration-300">
+          <div className="bg-white w-[500px] rounded-[3rem] shadow-2xl overflow-hidden border border-slate-100 p-8 lg:p-10 max-h-[90vh] overflow-y-auto">
+            <div className="text-center mb-8">
+              <div className="w-20 h-20 bg-orange-50 rounded-[2rem] flex items-center justify-center mx-auto mb-6 font-black text-2xl text-orange-600">
+                $
+              </div>
+              <h2 className="text-xl font-black text-slate-800 uppercase tracking-tighter">Fechamento de Caixa</h2>
+              <p className="text-[10px] font-bold text-slate-400 uppercase mt-2">Confirme os valores recebidos para encerrar o dia</p>
+            </div>
+
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 block">Dinheiro em Espécie (R$)</label>
+                  <input
+                    type="text"
+                    placeholder="0,00"
+                    value={closingReport.cash}
+                    onChange={(e) => setClosingReport(prev => ({ ...prev, cash: e.target.value }))}
+                    className="w-full p-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-orange-500 outline-none font-black text-sm text-center"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 block">Total em PIX (R$)</label>
+                  <input
+                    type="text"
+                    placeholder="0,00"
+                    value={closingReport.pix}
+                    onChange={(e) => setClosingReport(prev => ({ ...prev, pix: e.target.value }))}
+                    className="w-full p-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-orange-500 outline-none font-black text-sm text-center"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 block">Cartão Crédito (R$)</label>
+                  <input
+                    type="text"
+                    placeholder="0,00"
+                    value={closingReport.credit}
+                    onChange={(e) => setClosingReport(prev => ({ ...prev, credit: e.target.value }))}
+                    className="w-full p-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-orange-500 outline-none font-black text-sm text-center"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 block">Cartão Débito (R$)</label>
+                  <input
+                    type="text"
+                    placeholder="0,00"
+                    value={closingReport.debit}
+                    onChange={(e) => setClosingReport(prev => ({ ...prev, debit: e.target.value }))}
+                    className="w-full p-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-orange-500 outline-none font-black text-sm text-center"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 block">Observações (Opcional)</label>
+                <textarea
+                  placeholder="Ex: Diferença justificada por..."
+                  value={closingReport.observations}
+                  onChange={(e) => setClosingReport(prev => ({ ...prev, observations: e.target.value }))}
+                  className="w-full p-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-orange-500 outline-none font-bold text-xs min-h-[80px]"
+                />
+              </div>
+
+              <div className="flex gap-2 pt-4">
+                <button
+                  onClick={() => setIsClosingModalOpen(false)}
+                  className="flex-1 py-5 font-black uppercase text-[10px] text-slate-400 hover:text-slate-600"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleCloseCash}
+                  className="flex-[2] py-5 bg-orange-600 hover:bg-orange-700 text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl transition-all active:scale-95"
+                >
+                  Encerrar Caixa ✓
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div >
   );
 };

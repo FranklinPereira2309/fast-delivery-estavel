@@ -15,6 +15,7 @@ import auditRoutes from './routes/auditRoutes';
 import tableRoutes from './routes/tableRoutes';
 import publicRoutes from './routes/publicRoutes';
 import chatRoutes from './routes/chatRoutes';
+import cashRoutes from './routes/cashRoutes';
 import { initSocket } from './socket';
 import { startOrderTimeoutService } from './services/orderTimeoutService';
 import { loadSettingsToCache } from './storeStatusCache';
