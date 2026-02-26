@@ -56,6 +56,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
   const [splitAmount1, setSplitAmount1] = useState<string>('');
   const [emitNfce, setEmitNfce] = useState<boolean>(false);
   const [isNfceFeedbackOpen, setIsNfceFeedbackOpen] = useState(false);
+  const [isNfceVisual, setIsNfceVisual] = useState(false);
   const [paymentData, setPaymentData] = useState({
     receivedAmount: '',
     cardHolder: '',
@@ -456,7 +457,10 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       deliveryFee: (saleType === SaleType.OWN_DELIVERY) ? deliveryFeeValue : undefined,
       tableNumber: isTableSale ? finalTableNum! : undefined,
       waiterId: isTableSale ? orders.find(o => o.id === existingTableOrderId)?.waiterId : undefined,
-      isOriginDigitalMenu: isTableSale ? (tableSessionToClose?.isOriginDigitalMenu || false) : false
+      isOriginDigitalMenu: isTableSale ? (tableSessionToClose?.isOriginDigitalMenu || false) : false,
+      nfeStatus: emitNfce ? 'EMITTED' : undefined,
+      nfeNumber: emitNfce ? `NFC-${Date.now()}` : undefined,
+      nfeUrl: emitNfce ? `https://sefaz.gov.br/nfce/qrcode?p=${Date.now()}` : undefined
     };
 
     await db.saveOrder(orderData, currentUser);
@@ -471,6 +475,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
     if (orderData.status === OrderStatus.PREPARING) {
       showAlert("Sucesso", "Pedido enviado para a cozinha.", "INFO");
     } else {
+      setIsNfceVisual(emitNfce);
       setPrintingOrder(orderData);
     }
 
@@ -1219,43 +1224,113 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       {printingOrder && businessSettings && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
           <div className="relative w-full max-w-[80mm] bg-white p-8 border border-dashed shadow-2xl font-receipt text-[11px] text-black is-receipt animate-in zoom-in duration-200">
-            <div className="text-center mb-6 border-b border-dashed pb-4">
-              <h2 className="font-black text-sm uppercase tracking-tighter">{businessSettings.name}</h2>
-              <p className="text-[9px] font-bold mt-1 uppercase">Comprovante de Pagamento</p>
-            </div>
-            <div className="space-y-1 mb-4">
-              <p>DATA: {new Date(printingOrder.createdAt).toLocaleString('pt-BR')}</p>
-              <p>CLIENTE: {printingOrder.clientName}</p>
-              {printingOrder.clientDocument && <p>CPF/CNPJ: {printingOrder.clientDocument}</p>}
-              {printingOrder.clientEmail && <p>E-MAIL: {printingOrder.clientEmail}</p>}
-              {printingOrder.clientPhone && <p>FONE: {printingOrder.clientPhone}</p>}
-              {printingOrder.clientAddress && (
-                <p className="font-bold border-t border-dashed mt-2 pt-1 uppercase leading-tight">ENTREGA: {printingOrder.clientAddress}</p>
-              )}
-              {printingOrder.tableNumber && <p className="font-black">MESA: {printingOrder.tableNumber}</p>}
-              <p>MÉTODO: {printingOrder.paymentMethod || 'DINHEIRO'}</p>
-            </div>
-            <div className="border-t border-dashed my-3 py-3">
-              {groupedPrintingItems.map(([id, data]) => (
-                <div key={id} className="flex justify-between font-black uppercase py-0.5">
-                  <span>{data.quantity}x {data.product?.name.substring(0, 18)}</span>
-                  <span>R$ {(data.quantity * data.price).toFixed(2)}</span>
+            {isNfceVisual ? (
+              // NFC-e (DANFE) Layout
+              <div className="space-y-4">
+                <div className="text-center border-b border-dashed pb-4">
+                  <h2 className="font-black text-xs uppercase">DANFE NFC-e</h2>
+                  <p className="text-[8px] font-bold">Documento Auxiliar da Nota Fiscal de Consumidor Eletrônica</p>
                 </div>
-              ))}
-            </div>
-            {printingOrder.type === SaleType.OWN_DELIVERY && (
-              <div className="flex justify-between items-center border-t border-dashed pt-4 mb-2 text-[10px] uppercase font-black">
-                <span>Taxa Entrega:</span>
-                <span>R$ {deliveryFeeValue.toFixed(2)}</span>
+
+                <div className="text-[9px] space-y-1">
+                  <div className="flex justify-between">
+                    <span>NFC-e nº: {printingOrder.nfeNumber?.split('-')[1] || '000001'}</span>
+                    <span>Série: 001</span>
+                  </div>
+                  <p>Emissão: {new Date(printingOrder.createdAt).toLocaleString('pt-BR')}</p>
+                  <p>Protocolo: {Math.floor(Math.random() * 100000000000000)}</p>
+                </div>
+
+                <div className="border-t border-b border-dashed py-2">
+                  <table className="w-full text-left">
+                    <thead>
+                      <tr className="text-[8px] uppercase">
+                        <th>Item</th>
+                        <th className="text-right">Vl. Total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {groupedPrintingItems.map(([id, data]) => (
+                        <tr key={id} className="text-[9px] uppercase font-black">
+                          <td>{data.quantity}x {data.product?.name.substring(0, 15)}</td>
+                          <td className="text-right">R$ {(data.quantity * data.price).toFixed(2)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="flex justify-between font-black uppercase text-xs">
+                  <span>Valor Total R$</span>
+                  <span>{printingOrder.total.toFixed(2)}</span>
+                </div>
+
+                <div className="text-center space-y-2 mt-4 flex flex-col items-center">
+                  <div className="w-32 h-32 bg-slate-50 border-2 border-slate-100 flex items-center justify-center">
+                    <Icons.QrCode className="w-20 h-20 opacity-20" />
+                  </div>
+                  <p className="text-[8px] font-bold uppercase tracking-tighter">Consulta via QR Code ou Chave de Acesso</p>
+                  <p className="text-[7px] break-all font-mono opacity-60">35240212345678000190650010000000011000000012</p>
+                </div>
+
+                <div className="text-center text-[7px] italic border-t border-dashed pt-2">
+                  <p>PRODUTOS E SERVIÇOS TRIBUTADOS PELO ICMS NO DESTINO</p>
+                </div>
               </div>
+            ) : (
+              // Standard Sales Coupon Layout
+              <>
+                <div className="text-center mb-6 border-b border-dashed pb-4">
+                  <h2 className="font-black text-sm uppercase tracking-tighter">{businessSettings.name}</h2>
+                  <p className="text-[9px] font-bold mt-1 uppercase">Comprovante de Pagamento</p>
+                </div>
+                <div className="space-y-1 mb-4">
+                  <p>DATA: {new Date(printingOrder.createdAt).toLocaleString('pt-BR')}</p>
+                  <p>CLIENTE: {printingOrder.clientName}</p>
+                  {printingOrder.clientDocument && <p>CPF/CNPJ: {printingOrder.clientDocument}</p>}
+                  {printingOrder.clientEmail && <p>E-MAIL: {printingOrder.clientEmail}</p>}
+                  {printingOrder.clientPhone && <p>FONE: {printingOrder.clientPhone}</p>}
+                  {printingOrder.clientAddress && (
+                    <p className="font-bold border-t border-dashed mt-2 pt-1 uppercase leading-tight">ENTREGA: {printingOrder.clientAddress}</p>
+                  )}
+                  {printingOrder.tableNumber && <p className="font-black">MESA: {printingOrder.tableNumber}</p>}
+                  <p>MÉTODO: {printingOrder.paymentMethod || 'DINHEIRO'}</p>
+                </div>
+                <div className="border-t border-dashed my-3 py-3">
+                  {groupedPrintingItems.map(([id, data]) => (
+                    <div key={id} className="flex justify-between font-black uppercase py-0.5">
+                      <span>{data.quantity}x {data.product?.name.substring(0, 18)}</span>
+                      <span>R$ {(data.quantity * data.price).toFixed(2)}</span>
+                    </div>
+                  ))}
+                </div>
+                {printingOrder.type === SaleType.OWN_DELIVERY && (
+                  <div className="flex justify-between items-center border-t border-dashed pt-4 mb-2 text-[10px] uppercase font-black">
+                    <span>Taxa Entrega:</span>
+                    <span>R$ {deliveryFeeValue.toFixed(2)}</span>
+                  </div>
+                )}
+                <div className={`flex justify-between items-end ${printingOrder.type === SaleType.OWN_DELIVERY ? '' : 'border-t border-dashed pt-4'} mb-6`}>
+                  <span className="font-black text-[9px] uppercase tracking-widest">TOTAL:</span>
+                  <span className="text-2xl font-black">R$ {printingOrder.total.toFixed(2)}</span>
+                </div>
+              </>
             )}
-            <div className={`flex justify-between items-end ${printingOrder.type === SaleType.OWN_DELIVERY ? '' : 'border-t border-dashed pt-4'} mb-6`}>
-              <span className="font-black text-[9px] uppercase tracking-widest">TOTAL:</span>
-              <span className="text-2xl font-black">R$ {printingOrder.total.toFixed(2)}</span>
-            </div>
-            <div className="flex gap-2 no-print">
-              <button onClick={() => window.print()} className="flex-1 bg-slate-900 text-white py-4 rounded-2xl font-black uppercase text-[10px] shadow-xl">Imprimir</button>
-              <button onClick={() => setPrintingOrder(null)} className="flex-1 bg-slate-100 text-slate-600 py-4 rounded-2xl font-black uppercase text-[10px]">Fechar</button>
+
+            <div className="flex flex-col gap-2 no-print">
+              <div className="flex gap-2">
+                <button onClick={() => window.print()} className="flex-[2] bg-slate-900 text-white py-4 rounded-2xl font-black uppercase text-[10px] shadow-xl">Imprimir</button>
+                <button onClick={() => setPrintingOrder(null)} className="flex-1 bg-slate-100 text-slate-600 py-4 rounded-2xl font-black uppercase text-[10px]">Fechar</button>
+              </div>
+
+              {printingOrder.nfeStatus === 'EMITTED' && (
+                <button
+                  onClick={() => setIsNfceVisual(!isNfceVisual)}
+                  className="w-full py-3 border-2 border-dashed border-slate-200 text-slate-400 rounded-xl font-black uppercase text-[8px] hover:border-blue-400 hover:text-blue-500 transition-all"
+                >
+                  {isNfceVisual ? 'Ver Comprovante Simples' : 'Ver DANFE NFC-e'}
+                </button>
+              )}
             </div>
           </div>
         </div>

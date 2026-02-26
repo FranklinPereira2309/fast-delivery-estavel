@@ -10,6 +10,7 @@ const SalesMonitor: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [businessSettings, setBusinessSettings] = useState<BusinessSettings | null>(null);
   const [printingOrder, setPrintingOrder] = useState<Order | null>(null);
+  const [isNfceVisual, setIsNfceVisual] = useState(false);
   const [editingPaymentMethod, setEditingPaymentMethod] = useState(false);
   const [newPaymentMethod, setNewPaymentMethod] = useState('');
   const [isSavingPayment, setIsSavingPayment] = useState(false);
@@ -152,9 +153,19 @@ const SalesMonitor: React.FC = () => {
                       <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-all">
                         <button onClick={() => {
                           setPrintingOrder(order);
+                          setIsNfceVisual(false);
                           setEditingPaymentMethod(false);
                           setNewPaymentMethod(order.paymentMethod || 'DINHEIRO');
-                        }} className="p-2 text-slate-300 hover:text-emerald-500" title="Reemitir Cupom"><Icons.Print /></button>
+                        }} className="p-2 text-slate-300 hover:text-blue-500" title="Reemitir Cupom Simples"><Icons.Print className="w-4 h-4" /></button>
+
+                        {order.nfeStatus === 'EMITTED' && (
+                          <button onClick={() => {
+                            setPrintingOrder(order);
+                            setIsNfceVisual(true);
+                            setEditingPaymentMethod(false);
+                            setNewPaymentMethod(order.paymentMethod || 'DINHEIRO');
+                          }} className="p-2 text-slate-300 hover:text-emerald-500" title="Reemitir Cupom Fiscal (NFC-e)"><Icons.QrCode className="w-4 h-4" /></button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -175,108 +186,174 @@ const SalesMonitor: React.FC = () => {
       {printingOrder && businessSettings && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
           <div className="relative w-full max-w-[80mm] bg-white p-8 border border-dashed shadow-2xl font-receipt text-[11px] text-black is-receipt animate-in zoom-in duration-200">
-            <div className="text-center mb-6 border-b border-dashed pb-4">
-              <h2 className="font-black text-sm uppercase tracking-tighter">{businessSettings.name}</h2>
-              <p className="text-[9px] font-bold mt-1">CNPJ: {businessSettings.cnpj}</p>
-              <p className="text-[10px] font-black mt-3 border border-slate-900 py-1 uppercase tracking-widest">Comprovante de Pagamento</p>
-            </div>
-            <div className="space-y-1 mb-4">
-              <p>DATA: {new Date(printingOrder.createdAt).toLocaleString('pt-BR')}</p>
-              <p>CLIENTE: {printingOrder.clientName}</p>
-              {printingOrder.clientPhone && <p>FONE: {printingOrder.clientPhone}</p>}
-              {printingOrder.clientAddress && (
-                <p className="font-bold border-t border-dashed mt-2 pt-1 uppercase leading-tight">ENTREGA: {printingOrder.clientAddress}</p>
-              )}
-              {printingOrder.tableNumber && <p className="font-black">MESA: {printingOrder.tableNumber}</p>}
-              <p>STATUS: {OrderStatusLabels[printingOrder.status]}</p>
+            {isNfceVisual ? (
+              // NFC-e (DANFE) Layout
+              <div className="space-y-4">
+                <div className="text-center border-b border-dashed pb-4">
+                  <h2 className="font-black text-xs uppercase">DANFE NFC-e</h2>
+                  <p className="text-[8px] font-bold">Documento Auxiliar da Nota Fiscal de Consumidor Eletrônica</p>
+                </div>
 
-              <div className="mt-2 pt-2 border-t border-dashed no-print">
-                <div className="flex justify-between items-center bg-slate-50 p-2 rounded-lg border border-slate-100">
-                  {editingPaymentMethod ? (
-                    <div className="flex gap-2 w-full">
-                      <select
-                        value={newPaymentMethod}
-                        onChange={(e) => setNewPaymentMethod(e.target.value)}
-                        className="flex-1 text-[9px] font-black uppercase p-1 rounded border outline-none cursor-pointer"
-                        disabled={isSavingPayment}
-                      >
-                        <option value="DINHEIRO">Dinheiro</option>
-                        <option value="PIX">PIX</option>
-                        <option value="CRÉDITO">Crédito</option>
-                        <option value="DÉBITO">Débito</option>
-                      </select>
-                      <button
-                        disabled={isSavingPayment}
-                        onClick={async () => {
-                          setIsSavingPayment(true);
-                          try {
-                            // User is an approximation here since SalesMonitor doesn't get currentUser props in this snippet, 
-                            // but we can pass a dummy user or fetch from session for the audit log
-                            const session = db.getCurrentSession();
-                            await db.updateOrderPaymentMethod(printingOrder.id, newPaymentMethod, session?.user || { id: 'system', name: 'Sistema', email: '', password: '', permissions: [], createdAt: '' });
+                <div className="text-[9px] space-y-1">
+                  <div className="flex justify-between">
+                    <span>NFC-e nº: {printingOrder.nfeNumber?.split('-')[1] || '000001'}</span>
+                    <span>Série: 001</span>
+                  </div>
+                  <p>Emissão: {new Date(printingOrder.createdAt).toLocaleString('pt-BR')}</p>
+                  <p>Protocolo: {Math.floor(Math.random() * 100000000000000)}</p>
+                </div>
 
-                            // Edit local state immediately for fast feedback
-                            setPrintingOrder({ ...printingOrder, paymentMethod: newPaymentMethod });
-                            setOrders(prev => prev.map(o => o.id === printingOrder.id ? { ...o, paymentMethod: newPaymentMethod } : o));
-                            setEditingPaymentMethod(false);
-                          } catch (err) {
-                            console.error('Error updating payment', err);
-                          } finally {
-                            setIsSavingPayment(false);
-                          }
-                        }}
-                        className="bg-emerald-500 text-white px-2 py-1 rounded text-[8px] font-black uppercase"
-                      >
-                        Salvar
-                      </button>
-                      <button
-                        onClick={() => setEditingPaymentMethod(false)}
-                        className="bg-slate-200 text-slate-600 px-2 py-1 rounded text-[8px] font-black uppercase"
-                      >
-                        X
-                      </button>
-                    </div>
-                  ) : (
-                    <>
-                      <p className="font-black">PAGTO: {printingOrder.paymentMethod || 'DINHEIRO'}</p>
-                      <button
-                        onClick={() => setEditingPaymentMethod(true)}
-                        className="text-[9px] text-blue-600 font-bold underline px-2"
-                      >
-                        Editar
-                      </button>
-                    </>
+                <div className="border-t border-b border-dashed py-2">
+                  <table className="w-full text-left">
+                    <thead>
+                      <tr className="text-[8px] uppercase font-black">
+                        <th>Item</th>
+                        <th className="text-right">Vl. Total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {groupedPrintingItems.map(([id, data]) => (
+                        <tr key={id} className="text-[9px] uppercase font-black">
+                          <td>{data.quantity}x {data.name.substring(0, 15)}</td>
+                          <td className="text-right">R$ {(data.quantity * data.price).toFixed(2)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="flex justify-between font-black uppercase text-xs">
+                  <span>Valor Total R$</span>
+                  <span>{printingOrder.total.toFixed(2)}</span>
+                </div>
+
+                <div className="text-center space-y-2 mt-4 flex flex-col items-center">
+                  <div className="w-32 h-32 bg-slate-50 border-2 border-slate-100 flex items-center justify-center">
+                    <Icons.QrCode className="w-20 h-20 opacity-20" />
+                  </div>
+                  <p className="text-[8px] font-bold uppercase tracking-tighter">Consulta via QR Code ou Chave de Acesso</p>
+                  <p className="text-[7px] break-all font-mono opacity-60">35240212345678000190650010000000011000000012</p>
+                </div>
+
+                <div className="text-center text-[7px] italic border-t border-dashed pt-2">
+                  <p>PRODUTOS E SERVIÇOS TRIBUTADOS PELO ICMS NO DESTINO</p>
+                </div>
+              </div>
+            ) : (
+              // Standard Sales Coupon Layout
+              <>
+                <div className="text-center mb-6 border-b border-dashed pb-4">
+                  <h2 className="font-black text-sm uppercase tracking-tighter">{businessSettings.name}</h2>
+                  <p className="text-[9px] font-bold mt-1">CNPJ: {businessSettings.cnpj}</p>
+                  <p className="text-[10px] font-black mt-3 border border-slate-900 py-1 uppercase tracking-widest">Comprovante de Pagamento</p>
+                </div>
+                <div className="space-y-1 mb-4">
+                  <p>DATA: {new Date(printingOrder.createdAt).toLocaleString('pt-BR')}</p>
+                  <p>CLIENTE: {printingOrder.clientName}</p>
+                  {printingOrder.clientPhone && <p>FONE: {printingOrder.clientPhone}</p>}
+                  {printingOrder.clientAddress && (
+                    <p className="font-bold border-t border-dashed mt-2 pt-1 uppercase leading-tight">ENTREGA: {printingOrder.clientAddress}</p>
                   )}
+                  {printingOrder.tableNumber && <p className="font-black">MESA: {printingOrder.tableNumber}</p>}
+                  <p>STATUS: {OrderStatusLabels[printingOrder.status]}</p>
+
+                  <div className="mt-2 pt-2 border-t border-dashed no-print">
+                    <div className="flex justify-between items-center bg-slate-50 p-2 rounded-lg border border-slate-100">
+                      {editingPaymentMethod ? (
+                        <div className="flex gap-2 w-full">
+                          <select
+                            value={newPaymentMethod}
+                            onChange={(e) => setNewPaymentMethod(e.target.value)}
+                            className="flex-1 text-[9px] font-black uppercase p-1 rounded border outline-none cursor-pointer"
+                            disabled={isSavingPayment}
+                          >
+                            <option value="DINHEIRO">Dinheiro</option>
+                            <option value="PIX">PIX</option>
+                            <option value="CRÉDITO">Crédito</option>
+                            <option value="DÉBITO">Débito</option>
+                          </select>
+                          <button
+                            disabled={isSavingPayment}
+                            onClick={async () => {
+                              setIsSavingPayment(true);
+                              try {
+                                const session = db.getCurrentSession();
+                                await db.updateOrderPaymentMethod(printingOrder.id, newPaymentMethod, session?.user || { id: 'system', name: 'Sistema', email: '', password: '', permissions: [], createdAt: '' });
+                                setPrintingOrder({ ...printingOrder, paymentMethod: newPaymentMethod });
+                                setOrders(prev => prev.map(o => o.id === printingOrder.id ? { ...o, paymentMethod: newPaymentMethod } : o));
+                                setEditingPaymentMethod(false);
+                              } catch (err) {
+                                console.error('Error updating payment', err);
+                              } finally {
+                                setIsSavingPayment(false);
+                              }
+                            }}
+                            className="bg-emerald-500 text-white px-2 py-1 rounded text-[8px] font-black uppercase"
+                          >
+                            Salvar
+                          </button>
+                          <button
+                            onClick={() => setEditingPaymentMethod(false)}
+                            className="bg-slate-200 text-slate-600 px-2 py-1 rounded text-[8px] font-black uppercase"
+                          >
+                            X
+                          </button>
+                        </div>
+                      ) : (
+                        <>
+                          <p className="font-black">PAGTO: {printingOrder.paymentMethod || 'DINHEIRO'}</p>
+                          <button
+                            onClick={() => setEditingPaymentMethod(true)}
+                            className="text-[9px] text-blue-600 font-bold underline px-2"
+                          >
+                            Editar
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  <p className="font-black hidden print:block pt-1">PAGTO: {printingOrder.paymentMethod || 'DINHEIRO'}</p>
                 </div>
+                <div className="border-t border-dashed my-3 py-3">
+                  {groupedPrintingItems.map(([id, data]) => (
+                    <div key={id} className="flex justify-between font-black uppercase py-0.5">
+                      <span>{data.quantity}x {data.name.substring(0, 18)}</span>
+                      <span>R$ {(data.quantity * data.price).toFixed(2)}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex justify-between items-end border-t border-dashed pt-4 mb-1">
+                  <span className="font-black text-[9px] uppercase tracking-widest">SUBTOTAL:</span>
+                  <span className="text-sm font-black">R$ {(printingOrder.total - (printingOrder.deliveryFee || 0)).toFixed(2)}</span>
+                </div>
+                {printingOrder.deliveryFee !== undefined && printingOrder.deliveryFee > 0 && (
+                  <div className="flex justify-between items-end mb-1">
+                    <span className="font-black text-[9px] uppercase tracking-widest">TAXA ENTREGA:</span>
+                    <span className="text-sm font-black">R$ {printingOrder.deliveryFee.toFixed(2)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between items-end border-t border-dashed pt-2 mb-6">
+                  <span className="font-black text-[9px] uppercase tracking-widest">TOTAL:</span>
+                  <span className="text-2xl font-black">R$ {printingOrder.total.toFixed(2)}</span>
+                </div>
+              </>
+            )}
+
+            <div className="flex flex-col gap-2 no-print">
+              <div className="flex gap-2">
+                <button onClick={() => window.print()} className="flex-[2] bg-slate-900 text-white py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl">Imprimir</button>
+                <button onClick={() => setPrintingOrder(null)} className="flex-1 bg-slate-100 text-slate-600 py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest">Fechar</button>
               </div>
 
-              <p className="font-black hidden print:block pt-1">PAGTO: {printingOrder.paymentMethod || 'DINHEIRO'}</p>
-            </div>
-            <div className="border-t border-dashed my-3 py-3">
-              {groupedPrintingItems.map(([id, data]) => (
-                <div key={id} className="flex justify-between font-black uppercase py-0.5">
-                  <span>{data.quantity}x {data.name.substring(0, 18)}</span>
-                  <span>R$ {(data.quantity * data.price).toFixed(2)}</span>
-                </div>
-              ))}
-            </div>
-            <div className="flex justify-between items-end border-t border-dashed pt-4 mb-1">
-              <span className="font-black text-[9px] uppercase tracking-widest">SUBTOTAL:</span>
-              <span className="text-sm font-black">R$ {(printingOrder.total - (printingOrder.deliveryFee || 0)).toFixed(2)}</span>
-            </div>
-            {printingOrder.deliveryFee !== undefined && printingOrder.deliveryFee > 0 && (
-              <div className="flex justify-between items-end mb-1">
-                <span className="font-black text-[9px] uppercase tracking-widest">TAXA ENTREGA:</span>
-                <span className="text-sm font-black">R$ {printingOrder.deliveryFee.toFixed(2)}</span>
-              </div>
-            )}
-            <div className="flex justify-between items-end border-t border-dashed pt-2 mb-6">
-              <span className="font-black text-[9px] uppercase tracking-widest">TOTAL:</span>
-              <span className="text-2xl font-black">R$ {printingOrder.total.toFixed(2)}</span>
-            </div>
-            <div className="flex gap-2 no-print">
-              <button onClick={() => window.print()} className="flex-1 bg-slate-900 text-white py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl">Imprimir</button>
-              <button onClick={() => setPrintingOrder(null)} className="flex-1 bg-slate-100 text-slate-600 py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest">Fechar</button>
+              {printingOrder.nfeStatus === 'EMITTED' && (
+                <button
+                  onClick={() => setIsNfceVisual(!isNfceVisual)}
+                  className="w-full py-3 border-2 border-dashed border-slate-200 text-slate-400 rounded-xl font-black uppercase text-[8px] hover:border-blue-400 hover:text-blue-500 transition-all"
+                >
+                  {isNfceVisual ? 'Ver Comprovante Simples' : 'Ver DANFE NFC-e'}
+                </button>
+              )}
             </div>
           </div>
         </div>
