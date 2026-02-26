@@ -6,6 +6,7 @@ import { TableSession, Product, User, OrderItem, Order, OrderStatus, SaleType, W
 import { Icons, PLACEHOLDER_FOOD_IMAGE, formatImageUrl } from '../constants';
 import CustomAlert from '../components/CustomAlert';
 import { useDigitalAlert } from '../hooks/useDigitalAlert';
+import { validateEmail, validateCPF, validateCNPJ, maskPhone, maskDocument } from '../services/validationUtils';
 
 interface TablesProps {
   currentUser: User;
@@ -33,6 +34,8 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
   const [isUnregisteredClient, setIsUnregisteredClient] = useState(false);
   const [manualClientName, setManualClientName] = useState('');
   const [manualClientPhone, setManualClientPhone] = useState('');
+  const [manualClientEmail, setManualClientEmail] = useState('');
+  const [manualClientDocument, setManualClientDocument] = useState('');
   const [manualClientAddress, setManualClientAddress] = useState('');
   const [manualClientCep, setManualClientCep] = useState('');
   const [isLoadingCep, setIsLoadingCep] = useState(false);
@@ -295,9 +298,31 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
   };
 
   const startBillingRequest = (sess: TableSession) => {
-    if (isUnregisteredClient && !manualClientName.trim()) {
-      return showAlert("Identificação Requerida", "Por favor, digite ao menos o nome do cliente avulso.", "DANGER");
+    if (!manualClientName.trim()) {
+      showAlert('Cliente Necessário', 'Identifique o cliente para fechar a conta.', 'INFO');
+      return;
     }
+
+    if (manualClientEmail && !validateEmail(manualClientEmail)) {
+      showAlert('Email Inválido', 'Por favor, insira um endereço de email válido.', 'DANGER');
+      return;
+    }
+
+    if (manualClientDocument) {
+      const cleanDoc = manualClientDocument.replace(/\D/g, '');
+      if (cleanDoc.length <= 11) {
+        if (!validateCPF(cleanDoc)) {
+          showAlert('CPF Inválido', 'O CPF informado não é válido.', 'DANGER');
+          return;
+        }
+      } else {
+        if (!validateCNPJ(cleanDoc)) {
+          showAlert('CNPJ Inválido', 'O CNPJ informado não é válido.', 'DANGER');
+          return;
+        }
+      }
+    }
+
     if (!isUnregisteredClient && !selectedClient) {
       return showAlert("Identificação Requerida", "Por favor, selecione um cliente da base ou use a opção 'Avulso'.", "DANGER");
     }
@@ -310,17 +335,18 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
     if (!printingPreBill) return;
 
     const clientName = isUnregisteredClient ? manualClientName : (selectedClient?.name || 'Consumidor');
-    const clientId = isUnregisteredClient ? undefined : selectedClient?.id;
     const clientPhone = isUnregisteredClient ? manualClientPhone : selectedClient?.phone;
+    const clientEmail = isUnregisteredClient ? manualClientEmail : selectedClient?.email;
+    const clientDocument = isUnregisteredClient ? manualClientDocument : selectedClient?.document;
     const clientAddress = isUnregisteredClient ? manualClientAddress : selectedClient?.addresses[0];
 
     let finalClientId = isUnregisteredClient ? undefined : selectedClient?.id;
 
-    if (isUnregisteredClient && manualClientName && manualClientPhone) {
+    if (isUnregisteredClient && manualClientName) {
       // Here we attempt to find or create the client in the DB
       try {
         const formattedPhone = manualClientPhone.replace(/\D/g, ''); // just numbers
-        const existingClient = clients.find(c => c.phone.replace(/\D/g, '') === formattedPhone);
+        const existingClient = clients.find(c => c.phone?.replace(/\D/g, '') === formattedPhone);
 
         if (existingClient) {
           finalClientId = existingClient.id; // It actually existed, we can just use the ID
@@ -330,6 +356,8 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
             id: `CLIENT-${Date.now()}`,
             name: manualClientName,
             phone: manualClientPhone,
+            email: manualClientEmail || undefined,
+            document: manualClientDocument || undefined,
             addresses: manualClientAddress ? [manualClientAddress] : [],
             totalOrders: 0
           };
@@ -350,6 +378,8 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
       clientName,
       clientId: finalClientId,
       clientPhone,
+      clientEmail,
+      clientDocument,
       clientAddress
     });
 
@@ -361,6 +391,8 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
     setSelectedClient(null);
     setManualClientName('');
     setManualClientPhone('');
+    setManualClientEmail('');
+    setManualClientDocument('');
     setManualClientAddress('');
     setManualClientCep('');
     setClientSearch('');
@@ -408,9 +440,11 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
               setSelectedWaiterId(s?.waiterId || '');
               setActiveModalTab(status === 'billing' ? 'CHECKOUT' : 'LAUNCH');
               setIsUnregisteredClient(false);
-              setManualClientName('');
-              setManualClientPhone('');
-              setManualClientAddress('');
+              setManualClientName(s?.clientName || '');
+              setManualClientPhone(s?.clientPhone || '');
+              setManualClientEmail(s?.clientEmail || '');
+              setManualClientDocument(s?.clientDocument || '');
+              setManualClientAddress(s?.clientAddress || '');
               setManualClientCep('');
               setClientSearch('');
               setSelectedClient(null);
@@ -556,39 +590,17 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
                   <div className="flex flex-col items-center justify-center h-full">
                     <div className="text-center mb-8"><p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Valor Total da Conta</p><h4 className="text-6xl font-black text-slate-900 tracking-tighter">R$ {getSessForTable(selectedTable)?.items.reduce((acc, it) => acc + (it.price * it.quantity), 0).toFixed(2)}</h4></div>
                     <div className="w-full max-w-md bg-slate-50 p-8 rounded-[2rem] border border-slate-100 space-y-6">
-                      <div className="flex items-center justify-between"><label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Identificação do Cliente</label><button onClick={() => { setIsUnregisteredClient(!isUnregisteredClient); setSelectedClient(null); setManualClientName(''); setManualClientPhone(''); setManualClientAddress(''); setManualClientCep(''); setClientSearch(''); }} className={`text-[9px] font-black uppercase px-2 py-1 rounded-lg transition-all ${isUnregisteredClient ? 'bg-blue-600 text-white shadow-md' : 'bg-slate-200 text-slate-500'}`}>{isUnregisteredClient ? 'Mudar para Base' : 'Cliente Avulso?'}</button></div>
+                      <div className="flex items-center justify-between"><label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Identificação do Cliente</label><button onClick={() => { setIsUnregisteredClient(!isUnregisteredClient); setSelectedClient(null); setManualClientName(''); setManualClientPhone(''); setManualClientAddress(''); setManualClientCep(''); setClientSearch(''); setManualClientEmail(''); setManualClientDocument(''); }} className={`text-[9px] font-black uppercase px-2 py-1 rounded-lg transition-all ${isUnregisteredClient ? 'bg-blue-600 text-white shadow-md' : 'bg-slate-200 text-slate-500'}`}>{isUnregisteredClient ? 'Mudar para Base' : 'Cliente Avulso?'}</button></div>
                       {isUnregisteredClient ? (
                         <div className="space-y-3 animate-in zoom-in-95">
-                          <input
-                            type="text"
-                            className="w-full p-4 bg-white border border-slate-200 rounded-2xl text-[11px] font-black uppercase outline-none focus:ring-4 focus:ring-blue-50 transition-all"
-                            placeholder="Telefone"
-                            value={manualClientPhone}
-                            onChange={async (e) => {
-                              const phone = e.target.value;
-                              const cleanPhone = phone.replace(/\D/g, '');
-                              const cleanPrevPhone = manualClientPhone.replace(/\D/g, '');
-                              const matchedNew = clients.find(c => c.phone.replace(/\D/g, '') === cleanPhone && cleanPhone.length > 0);
-                              const matchedOld = clients.find(c => c.phone.replace(/\D/g, '') === cleanPrevPhone && cleanPrevPhone.length > 0);
-
-                              setManualClientPhone(phone);
-                              if (matchedNew) {
-                                setManualClientName(matchedNew.name);
-                                setManualClientAddress(matchedNew.addresses[0] || '');
-                              } else if (matchedOld || (cleanPhone.length >= 8 && cleanPrevPhone.length < 8)) {
-                                setManualClientName('');
-                                setManualClientAddress('');
-                                setManualClientCep('');
-                              }
-                            }}
-                          />
-                          <input
-                            type="text"
-                            className="w-full p-4 bg-white border border-slate-200 rounded-2xl text-[11px] font-black outline-none focus:ring-4 focus:ring-blue-50 transition-all"
-                            placeholder="Nome Completo"
-                            value={manualClientName}
-                            onChange={(e) => setManualClientName(e.target.value)}
-                          />
+                          <div className="flex gap-2">
+                            <input type="text" placeholder="Nome Completo" value={manualClientName} onChange={e => setManualClientName(e.target.value)} className="flex-1 p-4 bg-white border border-slate-200 rounded-2xl text-[11px] font-black uppercase outline-none focus:ring-4 focus:ring-blue-50 transition-all" />
+                            <input type="text" placeholder="Telefone" value={manualClientPhone} onChange={e => setManualClientPhone(maskPhone(e.target.value))} className="w-1/3 p-4 bg-white border border-slate-200 rounded-2xl text-[11px] font-black uppercase outline-none focus:ring-4 focus:ring-blue-50 transition-all" />
+                          </div>
+                          <div className="flex gap-2">
+                            <input type="email" placeholder="Email" value={manualClientEmail} onChange={e => setManualClientEmail(e.target.value)} className="flex-1 p-4 bg-white border border-slate-200 rounded-2xl text-[11px] font-black uppercase outline-none focus:ring-4 focus:ring-blue-50 transition-all" />
+                            <input type="text" placeholder="CPF/CNPJ" value={manualClientDocument} onChange={e => setManualClientDocument(maskDocument(e.target.value))} className="flex-1 p-4 bg-white border border-slate-200 rounded-2xl text-[11px] font-black uppercase outline-none focus:ring-4 focus:ring-blue-50 transition-all" />
+                          </div>
                           <div className="flex gap-2 items-start">
                             <div className="w-1/3 relative shrink-0">
                               <input

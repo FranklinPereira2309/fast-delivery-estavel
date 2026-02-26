@@ -74,6 +74,8 @@ model Client {
   id             String   @id @default(uuid())
   name           String
   phone          String
+  email          String?
+  document       String?
   addresses      String[]
   totalOrders    Int      @default(0)
   lastOrderDate  String?
@@ -133,16 +135,20 @@ model RecipeItem {
 
 model Order {
   id            String      @id @default(uuid())
+  orderId       String?     @unique
   clientId      String
   client        Client      @relation(fields: [clientId], references: [id])
   clientName    String
   clientAddress String?
   clientPhone   String?
+  clientEmail   String?
+  clientDocument String?
   items         OrderItem[]
   total         Float
   status        OrderStatus @default(PENDING)
   type          SaleType
   createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
   paymentMethod String?
   driverId      String?
   driver        DeliveryDriver? @relation(fields: [driverId], references: [id])
@@ -175,12 +181,14 @@ model TableSession {
   status             SessionStatus @default(available)
   items              OrderItem[]
   clientName         String?
+  clientPhone        String?
+  clientEmail        String?
+  clientDocument     String?
   clientId           String?
   waiterId           String?
   waiter             Waiter?       @relation(fields: [waiterId], references: [id])
   startTime          DateTime      @default(now())
   clientAddress      String?
-  clientPhone        String?
   hasPendingDigital  Boolean       @default(false)
   pendingReviewItems String?       // To store stringified array of requested digital items before approval
   isOriginDigitalMenu Boolean      @default(false)

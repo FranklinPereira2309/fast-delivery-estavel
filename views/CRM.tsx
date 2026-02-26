@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Client, User } from '../types';
 import { db } from '../services/db';
 import CustomAlert from '../components/CustomAlert';
+import { validateEmail, validateCPF, validateCNPJ, maskPhone, maskDocument } from '../services/validationUtils';
 
 interface CRMProps {
   currentUser: User;
@@ -41,6 +42,8 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
+    email: '',
+    document: '',
     cep: '',
     logradouro: '',
     numero: '',
@@ -81,6 +84,8 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
     setFormData({
       name: client.name,
       phone: client.phone,
+      email: client.email || '',
+      document: client.document || '',
       cep: '',
       logradouro: addr,
       numero: '',
@@ -159,12 +164,34 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
       return;
     }
 
+    if (formData.email && !validateEmail(formData.email)) {
+      showAlert('Email Inválido', 'Por favor, insira um endereço de email válido.', 'DANGER');
+      return;
+    }
+
+    if (formData.document) {
+      const cleanDoc = formData.document.replace(/\D/g, '');
+      if (cleanDoc.length <= 11) {
+        if (!validateCPF(cleanDoc)) {
+          showAlert('CPF Inválido', 'O CPF informado não é válido.', 'DANGER');
+          return;
+        }
+      } else {
+        if (!validateCNPJ(cleanDoc)) {
+          showAlert('CNPJ Inválido', 'O CNPJ informado não é válido.', 'DANGER');
+          return;
+        }
+      }
+    }
+
     const fullAddress = `${formData.logradouro}, ${formData.numero}${formData.complemento ? ' - ' + formData.complemento : ''}, ${formData.bairro}, ${formData.cidade} - ${formData.uf} (CEP: ${formData.cep})`;
 
     const clientData: Client = {
       id: editingClient?.id || Date.now().toString(),
       name: formData.name,
       phone: formData.phone,
+      email: formData.email || undefined,
+      document: formData.document || undefined,
       addresses: [fullAddress],
       totalOrders: editingClient?.totalOrders || 0,
       lastOrderDate: editingClient?.lastOrderDate || '-'
@@ -306,7 +333,29 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
                     className="w-full p-3 bg-slate-100 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all font-medium"
                     placeholder="Ex: (11) 99999-9999"
                     value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    onChange={(e) => setFormData({ ...formData, phone: maskPhone(e.target.value) })}
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-500 uppercase">Email</label>
+                  <input
+                    type="email"
+                    className="w-full p-3 bg-slate-100 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all font-medium"
+                    placeholder="Ex: joao@email.com"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-500 uppercase">CPF / CNPJ</label>
+                  <input
+                    type="text"
+                    className="w-full p-3 bg-slate-100 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all font-medium"
+                    placeholder="000.000.000-00 ou 00.000.000/0000-00"
+                    value={formData.document}
+                    onChange={(e) => setFormData({ ...formData, document: maskDocument(e.target.value) })}
                   />
                 </div>
               </div>

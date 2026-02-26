@@ -80,6 +80,8 @@ export interface Client {
   id: string;
   name: string;
   phone: string;
+  email?: string;
+  document?: string;
   addresses: string[];
   totalOrders: number;
   lastOrderDate?: string;
@@ -96,37 +98,45 @@ export interface Product {
 }
 
 export interface OrderItem {
-  uid: string; // ID único da instância do item
+  uid: string;
+  id?: string;
+  orderId?: string;
+  tableSessionId?: number;
   productId: string;
   quantity: number;
   price: number;
   isReady?: boolean;
   readyAt?: string;
   observations?: string;
-  tableSessionId?: number;
 }
 
 export interface TableSession {
   tableNumber: number;
-  status: 'available' | 'occupied' | 'billing';
+  status: 'available' | 'occupied' | 'billing' | 'pending-digital';
   items: OrderItem[];
   clientName?: string;
+  clientPhone?: string;
+  clientEmail?: string;
+  clientDocument?: string;
   clientId?: string;
   waiterId?: string;
   startTime: string;
-  clientAddress?: string; // Novo: Endereço para cupom de mesa
-  clientPhone?: string;   // Novo: Telefone para cupom de mesa
+  clientAddress?: string;
   hasPendingDigital?: boolean;
   pendingReviewItems?: string;
   isOriginDigitalMenu?: boolean;
+  updatedAt?: Date;
 }
 
 export interface Order {
   id: string;
-  clientId: string;
+  orderId?: string;
+  clientId?: string;
   clientName: string;
   clientAddress?: string;
-  clientPhone?: string; // Novo: Telefone no pedido
+  clientPhone?: string;
+  clientEmail?: string;
+  clientDocument?: string;
   items: OrderItem[];
   total: number;
   status: OrderStatus;
@@ -134,10 +144,13 @@ export interface Order {
   createdAt: string;
   paymentMethod?: string;
   driverId?: string;
+  deliveryDriverId?: string;
+  assignedAt?: string;
   deliveryFee?: number;
   tableNumber?: number;
   waiterId?: string;
   isOriginDigitalMenu?: boolean;
+  updatedAt?: string;
 }
 
 export interface AuditLog {
@@ -145,7 +158,7 @@ export interface AuditLog {
   timestamp: string;
   userId: string;
   userName: string;
-  action: 'CREATE_ORDER' | 'EDIT_ORDER' | 'DELETE_ORDER' | 'LOGIN' | 'LOGOUT' | 'STOCK_ADJUST' | 'RECIPE_UPDATE' | 'TABLE_OPEN' | 'TABLE_ADD_ITEM' | 'TABLE_VOID_ITEM' | 'TABLE_BILL_REQUEST' | 'TABLE_DIGITAL_APPROVE' | 'TABLE_DIGITAL_REJECT';
+  action: string;
   details: string;
 }
 
@@ -155,12 +168,10 @@ export interface DeliveryDriver {
   phone: string;
   email?: string;
   address?: string;
-  vehicle: {
-    plate: string;
-    model: string;
-    brand: string;
-    type: 'Moto' | 'Carro' | 'Bicicleta';
-  };
+  vehiclePlate: string;
+  vehicleModel: string;
+  vehicleBrand: string;
+  vehicleType: 'Moto' | 'Carro' | 'Bicicleta';
   status: 'AVAILABLE' | 'BUSY' | 'OFFLINE';
 }
 

@@ -5,6 +5,7 @@ import { db, BusinessSettings } from '../services/db';
 import { socket } from '../services/socket';
 import { Icons, PLACEHOLDER_FOOD_IMAGE, formatImageUrl } from '../constants';
 import CustomAlert from '../components/CustomAlert';
+import { validateEmail, validateCPF, validateCNPJ, maskPhone, maskDocument } from '../services/validationUtils';
 
 interface POSProps {
   currentUser: User;
@@ -25,7 +26,14 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
   const [showClientList, setShowClientList] = useState(false);
 
   const [isAvulso, setIsAvulso] = useState(false);
-  const [avulsoData, setAvulsoData] = useState({ name: '', phone: '', address: '', cep: '' });
+  const [avulsoData, setAvulsoData] = useState({
+    phone: '',
+    name: '',
+    address: '',
+    cep: '',
+    email: '',
+    document: ''
+  });
   const [isLoadingCep, setIsLoadingCep] = useState(false);
 
   const [tableNumberInput, setTableNumberInput] = useState('');
@@ -160,7 +168,9 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
         name: order.clientName,
         phone: order.clientPhone || '',
         address: order.clientAddress || '',
-        cep: ''
+        cep: '',
+        email: order.clientEmail || '',
+        document: order.clientDocument || ''
       });
     }
 
@@ -266,7 +276,32 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       }
     }
 
-    // Busca a sessão da mesa diretamente no banco de garantir que pegamos os dados reais, 
+    if (saleType !== SaleType.COUNTER && !selectedClient && !avulsoData.name) {
+      showAlert('Cliente Necessário', 'Para entregas ou mesas, identifique o cliente.', 'INFO');
+      return;
+    }
+
+    if (!selectedClient && avulsoData.email && !validateEmail(avulsoData.email)) {
+      showAlert('Email Inválido', 'Por favor, insira um endereço de email válido.', 'DANGER');
+      return;
+    }
+
+    if (!selectedClient && avulsoData.document) {
+      const cleanDoc = avulsoData.document.replace(/\D/g, '');
+      if (cleanDoc.length <= 11) {
+        if (!validateCPF(cleanDoc)) {
+          showAlert('CPF Inválido', 'O CPF informado não é válido.', 'DANGER');
+          return;
+        }
+      } else {
+        if (!validateCNPJ(cleanDoc)) {
+          showAlert('CNPJ Inválido', 'O CNPJ informado não é válido.', 'DANGER');
+          return;
+        }
+      }
+    }
+
+    // Busca a sessão da mesa diretamente no banco de garantir que pegamos os dados reais,
     // mesmo que ela esteja apenas 'occupied' (e não 'billing' no pendingTables)
     let freshTableSession = isTableSale ? ((await db.getTableSessions()).find(t => t.tableNumber === finalTableNum)) : null;
     let tableSessionToClose = isTableSale ? (freshTableSession || pendingTables.find(t => t.tableNumber === finalTableNum)) : null;
@@ -291,7 +326,9 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
             name: avulsoData.name,
             phone: avulsoData.phone,
             addresses: avulsoData.address ? [avulsoData.address] : [],
-            totalOrders: 0
+            totalOrders: 0,
+            email: avulsoData.email || undefined,
+            document: avulsoData.document || undefined
           };
           await db.saveClient(newClient);
           finalClientId = newClient.id;
@@ -313,6 +350,8 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
         clientName: finalClientName,
         clientAddress: isAvulso ? avulsoData.address : (selectedClient?.addresses[0] || undefined),
         clientPhone: isAvulso ? avulsoData.phone : (selectedClient?.phone || undefined),
+        clientEmail: isAvulso ? avulsoData.email : (selectedClient?.email || undefined),
+        clientDocument: isAvulso ? avulsoData.document : (selectedClient?.document || undefined),
         items: [...cart],
         total: cartTotal,
         status: OrderStatus.PREPARING,
@@ -344,6 +383,14 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       ? (pendingTables.find(t => t.tableNumber === finalTableNum)?.clientPhone || undefined)
       : (isAvulso ? avulsoData.phone : (selectedClient?.phone || undefined));
 
+    const finalEmail = isTableSale
+      ? (pendingTables.find(t => t.tableNumber === finalTableNum)?.clientEmail || undefined)
+      : (isAvulso ? avulsoData.email : (selectedClient?.email || undefined));
+
+    const finalDocument = isTableSale
+      ? (pendingTables.find(t => t.tableNumber === finalTableNum)?.clientDocument || undefined)
+      : (isAvulso ? avulsoData.document : (selectedClient?.document || undefined));
+
     const existingTableOrderId = isTableSale ? `TABLE-${finalTableNum}` : null;
 
     // Delivery Validation
@@ -364,6 +411,8 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
         clientName: finalClientName,
         clientAddress: finalAddress,
         clientPhone: finalPhone,
+        clientEmail: finalEmail,
+        clientDocument: finalDocument,
         items: [...cart],
         total: cartTotal,
         status: OrderStatus.PREPARING,
@@ -391,6 +440,8 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       clientName: finalClientName,
       clientAddress: finalAddress,
       clientPhone: finalPhone,
+      clientEmail: finalEmail,
+      clientDocument: finalDocument,
       items: [...cart],
       total: cartTotal,
       status: OrderStatus.DELIVERED,
@@ -434,7 +485,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
     setCurrentOrderStatus(null);
     setEditingOrderId(null);
     setIsAvulso(false);
-    setAvulsoData({ name: '', phone: '', address: '', cep: '' });
+    setAvulsoData({ name: '', phone: '', address: '', cep: '', email: '', document: '' });
     setManualDeliveryFee(null);
   };
 
@@ -617,28 +668,23 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
 
                   {isAvulso ? (
                     <div className="space-y-2 animate-in zoom-in-95">
-                      <input
-                        type="text"
-                        placeholder="Telefone"
-                        value={avulsoData.phone}
-                        onChange={e => {
-                          const phone = e.target.value;
-                          const cleanPhone = phone.replace(/\D/g, '');
-                          const cleanPrevPhone = avulsoData.phone.replace(/\D/g, '');
-                          const matchedNew = clients.find(c => c.phone.replace(/\D/g, '') === cleanPhone && cleanPhone.length > 0);
-                          const matchedOld = clients.find(c => c.phone.replace(/\D/g, '') === cleanPrevPhone && cleanPrevPhone.length > 0);
-
-                          if (matchedNew) {
-                            setAvulsoData({ phone, name: matchedNew.name, address: matchedNew.addresses[0] || '', cep: avulsoData.cep });
-                          } else if (matchedOld || (cleanPhone.length >= 8 && cleanPrevPhone.length < 8)) {
-                            setAvulsoData({ phone, name: '', address: '', cep: '' });
-                          } else {
-                            setAvulsoData(prev => ({ ...prev, phone }));
+                      <div className="flex gap-2">
+                        <input type="text" className="flex-1 p-4 bg-slate-100 border-none rounded-2xl text-[11px] font-black uppercase outline-none" placeholder="Fone..." value={avulsoData.phone} onChange={(e) => {
+                          const val = maskPhone(e.target.value);
+                          setAvulsoData({ ...avulsoData, phone: val });
+                          const match = clients.find(c => c.phone === val);
+                          if (match) {
+                            setSelectedClient(match);
+                            setClientSearch(match.name);
+                            setShowClientList(false);
                           }
-                        }}
-                        className="w-full p-3 bg-slate-100 border-none rounded-xl text-[10px] font-black uppercase outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                      <input type="text" placeholder="Nome do Cliente" value={avulsoData.name} onChange={e => setAvulsoData({ ...avulsoData, name: e.target.value })} className="w-full p-3 bg-slate-100 border-none rounded-xl text-[10px] font-black outline-none focus:ring-2 focus:ring-blue-500" />
+                        }} />
+                        <input type="text" className="flex-1 p-4 bg-slate-100 border-none rounded-2xl text-[11px] font-black uppercase outline-none" placeholder="Nome..." value={avulsoData.name} onChange={(e) => setAvulsoData({ ...avulsoData, name: e.target.value })} />
+                      </div>
+                      <div className="flex gap-2 mt-2">
+                        <input type="email" className="flex-1 p-4 bg-slate-100 border-none rounded-2xl text-[11px] font-black uppercase outline-none" placeholder="Email..." value={avulsoData.email} onChange={(e) => setAvulsoData({ ...avulsoData, email: e.target.value })} />
+                        <input type="text" className="flex-1 p-4 bg-slate-100 border-none rounded-2xl text-[11px] font-black uppercase outline-none" placeholder="CPF/CNPJ..." value={avulsoData.document} onChange={(e) => setAvulsoData({ ...avulsoData, document: maskDocument(e.target.value) })} />
+                      </div>
                       {(saleType === SaleType.OWN_DELIVERY || saleType === SaleType.THIRD_PARTY) && (
                         <div className="flex gap-2 items-start">
                           <div className="w-1/3 relative shrink-0">

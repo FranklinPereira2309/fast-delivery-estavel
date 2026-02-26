@@ -39,6 +39,8 @@ const syncClientStats = async (tx: any, order: any, oldStatus?: string) => {
                 data: {
                     name: order.clientName,
                     phone: order.clientPhone,
+                    email: order.clientEmail || null,
+                    document: order.clientDocument || null,
                     addresses: [order.clientAddress || 'S/ Endereço'],
                     totalOrders: 0
                 }
@@ -179,6 +181,8 @@ export const saveOrder = async (req: Request, res: Response) => {
                     waiterId: waiterId,
                     total: order.total,
                     deliveryFee: order.deliveryFee,
+                    clientEmail: order.clientEmail || null,
+                    clientDocument: order.clientDocument || null,
                     isOriginDigitalMenu: order.isOriginDigitalMenu !== undefined ? order.isOriginDigitalMenu : false, // Fix: Preserve Origin into Update
                     items: {
                         deleteMany: {},
@@ -209,6 +213,8 @@ export const saveOrder = async (req: Request, res: Response) => {
                     assignedAt: driverId ? new Date() : null,
                     tableNumber: order.tableNumber,
                     waiterId: waiterId,
+                    clientEmail: order.clientEmail || null,
+                    clientDocument: order.clientDocument || null,
                     isOriginDigitalMenu: order.isOriginDigitalMenu !== undefined ? order.isOriginDigitalMenu : false, // Fix: Preserve Origin into Creation
                     items: {
                         create: order.items.map((item: any) => ({

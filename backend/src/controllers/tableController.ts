@@ -104,6 +104,8 @@ export const saveTableSession = async (req: Request, res: Response) => {
                     total: total,
                     clientId: clientId,
                     clientName: sessionData.clientName || `Mesa ${tableNum}`,
+                    clientEmail: sessionData.clientEmail || null,
+                    clientDocument: sessionData.clientDocument || null,
                     waiterId: waiterId,
                     createdAt: sessionData.startTime ? new Date(sessionData.startTime) : undefined
                 },
@@ -111,6 +113,8 @@ export const saveTableSession = async (req: Request, res: Response) => {
                     id: orderId,
                     clientId: clientId,
                     clientName: sessionData.clientName || `Mesa ${tableNum}`,
+                    clientEmail: sessionData.clientEmail || null,
+                    clientDocument: sessionData.clientDocument || null,
                     total: total,
                     status: calculatedStatus,
                     type: 'TABLE',
