@@ -43,6 +43,7 @@ app.use('/api/audit', auditRoutes);
 app.use('/api/tables', tableRoutes);
 app.use('/api/public', publicRoutes); // Rotas abertas para clientes e cardápio digital
 app.use('/api/chat', chatRoutes);
+app.use('/api/cash', cashRoutes);
 
 // Basic health check
 app.get('/health', (req, res) => {
