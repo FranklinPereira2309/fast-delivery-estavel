@@ -717,10 +717,16 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
               )}
             </div>
 
-            <div className="p-8 lg:p-10 bg-slate-50 border-t border-slate-100 shrink-0">
+            <div className="p-8 lg:p-10 bg-slate-50 border-t border-slate-100 shrink-0 flex gap-4">
+              <button
+                onClick={() => setIsPaymentModalOpen(false)}
+                className="flex-1 py-6 bg-white border border-slate-200 text-slate-500 rounded-[2rem] font-black uppercase text-lg tracking-widest hover:bg-red-50 hover:text-red-500 hover:border-red-100 transition-all"
+              >
+                Cancelar
+              </button>
               <button
                 onClick={processPaymentAndFinalize}
-                className="w-full py-6 bg-blue-600 hover:bg-blue-700 text-white rounded-[2rem] font-black uppercase text-lg tracking-widest shadow-2xl shadow-blue-200 transition-all flex items-center justify-center gap-4 group"
+                className="flex-[2] py-6 bg-blue-600 hover:bg-blue-700 text-white rounded-[2rem] font-black uppercase text-lg tracking-widest shadow-2xl shadow-blue-200 transition-all flex items-center justify-center gap-4 group"
               >
                 <span>Finalizar Pedido</span>
                 <Icons.View className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
@@ -1074,19 +1080,38 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
               <div
                 onClick={() => {
                   if (cart.length === 0) return showAlert("Carrinho Vazio", "Adicione produtos antes de selecionar a forma de pagamento.", "INFO");
+
+                  // Rule: Counter sales must be READY before payment
+                  if (saleType === SaleType.COUNTER && !editingOrderId) {
+                    return showAlert("Fluxo de Balcão", "Para vendas de Balcão, primeiro envie o pedido para a cozinha. O recebimento é habilitado após o pedido ficar 'PRONTO'.", "INFO");
+                  }
+
                   setIsPaymentModalOpen(true);
                 }}
-                className="w-full p-4 bg-blue-600 text-white rounded-2xl flex items-center justify-between group cursor-pointer hover:bg-blue-700 transition-all shadow-lg shadow-blue-100"
+                className={`w-full p-4 rounded-2xl flex items-center justify-between group transition-all shadow-lg shadow-blue-100 ${(saleType === SaleType.COUNTER && !editingOrderId)
+                  ? 'bg-slate-200 text-slate-400 cursor-not-allowed grayscale'
+                  : 'bg-blue-600 text-white cursor-pointer hover:bg-blue-700'
+                  }`}
               >
                 <div className="flex items-center gap-3">
                   <div className="bg-white/20 p-2 rounded-xl">
-                    <Icons.CreditCard className="w-4 h-4 text-white" />
+                    {saleType === SaleType.COUNTER && !editingOrderId ? (
+                      <Icons.POS className="w-4 h-4 text-slate-400" /> // Using POS icon as fallback
+                    ) : (
+                      <Icons.CreditCard className="w-4 h-4 text-white" />
+                    )}
                   </div>
                   <div className="text-left">
                     <p className="text-[10px] font-black uppercase tracking-tighter">Forma de Recebimento</p>
                   </div>
                 </div>
-                <div className="bg-white/20 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest">SELECIONAR</div>
+                {saleType === SaleType.COUNTER && !editingOrderId ? (
+                  <div className="bg-white/20 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest flex items-center gap-1">
+                    Bloqueado
+                  </div>
+                ) : (
+                  <div className="bg-white/20 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest">SELECIONAR</div>
+                )}
               </div>
             </div>
           </div>
