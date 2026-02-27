@@ -268,6 +268,8 @@ export const deleteOrder = async (req: Request, res: Response) => {
     const { id } = req.params;
     const { user } = req.body;
 
+    let orderDeleted: any = null;
+
     try {
         await prisma.$transaction(async (tx: any) => {
             // 1. Inspeciona o pedido antes de apagar
@@ -279,6 +281,8 @@ export const deleteOrder = async (req: Request, res: Response) => {
             if (!orderToDelete) {
                 throw new Error("Pedido não encontrado.");
             }
+
+            orderDeleted = orderToDelete;
 
             // 2. Se era um pedido Finalizado (DELIVERED), desfazemos os logs
             if (orderToDelete.status === 'DELIVERED') {
@@ -317,9 +321,9 @@ export const deleteOrder = async (req: Request, res: Response) => {
             getIO().emit('orderStatusChanged', { action: 'delete', id });
 
             // Se for pedido vindo do menu digital, avisar o cliente
-            if (orderToDelete.isOriginDigitalMenu && orderToDelete.tableNumber) {
+            if (orderDeleted && orderDeleted.isOriginDigitalMenu && orderDeleted.tableNumber) {
                 getIO().emit('digitalOrderCancelled', {
-                    tableNumber: orderToDelete.tableNumber,
+                    tableNumber: orderDeleted.tableNumber,
                     message: "Esse pedido foi cancelado. Qualquer dúvida falar com o Garçom Responsável."
                 });
             }
