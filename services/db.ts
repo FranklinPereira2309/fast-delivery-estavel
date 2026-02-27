@@ -268,6 +268,17 @@ class APIDBService {
     });
   }
 
+  public async getClosurePreview(): Promise<{ systemCash: number, systemPix: number, systemCredit: number, systemDebit: number, totalSales: number }> {
+    return this.request<{ systemCash: number, systemPix: number, systemCredit: number, systemDebit: number, totalSales: number }>('/cash/preview');
+  }
+
+  public async updateCashSession(data: { id: string, cash: number, pix: number, credit: number, debit: number, observations?: string, user: User }): Promise<CashSession> {
+    return this.request<CashSession>('/cash/update', {
+      method: 'PATCH',
+      body: JSON.stringify(data)
+    });
+  }
+
   public async getCashSessions(startDate?: string, endDate?: string): Promise<CashSession[]> {
     let path = '/cash/list';
     const params = new URLSearchParams();

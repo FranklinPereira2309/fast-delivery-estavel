@@ -31,21 +31,11 @@ export const openCashSession = async (req: Request, res: Response) => {
     res.json(session);
 };
 
-export const closeCashSession = async (req: Request, res: Response) => {
-    const { sessionId, cash, pix, credit, debit, observations, user } = req.body;
-
-    const session = await prisma.cashSession.findUnique({
-        where: { id: sessionId }
-    });
-
-    if (!session || session.status === 'CLOSED') {
-        return res.status(400).json({ message: 'Caixa não encontrado ou já fechado.' });
-    }
-
+const calculateSessionTotals = async (openedAt: Date) => {
     // Get all orders completed since opening
     const orders = await prisma.order.findMany({
         where: {
-            createdAt: { gte: session.openedAt },
+            createdAt: { gte: openedAt },
             status: 'DELIVERED'
         }
     });
@@ -84,8 +74,37 @@ export const closeCashSession = async (req: Request, res: Response) => {
     });
 
     const totalSales = systemCash + systemPix + systemCredit + systemDebit;
+    return { systemCash, systemPix, systemCredit, systemDebit, totalSales };
+};
+
+export const getClosurePreview = async (req: Request, res: Response) => {
+    const session = await prisma.cashSession.findFirst({
+        where: { status: 'OPEN' }
+    });
+
+    if (!session) {
+        return res.status(404).json({ message: 'Nenhum caixa aberto encontrado.' });
+    }
+
+    const totals = await calculateSessionTotals(session.openedAt);
+    res.json(totals);
+};
+
+export const closeCashSession = async (req: Request, res: Response) => {
+    const { sessionId, cash, pix, credit, debit, observations, user } = req.body;
+
+    const session = await prisma.cashSession.findUnique({
+        where: { id: sessionId }
+    });
+
+    if (!session || session.status === 'CLOSED') {
+        return res.status(400).json({ message: 'Caixa não encontrado ou já fechado.' });
+    }
+
+    const totals = await calculateSessionTotals(session.openedAt);
+
     const totalReported = parseFloat(cash) + parseFloat(pix) + parseFloat(credit) + parseFloat(debit);
-    const difference = totalReported - totalSales;
+    const difference = totalReported - totals.totalSales;
 
     const updatedSession = await prisma.cashSession.update({
         where: { id: sessionId },
@@ -98,17 +117,57 @@ export const closeCashSession = async (req: Request, res: Response) => {
             reportedPix: parseFloat(pix),
             reportedCredit: parseFloat(credit),
             reportedDebit: parseFloat(debit),
-            systemCash,
-            systemPix,
-            systemCredit,
-            systemDebit,
-            totalSales,
+            systemCash: totals.systemCash,
+            systemPix: totals.systemPix,
+            systemCredit: totals.systemCredit,
+            systemDebit: totals.systemDebit,
+            totalSales: totals.totalSales,
             difference,
             observations
         }
     });
 
     res.json(updatedSession);
+};
+
+export const updateCashSession = async (req: Request, res: Response) => {
+    const { id, cash, pix, credit, debit, observations, user } = req.body;
+
+    const session = await prisma.cashSession.findUnique({
+        where: { id }
+    });
+
+    if (!session) {
+        return res.status(404).json({ message: 'Caixa não encontrado.' });
+    }
+
+    // Re-calculate totals if it was already closed, to ensure difference is correct
+    // In "Revisar", we might only update the reported values.
+    const totals = {
+        systemCash: session.systemCash || 0,
+        systemPix: session.systemPix || 0,
+        systemCredit: session.systemCredit || 0,
+        systemDebit: session.systemDebit || 0,
+        totalSales: session.totalSales || 0
+    };
+
+    const totalReported = parseFloat(cash) + parseFloat(pix) + parseFloat(credit) + parseFloat(debit);
+    const difference = totalReported - totals.totalSales;
+
+    const updated = await prisma.cashSession.update({
+        where: { id },
+        data: {
+            reportedCash: parseFloat(cash),
+            reportedPix: parseFloat(pix),
+            reportedCredit: parseFloat(credit),
+            reportedDebit: parseFloat(debit),
+            difference,
+            observations,
+            closedByName: `${session.closedByName} (Alt: ${user.name})`
+        }
+    });
+
+    res.json(updated);
 };
 
 export const reopenCashSession = async (req: Request, res: Response) => {
