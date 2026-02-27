@@ -90,7 +90,12 @@ const handleInventoryImpact = async (tx: any, items: any[], type: 'DECREMENT' | 
         if (product && product.recipe && Array.isArray(product.recipe)) {
             for (const r of product.recipe) {
                 if (!r.inventoryItemId) continue;
-                const quantityToChange = parseFloat(r.quantity.toString()) * parseFloat(item.quantity.toString()) * parseFloat(r.wasteFactor.toString());
+                const q = parseFloat(r.quantity?.toString() || '0');
+                const iq = parseFloat(item.quantity?.toString() || '0');
+                const wf = parseFloat(r.wasteFactor?.toString() || '1');
+                const quantityToChange = isNaN(q * iq * wf) ? 0 : (q * iq * wf);
+
+                if (quantityToChange === 0) continue;
 
                 await tx.inventoryItem.update({
                     where: { id: r.inventoryItemId },
@@ -214,14 +219,14 @@ export const saveOrder = async (req: Request, res: Response) => {
                     items: {
                         deleteMany: {},
                         create: (order.items || []).map((item: any) => ({
-                            id: item.uid,
+                            id: item.uid || item.id,
                             productId: item.productId,
                             quantity: Math.round(parseFloat(item.quantity?.toString()) || 0),
                             price: parseFloat(item.price?.toString()) || 0,
                             isReady: !!item.isReady,
-                            readyAt: item.readyAt ? new Date(item.readyAt) : null,
+                            readyAt: (item.readyAt && !isNaN(Date.parse(item.readyAt))) ? new Date(item.readyAt) : null,
                             observations: item.observations || null,
-                            tableSessionId: item.tableSessionId ? parseInt(item.tableSessionId.toString()) : null
+                            tableSessionId: (newStatus === 'DELIVERED') ? null : (item.tableSessionId ? parseInt(item.tableSessionId.toString()) : null)
                         }))
                     }
                 },
@@ -242,7 +247,8 @@ export const saveOrder = async (req: Request, res: Response) => {
                     waiterId: waiterId,
                     clientEmail: order.clientEmail || null,
                     clientDocument: order.clientDocument || null,
-                    isOriginDigitalMenu: order.isOriginDigitalMenu !== undefined ? order.isOriginDigitalMenu : false, // Fix: Preserve Origin into Creation
+                    isOriginDigitalMenu: order.isOriginDigitalMenu !== undefined ? order.isOriginDigitalMenu : false,
+                    createdAt: (order.createdAt && !isNaN(Date.parse(order.createdAt))) ? new Date(order.createdAt) : new Date(),
                     nfeStatus: order.nfeStatus || null,
                     nfeNumber: order.nfeNumber || null,
                     nfeUrl: order.nfeUrl || null,
@@ -255,9 +261,9 @@ export const saveOrder = async (req: Request, res: Response) => {
                             quantity: Math.round(parseFloat(item.quantity?.toString()) || 0),
                             price: parseFloat(item.price?.toString()) || 0,
                             isReady: !!item.isReady,
-                            readyAt: item.readyAt ? new Date(item.readyAt) : null,
+                            readyAt: (item.readyAt && !isNaN(Date.parse(item.readyAt))) ? new Date(item.readyAt) : null,
                             observations: item.observations || null,
-                            tableSessionId: item.tableSessionId ? parseInt(item.tableSessionId.toString()) : null
+                            tableSessionId: (newStatus === 'DELIVERED') ? null : (item.tableSessionId ? parseInt(item.tableSessionId.toString()) : null)
                         }))
                     }
                 },
