@@ -54,12 +54,22 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
   const [isSplitPayment, setIsSplitPayment] = useState(false);
   const [paymentMethod2, setPaymentMethod2] = useState<string>('');
   const [splitAmount1, setSplitAmount1] = useState<string>('');
+  const [splitAmount2, setSplitAmount2] = useState<string>('');
   const [emitNfce, setEmitNfce] = useState<boolean>(false);
   const [isNfceFeedbackOpen, setIsNfceFeedbackOpen] = useState(false);
   const [isNfceVisual, setIsNfceVisual] = useState(false);
   const [paymentData, setPaymentData] = useState({
     receivedAmount: '',
-    cardHolder: '',
+    cardHolder: '', // <-- Added Explicit Type Requirement Mapping later
+    cardName: '',
+    cardNumber: '',
+    cardExpiry: '',
+    cardCVV: '',
+    pixStatus: 'idle' as 'idle' | 'generating' | 'waiting' | 'paid'
+  });
+  const [paymentData2, setPaymentData2] = useState({
+    receivedAmount: '',
+    cardName: '',
     cardNumber: '',
     cardExpiry: '',
     cardCVV: '',
@@ -324,6 +334,9 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       }
 
       if (paymentMethod === 'CRÉDITO' || paymentMethod === 'DÉBITO') {
+        if (!paymentData.cardName || paymentData.cardName.trim().length < 3) {
+          return showAlert("Nome Inválido", "O Titular do Cartão deve ser preenchido corretamente.", "DANGER");
+        }
         if (!validateCreditCard(paymentData.cardNumber)) {
           return showAlert("Cartão Inválido", "O número do cartão informado é inválido.", "DANGER");
         }
@@ -333,42 +346,64 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       }
     } else {
       const am1 = parseFloat(splitAmount1) || 0;
-      const am2 = total - am1;
+      const am2 = parseFloat(splitAmount2) || (cartTotal - am1); // Fallback para cálculo ou estado livre
 
-      if (am1 <= 0 || am1 >= total) {
-        return showAlert("Valor Inválido", "O valor do primeiro pagamento deve ser maior que zero e menor que o total.", "DANGER");
+      if (am1 <= 0 || am2 <= 0 || am1 >= total) {
+        return showAlert("Valor Inválido", "Os valores divididos devem ser maiores que zero e positivos.", "DANGER");
+      }
+
+      // Validação Absoluta de correspondência
+      const sum = am1 + am2;
+      if (Math.abs(sum - cartTotal) > 0.01) {
+        return showAlert("Soma Inválida", `A soma dos dois pagamentos (R$ ${sum.toFixed(2)}) difere do Total do Pedido (R$ ${cartTotal.toFixed(2)}). Corrija os valores antes de finalizar!`, "DANGER");
       }
 
       if (!paymentMethod2) {
         return showAlert("Segundo Método", "Selecione a segunda forma de pagamento.", "DANGER");
       }
 
-      // Check change for Cash in either slot
+      // Check change for Cash in Method 1
       if (paymentMethod === 'DINHEIRO') {
         const received = parseFloat(paymentData.receivedAmount);
         if (isNaN(received) || received < am1) {
-          return showAlert("Valor Insuficiente", "O valor recebido em Dinheiro (Met. 1) deve ser >= " + am1.toFixed(2), "DANGER");
+          return showAlert("Valor Insuficiente 1", "O valor recebido em Dinheiro (Met. 1) deve ser maior ou igual a " + am1.toFixed(2), "DANGER");
         }
         if (received - am1 > maxChangeAllowed) {
           return showAlert("Troco Excedido", `O valor do troco (Met. 1) não pode ultrapassar R$ ${maxChangeAllowed.toFixed(2)}.`, "DANGER");
         }
       }
 
+      // Check change for Cash in Method 2
       if (paymentMethod2 === 'DINHEIRO') {
-        const received = parseFloat(paymentData.receivedAmount); // Reuse receivedAmount for the cash portion
+        const received = parseFloat(paymentData2.receivedAmount);
         if (isNaN(received) || received < am2) {
-          return showAlert("Valor Insuficiente", "O valor recebido em Dinheiro (Met. 2) deve ser >= " + am2.toFixed(2), "DANGER");
+          return showAlert("Valor Insuficiente 2", "O valor recebido em Dinheiro (Met. 2) deve ser maior ou igual a " + am2.toFixed(2), "DANGER");
         }
         if (received - am2 > maxChangeAllowed) {
           return showAlert("Troco Excedido", `O valor do troco (Met. 2) não pode ultrapassar R$ ${maxChangeAllowed.toFixed(2)}.`, "DANGER");
         }
       }
 
-      // Basic card validation if either is card
-      if (paymentMethod === 'CRÉDITO' || paymentMethod === 'DÉBITO' || paymentMethod2 === 'CRÉDITO' || paymentMethod2 === 'DÉBITO') {
-        if (paymentData.cardNumber && !validateCreditCard(paymentData.cardNumber)) {
-          return showAlert("Cartão Inválido", "O número do cartão informado é inválido.", "DANGER");
+      // Method 1 Card Validation
+      if (paymentMethod === 'CRÉDITO' || paymentMethod === 'DÉBITO') {
+        if (!paymentData.cardName || paymentData.cardName.trim().length < 3) {
+          return showAlert("Nome Inválido 1", "O Titular do 1º Cartão deve ser preenchido.", "DANGER");
         }
+        if (!validateCreditCard(paymentData.cardNumber)) {
+          return showAlert("Cartão Inválido 1", "O número do 1º cartão informado é inválido.", "DANGER");
+        }
+        if (!paymentData.cardExpiry || paymentData.cardExpiry.length < 5) return showAlert("Validade 1", "Validade do 1º cartão vazia.", "DANGER");
+      }
+
+      // Method 2 Card Validation
+      if (paymentMethod2 === 'CRÉDITO' || paymentMethod2 === 'DÉBITO') {
+        if (!paymentData2.cardName || paymentData2.cardName.trim().length < 3) {
+          return showAlert("Nome Inválido 2", "O Titular do 2º Cartão deve ser preenchido.", "DANGER");
+        }
+        if (!validateCreditCard(paymentData2.cardNumber)) {
+          return showAlert("Cartão Inválido 2", "O número do 2º cartão informado é inválido.", "DANGER");
+        }
+        if (!paymentData2.cardExpiry || paymentData2.cardExpiry.length < 5) return showAlert("Validade 2", "Validade do 2º cartão vazia.", "DANGER");
       }
     }
 
@@ -547,11 +582,21 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
     setPaymentData({
       receivedAmount: '',
       cardHolder: '',
+      cardName: '',
       cardNumber: '',
       cardExpiry: '',
       cardCVV: '',
       pixStatus: 'idle'
     });
+    setPaymentData2({
+      receivedAmount: '',
+      cardName: '',
+      cardNumber: '',
+      cardExpiry: '',
+      cardCVV: '',
+      pixStatus: 'idle'
+    });
+    setSplitAmount2('');
   };
 
   const handleOpenCash = async () => {
@@ -784,9 +829,13 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
 
                   <div className="bg-slate-50 p-4 rounded-[2rem] border border-slate-100 flex flex-col justify-center text-center">
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">2º Pagamento (R$)</label>
-                    <span className="text-xl font-black text-slate-800 py-3">
-                      R$ {(cartTotal - (parseFloat(splitAmount1) || 0)).toFixed(2)}
-                    </span>
+                    <input
+                      type="number"
+                      className="w-full p-4 bg-white border-2 border-slate-100 rounded-2xl text-lg font-black outline-none focus:border-blue-500 transition-all text-center"
+                      value={splitAmount2 || (cartTotal - (parseFloat(splitAmount1) || 0)).toFixed(2)}
+                      onChange={e => setSplitAmount2(e.target.value)}
+                      placeholder="Valor 2"
+                    />
                   </div>
 
                   <div className="col-span-2 grid grid-cols-4 gap-2 bg-slate-100 p-2 rounded-[1.5rem] mt-2">
@@ -810,107 +859,213 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
             </div>
 
             <div className="p-8 lg:p-10 overflow-y-auto">
-              {/* Render Payment Details based on selection */}
-              {(paymentMethod === 'DINHEIRO' || (isSplitPayment && paymentMethod2 === 'DINHEIRO')) && (
-                <div className="space-y-6 animate-in zoom-in-95 duration-200 mb-6">
-                  <div className="p-6 bg-blue-50/50 rounded-[2rem] border-2 border-blue-100 flex flex-col items-center justify-center">
-                    <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-1">Total da Compra</span>
-                    <span className="text-4xl font-black text-blue-700 tracking-tighter">R$ {cartTotal.toFixed(2)}</span>
-                  </div>
+              <div className={`grid gap-6 ${isSplitPayment ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                {/* 1º Método de Pagamento */}
+                <div>
+                  {isSplitPayment && <h4 className="text-[12px] font-black text-slate-400 uppercase tracking-widest mb-4 border-b border-slate-100 pb-2">1º Método ({paymentMethod})</h4>}
 
-                  <div className="space-y-2">
-                    <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Valor Recebido em Dinheiro (R$)</label>
-                    <input
-                      type="number"
-                      className="w-full p-6 bg-slate-50 border-2 border-slate-100 rounded-[2rem] text-2xl font-black outline-none focus:border-blue-500 transition-all"
-                      placeholder="0,00"
-                      value={paymentData.receivedAmount}
-                      onChange={e => setPaymentData({ ...paymentData, receivedAmount: e.target.value })}
-                      autoFocus={!isSplitPayment}
-                    />
-                  </div>
-                  {(() => {
-                    const amCash = !isSplitPayment
-                      ? cartTotal
-                      : (paymentMethod === 'DINHEIRO' ? parseFloat(splitAmount1) : (cartTotal - parseFloat(splitAmount1)));
-                    const received = parseFloat(paymentData.receivedAmount) || 0;
-                    if (received > amCash && amCash > 0) {
-                      return (
-                        <div className="bg-green-50 p-6 rounded-[2rem] border border-green-100 flex items-center justify-between animate-in slide-in-from-top-2">
-                          <span className="text-sm font-black text-green-700 uppercase">Troco para o Cliente:</span>
-                          <span className="text-2xl font-black text-green-600">R$ {(received - amCash).toFixed(2)}</span>
+                  {paymentMethod === 'DINHEIRO' && (
+                    <div className="space-y-6 animate-in zoom-in-95 duration-200 mb-6">
+                      {!isSplitPayment && (
+                        <div className="p-6 bg-blue-50/50 rounded-[2rem] border-2 border-blue-100 flex flex-col items-center justify-center">
+                          <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-1">Total da Compra</span>
+                          <span className="text-4xl font-black text-blue-700 tracking-tighter">R$ {cartTotal.toFixed(2)}</span>
                         </div>
-                      );
-                    }
-                    return null;
-                  })()}
-                </div>
-              )}
+                      )}
 
-              {(paymentMethod === 'CRÉDITO' || paymentMethod === 'DÉBITO') && (
-                <div className="space-y-6 animate-in zoom-in-95 duration-200">
-                  <div className="space-y-2">
-                    <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Número do Cartão</label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        className="w-full p-6 bg-slate-50 border-2 border-slate-100 rounded-[2rem] text-xl font-black outline-none focus:border-blue-500 transition-all pr-20"
-                        placeholder="0000 0000 0000 0000"
-                        value={paymentData.cardNumber}
-                        onChange={e => setPaymentData({ ...paymentData, cardNumber: maskCardNumber(e.target.value) })}
-                      />
-                      <div className="absolute right-6 top-1/2 -translate-y-1/2 bg-white px-3 py-1.5 rounded-xl border border-slate-100 text-[10px] font-black text-blue-600 shadow-sm uppercase tracking-tighter">
-                        {getCardBrand(paymentData.cardNumber)}
+                      <div className="space-y-2">
+                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Recebido Dinheiro (R$)</label>
+                        <input
+                          type="number"
+                          className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-[2rem] text-xl font-black outline-none focus:border-blue-500 transition-all"
+                          placeholder="0,00"
+                          value={paymentData.receivedAmount}
+                          onChange={e => setPaymentData({ ...paymentData, receivedAmount: e.target.value })}
+                          autoFocus={!isSplitPayment}
+                        />
+                      </div>
+                      {(() => {
+                        const amCash = !isSplitPayment ? cartTotal : (parseFloat(splitAmount1) || 0);
+                        const received = parseFloat(paymentData.receivedAmount) || 0;
+                        if (received > amCash && amCash > 0) {
+                          return (
+                            <div className="bg-green-50 p-4 rounded-[2rem] border border-green-100 flex items-center justify-between animate-in slide-in-from-top-2">
+                              <span className="text-xs font-black text-green-700 uppercase">Troco (1):</span>
+                              <span className="text-xl font-black text-green-600">R$ {(received - amCash).toFixed(2)}</span>
+                            </div>
+                          );
+                        }
+                        return null;
+                      })()}
+                    </div>
+                  )}
+
+                  {(paymentMethod === 'CRÉDITO' || paymentMethod === 'DÉBITO') && (
+                    <div className="space-y-4 animate-in zoom-in-95 duration-200">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Titular do Cartão</label>
+                        <input
+                          type="text"
+                          className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-[1.5rem] text-sm font-black uppercase outline-none focus:border-blue-500 transition-all"
+                          placeholder="NOME IMPRESSO"
+                          value={paymentData.cardName}
+                          onChange={e => setPaymentData({ ...paymentData, cardName: e.target.value })}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Número do Cartão</label>
+                        <div className="relative">
+                          <input
+                            type="text"
+                            className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-[1.5rem] text-sm font-black outline-none focus:border-blue-500 transition-all pr-16"
+                            placeholder="0000 0000 0000 0000"
+                            value={paymentData.cardNumber}
+                            onChange={e => setPaymentData({ ...paymentData, cardNumber: maskCardNumber(e.target.value) })}
+                          />
+                          <div className="absolute right-4 top-1/2 -translate-y-1/2 bg-white px-2 py-1 rounded-lg border border-slate-100 text-[8px] font-black text-blue-600 shadow-sm uppercase tracking-tighter">
+                            {getCardBrand(paymentData.cardNumber)}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Validade</label>
+                          <input
+                            type="text"
+                            className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-[1.5rem] text-sm font-black outline-none focus:border-blue-500 transition-all text-center"
+                            placeholder="MM/AA"
+                            value={paymentData.cardExpiry}
+                            onChange={e => setPaymentData({ ...paymentData, cardExpiry: maskExpiry(e.target.value) })}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">CVV</label>
+                          <input
+                            type="text"
+                            className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-[1.5rem] text-sm font-black outline-none focus:border-blue-500 transition-all text-center"
+                            placeholder="000"
+                            maxLength={3}
+                            value={paymentData.cardCVV}
+                            onChange={e => setPaymentData({ ...paymentData, cardCVV: e.target.value.replace(/\D/g, '') })}
+                          />
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Validade</label>
-                      <input
-                        type="text"
-                        className="w-full p-5 bg-slate-50 border-2 border-slate-100 rounded-[2rem] text-lg font-black outline-none focus:border-blue-500 transition-all text-center"
-                        placeholder="MM/AA"
-                        value={paymentData.cardExpiry}
-                        onChange={e => setPaymentData({ ...paymentData, cardExpiry: maskExpiry(e.target.value) })}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">CVV</label>
-                      <input
-                        type="text"
-                        className="w-full p-5 bg-slate-50 border-2 border-slate-100 rounded-[2rem] text-lg font-black outline-none focus:border-blue-500 transition-all text-center"
-                        placeholder="000"
-                        maxLength={3}
-                        value={paymentData.cardCVV}
-                        onChange={e => setPaymentData({ ...paymentData, cardCVV: e.target.value.replace(/\D/g, '') })}
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
+                  )}
 
-              {paymentMethod === 'PIX' && (
-                <div className="flex flex-col items-center py-6 animate-in zoom-in-95 duration-200">
-                  <div className="w-48 h-48 bg-slate-50 rounded-[2.5rem] border-4 border-blue-50 flex items-center justify-center mb-6 relative group overflow-hidden shadow-inner">
-                    <div className="text-slate-200"><Icons.QrCode className="w-24 h-24" /></div>
-                    <div className="absolute inset-0 bg-white/60 backdrop-blur-sm flex items-center justify-center flex-col gap-2 p-4 text-center">
-                      <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-2"></div>
-                      <p className="text-[10px] font-black text-blue-800 uppercase leading-tight">Aguardando Pagamento em Tempo Real...</p>
+                  {paymentMethod === 'PIX' && (
+                    <div className="flex flex-col items-center py-4 animate-in zoom-in-95 duration-200">
+                      <div className="w-40 h-40 bg-slate-50 rounded-[2rem] border-4 border-blue-50 flex items-center justify-center mb-4 relative group overflow-hidden shadow-inner">
+                        <div className="text-slate-200"><Icons.QrCode className="w-20 h-20" /></div>
+                        <div className="absolute inset-0 bg-white/60 backdrop-blur-sm flex items-center justify-center flex-col gap-2 p-2 text-center">
+                          <div className="w-6 h-6 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-1"></div>
+                          <p className="text-[9px] font-black text-blue-800 uppercase leading-tight">Aguardando Pagamento...</p>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                  <button
-                    onClick={() => {
-                      navigator.clipboard.writeText("00020126580014BR.GOV.BCB.PIX0136123e4567-e89b-12d3-a456-42661417400052040000530398654041.005802BR5913Fast Delivery6009Sao Paulo62070503***6304E2CA");
-                      showAlert("Copiado!", "Código PIX Copia e Cola copiado para a área de transferência.");
-                    }}
-                    className="px-8 py-4 bg-slate-100 text-slate-600 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-slate-200 transition-all flex items-center gap-2"
-                  >
-                    <Icons.View className="w-4 h-4" />
-                    PIX Copia e Cola
-                  </button>
+                  )}
                 </div>
-              )}
+
+                {/* 2º Método de Pagamento Condicional */}
+                {isSplitPayment && paymentMethod2 && (
+                  <div className="border-l border-slate-100 pl-6">
+                    <h4 className="text-[12px] font-black text-slate-400 uppercase tracking-widest mb-4 border-b border-slate-100 pb-2">2º Método ({paymentMethod2})</h4>
+
+                    {paymentMethod2 === 'DINHEIRO' && (
+                      <div className="space-y-6 animate-in zoom-in-95 duration-200 mb-6">
+                        <div className="space-y-2">
+                          <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Recebido Dinheiro (R$)</label>
+                          <input
+                            type="number"
+                            className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-[2rem] text-xl font-black outline-none focus:border-blue-500 transition-all"
+                            placeholder="0,00"
+                            value={paymentData2.receivedAmount}
+                            onChange={e => setPaymentData2({ ...paymentData2, receivedAmount: e.target.value })}
+                          />
+                        </div>
+                        {(() => {
+                          const amCash = parseFloat(splitAmount2) || (cartTotal - (parseFloat(splitAmount1) || 0));
+                          const received = parseFloat(paymentData2.receivedAmount) || 0;
+                          if (received > amCash && amCash > 0) {
+                            return (
+                              <div className="bg-green-50 p-4 rounded-[2rem] border border-green-100 flex items-center justify-between animate-in slide-in-from-top-2">
+                                <span className="text-xs font-black text-green-700 uppercase">Troco (2):</span>
+                                <span className="text-xl font-black text-green-600">R$ {(received - amCash).toFixed(2)}</span>
+                              </div>
+                            );
+                          }
+                          return null;
+                        })()}
+                      </div>
+                    )}
+
+                    {(paymentMethod2 === 'CRÉDITO' || paymentMethod2 === 'DÉBITO') && (
+                      <div className="space-y-4 animate-in zoom-in-95 duration-200">
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Titular do Cartão</label>
+                          <input
+                            type="text"
+                            className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-[1.5rem] text-sm font-black uppercase outline-none focus:border-blue-500 transition-all"
+                            placeholder="NOME IMPRESSO"
+                            value={paymentData2.cardName}
+                            onChange={e => setPaymentData2({ ...paymentData2, cardName: e.target.value })}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Número do Cartão</label>
+                          <div className="relative">
+                            <input
+                              type="text"
+                              className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-[1.5rem] text-sm font-black outline-none focus:border-blue-500 transition-all pr-16"
+                              placeholder="0000 0000 0000 0000"
+                              value={paymentData2.cardNumber}
+                              onChange={e => setPaymentData2({ ...paymentData2, cardNumber: maskCardNumber(e.target.value) })}
+                            />
+                            <div className="absolute right-4 top-1/2 -translate-y-1/2 bg-white px-2 py-1 rounded-lg border border-slate-100 text-[8px] font-black text-blue-600 shadow-sm uppercase tracking-tighter">
+                              {getCardBrand(paymentData2.cardNumber)}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Validade</label>
+                            <input
+                              type="text"
+                              className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-[1.5rem] text-sm font-black outline-none focus:border-blue-500 transition-all text-center"
+                              placeholder="MM/AA"
+                              value={paymentData2.cardExpiry}
+                              onChange={e => setPaymentData2({ ...paymentData2, cardExpiry: maskExpiry(e.target.value) })}
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">CVV</label>
+                            <input
+                              type="text"
+                              className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-[1.5rem] text-sm font-black outline-none focus:border-blue-500 transition-all text-center"
+                              placeholder="000"
+                              maxLength={3}
+                              value={paymentData2.cardCVV}
+                              onChange={e => setPaymentData2({ ...paymentData2, cardCVV: e.target.value.replace(/\D/g, '') })}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {paymentMethod2 === 'PIX' && (
+                      <div className="flex flex-col items-center py-4 animate-in zoom-in-95 duration-200">
+                        <div className="w-40 h-40 bg-slate-50 rounded-[2rem] border-4 border-blue-50 flex items-center justify-center mb-4 relative group overflow-hidden shadow-inner">
+                          <div className="text-slate-200"><Icons.QrCode className="w-20 h-20" /></div>
+                          <div className="absolute inset-0 bg-white/60 backdrop-blur-sm flex items-center justify-center flex-col gap-2 p-2 text-center">
+                            <div className="w-6 h-6 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-1"></div>
+                            <p className="text-[9px] font-black text-blue-800 uppercase leading-tight">Aguardando Pagamento...</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="p-8 lg:p-10 bg-slate-50 border-t border-slate-100 shrink-0 flex flex-col gap-4">
