@@ -43,6 +43,12 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
     const [showClientDropdown, setShowClientDropdown] = useState(false);
     const [previewType, setPreviewType] = useState<'SALES' | 'CLIENTS' | 'CLIENT_ORDERS' | 'DRIVERS' | 'INVENTORY' | 'CASH' | null>(null);
 
+    // Editing Cash Reports
+    const [isEditReportModalOpen, setIsEditReportModalOpen] = useState(false);
+    const [editingSession, setEditingSession] = useState<CashSession | null>(null);
+    const [adminPassword, setAdminPassword] = useState('');
+    const [alert, setAlert] = useState<{ title: string; message: string; type: 'SUCCESS' | 'DANGER' | 'WARNING' } | null>(null);
+
     // Driver Filters
     const [driverStartDate, setDriverStartDate] = useState(new Date().toISOString().split('T')[0]);
     const [driverEndDate, setDriverEndDate] = useState(new Date().toISOString().split('T')[0]);
@@ -62,6 +68,43 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
             fetchCashSessions();
         }
     }, [cashStartDate, cashEndDate, activeTab]);
+
+    const showAlert = (title: string, message: string, type: 'SUCCESS' | 'DANGER' | 'WARNING') => {
+        setAlert({ title, message, type });
+        setTimeout(() => setAlert(null), 3000);
+    };
+
+    const handleEditReport = (session: CashSession) => {
+        setEditingSession({ ...session });
+        setIsEditReportModalOpen(true);
+    };
+
+    const handleSaveEdit = async () => {
+        if (!editingSession || !currentUser) return;
+
+        if (adminPassword !== currentUser.password) {
+            return showAlert("Senha Incorreta", "Informe a senha do Admin Master para autorizar a alteração.", "DANGER");
+        }
+
+        try {
+            await db.updateCashSession({
+                id: editingSession.id,
+                cash: editingSession.reportedCash || 0,
+                pix: editingSession.reportedPix || 0,
+                credit: editingSession.reportedCredit || 0,
+                debit: editingSession.reportedDebit || 0,
+                observations: editingSession.observations || '',
+                user: currentUser
+            });
+            showAlert("Sucesso", "Relatório de caixa atualizado com sucesso!", "SUCCESS");
+            setIsEditReportModalOpen(false);
+            setEditingSession(null);
+            setAdminPassword('');
+            fetchCashSessions();
+        } catch (error) {
+            showAlert("Erro", "Não foi possível atualizar o relatório.", "DANGER");
+        }
+    };
 
     const fetchData = async () => {
         const [o, c, s, d, r] = await Promise.all([
@@ -651,6 +694,16 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
 
     return (
         <div className="flex flex-col h-full gap-8 animate-in fade-in duration-500 overflow-y-auto pb-8">
+            {alert && (
+                <div className="fixed top-8 right-8 z-[200]">
+                    <CustomAlert
+                        title={alert.title}
+                        message={alert.message}
+                        type={alert.type}
+                        onClose={() => setAlert(null)}
+                    />
+                </div>
+            )}
 
             {/* TABS HEADER */}
             <div className="flex gap-4 border-b border-slate-200 pb-2 px-2 shrink-0">
@@ -947,14 +1000,23 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
                                                         {s.status === 'OPEN' ? 'Aberto' : 'Fechado'}
                                                     </span>
                                                 </td>
-                                                <td className="p-4 text-right">
+                                                <td className="p-4 text-right flex justify-end gap-2">
                                                     {s.status === 'CLOSED' && currentUser?.role === 'ADMIN' && (
-                                                        <button
-                                                            onClick={() => handleReopen(s.id)}
-                                                            className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all text-[8px] uppercase font-black"
-                                                        >
-                                                            Reabrir
-                                                        </button>
+                                                        <>
+                                                            <button
+                                                                onClick={() => handleEditReport(s)}
+                                                                className="p-2 bg-amber-50 text-amber-600 rounded-lg hover:bg-amber-600 hover:text-white transition-all text-[8px] uppercase font-black flex items-center gap-1"
+                                                            >
+                                                                <Icons.Edit />
+                                                                Editar
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleReopen(s.id)}
+                                                                className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all text-[8px] uppercase font-black"
+                                                            >
+                                                                Reabrir
+                                                            </button>
+                                                        </>
                                                     )}
                                                 </td>
                                             </tr>
@@ -971,6 +1033,101 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
                             <Icons.Print />
                             Visualizar Histórico de Caixa
                         </button>
+                        {/* MODAL DE EDIÇÃO DO RELATÓRIO DE CAIXA */}
+                        {isEditReportModalOpen && editingSession && (
+                            <div className="fixed inset-0 z-[130] flex items-center justify-center p-12 bg-slate-900/90 backdrop-blur-xl animate-in fade-in duration-300">
+                                <div className="bg-white rounded-[4rem] shadow-2xl w-full max-w-2xl flex flex-col overflow-hidden">
+                                    <div className="p-10 border-b border-slate-100 bg-slate-50">
+                                        <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter flex items-center gap-3">
+                                            <span className="p-3 bg-amber-50 text-amber-600 rounded-2xl"><Icons.Edit /></span>
+                                            Corrigir Relatório de Caixa
+                                        </h3>
+                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-2 ml-14">Apenas Admin Master pode realizar alterações</p>
+                                    </div>
+
+                                    <div className="p-10 space-y-8">
+                                        <div className="grid grid-cols-2 gap-6">
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Dinheiro (R$)</label>
+                                                <input
+                                                    type="text"
+                                                    value={editingSession.reportedCash || 0}
+                                                    onChange={e => setEditingSession({ ...editingSession, reportedCash: parseFloat(e.target.value.replace(',', '.')) || 0 })}
+                                                    className="w-full p-5 bg-slate-50 border-none rounded-[1.5rem] font-bold text-lg"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Pix (R$)</label>
+                                                <input
+                                                    type="text"
+                                                    value={editingSession.reportedPix || 0}
+                                                    onChange={e => setEditingSession({ ...editingSession, reportedPix: parseFloat(e.target.value.replace(',', '.')) || 0 })}
+                                                    className="w-full p-5 bg-slate-50 border-none rounded-[1.5rem] font-bold text-lg"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Crédito (R$)</label>
+                                                <input
+                                                    type="text"
+                                                    value={editingSession.reportedCredit || 0}
+                                                    onChange={e => setEditingSession({ ...editingSession, reportedCredit: parseFloat(e.target.value.replace(',', '.')) || 0 })}
+                                                    className="w-full p-5 bg-slate-50 border-none rounded-[1.5rem] font-bold text-lg"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Débito (R$)</label>
+                                                <input
+                                                    type="text"
+                                                    value={editingSession.reportedDebit || 0}
+                                                    onChange={e => setEditingSession({ ...editingSession, reportedDebit: parseFloat(e.target.value.replace(',', '.')) || 0 })}
+                                                    className="w-full p-5 bg-slate-50 border-none rounded-[1.5rem] font-bold text-lg"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Observações do Admin</label>
+                                            <textarea
+                                                value={editingSession.observations || ''}
+                                                onChange={e => setEditingSession({ ...editingSession, observations: e.target.value })}
+                                                placeholder="Motivo da correção..."
+                                                className="w-full p-5 bg-slate-50 border-none rounded-[1.5rem] font-bold text-sm min-h-[100px]"
+                                            />
+                                        </div>
+
+                                        <div className="space-y-2 pt-4 border-t border-slate-100">
+                                            <label className="text-[10px] font-black text-red-400 uppercase tracking-widest ml-1 underline">Senha do Admin Master</label>
+                                            <input
+                                                type="password"
+                                                placeholder="Digite a senha para autorizar"
+                                                value={adminPassword}
+                                                onChange={e => setAdminPassword(e.target.value)}
+                                                className="w-full p-5 bg-red-50 text-red-900 border-none rounded-[1.5rem] font-black placeholder:text-red-200"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="p-10 border-t border-slate-100 bg-slate-50 flex gap-4">
+                                        <button
+                                            onClick={() => {
+                                                setIsEditReportModalOpen(false);
+                                                setEditingSession(null);
+                                                setAdminPassword('');
+                                            }}
+                                            className="flex-1 py-5 bg-white text-slate-400 rounded-3xl font-black uppercase text-xs tracking-widest border border-slate-200 hover:bg-slate-100 transition-all"
+                                        >
+                                            Cancelar
+                                        </button>
+                                        <button
+                                            onClick={handleSaveEdit}
+                                            className="flex-[2] py-5 bg-slate-900 text-white rounded-3xl font-black uppercase text-xs tracking-widest hover:bg-black transition-all shadow-xl shadow-slate-900/20"
+                                        >
+                                            Salvar Alterações
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 )}
 
