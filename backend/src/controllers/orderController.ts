@@ -155,8 +155,8 @@ export const saveOrder = async (req: Request, res: Response) => {
             const oldDriverId = existingOrder?.driverId;
             const newStatus = order.status;
             const tableNumIdx = order.tableNumber ? parseInt(order.tableNumber as string) : null;
-            const deliveryFeeNum = order.deliveryFee ? parseFloat(order.deliveryFee.toString()) : 0;
-            const totalNum = order.total ? parseFloat(order.total.toString()) : 0;
+            const deliveryFeeNum = (order.deliveryFee !== null && order.deliveryFee !== undefined) ? parseFloat(order.deliveryFee.toString()) : 0;
+            const totalNum = (order.total !== null && order.total !== undefined) ? parseFloat(order.total.toString()) : 0;
 
             // 1. Inventory Sync (Only on Finalization or Reversion)
             const itemsForInventory = order.items; // Use current items for stock calculation
@@ -215,18 +215,18 @@ export const saveOrder = async (req: Request, res: Response) => {
                     nfeNumber: order.nfeNumber || null,
                     nfeUrl: order.nfeUrl || null,
                     nfeError: order.nfeError || null,
-                    splitAmount1: order.splitAmount1 !== undefined ? parseFloat(order.splitAmount1.toString()) : null,
+                    splitAmount1: (order.splitAmount1 !== null && order.splitAmount1 !== undefined) ? parseFloat(order.splitAmount1.toString()) : null,
                     items: {
                         deleteMany: {},
                         create: (order.items || []).map((item: any) => ({
                             id: item.uid || item.id,
                             productId: item.productId,
-                            quantity: Math.round(parseFloat(item.quantity?.toString()) || 0),
-                            price: parseFloat(item.price?.toString()) || 0,
+                            quantity: (item.quantity && !isNaN(parseFloat(item.quantity.toString()))) ? Math.round(parseFloat(item.quantity.toString())) : 0,
+                            price: (item.price && !isNaN(parseFloat(item.price.toString()))) ? parseFloat(item.price.toString()) : 0,
                             isReady: !!item.isReady,
                             readyAt: (item.readyAt && !isNaN(Date.parse(item.readyAt))) ? new Date(item.readyAt) : null,
                             observations: item.observations || null,
-                            tableSessionId: (newStatus === 'DELIVERED') ? null : (item.tableSessionId ? parseInt(item.tableSessionId.toString()) : null)
+                            tableSessionId: (newStatus === 'DELIVERED') ? null : ((item.tableSessionId && !isNaN(parseInt(item.tableSessionId.toString()))) ? parseInt(item.tableSessionId.toString()) : null)
                         }))
                     }
                 },
@@ -253,17 +253,17 @@ export const saveOrder = async (req: Request, res: Response) => {
                     nfeNumber: order.nfeNumber || null,
                     nfeUrl: order.nfeUrl || null,
                     nfeError: order.nfeError || null,
-                    splitAmount1: order.splitAmount1 !== undefined ? parseFloat(order.splitAmount1.toString()) : null,
+                    splitAmount1: (order.splitAmount1 !== null && order.splitAmount1 !== undefined) ? parseFloat(order.splitAmount1.toString()) : null,
                     items: {
                         create: (order.items || []).map((item: any) => ({
                             id: item.uid || item.id,
                             productId: item.productId,
-                            quantity: Math.round(parseFloat(item.quantity?.toString()) || 0),
-                            price: parseFloat(item.price?.toString()) || 0,
+                            quantity: (item.quantity && !isNaN(parseFloat(item.quantity.toString()))) ? Math.round(parseFloat(item.quantity.toString())) : 0,
+                            price: (item.price && !isNaN(parseFloat(item.price.toString()))) ? parseFloat(item.price.toString()) : 0,
                             isReady: !!item.isReady,
                             readyAt: (item.readyAt && !isNaN(Date.parse(item.readyAt))) ? new Date(item.readyAt) : null,
                             observations: item.observations || null,
-                            tableSessionId: (newStatus === 'DELIVERED') ? null : (item.tableSessionId ? parseInt(item.tableSessionId.toString()) : null)
+                            tableSessionId: (newStatus === 'DELIVERED') ? null : ((item.tableSessionId && !isNaN(parseInt(item.tableSessionId.toString()))) ? parseInt(item.tableSessionId.toString()) : null)
                         }))
                     }
                 },

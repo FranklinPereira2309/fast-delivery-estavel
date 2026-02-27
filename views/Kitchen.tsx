@@ -45,10 +45,11 @@ const Kitchen: React.FC = () => {
     const allInventory = await db.getInventory();
     const allWaiters = await db.getWaiters();
 
-    // Filtro inteligente: Pedidos ativos (não finalizados ou cancelados)
+    // Filtro inteligente: Pedidos ativos (não finalizados ou cancelados) QUE POSSUEM itens em preparo
     const activeOrders = allOrders.filter(o =>
       o.status !== OrderStatus.CANCELLED &&
-      o.status !== OrderStatus.DELIVERED
+      o.status !== OrderStatus.DELIVERED &&
+      o.items.some(it => !it.isReady)
     );
 
     // Detectar novos itens em pedidos existentes para resetar o blink

@@ -182,11 +182,10 @@ export const getTableConsumption = async (req: Request, res: Response) => {
             return res.status(401).json({ message: 'Sessão inválida ou não autorizada.' });
         }
 
-        // Return a cleaner structure for the frontend with grouping
+        // Return a cleaner structure for the frontend with grouping by name
         const groupedItems = session.items.reduce((acc: any[], it) => {
             const itemName = it.product.name;
-            const itemObservations = it.observations || '';
-            const existing = acc.find(x => x.name === itemName && x.observations === itemObservations);
+            const existing = acc.find(x => x.name === itemName);
 
             if (existing) {
                 existing.quantity += it.quantity;
@@ -197,8 +196,7 @@ export const getTableConsumption = async (req: Request, res: Response) => {
                     price: it.price,
                     quantity: it.quantity,
                     imageUrl: it.product.imageUrl,
-                    isReady: it.isReady,
-                    observations: it.observations
+                    isReady: it.isReady
                 });
             }
             return acc;

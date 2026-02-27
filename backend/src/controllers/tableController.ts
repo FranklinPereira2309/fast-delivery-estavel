@@ -47,7 +47,7 @@ export const saveTableSession = async (req: Request, res: Response) => {
                 !previousItems.some((oldItem: any) => oldItem.id === newItem.uid)
             );
 
-            if (itemsToDeduct.length > 0) {
+            if (itemsToDeduct.some((it: any) => !it.isReady)) {
                 isNewItemsAdded = true;
             }
 
