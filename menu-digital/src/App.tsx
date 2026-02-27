@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { BrowserRouter, Routes, Route, useSearchParams } from 'react-router-dom';
 import Home from './components/Home';
 import CartModal from './components/CartModal';
@@ -25,6 +25,19 @@ function AppContent() {
   const [isOwner, setIsOwner] = useState(false);
   const [isSessionFinished, setIsSessionFinished] = useState(false);
   const [cancellationMessage, setCancellationMessage] = useState<string | null>(null);
+
+  // Ref para rastrear estados terminais em tempo real e evitar "stale closures"
+  const terminalStateRef = useRef({
+    finished: false,
+    cancellation: null as string | null
+  });
+
+  // Função centralizada para atualizar estados terminais imediatamente
+  const updateTerminalState = useCallback((finished: boolean, cancellation: string | null) => {
+    terminalStateRef.current = { finished, cancellation };
+    setIsSessionFinished(finished);
+    setCancellationMessage(cancellation);
+  }, []);
 
   // Status da Loja
   const [storeStatus, setStoreStatus] = useState<StoreStatus>({ status: 'online', is_manually_closed: false, next_status_change: null });
@@ -65,7 +78,10 @@ function AppContent() {
       setIsBilling(data.status === 'billing');
       // Only clear finished session if we are actually in an active state now
       if (data.status === 'occupied' || data.status === 'billing') {
-        setIsSessionFinished(false);
+        // preserve a active cancellation message if it exists
+        if (!terminalStateRef.current.cancellation) {
+          updateTerminalState(false, null);
+        }
       }
     } catch (err: any) {
       if (err.status === 'billing') {
@@ -84,7 +100,10 @@ function AppContent() {
         const token = localStorage.getItem(`sessionToken_${tableParam}`);
         if (token && (err.message?.includes('não autorizada') || err.status === 401)) {
           localStorage.removeItem(`sessionToken_${tableParam}`);
-          setIsSessionFinished(true);
+          // Apenas assume tela de "Obrigado" se não houver um cancelamento sendo exibido
+          if (!terminalStateRef.current.cancellation) {
+            updateTerminalState(true, null);
+          }
         } else {
           setTableError(err.message || 'Erro ao validar a mesa.');
         }
@@ -115,8 +134,8 @@ function AppContent() {
     fetchStatus();
 
     const intervalId = setInterval(() => {
-      // Don't poll if we are already in a terminal state
-      if (!isSessionFinished && !cancellationMessage) {
+      // Usamos a ref para garantir que o setInterval leia o valor MAIS RECENTE sem precisar recriar o hook
+      if (!terminalStateRef.current.finished && !terminalStateRef.current.cancellation) {
         fetchTableData();
       }
       fetchStatus();
@@ -136,26 +155,26 @@ function AppContent() {
 
         // 2. Handle Payment Completion (Table becomes available)
         if (data.status === 'available') {
-          // Se já existe uma mensagem de cancelamento/rejeição, não mostramos a tela de "Obrigado"
-          // porque o "available" provavelmente é resultado da rejeição do pedido único da mesa.
-          if (cancellationMessage) {
+          // Usa a ref para não sofrer do problema de Stale Closure
+          if (terminalStateRef.current.cancellation) {
             console.log('Skipping Thank You screen because cancellation is active');
             return;
           }
 
           setIsBilling(false);
-          setIsSessionFinished(true); // Triggers "Thank You" screen
           setCurrentPin(null);
           setIsOwner(false);
           setIsPinRequired(false);
-          setCancellationMessage(null);
+          // Triggers "Thank You" screen
+          updateTerminalState(true, null);
           return;
         }
 
-        // 3. Status is occupied or available (not billing, not just emptied)
         // 3. Status is occupied or pending-digital
         setIsBilling(false);
-        setIsSessionFinished(false);
+        if (!terminalStateRef.current.cancellation) {
+          updateTerminalState(false, null);
+        }
         setTableError(null);
         fetchTableData();
       }
@@ -168,10 +187,10 @@ function AppContent() {
     const handleCancellation = (data: any) => {
       console.log('Socket digitalOrderCancelled received:', data);
       if (data.tableNumber === Number(tableParam)) {
-        setCancellationMessage(data.message || "Pedido Cancelado, dúvidas pergunte ao Garçom");
         setIsBilling(false);
         setIsPinRequired(false);
-        setIsSessionFinished(false); // Guarantee the Thank You screen doesn't overlap
+        // Atualiza a ref e os states de imediato; "finished" fica false para a tela de cancelamento assumir
+        updateTerminalState(false, data.message || "Pedido Cancelado, dúvidas pergunte ao Garçom");
       }
     };
 
@@ -262,7 +281,7 @@ function AppContent() {
 
           <div className="space-y-6 pt-4">
             <button
-              onClick={() => setCancellationMessage(null)}
+              onClick={() => updateTerminalState(false, null)}
               className="w-full py-5 bg-white text-slate-900 rounded-[2rem] font-black uppercase text-xs tracking-widest transition-all hover:bg-slate-100 active:scale-95 shadow-xl shadow-white/5"
             >
               Voltar ao Menu
@@ -304,7 +323,7 @@ function AppContent() {
             <button
               onClick={() => {
                 localStorage.removeItem(`sessionToken_${tableParam}`);
-                setIsSessionFinished(false);
+                updateTerminalState(false, null);
                 window.location.reload(); // Recarregar para limpar estados e iniciar nova tentativa de entrada
               }}
               className="px-8 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-full text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 border border-slate-700"
