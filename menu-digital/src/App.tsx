@@ -116,10 +116,15 @@ function AppContent() {
 
     const handleTableStatus = (data: any) => {
       if (data.tableNumber === Number(tableParam)) {
-        // If the table was in billing and now it's being refreshed (usually means reopened/available)
-        // we might want to do a full reload to clear state for the next customer.
-        if (isBilling) {
-          window.location.reload();
+        // Se a mesa estava em cobrança e agora ficou disponível/mudou,
+        // significa que o pagamento foi concluído.
+        if (isBilling && (data.status === 'available' || data.action === 'refresh')) {
+          setIsBilling(false);
+          setIsSessionFinished(true);
+          // O reload para reiniciar o PIN ocorrerá após o usuário ler a mensagem de agradecimento
+          // ou após um timeout automático opcional. Para garantir que o PIN resete para o próximo,
+          // podemos limpar o token local e deixar a tela de sucesso.
+          localStorage.removeItem(`sessionToken_${tableParam}`);
           return;
         }
         fetchTableData();
@@ -196,20 +201,35 @@ function AppContent() {
   if (isSessionFinished) {
     return (
       <div className="min-h-screen flex items-center justify-center p-6 bg-slate-900 text-white text-center">
-        <div className="max-w-md w-full space-y-8 animate-in fade-in zoom-in duration-500">
-          <div className="w-24 h-24 bg-emerald-600 rounded-3xl mx-auto flex items-center justify-center shadow-2xl shadow-emerald-500/40">
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-            </svg>
+        <div className="max-w-md w-full space-y-8 animate-in fade-in zoom-in duration-700">
+          <div className="relative mx-auto w-24 h-24">
+            <div className="absolute inset-0 bg-emerald-500/20 rounded-full animate-ping"></div>
+            <div className="relative w-24 h-24 bg-emerald-600 rounded-3xl flex items-center justify-center shadow-2xl shadow-emerald-500/40">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
           </div>
           <div className="space-y-4">
-            <h1 className="text-3xl font-black uppercase tracking-tighter">Sessão Finalizada!</h1>
-            <p className="text-slate-400 text-lg leading-relaxed">
-              Muito obrigado pela visita. <br />
-              <span className="text-sm font-medium opacity-75">Sua conta foi paga e a mesa liberada.</span>
+            <h1 className="text-4xl font-black uppercase tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-white to-slate-400">
+              Muito Obrigado!
+            </h1>
+            <p className="text-slate-400 text-lg leading-relaxed font-medium">
+              Agradecemos por usar nossos serviços. <br />
+              <span className="text-emerald-400">Sua sessão foi encerrada com sucesso.</span>
             </p>
           </div>
-          <p className="text-xs text-slate-500 pt-8 italic leading-relaxed">Agradecemos a preferência! <br /> Volte sempre para saborear o que temos de melhor.</p>
+          <div className="pt-8 space-y-4">
+            <p className="text-xs text-slate-500 italic leading-relaxed uppercase tracking-[0.2em] font-black opacity-50">
+              Agradecemos a preferência! <br /> Volte sempre para saborear o que temos de melhor.
+            </p>
+            <button
+              onClick={() => window.location.href = `/?mesa=${tableParam}`}
+              className="px-8 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-full text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 border border-slate-700"
+            >
+              Nova Sessão
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -217,27 +237,42 @@ function AppContent() {
 
   if (isBilling) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-6 bg-slate-900 text-white text-center">
-        <div className="max-w-md w-full space-y-8 animate-in fade-in zoom-in duration-500">
-          <div className="relative mx-auto w-24 h-24">
-            <div className="absolute inset-0 bg-blue-500/20 rounded-full animate-ping"></div>
-            <div className="relative w-24 h-24 bg-blue-600 rounded-3xl flex items-center justify-center shadow-2xl shadow-blue-500/40">
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 animate-spin-slow" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+      <div className="min-h-screen flex items-center justify-center p-6 bg-slate-900 text-white text-center overflow-hidden">
+        {/* Decorative elements */}
+        <div className="absolute top-[-10%] left-[-10%] w-64 h-64 bg-blue-600/10 rounded-full blur-[100px]"></div>
+        <div className="absolute bottom-[-10%] right-[-10%] w-64 h-64 bg-blue-400/10 rounded-full blur-[100px]"></div>
+
+        <div className="max-w-md w-full space-y-10 relative z-10 animate-in fade-in zoom-in duration-700">
+          <div className="relative mx-auto w-32 h-32">
+            <div className="absolute inset-0 bg-blue-500/20 rounded-full animate-pulse"></div>
+            <div className="absolute inset-2 border-2 border-dashed border-blue-400/30 rounded-full animate-spin-slow"></div>
+            <div className="relative w-32 h-32 bg-gradient-to-br from-blue-600 to-blue-800 rounded-[2.5rem] flex items-center justify-center shadow-2xl shadow-blue-500/40 transform -rotate-3">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-16 h-16 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
           </div>
-          <div className="space-y-3">
-            <h1 className="text-2xl font-black uppercase tracking-tighter">Quase lá!</h1>
-            <p className="text-slate-400 text-lg leading-relaxed">
-              O fechamento da sua conta está em processamento. <br />
-              <span className="text-sm font-medium opacity-75">Por favor, aguarde um momento...</span>
+
+          <div className="space-y-4">
+            <div className="inline-block px-4 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-full mb-2">
+              <span className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-400">Processando</span>
+            </div>
+            <h1 className="text-4xl font-black uppercase tracking-tighter leading-none text-white">Pagamento <br /> em curso</h1>
+            <p className="text-slate-400 text-lg leading-relaxed max-w-[280px] mx-auto font-medium">
+              Estamos finalizando o fechamento da sua mesa. Por favor, aguarde...
             </p>
           </div>
-          <div className="flex justify-center gap-2">
-            <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-            <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-            <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce"></div>
+
+          <div className="flex flex-col items-center gap-6">
+            <div className="flex justify-center gap-3">
+              <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+              <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+              <div className="w-2 h-2 bg-blue-300 rounded-full animate-bounce"></div>
+            </div>
+
+            <p className="text-[10px] text-slate-500 font-black uppercase tracking-[0.2em] max-w-[240px] opacity-60">
+              fique à vontade para chamar um garçom se precisar de ajuda
+            </p>
           </div>
         </div>
       </div>
