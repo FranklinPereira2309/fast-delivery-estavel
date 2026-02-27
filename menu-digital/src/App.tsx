@@ -55,10 +55,7 @@ function AppContent() {
       if (data.sessionToken) {
         localStorage.setItem(`sessionToken_${tableParam}`, data.sessionToken);
       }
-      if (data.pin) {
-        setCurrentPin(data.pin);
-      }
-
+      setCurrentPin(data.pin || null);
       setTableNumber(tableParam);
       setClientName(data.clientName);
       setIsOwner(!!data.isOwner);
@@ -115,18 +112,28 @@ function AppContent() {
     fetchStatus();
 
     const handleTableStatus = (data: any) => {
-      if (data.tableNumber === Number(tableParam)) {
-        // Se a mesa estava em cobrança e agora ficou disponível/mudou,
-        // significa que o pagamento foi concluído.
-        if (isBilling && (data.status === 'available' || data.action === 'refresh')) {
+      console.log('Socket tableStatusChanged received:', data);
+      const targetTable = Number(tableParam);
+      if (data.tableNumber === targetTable) {
+        // 1. Handle Immediate Billing Transition
+        if (data.status === 'billing') {
+          setIsBilling(true);
+          setTableError(null);
+          setIsPinRequired(false);
+          return;
+        }
+
+        // 2. Handle Payment Completion (Table becomes available)
+        if (data.status === 'available') {
           setIsBilling(false);
           setIsSessionFinished(true);
-          // O reload para reiniciar o PIN ocorrerá após o usuário ler a mensagem de agradecimento
-          // ou após um timeout automático opcional. Para garantir que o PIN resete para o próximo,
-          // podemos limpar o token local e deixar a tela de sucesso.
+          setCurrentPin(null);
+          setIsOwner(false);
           localStorage.removeItem(`sessionToken_${tableParam}`);
           return;
         }
+
+        // 3. Fallback: Fetch Data
         fetchTableData();
       }
     };
@@ -136,8 +143,12 @@ function AppContent() {
     };
 
     const handleCancellation = (data: any) => {
+      console.log('Socket digitalOrderCancelled received:', data);
       if (data.tableNumber === Number(tableParam)) {
-        setCancellationMessage(data.message);
+        setCancellationMessage(data.message || "Pedido Cancelado, dúvidas pergunte ao Garçom");
+        // Clear billing or pin states if they were up
+        setIsBilling(false);
+        setIsPinRequired(false);
       }
     };
 

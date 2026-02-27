@@ -66,7 +66,7 @@ export const verifyTable = async (req: Request, res: Response) => {
             return res.json({
                 tableNumber,
                 status: 'available',
-                pin, // Retorna o PIN apenas no primeiro acesso (quem gera)
+                pin: null, // O PIN só aparece após o primeiro pedido (status occupied)
                 sessionToken,
                 isOwner: true
             });

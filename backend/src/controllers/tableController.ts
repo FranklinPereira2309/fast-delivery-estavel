@@ -183,11 +183,9 @@ export const saveTableSession = async (req: Request, res: Response) => {
             });
 
             const { rejection } = req.query;
-            const isDigitalAction = result?.isOriginDigitalMenu || result?.hasPendingDigital;
-
-            if (rejection === 'true' && isDigitalAction) {
+            if (rejection === 'true') {
                 getIO().emit('digitalOrderCancelled', {
-                    tableNumber: data.tableNumber,
+                    tableNumber: Number(data.tableNumber),
                     message: "Pedido Cancelado, dúvidas pergunte ao Garçom"
                 });
             }
@@ -223,11 +221,9 @@ export const deleteTableSession = async (req: Request, res: Response) => {
             action: 'refresh'
         });
 
-        const isDigitalAction = session?.isOriginDigitalMenu || session?.hasPendingDigital;
-
-        if (cancellation === 'true' && isDigitalAction) {
+        if (cancellation === 'true') {
             getIO().emit('digitalOrderCancelled', {
-                tableNumber: tableNum,
+                tableNumber: Number(tableNum),
                 message: "Pedido Cancelado, dúvidas pergunte ao Garçom"
             });
         }
