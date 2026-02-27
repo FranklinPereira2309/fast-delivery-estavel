@@ -168,6 +168,13 @@ export const saveOrder = async (req: Request, res: Response) => {
                     await tx.tableSession.deleteMany({
                         where: { tableNumber: tableNumIdx }
                     }).catch((e: any) => console.log('Sessão de mesa já removida ou inexistente:', e));
+
+                    // Notificar o cardápio digital que o pagamento foi concluído (mesa liberada)
+                    getIO().emit('tableStatusChanged', {
+                        tableNumber: tableNumIdx,
+                        status: 'available',
+                        action: 'refresh'
+                    });
                 }
             } else if (newStatus !== 'DELIVERED' && oldStatus === 'DELIVERED') {
                 await handleInventoryImpact(tx, itemsForInventory, 'INCREMENT', order.id);
@@ -381,6 +388,13 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
                     await tx.tableSession.deleteMany({
                         where: { tableNumber: oldOrder.tableNumber }
                     }).catch((e: any) => console.log('Sessão de mesa já removida ou inexistente:', e));
+
+                    // Notificar o cardápio digital que o pagamento foi concluído (mesa liberada)
+                    getIO().emit('tableStatusChanged', {
+                        tableNumber: oldOrder.tableNumber,
+                        status: 'available',
+                        action: 'refresh'
+                    });
                 }
             } else if (newStatus !== 'DELIVERED' && oldStatus === 'DELIVERED') {
                 await handleInventoryImpact(tx, oldOrder.items, 'INCREMENT', id as string);

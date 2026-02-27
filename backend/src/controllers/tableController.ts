@@ -176,7 +176,11 @@ export const saveTableSession = async (req: Request, res: Response) => {
         }
 
         try {
-            getIO().emit('tableStatusChanged', { tableNumber: data.tableNumber });
+            getIO().emit('tableStatusChanged', {
+                tableNumber: data.tableNumber,
+                status: data.status || 'occupied',
+                action: 'refresh'
+            });
 
             const { rejection } = req.query;
             const isDigitalAction = result?.isOriginDigitalMenu || result?.hasPendingDigital;
@@ -213,7 +217,11 @@ export const deleteTableSession = async (req: Request, res: Response) => {
     await prisma.tableSession.deleteMany({ where: { tableNumber: tableNum } });
 
     try {
-        getIO().emit('tableStatusChanged', { tableNumber: tableNum });
+        getIO().emit('tableStatusChanged', {
+            tableNumber: tableNum,
+            status: 'available',
+            action: 'refresh'
+        });
 
         const isDigitalAction = session?.isOriginDigitalMenu || session?.hasPendingDigital;
 
