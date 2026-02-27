@@ -324,6 +324,10 @@ export const createOrder = async (req: Request, res: Response) => {
             const pinToKeep = session?.pin || Math.floor(1000 + Math.random() * 9000).toString();
             const tokenToKeep = session?.sessionToken || token || crypto.randomBytes(32).toString('hex');
 
+            // Aqui está a correção: se estávamos apenas "available" lendo o cardápio,
+            // a data de início oficial da mesa (consumo) é AGORA, pra bater com o horário real do pedido.
+            const newStartTime = session?.status === 'available' ? new Date() : (session?.startTime || new Date());
+
             return await tx.tableSession.upsert({
                 where: { tableNumber: tableNumNum },
                 create: {
@@ -334,14 +338,16 @@ export const createOrder = async (req: Request, res: Response) => {
                     pendingReviewItems: JSON.stringify(newPending),
                     isOriginDigitalMenu: true,
                     pin: pinToKeep,
-                    sessionToken: tokenToKeep
+                    sessionToken: tokenToKeep,
+                    startTime: newStartTime
                 },
                 update: {
                     status: 'occupied',
                     ...(clientName ? { clientName } : {}),
                     hasPendingDigital: true,
                     pendingReviewItems: JSON.stringify(newPending),
-                    isOriginDigitalMenu: true
+                    isOriginDigitalMenu: true,
+                    startTime: newStartTime
                 }
             });
         });

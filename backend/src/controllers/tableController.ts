@@ -97,6 +97,12 @@ export const saveTableSession = async (req: Request, res: Response) => {
 
             // If table is in billing, keep its natural calculatedStatus so CRM correctly counts finalizations.
 
+            // Aqui aplicamos a mesma fix do Cardápio Digital: Se uma mesa existia como "available"
+            // (ex: QR code lido cedo), mas o garçom está lançando o primeiro item agora no painel,
+            // ou se for a transição de zero itens para n itens, nós forçamos a data real de início do pedido.
+            const isFirstRealOrder = existingSession?.status === 'available' || (!existingSession?.items?.length && currentItems.length > 0);
+            const actualStartTime = isFirstRealOrder ? new Date() : (sessionData.startTime ? new Date(sessionData.startTime) : undefined);
+
             await tx.order.upsert({
                 where: { id: orderId },
                 update: {
@@ -109,7 +115,7 @@ export const saveTableSession = async (req: Request, res: Response) => {
                     waiterId: waiterId,
                     digitalPin: sessionData.pin || existingSession?.pin || null,
                     digitalToken: sessionData.sessionToken || existingSession?.sessionToken || null,
-                    createdAt: sessionData.startTime ? new Date(sessionData.startTime) : undefined
+                    createdAt: actualStartTime
                 },
                 create: {
                     id: orderId,
@@ -125,7 +131,7 @@ export const saveTableSession = async (req: Request, res: Response) => {
                     isOriginDigitalMenu: sessionData.isOriginDigitalMenu || false, // Fix: Propagate origin into standard Order DB
                     digitalPin: sessionData.pin || existingSession?.pin || null,
                     digitalToken: sessionData.sessionToken || existingSession?.sessionToken || null,
-                    createdAt: sessionData.startTime ? new Date(sessionData.startTime) : undefined
+                    createdAt: actualStartTime
                 }
             });
 
@@ -134,6 +140,7 @@ export const saveTableSession = async (req: Request, res: Response) => {
                 where: { tableNumber: tableNum },
                 update: {
                     ...sessionData,
+                    startTime: actualStartTime,
                     clientId: clientId === 'ANONYMOUS' ? null : clientId, // TableSession allows null clientId
                     waiterId: waiterId,
                     items: {
@@ -151,6 +158,7 @@ export const saveTableSession = async (req: Request, res: Response) => {
                 },
                 create: {
                     ...sessionData,
+                    startTime: actualStartTime,
                     tableNumber: tableNum,
                     items: {
                         create: currentItems.map((item: any) => ({

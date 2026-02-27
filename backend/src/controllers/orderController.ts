@@ -158,8 +158,10 @@ export const saveOrder = async (req: Request, res: Response) => {
             const deliveryFeeNum = (order.deliveryFee !== null && order.deliveryFee !== undefined) ? parseFloat(order.deliveryFee.toString()) : 0;
             const totalNum = (order.total !== null && order.total !== undefined) ? parseFloat(order.total.toString()) : 0;
 
-            // 1. Inventory Sync (Only on Finalization or Reversion)
+            // 1. Inventory Sync & Historical Record Archival (Only on Finalization or Reversion)
             const itemsForInventory = order.items; // Use current items for stock calculation
+            let orderIdToSave = order.id;
+
             if (newStatus === 'DELIVERED' && oldStatus !== 'DELIVERED') {
                 await handleInventoryImpact(tx, itemsForInventory, 'DECREMENT', order.id);
 
@@ -175,6 +177,21 @@ export const saveOrder = async (req: Request, res: Response) => {
                         status: 'available',
                         action: 'refresh'
                     });
+
+                    // Modificação: Em vez de atualizar o registro TABLE-X infinitamente (o que destrói o histórico de vendas),
+                    // quando a mesa paga a conta e vira DELIVERED, nós a RENOMEAMOS para um ID único no banco.
+                    // Isso "arquiva" este pedido finalizado no Monitor de Vendas.
+                    // Removendo o antigo `TABLE-X` e criando um novo com o histórico preservado.
+                    if (existingOrder && existingOrder.id === `TABLE-${tableNumIdx}`) {
+                        const finalId = `TABLE-${tableNumIdx}-F-${Date.now()}`;
+                        orderIdToSave = finalId;
+
+                        // Temos que remover o rascunho temporário do "TABLE-X" porque o Prisma faria o upsert na primary key
+                        // Nós deletamos o registro rascunho da mesa, liberando a chave para o próximo cliente.
+                        // O novo ID 'TABLE-X-F-1234' será criado pelo `upsert` no bloco abaixo.
+                        await tx.orderItem.deleteMany({ where: { orderId: existingOrder.id } });
+                        await tx.order.delete({ where: { id: existingOrder.id } }).catch(() => { });
+                    }
                 }
             } else if (newStatus !== 'DELIVERED' && oldStatus === 'DELIVERED') {
                 await handleInventoryImpact(tx, itemsForInventory, 'INCREMENT', order.id);
@@ -211,7 +228,7 @@ export const saveOrder = async (req: Request, res: Response) => {
 
             // 3. Upsert Order
             return await tx.order.upsert({
-                where: { id: order.id },
+                where: { id: orderIdToSave },
                 update: {
                     status: order.status,
                     clientId: order.clientId,
@@ -249,7 +266,7 @@ export const saveOrder = async (req: Request, res: Response) => {
                     }
                 },
                 create: {
-                    id: order.id,
+                    id: orderIdToSave,
                     clientId: order.clientId,
                     clientName: order.clientName,
                     clientAddress: order.clientAddress,
