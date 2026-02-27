@@ -105,14 +105,17 @@ function AppContent() {
             updateTerminalState(true, null);
           }
         } else {
-          setTableError(err.message || 'Erro ao validar a mesa.');
+          // Só exibe erro de mesa se não estivermos exibindo uma tela final
+          if (!terminalStateRef.current.finished && !terminalStateRef.current.cancellation) {
+            setTableError(err.message || 'Erro ao validar a mesa.');
+          }
         }
         setIsBilling(false);
         setIsPinRequired(false);
       }
       setIsValidating(false);
     }
-  }, [tableParam]);
+  }, [tableParam, updateTerminalState]);
 
   const handlePinSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

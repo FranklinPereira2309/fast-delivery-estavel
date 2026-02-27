@@ -44,22 +44,24 @@ export const verifyTable = async (req: Request, res: Response) => {
 
         // 3. Se a mesa estiver disponível (ou não houver sessão), criamos uma nova com PIN
         if (!session || session.status === 'available') {
-            const pin = Math.floor(1000 + Math.random() * 9000).toString(); // PIN de 4 dígitos
-            const sessionToken = crypto.randomBytes(32).toString('hex');
+            // Só gera NOVO pin e token se realmente não existir uma sessão ou se ela estiver explícita vazia, 
+            // mas CUIDADO: o frontend chama isso a cada 5 segundos. Se a mesa está 'available', 
+            // não devemos ficar reescrevendo o PIN e token no banco caso o frontend já tenha um!
+            const pinToSet = session?.pin || Math.floor(1000 + Math.random() * 9000).toString(); // PIN de 4 dígitos
+            const tokenToSet = session?.sessionToken || crypto.randomBytes(32).toString('hex');
 
             session = await prisma.tableSession.upsert({
                 where: { tableNumber },
                 create: {
                     tableNumber,
                     status: 'available', // Começa como livre no banco, mas com PIN gerado
-                    pin,
-                    sessionToken
+                    pin: pinToSet,
+                    sessionToken: tokenToSet
                 },
                 update: {
-                    pin,
-                    sessionToken,
-                    // Ao resetar para novo PIN, garantimos que status seja ocupada assim que o primeiro acesse
-                    // Na verdade, o primeiro acesso via QR Code já deve marcar como ocupada se for o dono.
+                    // Mantem o PIN e token já criados para a mesa 'available', não regenera a toda chamada
+                    pin: pinToSet,
+                    sessionToken: tokenToSet,
                 }
             });
 
@@ -67,7 +69,7 @@ export const verifyTable = async (req: Request, res: Response) => {
                 tableNumber,
                 status: 'available',
                 pin: null, // O PIN só aparece após o primeiro pedido (status occupied)
-                sessionToken,
+                sessionToken: session.sessionToken,
                 isOwner: true
             });
         }
@@ -317,6 +319,11 @@ export const createOrder = async (req: Request, res: Response) => {
 
             const newPending = [...existingPending, ...newItems];
 
+            // The session should already exist from verifyTable, but if upsert triggers create,
+            // we must preserve the headers token or generate a new one to avoid breaking the frontend.
+            const pinToKeep = session?.pin || Math.floor(1000 + Math.random() * 9000).toString();
+            const tokenToKeep = session?.sessionToken || token || crypto.randomBytes(32).toString('hex');
+
             return await tx.tableSession.upsert({
                 where: { tableNumber: tableNumNum },
                 create: {
@@ -325,7 +332,9 @@ export const createOrder = async (req: Request, res: Response) => {
                     clientName: clientName || 'Mesa Digital',
                     hasPendingDigital: true,
                     pendingReviewItems: JSON.stringify(newPending),
-                    isOriginDigitalMenu: true
+                    isOriginDigitalMenu: true,
+                    pin: pinToKeep,
+                    sessionToken: tokenToKeep
                 },
                 update: {
                     status: 'occupied',
