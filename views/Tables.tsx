@@ -499,7 +499,7 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
             }}
               className={`relative h-44 rounded-[2.5rem] border-4 transition-all duration-300 flex flex-col items-center justify-center gap-2 shadow-sm ${status === 'available' ? 'bg-white border-emerald-50 text-emerald-600 hover:border-emerald-300' :
                 status === 'occupied' ? 'bg-red-600 border-red-700 text-white hover:bg-red-700' :
-                  status === 'pending_digital' ? 'bg-indigo-600 border-indigo-700 text-white hover:bg-indigo-700 shadow-[0_0_15px_rgba(79,70,229,0.4)]' :
+                  status === 'pending_digital' ? 'bg-[#C026D3] border-fuchsia-700 text-white hover:bg-fuchsia-700 shadow-[0_0_15px_rgba(192,38,211,0.4)]' :
                     'bg-orange-500 border-orange-600 text-white hover:bg-orange-600 animate-moderate-blink'
                 }`}
             >
@@ -521,7 +521,7 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
           <div className="bg-white rounded-[3rem] shadow-2xl w-full max-w-5xl h-[85vh] flex flex-col overflow-hidden animate-in zoom-in duration-200 border border-white/20">
             <div className="p-8 border-b bg-slate-50 flex justify-between items-center">
               <div className="flex items-center gap-6">
-                <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-white text-3xl font-black shadow-xl ${getTableStatus(selectedTable) === 'available' ? 'bg-emerald-500' : getTableStatus(selectedTable) === 'pending_digital' ? 'bg-indigo-600' : 'bg-red-600'}`}>{selectedTable}</div>
+                <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-white text-3xl font-black shadow-xl ${getTableStatus(selectedTable) === 'available' ? 'bg-emerald-500' : getTableStatus(selectedTable) === 'pending_digital' ? 'bg-[#C026D3]' : 'bg-red-600'}`}>{selectedTable}</div>
                 <div>
                   <h3 className="text-2xl font-black text-slate-800 uppercase tracking-tighter">Painel da Mesa {selectedTable}</h3>
                   <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">{getSessForTable(selectedTable)?.startTime ? `Aberta às ${new Date(getSessForTable(selectedTable)!.startTime).toLocaleTimeString()}` : 'Aguardando Atendimento'}</p>
