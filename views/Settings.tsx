@@ -427,8 +427,12 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings, onReset }) =
                                         <input type="number" step="any" className="w-full p-4 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-blue-50 transition-all font-bold text-sm" value={settings.restaurantLng || ''} onChange={e => setSettings({ ...settings, restaurantLng: parseFloat(e.target.value) || undefined })} placeholder="-46.6333" />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Raio Permitido (Metros)</label>
-                                        <input type="number" className="w-full p-4 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-blue-50 transition-all font-bold text-sm" value={settings.geofenceRadius || 0} onChange={e => setSettings({ ...settings, geofenceRadius: parseInt(e.target.value) || 0 })} placeholder="30" />
+                                        <div className="flex justify-between items-center ml-1">
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Raio Permitido (Metros)</label>
+                                            <span className="text-[8px] font-black text-blue-500 uppercase tracking-widest">(0 = Desativar)</span>
+                                        </div>
+                                        <input type="number" className="w-full p-4 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-blue-50 transition-all font-bold text-sm" value={settings.geofenceRadius || 0} onChange={e => setSettings({ ...settings, geofenceRadius: parseInt(e.target.value) || 0 })} placeholder="Recomendado: 150" />
+                                        <p className="text-[8px] text-slate-400 font-bold uppercase tracking-widest ml-1 opacity-60">Sugestão: 150m cobre a maioria das oscilações de GPS interno.</p>
                                     </div>
                                 </div>
                             </div>

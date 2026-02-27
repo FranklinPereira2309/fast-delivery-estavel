@@ -279,7 +279,9 @@ export const createOrder = async (req: Request, res: Response) => {
             );
 
             if (distance > settings.geofenceRadius) {
-                return res.status(403).json({ message: "Você está longe do restaurante! Não é possível realizar pedidos no momento. Se estiver tendo problemas fale com os garçons?!" });
+                return res.status(403).json({
+                    message: `Você está longe do restaurante (aprox. ${Math.round(distance)}m)! O limite é de ${settings.geofenceRadius}m. Por favor, aproxime-se ou fale com os garçons.`
+                });
             }
         }
         // ----------------------------------
