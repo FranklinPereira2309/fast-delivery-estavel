@@ -30,18 +30,19 @@ const syncClientStats = async (tx: any, order: any, oldStatus?: string) => {
 
     // 1. Handle Auto-Registration for Avulso Clients
     if (isNewFinalization && (order.clientId === 'ANONYMOUS' || !order.clientId) && order.clientPhone && order.clientPhone !== '0000000000') {
+        const safePhone = order.clientPhone.toString();
         let client = await tx.client.findFirst({
-            where: { phone: order.clientPhone }
+            where: { phone: safePhone }
         });
 
         if (!client) {
             client = await tx.client.create({
                 data: {
-                    name: order.clientName,
-                    phone: order.clientPhone,
+                    name: order.clientName || 'Consumidor Avulso',
+                    phone: safePhone,
                     email: order.clientEmail || null,
                     document: order.clientDocument || null,
-                    addresses: [order.clientAddress || 'S/ Endereço'],
+                    addresses: [order.clientAddress?.toString() || 'S/ Endereço'],
                     totalOrders: 0
                 }
             });
@@ -51,13 +52,18 @@ const syncClientStats = async (tx: any, order: any, oldStatus?: string) => {
 
     // 2. Increment on Finalization
     if (isNewFinalization && finalClientId && finalClientId !== 'ANONYMOUS') {
-        await tx.client.update({
-            where: { id: finalClientId },
-            data: {
-                totalOrders: { increment: 1 },
-                lastOrderDate: new Date().toLocaleDateString('pt-BR')
-            }
-        });
+        try {
+            await tx.client.update({
+                where: { id: finalClientId },
+                data: {
+                    totalOrders: { increment: 1 },
+                    lastOrderDate: new Date().toLocaleDateString('pt-BR')
+                }
+            });
+        } catch (e) {
+            console.error('Erro ao atualizar estatísticas do cliente:', e);
+            // Ignora erro de estatística para não travar o pedido
+        }
     }
 
     // 3. Decrement on Reversion (Reopen)
@@ -207,15 +213,15 @@ export const saveOrder = async (req: Request, res: Response) => {
                     splitAmount1: order.splitAmount1 !== undefined ? parseFloat(order.splitAmount1.toString()) : null,
                     items: {
                         deleteMany: {},
-                        create: order.items.map((item: any) => ({
+                        create: (order.items || []).map((item: any) => ({
                             id: item.uid,
                             productId: item.productId,
-                            quantity: item.quantity,
-                            price: item.price,
-                            isReady: item.isReady || false,
+                            quantity: Math.round(parseFloat(item.quantity?.toString()) || 0),
+                            price: parseFloat(item.price?.toString()) || 0,
+                            isReady: !!item.isReady,
                             readyAt: item.readyAt ? new Date(item.readyAt) : null,
                             observations: item.observations || null,
-                            tableSessionId: item.tableSessionId || null
+                            tableSessionId: item.tableSessionId ? parseInt(item.tableSessionId.toString()) : null
                         }))
                     }
                 },
@@ -243,15 +249,15 @@ export const saveOrder = async (req: Request, res: Response) => {
                     nfeError: order.nfeError || null,
                     splitAmount1: order.splitAmount1 !== undefined ? parseFloat(order.splitAmount1.toString()) : null,
                     items: {
-                        create: order.items.map((item: any) => ({
-                            id: item.uid,
+                        create: (order.items || []).map((item: any) => ({
+                            id: item.uid || item.id,
                             productId: item.productId,
-                            quantity: item.quantity,
-                            price: item.price,
-                            isReady: item.isReady || false,
+                            quantity: Math.round(parseFloat(item.quantity?.toString()) || 0),
+                            price: parseFloat(item.price?.toString()) || 0,
+                            isReady: !!item.isReady,
                             readyAt: item.readyAt ? new Date(item.readyAt) : null,
                             observations: item.observations || null,
-                            tableSessionId: item.tableSessionId || null
+                            tableSessionId: item.tableSessionId ? parseInt(item.tableSessionId.toString()) : null
                         }))
                     }
                 },

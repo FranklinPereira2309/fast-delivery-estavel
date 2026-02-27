@@ -209,7 +209,8 @@ export const deleteTableSession = async (req: Request, res: Response) => {
     // Buscar sessão antes de deletar para saber se era digital
     const session = await prisma.tableSession.findUnique({ where: { tableNumber: tableNum } });
 
-    await prisma.tableSession.delete({ where: { tableNumber: tableNum } });
+    // Use deleteMany para não dar erro se já foi deletado (ex: pelo status DELIVERED no saveOrder)
+    await prisma.tableSession.deleteMany({ where: { tableNumber: tableNum } });
 
     try {
         getIO().emit('tableStatusChanged', { tableNumber: tableNum });
