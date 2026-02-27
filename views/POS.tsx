@@ -309,11 +309,17 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
   const processPaymentAndFinalize = async () => {
     const total = cartTotal;
 
+    // Troco Máximo Validation Rule
+    const maxChangeAllowed = businessSettings?.maxChange ?? 191;
+
     if (!isSplitPayment) {
       if (paymentMethod === 'DINHEIRO') {
         const received = parseFloat(paymentData.receivedAmount);
         if (isNaN(received) || received < total) {
           return showAlert("Valor Insuficiente", "O valor recebido deve ser igual ou maior que o total.", "DANGER");
+        }
+        if (received - total > maxChangeAllowed) {
+          return showAlert("Troco Excedido", `O valor do troco não pode ultrapassar o teto configurado de R$ ${maxChangeAllowed.toFixed(2)}.`, "DANGER");
         }
       }
 
@@ -343,12 +349,18 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
         if (isNaN(received) || received < am1) {
           return showAlert("Valor Insuficiente", "O valor recebido em Dinheiro (Met. 1) deve ser >= " + am1.toFixed(2), "DANGER");
         }
+        if (received - am1 > maxChangeAllowed) {
+          return showAlert("Troco Excedido", `O valor do troco (Met. 1) não pode ultrapassar R$ ${maxChangeAllowed.toFixed(2)}.`, "DANGER");
+        }
       }
 
       if (paymentMethod2 === 'DINHEIRO') {
         const received = parseFloat(paymentData.receivedAmount); // Reuse receivedAmount for the cash portion
         if (isNaN(received) || received < am2) {
           return showAlert("Valor Insuficiente", "O valor recebido em Dinheiro (Met. 2) deve ser >= " + am2.toFixed(2), "DANGER");
+        }
+        if (received - am2 > maxChangeAllowed) {
+          return showAlert("Troco Excedido", `O valor do troco (Met. 2) não pode ultrapassar R$ ${maxChangeAllowed.toFixed(2)}.`, "DANGER");
         }
       }
 
@@ -739,7 +751,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                 {isSplitPayment && <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Selecione 02 Métodos</span>}
               </div>
 
-              <div className="grid grid-cols-4 gap-3 bg-slate-100 p-2 rounded-[2rem] mb-4">
+              <div className={`grid gap-3 bg-slate-100 p-2 rounded-[2rem] mb-4 ${isSplitPayment ? 'grid-cols-2' : 'grid-cols-4'}`}>
                 {[
                   { id: 'DINHEIRO', label: 'Dinheiro', icon: Icons.Dashboard },
                   { id: 'PIX', label: 'PIX', icon: Icons.QrCode },
@@ -758,18 +770,26 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
               </div>
 
               {isSplitPayment && (
-                <div className="space-y-4 animate-in slide-in-from-top-2 duration-300">
-                  <div className="bg-blue-50/50 p-4 rounded-3xl border border-blue-100">
-                    <label className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-2 block">Quanto no 1º Método ({paymentMethod})?</label>
+                <div className="grid grid-cols-2 gap-4 animate-in slide-in-from-top-2 duration-300">
+                  <div className="bg-blue-50/50 p-4 rounded-[2rem] border border-blue-100 flex flex-col justify-center">
+                    <label className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-2 block">1º Pagamento (R$)</label>
                     <input
                       type="number"
-                      className="w-full p-4 bg-white border-2 border-blue-100 rounded-2xl text-lg font-black outline-none focus:border-blue-500 transition-all"
+                      className="w-full p-4 bg-white border-2 border-blue-100 rounded-2xl text-lg font-black outline-none focus:border-blue-500 transition-all text-center"
                       value={splitAmount1}
                       onChange={e => setSplitAmount1(e.target.value)}
+                      placeholder="Valor 1"
                     />
                   </div>
 
-                  <div className="grid grid-cols-4 gap-3 bg-slate-100 p-2 rounded-[2rem]">
+                  <div className="bg-slate-50 p-4 rounded-[2rem] border border-slate-100 flex flex-col justify-center text-center">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">2º Pagamento (R$)</label>
+                    <span className="text-xl font-black text-slate-800 py-3">
+                      R$ {(cartTotal - (parseFloat(splitAmount1) || 0)).toFixed(2)}
+                    </span>
+                  </div>
+
+                  <div className="col-span-2 grid grid-cols-4 gap-2 bg-slate-100 p-2 rounded-[1.5rem] mt-2">
                     {[
                       { id: 'DINHEIRO', label: 'Dinheiro', icon: Icons.Dashboard },
                       { id: 'PIX', label: 'PIX', icon: Icons.QrCode },
@@ -777,19 +797,13 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                       { id: 'DÉBITO', label: 'Débito', icon: Icons.CreditCard }
                     ].map(method => (
                       <button
-                        key={method.id}
+                        key={`method2-${method.id}`}
                         onClick={() => setPaymentMethod2(method.id)}
-                        className={`flex flex-col items-center gap-2 py-4 rounded-3xl transition-all ${paymentMethod2 === method.id ? 'bg-white text-blue-600 shadow-xl' : 'text-slate-400 hover:bg-slate-200'}`}
+                        className={`flex flex-col items-center gap-1 py-3 rounded-2xl transition-all ${paymentMethod2 === method.id ? 'bg-white text-blue-600 shadow-md' : 'text-slate-400 hover:bg-slate-200'}`}
                       >
-                        <method.icon className="w-5 h-5" />
-                        <span className="text-[9px] font-black uppercase tracking-widest">{method.label}</span>
+                        <span className="text-[8px] font-black uppercase tracking-widest">{method.label}</span>
                       </button>
                     ))}
-                  </div>
-                  <div className="px-4 py-2 text-center">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                      2º Método ({paymentMethod2}): <span className="text-blue-600">R$ {(cartTotal - (parseFloat(splitAmount1) || 0)).toFixed(2)}</span>
-                    </p>
                   </div>
                 </div>
               )}

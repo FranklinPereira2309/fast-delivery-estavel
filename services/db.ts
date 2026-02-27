@@ -15,7 +15,9 @@ export interface BusinessSettings {
   geofenceRadius?: number;
   isManuallyClosed: boolean;
   operatingHours: string;
+  maxChange?: number;
 }
+
 
 const DEFAULT_SETTINGS: BusinessSettings = {
   name: 'Fast Food Express',
@@ -26,7 +28,8 @@ const DEFAULT_SETTINGS: BusinessSettings = {
   tableCount: 10,
   geofenceRadius: 30,
   isManuallyClosed: false,
-  operatingHours: '[]'
+  operatingHours: '[]',
+  maxChange: 191
 };
 
 class APIDBService {

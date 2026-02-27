@@ -242,6 +242,7 @@ model BusinessSettings {
   isManuallyClosed Boolean @default(false)
   operatingHours  String @default("[]")
   orderTimeoutMinutes Int @default(5)
+  maxChange       Float  @default(191)
 }
 
 model ChatMessage {
