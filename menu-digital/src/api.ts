@@ -3,8 +3,9 @@ import { io } from 'socket.io-client';
 import { Product } from './types';
 
 // O Backend está rodando na porta 3000
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/public';
-const SOCKET_URL = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api/public', '') : 'http://localhost:3000';
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+const API_URL = BASE_URL.endsWith('/public') ? BASE_URL : `${BASE_URL}/public`;
+const SOCKET_URL = BASE_URL.replace('/api', '');
 
 // Configuração do axios para incluir o token de sessão se existir
 axios.interceptors.request.use((config) => {

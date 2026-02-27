@@ -115,6 +115,12 @@ const handleInventoryImpact = async (tx: any, items: any[], type: 'DECREMENT' | 
 
 export const saveOrder = async (req: Request, res: Response) => {
     const { user, order } = req.body;
+
+    if (!order) {
+        console.error('Invalid order save request: order object is missing', req.body);
+        return res.status(400).json({ error: 'Pedido não informado no corpo da requisição.' });
+    }
+
     console.log('Receiving order save request:', { id: order.id, type: order.type, status: order.status, itemsCount: order.items?.length });
 
     try {

@@ -179,7 +179,9 @@ export const saveTableSession = async (req: Request, res: Response) => {
             getIO().emit('tableStatusChanged', { tableNumber: data.tableNumber });
 
             const { rejection } = req.query;
-            if (rejection === 'true') {
+            const isDigitalAction = result?.isOriginDigitalMenu || result?.hasPendingDigital;
+
+            if (rejection === 'true' && isDigitalAction) {
                 getIO().emit('digitalOrderCancelled', {
                     tableNumber: data.tableNumber,
                     message: "Esse pedido foi cancelado. Qualquer dúvida falar com o Garçom Responsável."
@@ -212,7 +214,9 @@ export const deleteTableSession = async (req: Request, res: Response) => {
     try {
         getIO().emit('tableStatusChanged', { tableNumber: tableNum });
 
-        if (cancellation === 'true' && session?.isOriginDigitalMenu) {
+        const isDigitalAction = session?.isOriginDigitalMenu || session?.hasPendingDigital;
+
+        if (cancellation === 'true' && isDigitalAction) {
             getIO().emit('digitalOrderCancelled', {
                 tableNumber: tableNum,
                 message: "Esse pedido foi cancelado. Qualquer dúvida falar com o Garçom Responsável."

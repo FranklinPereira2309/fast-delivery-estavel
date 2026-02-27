@@ -293,7 +293,8 @@ export const createOrder = async (req: Request, res: Response) => {
         // ----------------------------------
 
         const updatedSession = await prisma.$transaction(async (tx) => {
-            const session = await tx.tableSession.findUnique({ where: { tableNumber } });
+            const tableNumNum = parseInt(tableNumber as string);
+            const session = await tx.tableSession.findUnique({ where: { tableNumber: tableNumNum } });
 
             // Validate products exist
             for (const item of items) {
@@ -314,9 +315,9 @@ export const createOrder = async (req: Request, res: Response) => {
             const newPending = [...existingPending, ...newItems];
 
             return await tx.tableSession.upsert({
-                where: { tableNumber },
+                where: { tableNumber: tableNumNum },
                 create: {
-                    tableNumber,
+                    tableNumber: tableNumNum,
                     status: 'occupied',
                     clientName: clientName || 'Mesa Digital',
                     hasPendingDigital: true,
