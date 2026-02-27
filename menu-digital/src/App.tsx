@@ -106,10 +106,15 @@ function AppContent() {
     }
   };
 
-  // Atualizar mesa e verificar no início
+  // Atualizar mesa e verificar no início e a cada 5 segundos como fallback ao socket
   useEffect(() => {
     fetchTableData();
     fetchStatus();
+
+    const intervalId = setInterval(() => {
+      fetchTableData();
+      fetchStatus();
+    }, 5000);
 
     const handleTableStatus = (data: any) => {
       console.log('Socket tableStatusChanged received:', data);
@@ -165,6 +170,7 @@ function AppContent() {
     socket.on('digitalOrderCancelled', handleCancellation);
 
     return () => {
+      clearInterval(intervalId);
       socket.off('tableStatusChanged', handleTableStatus);
       socket.off('newOrder', handleTableStatus);
       socket.off('store_status_changed', handleStoreStatus);
