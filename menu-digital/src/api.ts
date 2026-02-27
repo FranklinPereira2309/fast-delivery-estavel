@@ -29,6 +29,7 @@ axios.interceptors.request.use((config) => {
 export const socket = io(SOCKET_URL, {
     autoConnect: true,
     reconnection: true,
+    transports: ['websocket']
 });
 
 export const MOCK_CATEGORIES = ['Lanches', 'Porções', 'Bebidas', 'Sobremesas', 'Pizzas']; // Temporário, idealmente também viria do BD.

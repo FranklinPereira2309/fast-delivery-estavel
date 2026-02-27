@@ -9,6 +9,7 @@ const SOCKET_URL = (import.meta as any).env.VITE_API_URL
 export const socket = io(SOCKET_URL, {
     autoConnect: true,
     reconnection: true,
+    transports: ['websocket']
 });
 
 socket.on('connect', () => {
