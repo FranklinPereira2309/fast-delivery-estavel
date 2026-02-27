@@ -5,7 +5,7 @@ let globalIsAlerting = false;
 const listeners = new Set<(val: boolean) => void>();
 
 // Reliable notification sound
-const ALERT_SOUND_URL = 'https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3';
+const ALERT_SOUND_URL = '/alerta.mp3';
 const audio = new Audio(ALERT_SOUND_URL);
 
 const setGlobalAlert = (val: boolean) => {

@@ -4,7 +4,7 @@ class AudioAlertService {
 
     constructor() {
         // Usando o mesmo som que existia no useDigitalAlert
-        this.audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+        this.audio = new Audio('/alerta.mp3');
 
         const unlockAudio = () => {
             if (this.initialized) return;
