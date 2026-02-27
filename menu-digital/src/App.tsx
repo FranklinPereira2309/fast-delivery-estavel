@@ -130,14 +130,19 @@ function AppContent() {
 
         // 2. Handle Payment Completion (Table becomes available)
         if (data.status === 'available') {
+          // Se já existe uma mensagem de cancelamento/rejeição, não mostramos a tela de "Obrigado"
+          // porque o "available" provavelmente é resultado da rejeição do pedido único da mesa.
+          if (cancellationMessage) {
+            console.log('Skipping Thank You screen because cancellation is active');
+            return;
+          }
+
           setIsBilling(false);
           setIsSessionFinished(true); // Triggers "Thank You" screen
           setCurrentPin(null);
           setIsOwner(false);
           setIsPinRequired(false);
           setCancellationMessage(null);
-          // IMPORTANTE: Não removemos o token imediatamente para permitir ver a tela de agradecimento.
-          // O token será removido ao clicar em "Nova Sessão" ou se uma nova sessão for detectada.
           return;
         }
 
@@ -224,25 +229,42 @@ function AppContent() {
 
   if (cancellationMessage) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-6 bg-slate-900 text-white text-center">
-        <div className="max-w-md w-full space-y-8 animate-fade-in animate-zoom-in">
-          <div className="w-24 h-24 bg-red-600 rounded-3xl mx-auto flex items-center justify-center shadow-2xl shadow-red-500/40 rotate-12">
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+      <div className="min-h-screen flex items-center justify-center p-6 bg-slate-900 text-white text-center overflow-hidden">
+        {/* Decorative elements */}
+        <div className="absolute top-[-10%] right-[-10%] w-64 h-64 bg-red-600/10 rounded-full blur-[100px]"></div>
+        <div className="absolute bottom-[-10%] left-[-10%] w-64 h-64 bg-red-400/10 rounded-full blur-[100px]"></div>
+
+        <div className="max-w-md w-full space-y-10 relative z-10 animate-fade-in animate-zoom-in">
+          <div className="relative mx-auto w-32 h-32">
+            <div className="absolute inset-0 bg-red-500/20 rounded-full animate-pulse"></div>
+            <div className="relative w-32 h-32 bg-gradient-to-br from-red-600 to-red-800 rounded-[2.5rem] flex items-center justify-center shadow-2xl shadow-red-500/40 transform rotate-3">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-16 h-16 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </div>
           </div>
+
           <div className="space-y-4">
-            <h1 className="text-3xl font-black uppercase tracking-tighter leading-tight text-white px-2">
+            <div className="inline-block px-4 py-1.5 bg-red-500/10 border border-red-500/20 rounded-full mb-2">
+              <span className="text-[10px] font-black uppercase tracking-[0.3em] text-red-400">Atenção</span>
+            </div>
+            <h1 className="text-4xl font-black uppercase tracking-tighter leading-none text-white">Pedido <br /> Recusado</h1>
+            <p className="text-slate-400 text-lg leading-relaxed max-w-[280px] mx-auto font-medium">
               {cancellationMessage}
-            </h1>
+            </p>
           </div>
-          <button
-            onClick={() => setCancellationMessage(null)}
-            className="w-full py-4 bg-slate-800 hover:bg-slate-700 text-white rounded-2xl font-black uppercase text-xs tracking-widest transition-all"
-          >
-            Entendi, voltar ao Menu
-          </button>
-          <p className="text-[10px] text-slate-500 pt-4 uppercase font-bold tracking-widest">Agradecemos a compreensão.</p>
+
+          <div className="space-y-6 pt-4">
+            <button
+              onClick={() => setCancellationMessage(null)}
+              className="w-full py-5 bg-white text-slate-900 rounded-[2rem] font-black uppercase text-xs tracking-widest transition-all hover:bg-slate-100 active:scale-95 shadow-xl shadow-white/5"
+            >
+              Voltar ao Menu
+            </button>
+            <p className="text-[10px] text-slate-500 font-black uppercase tracking-[0.2em] max-w-[240px] mx-auto opacity-60">
+              o garçom poderá lhe informar o motivo da recusa
+            </p>
+          </div>
         </div>
       </div>
     );
