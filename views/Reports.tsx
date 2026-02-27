@@ -52,6 +52,17 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
         fetchData();
     }, []);
 
+    const fetchCashSessions = async () => {
+        const cs = await db.getCashSessions(cashStartDate, cashEndDate);
+        setCashSessions(cs);
+    };
+
+    useEffect(() => {
+        if (activeTab === 'CASH') {
+            fetchCashSessions();
+        }
+    }, [cashStartDate, cashEndDate, activeTab]);
+
     const fetchData = async () => {
         const [o, c, s, d, r] = await Promise.all([
             db.getOrders(),
@@ -67,8 +78,7 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
         setRejections(r);
 
         // Fetch cash sessions for current period
-        const cs = await db.getCashSessions(cashStartDate, cashEndDate);
-        setCashSessions(cs);
+        fetchCashSessions();
     };
 
     const handleReopen = async (sessionId: string) => {
@@ -484,6 +494,11 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
             const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
             const filtered = await db.getCashSessions(cashStartDate, cashEndDate);
+
+            if (filtered.length === 0) {
+                alert('Nenhuma movimentação de caixa encontrada para este período.');
+                return;
+            }
 
             let page = pdfDoc.addPage([595.28, 841.89]);
             const { width, height } = page.getSize();

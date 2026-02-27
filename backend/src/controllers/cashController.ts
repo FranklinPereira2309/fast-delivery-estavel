@@ -209,8 +209,8 @@ export const getCashSessions = async (req: Request, res: Response) => {
     const sessions = await prisma.cashSession.findMany({
         where: {
             openedAt: {
-                gte: start ? new Date(start as string) : undefined,
-                lte: end ? new Date(end as string) : undefined
+                gte: start ? new Date(`${start}T00:00:00`) : undefined,
+                lte: end ? new Date(`${end}T23:59:59.999`) : undefined
             }
         },
         orderBy: { openedAt: 'desc' }
