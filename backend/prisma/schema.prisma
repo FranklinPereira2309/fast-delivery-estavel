@@ -287,3 +287,12 @@ model CashSession {
   difference      Float?
   observations    String?
 }
+
+model Feedback {
+  id          String   @id @default(uuid())
+  name        String?
+  message     String
+  tableNumber Int
+  isRead      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+}

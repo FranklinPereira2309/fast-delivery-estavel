@@ -21,6 +21,10 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
   const [clients, setClients] = useState<Client[]>([]);
   const [selectedTable, setSelectedTable] = useState<number | null>(null);
   const [activeModalTab, setActiveModalTab] = useState<'LAUNCH' | 'REMOVE' | 'CHECKOUT' | 'CONSUMPTION'>('LAUNCH');
+  const [feedbacks, setFeedbacks] = useState<any[]>([]);
+  const [showFeedbacks, setShowFeedbacks] = useState(false);
+  const [hasNewFeedback, setHasNewFeedback] = useState(false);
+  const [lastFeedbackBlink, setLastFeedbackBlink] = useState(false);
 
   const [lastAddedProduct, setLastAddedProduct] = useState<string | null>(null);
   const [isConfirmingBilling, setIsConfirmingBilling] = useState(false);
@@ -69,9 +73,18 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
 
     socket.on('newOrder', handleNewOrder);
 
+    const handleNewFeedback = (feedback: any) => {
+      console.log('WS: Novo feedback recebido!', feedback);
+      setFeedbacks(prev => [feedback, ...prev]);
+      setHasNewFeedback(true);
+    };
+
+    socket.on('newFeedback', handleNewFeedback);
+
     return () => {
       clearInterval(agent);
       socket.off('newOrder', handleNewOrder);
+      socket.off('newFeedback', handleNewFeedback);
     };
   }, []);
 
@@ -88,6 +101,14 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
     setProducts(prods);
     setWaiters(wa);
     setClients(cl);
+
+    // Fetch feedbacks
+    try {
+      const fb = await db.getFeedbacks();
+      setFeedbacks(fb);
+    } catch (e) {
+      console.error('Error fetching feedbacks', e);
+    }
   };
 
   const getTableStatus = (num: number) => {
@@ -415,7 +436,7 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
   if (!settings) return null;
 
   return (
-    <div className="flex flex-col h-full gap-8 rounded-[2rem] p-2 transition-all duration-300" onClick={(e) => {
+    <div className={`flex flex-col h-full gap-8 rounded-[2rem] p-2 transition-all duration-300 ${isAlerting ? 'animate-notify-turquoise' : ''}`} onClick={(e) => {
       // Dismiss the alerting state if active, but without visual feedback on the container
       if (isAlerting) dismissAlert();
     }}>
@@ -434,6 +455,20 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
             <div className="flex items-center gap-1.5"><span className="w-2 h-2 bg-red-600 rounded-full animate-bounce"></span><span className="text-[10px] font-bold uppercase text-slate-400">Ocupada</span></div>
             <div className="flex items-center gap-1.5"><span className="w-2 h-2 bg-orange-500 rounded-full animate-bounce"></span><span className="text-[10px] font-bold uppercase text-slate-400">Checkout</span></div>
           </div>
+
+          <button
+            onClick={() => {
+              setShowFeedbacks(true);
+              setHasNewFeedback(false);
+            }}
+            className={`flex items-center gap-2 px-6 py-3 rounded-2xl transition-all font-black uppercase text-[10px] relative ${hasNewFeedback ? 'bg-indigo-600 text-white animate-moderate-blink shadow-lg shadow-indigo-200' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+            </svg>
+            Mensagens do Dia
+            {hasNewFeedback && <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-white animate-ping"></span>}
+          </button>
         </div>
       </div>
 
@@ -793,6 +828,55 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
                 </button>
               )}
               <button onClick={() => { setShowConsumptionTicket(false); setIsConfirmingBilling(false); }} className="w-full py-3 text-slate-400 font-black uppercase text-[9px] hover:text-red-500 transition-all">Cancelar / Voltar</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL DE MENSAGENS / FEEDBACK */}
+      {showFeedbacks && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-end p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="absolute inset-0" onClick={() => setShowFeedbacks(false)} />
+          <div className="bg-white rounded-[3rem] shadow-2xl w-full max-w-md h-[95vh] flex flex-col overflow-hidden animate-in slide-in-from-right duration-300 relative border-l border-white/20">
+            <div className="p-8 border-b bg-indigo-50 flex justify-between items-center">
+              <div>
+                <h3 className="text-xl font-black text-indigo-900 uppercase tracking-tighter">Mensagens dos Clientes</h3>
+                <p className="text-[9px] font-bold text-indigo-400 uppercase tracking-widest">Feedbacks e Sugestões do dia</p>
+              </div>
+              <button
+                onClick={() => setShowFeedbacks(false)}
+                className="p-3 bg-white text-slate-400 rounded-2xl hover:text-slate-600 transition-all shadow-sm"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6 space-y-4">
+              {feedbacks.length > 0 ? (
+                feedbacks.map((fb, i) => (
+                  <div key={fb.id} className="bg-slate-50 border border-slate-100 p-5 rounded-[2rem] shadow-sm animate-in fade-in slide-in-from-bottom-2" style={{ animationDelay: `${i * 50}ms` }}>
+                    <div className="flex justify-between items-start mb-3">
+                      <div className="flex items-center gap-2">
+                        <div className="bg-indigo-600 text-white w-8 h-8 rounded-xl flex items-center justify-center text-[10px] font-black">M{fb.tableNumber}</div>
+                        <span className="text-xs font-black text-slate-800 uppercase tracking-tight">{fb.name || 'Cliente Anônimo'}</span>
+                      </div>
+                      <span className="text-[8px] font-bold text-slate-400 uppercase">{new Date(fb.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    </div>
+                    <p className="text-sm font-bold text-slate-600 leading-relaxed bg-white/50 p-4 rounded-2xl border border-slate-50 italic">
+                      "{fb.message}"
+                    </p>
+                  </div>
+                ))
+              ) : (
+                <div className="h-full flex flex-col items-center justify-center text-center p-12 space-y-4">
+                  <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center text-slate-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    </svg>
+                  </div>
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Nenhuma mensagem recebida hoje.</p>
+                </div>
+              )}
             </div>
           </div>
         </div>

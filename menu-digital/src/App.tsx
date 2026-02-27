@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, useSearchParams } from 'react-router-dom'
 import Home from './components/Home';
 import CartModal from './components/CartModal';
 import { CartItem } from './types';
+import FooterNav from './components/FooterNav';
 import { verifyTable, socket, fetchStoreStatus, StoreStatus, validatePin } from './api';
 
 function AppContent() {
@@ -21,7 +22,8 @@ function AppContent() {
   const [pinInput, setPinInput] = useState('');
   const [pinError, setPinError] = useState<string | null>(null);
   const [currentPin, setCurrentPin] = useState<string | null>(null);
-  const [showPinInfo, setShowPinInfo] = useState(false);
+  const [isOwner, setIsOwner] = useState(false);
+  const [isSessionFinished, setIsSessionFinished] = useState(false);
 
   // Status da Loja
   const [storeStatus, setStoreStatus] = useState<StoreStatus>({ status: 'online', is_manually_closed: false, next_status_change: null });
@@ -58,10 +60,12 @@ function AppContent() {
 
       setTableNumber(tableParam);
       setClientName(data.clientName);
+      setIsOwner(!!data.isOwner);
       setTableError(null);
       setIsPinRequired(false);
       setIsBilling(false);
       setIsValidating(false);
+      setIsSessionFinished(false);
     } catch (err: any) {
       if (err.status === 'billing') {
         setIsBilling(true);
@@ -71,8 +75,18 @@ function AppContent() {
         setIsPinRequired(true);
         setTableError(null);
         setIsBilling(false);
+      } else if (err.message?.includes('Mesa não encontrada') || err.message?.includes('inexistente')) {
+        setTableError(err.message);
+        setIsBilling(false);
       } else {
-        setTableError(err.message || 'Erro ao validar a mesa.');
+        // Se a mesa estiver livre agora mas o usuário tinha um token, significa que a sessão acabou
+        const token = localStorage.getItem(`sessionToken_${tableParam}`);
+        if (token && (err.message?.includes('não autorizada') || err.status === 401)) {
+          localStorage.removeItem(`sessionToken_${tableParam}`);
+          setIsSessionFinished(true);
+        } else {
+          setTableError(err.message || 'Erro ao validar a mesa.');
+        }
         setIsBilling(false);
         setIsPinRequired(false);
       }
@@ -166,6 +180,28 @@ function AppContent() {
     return (
       <div className="min-h-screen flex items-center justify-center p-6 bg-slate-900 text-white text-center">
         <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+      </div>
+    );
+  }
+
+  if (isSessionFinished) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-6 bg-slate-900 text-white text-center">
+        <div className="max-w-md w-full space-y-8 animate-in fade-in zoom-in duration-500">
+          <div className="w-24 h-24 bg-emerald-600 rounded-3xl mx-auto flex items-center justify-center shadow-2xl shadow-emerald-500/40">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <div className="space-y-4">
+            <h1 className="text-3xl font-black uppercase tracking-tighter">Sessão Finalizada!</h1>
+            <p className="text-slate-400 text-lg leading-relaxed">
+              Muito obrigado pela visita. <br />
+              <span className="text-sm font-medium opacity-75">Sua conta foi paga e a mesa liberada.</span>
+            </p>
+          </div>
+          <p className="text-xs text-slate-500 pt-8 italic leading-relaxed">Agradecemos a preferência! <br /> Volte sempre para saborear o que temos de melhor.</p>
+        </div>
       </div>
     );
   }
@@ -275,28 +311,6 @@ function AppContent() {
             </p>
           </div>
         </div>
-
-        {currentPin && (
-          <div className="relative">
-            <button
-              onClick={() => setShowPinInfo(!showPinInfo)}
-              className="p-3 bg-slate-100 text-slate-600 rounded-xl hover:bg-blue-50 hover:text-blue-600 transition-all flex items-center gap-2 group"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-              </svg>
-              <span className="text-[10px] font-black uppercase tracking-widest hidden sm:block">PIN: {currentPin}</span>
-            </button>
-
-            {showPinInfo && (
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-2xl border border-slate-100 p-4 z-50 animate-in fade-in slide-in-from-top-2">
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Seu PIN de Acesso</p>
-                <div className="text-2xl font-black text-blue-600 tracking-widest">{currentPin}</div>
-                <p className="text-[9px] text-slate-500 mt-2 font-medium">Compartilhe este código com outras pessoas na sua mesa.</p>
-              </div>
-            )}
-          </div>
-        )}
       </header>
 
       {/* Banner de Status da Loja */}
@@ -342,6 +356,12 @@ function AppContent() {
         initialClientName={clientName || undefined}
         onOrderSuccess={fetchTableData}
         storeStatus={storeStatus}
+      />
+
+      <FooterNav
+        tableNumber={tableNumber || ''}
+        isOwner={isOwner}
+        pin={currentPin}
       />
     </div>
   );

@@ -115,21 +115,37 @@ const calculateCurrentStoreStatus = (): StoreStatus => {
             // It's open! Calculate next_status_change (closing time)
             console.log(`[DEBUG StoreStatus] Loja ABERTA. Próximo fechamento: ${todayConfig.closeTime}`);
 
-            // Get SP time parts again to create the closing date object
-            const spString = new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" });
-            const nextChangeDate = new Date(spString);
+            // Get SP date parts to construct a specialized ISO string
+            const spDateParts = new Intl.DateTimeFormat('en-US', {
+                timeZone: 'America/Sao_Paulo',
+                year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+            }).formatToParts(new Date());
 
+            const getP = (type: string) => spDateParts.find(p => p.type === type)?.value || '00';
+
+            let y = getP('year');
+            let m = getP('month');
+            let d = getP('day');
+
+            // If closes next day, increment day
             if (closeTimeInt < openTimeInt && currentTimeInt >= openTimeInt) {
-                // Closes tomorrow
-                nextChangeDate.setDate(nextChangeDate.getDate() + 1);
+                const tempDate = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+                tempDate.setDate(tempDate.getDate() + 1);
+                y = tempDate.getFullYear().toString();
+                m = (tempDate.getMonth() + 1).toString().padStart(2, '0');
+                d = tempDate.getDate().toString().padStart(2, '0');
             }
-            nextChangeDate.setHours(closeParts[0], closeParts[1], 0, 0);
+
+            // Construct ISO with -03:00 offset (Brasilia Time)
+            const closingISO = `${y}-${m}-${d}T${todayConfig.closeTime}:00-03:00`;
+            const nextChangeDate = new Date(closingISO);
 
             return { status: 'online', is_manually_closed: false, next_status_change: nextChangeDate.toISOString() };
         } else {
             // It's closed.
             console.log(`[DEBUG StoreStatus] Loja fechada (fora do horário). Próxima abertura: ${todayConfig.openTime}`);
-            return { status: 'offline', is_manually_closed: false, next_status_change: getNextOpenTime(hours, new Date()) };
+            const nextOpen = getNextOpenTime(hours, new Date());
+            return { status: 'offline', is_manually_closed: false, next_status_change: nextOpen };
         }
 
     } catch (e) {

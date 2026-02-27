@@ -62,7 +62,7 @@ export const fetchProducts = async (): Promise<Product[]> => {
     }
 };
 
-export const verifyTable = async (tableNumber: string): Promise<{ tableNumber: number, status: string, clientName: string | null, pin?: string, sessionToken?: string }> => {
+export const verifyTable = async (tableNumber: string): Promise<{ tableNumber: number, status: string, clientName: string | null, pin?: string, sessionToken?: string, isOwner?: boolean }> => {
     try {
         const response = await axios.get(`${API_URL}/tables/${tableNumber}/verify`);
         return response.data;
@@ -90,5 +90,25 @@ export const submitOrder = async (payload: OrderPayload) => {
     } catch (error: any) {
         console.error('Error submitting order', error);
         throw error.response?.data || { message: 'Erro ao enviar o pedido.' };
+    }
+};
+
+export const submitFeedback = async (tableNumber: string, message: string, name?: string) => {
+    try {
+        const response = await axios.post(`${API_URL}/feedback`, { tableNumber, message, name });
+        return response.data;
+    } catch (error: any) {
+        console.error('Error submitting feedback', error);
+        throw error.response?.data || { message: 'Erro ao enviar feedback.' };
+    }
+};
+
+export const fetchConsumption = async (tableNumber: string) => {
+    try {
+        const response = await axios.get(`${API_URL}/tables/${tableNumber}/consumption`);
+        return response.data;
+    } catch (error: any) {
+        console.error('Error fetching consumption', error);
+        throw error.response?.data || { message: 'Erro ao buscar extrato.' };
     }
 };

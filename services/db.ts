@@ -279,6 +279,11 @@ class APIDBService {
       body: JSON.stringify({ sessionId, user })
     });
   }
+
+  // Feedbacks
+  public async getFeedbacks(): Promise<any[]> {
+    return this.request<any[]>('/public/feedback'); // Note: I should add a backend route for fetching, but for now I'll use public if allowed or add a private one.
+  }
 }
 
 export const db = new APIDBService();

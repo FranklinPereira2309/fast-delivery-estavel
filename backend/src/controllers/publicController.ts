@@ -91,12 +91,44 @@ export const verifyTable = async (req: Request, res: Response) => {
             tableNumber,
             status: session.status,
             clientName: session.clientName || null,
-            pin: session.pin // Para quem já tem o token, o PIN fica disponível
+            pin: session.pin, // Para quem já tem o token, o PIN fica disponível
+            isOwner: session.sessionToken === token
         });
 
     } catch (error) {
         console.error('Error verifying table:', error);
         res.status(500).json({ message: 'Error verifying table' });
+    }
+};
+
+export const submitFeedback = async (req: Request, res: Response) => {
+    const { name, message, tableNumber } = req.body;
+
+    if (!message || !tableNumber) {
+        return res.status(400).json({ message: 'Mensagem e número da mesa são obrigatórios.' });
+    }
+
+    try {
+        const feedback = await prisma.feedback.create({
+            data: {
+                name: name || 'Anônimo',
+                message,
+                tableNumber: parseInt(tableNumber)
+            }
+        });
+
+        // Emitir evento socket para o módulo Gestão de Mesas
+        try {
+            getIO().emit('newFeedback', feedback);
+        } catch (e) {
+            console.error('Socket error emitting newFeedback:', e);
+        }
+
+        res.status(201).json({ message: 'Obrigado pelo seu feedback!' });
+
+    } catch (error) {
+        console.error('Error submitting feedback:', error);
+        res.status(500).json({ message: 'Erro ao enviar feedback.' });
     }
 };
 
@@ -124,6 +156,68 @@ export const validatePin = async (req: Request, res: Response) => {
     } catch (error) {
         console.error('Error validating PIN:', error);
         res.status(500).json({ message: 'Erro ao validar PIN.' });
+    }
+};
+
+export const getTableConsumption = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const tableNumber = parseInt(id as string);
+    const token = req.headers.authorization?.replace('Bearer ', '');
+
+    if (isNaN(tableNumber)) {
+        return res.status(400).json({ message: 'Invalid table number' });
+    }
+
+    try {
+        const session = await prisma.tableSession.findUnique({
+            where: { tableNumber },
+            include: {
+                items: {
+                    include: { product: true }
+                }
+            }
+        });
+
+        if (!session || (session.sessionToken && token !== session.sessionToken)) {
+            return res.status(401).json({ message: 'Sessão inválida ou não autorizada.' });
+        }
+
+        // Return a cleaner structure for the frontend
+        const consumption = {
+            tableNumber: session.tableNumber,
+            clientName: session.clientName,
+            status: session.status,
+            startTime: session.startTime,
+            items: session.items.map(it => ({
+                id: it.id,
+                name: it.product.name,
+                price: it.price,
+                quantity: it.quantity,
+                imageUrl: it.product.imageUrl,
+                isReady: it.isReady,
+                observations: it.observations
+            })),
+            total: session.items.reduce((acc, it) => acc + (it.price * it.quantity), 0)
+        };
+
+        res.json(consumption);
+
+    } catch (error) {
+        console.error('Error fetching table consumption:', error);
+        res.status(500).json({ message: 'Erro ao buscar extrato.' });
+    }
+};
+
+export const getFeedbacks = async (req: Request, res: Response) => {
+    try {
+        const feedbacks = await prisma.feedback.findMany({
+            orderBy: { createdAt: 'desc' },
+            take: 50 // Last 50 feedbacks
+        });
+        res.json(feedbacks);
+    } catch (error) {
+        console.error('Error fetching feedbacks:', error);
+        res.status(500).json({ message: 'Erro ao buscar feedbacks.' });
     }
 };
 
