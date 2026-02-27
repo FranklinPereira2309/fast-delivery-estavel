@@ -196,7 +196,7 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
       sess.items.splice(itemIdx, 1);
 
       if (sess.items.length === 0) {
-        await db.deleteTableSession(selectedTable);
+        await db.deleteTableSession(selectedTable, true); // true = cancellation
         await db.deleteOrder(`TABLE-${selectedTable}`, currentUser);
       } else {
         await db.saveTableSession({ ...sess });
@@ -278,7 +278,7 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
       try {
         if (sess.items.length === 0) {
           // Se não há outros itens, exclui a sessão da mesa e ela volta a ficar livre
-          await db.deleteTableSession(tableNum);
+          await db.deleteTableSession(tableNum, true); // true = cancellation
         } else {
           // Se já haviam outros itens na mesa, apenas remove o status de digital pendente
           await db.saveTableSession({
@@ -503,7 +503,7 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
                 }`}
             >
               <span className="text-2xl font-black shrink-0">Mesa {tableNum}</span>
-              {sess && (
+              {sess && (sess.items.length > 0 || sess.hasPendingDigital) && (
                 <div className="text-center w-full px-2 overflow-hidden flex flex-col items-center">
                   <p className="text-[10px] font-black mt-1 opacity-80 w-[95%] text-ellipsis overflow-hidden whitespace-nowrap block">{sess.clientName || 'Consumo'}</p>
                   <p className="text-sm font-black shrink-0 mt-0.5">R$ {sess.items.reduce((acc, it) => acc + (it.price * it.quantity), 0).toFixed(2)}</p>

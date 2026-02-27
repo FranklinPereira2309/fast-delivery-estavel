@@ -24,6 +24,7 @@ function AppContent() {
   const [currentPin, setCurrentPin] = useState<string | null>(null);
   const [isOwner, setIsOwner] = useState(false);
   const [isSessionFinished, setIsSessionFinished] = useState(false);
+  const [cancellationMessage, setCancellationMessage] = useState<string | null>(null);
 
   // Status da Loja
   const [storeStatus, setStoreStatus] = useState<StoreStatus>({ status: 'online', is_manually_closed: false, next_status_change: null });
@@ -129,16 +130,24 @@ function AppContent() {
       setStoreStatus(status);
     };
 
+    const handleCancellation = (data: any) => {
+      if (data.tableNumber === Number(tableParam)) {
+        setCancellationMessage(data.message);
+      }
+    };
+
     socket.on('tableStatusChanged', handleTableStatus);
     socket.on('newOrder', handleTableStatus);
     socket.on('store_status_changed', handleStoreStatus);
+    socket.on('digitalOrderCancelled', handleCancellation);
 
     return () => {
       socket.off('tableStatusChanged', handleTableStatus);
       socket.off('newOrder', handleTableStatus);
       socket.off('store_status_changed', handleStoreStatus);
+      socket.off('digitalOrderCancelled', handleCancellation);
     };
-  }, [fetchTableData, fetchStatus, tableParam]);
+  }, [fetchTableData, fetchStatus, tableParam, isBilling]);
 
   useEffect(() => {
     if (storeStatus.status === 'online' && storeStatus.next_status_change) {
@@ -230,6 +239,33 @@ function AppContent() {
             <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
             <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce"></div>
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (cancellationMessage) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-6 bg-slate-900 text-white text-center">
+        <div className="max-w-md w-full space-y-8 animate-in fade-in zoom-in duration-500">
+          <div className="w-24 h-24 bg-red-600 rounded-3xl mx-auto flex items-center justify-center shadow-2xl shadow-red-500/40 rotate-12">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </div>
+          <div className="space-y-4">
+            <h1 className="text-3xl font-black uppercase tracking-tighter">Pedido Cancelado</h1>
+            <p className="text-slate-400 text-lg leading-relaxed">
+              {cancellationMessage}
+            </p>
+          </div>
+          <button
+            onClick={() => setCancellationMessage(null)}
+            className="w-full py-4 bg-slate-800 hover:bg-slate-700 text-white rounded-2xl font-black uppercase text-xs tracking-widest transition-all"
+          >
+            Entendi, voltar ao Menu
+          </button>
+          <p className="text-[10px] text-slate-500 pt-4 uppercase font-bold tracking-widest">Agradecemos a compreensão.</p>
         </div>
       </div>
     );

@@ -193,11 +193,23 @@ export const saveTableSession = async (req: Request, res: Response) => {
 
 export const deleteTableSession = async (req: Request, res: Response) => {
     const { tableNumber } = req.params;
+    const { cancellation } = req.query;
     const tableNum = parseInt(tableNumber as string);
+
+    // Buscar sessão antes de deletar para saber se era digital
+    const session = await prisma.tableSession.findUnique({ where: { tableNumber: tableNum } });
+
     await prisma.tableSession.delete({ where: { tableNumber: tableNum } });
 
     try {
         getIO().emit('tableStatusChanged', { tableNumber: tableNum });
+
+        if (cancellation === 'true' && session?.isOriginDigitalMenu) {
+            getIO().emit('digitalOrderCancelled', {
+                tableNumber: tableNum,
+                message: "Esse pedido foi cancelado. Qualquer dúvida falar com o Garçom Responsável."
+            });
+        }
     } catch (e) {
         console.error('Socket error emitting tableStatusChanged:', e);
     }

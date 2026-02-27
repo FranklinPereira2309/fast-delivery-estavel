@@ -315,6 +315,14 @@ export const deleteOrder = async (req: Request, res: Response) => {
 
         try {
             getIO().emit('orderStatusChanged', { action: 'delete', id });
+
+            // Se for pedido vindo do menu digital, avisar o cliente
+            if (orderToDelete.isOriginDigitalMenu && orderToDelete.tableNumber) {
+                getIO().emit('digitalOrderCancelled', {
+                    tableNumber: orderToDelete.tableNumber,
+                    message: "Esse pedido foi cancelado. Qualquer dúvida falar com o Garçom Responsável."
+                });
+            }
         } catch (e) {
             console.error('Socket error emitting orderStatusChanged:', e);
         }
