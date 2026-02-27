@@ -159,27 +159,30 @@ const SalesMonitor: React.FC = () => {
                       </p>
                     </td>
                     <td className="px-8 py-5 text-right">
-                      <div className="flex justify-end gap-2 transition-all">
-                        <button onClick={() => {
-                          setPrintingOrder(order);
-                          setIsNfceVisual(false);
-                          setEditingPaymentMethod(false);
-                          setNewPaymentMethod(order.paymentMethod || 'DINHEIRO');
-                        }} className="p-2.5 text-blue-600 hover:bg-blue-50 rounded-2xl border border-blue-100 shadow-sm transition-all active:scale-95" title="Reemitir Cupom Simples">
-                          <Icons.Print className="w-5 h-5" />
-                        </button>
-
-                        {order.nfeStatus === 'EMITTED' && (
+                      {/* Ocultar os botões de cupom se for mesa em aberto */}
+                      {!(order.type === SaleType.TABLE && order.status !== OrderStatus.DELIVERED) && (
+                        <div className="flex justify-end gap-2 transition-all">
                           <button onClick={() => {
                             setPrintingOrder(order);
-                            setIsNfceVisual(true);
+                            setIsNfceVisual(false);
                             setEditingPaymentMethod(false);
                             setNewPaymentMethod(order.paymentMethod || 'DINHEIRO');
-                          }} className="p-2.5 text-emerald-600 hover:bg-emerald-50 rounded-2xl border border-emerald-100 shadow-sm transition-all active:scale-95" title="Reemitir Cupom Fiscal (NFC-e)">
+                          }} className="p-2.5 text-blue-600 hover:bg-blue-50 rounded-2xl border border-blue-100 shadow-sm transition-all active:scale-95" title="Reemitir Cupom Simples">
                             <Icons.Print className="w-5 h-5" />
                           </button>
-                        )}
-                      </div>
+
+                          {order.nfeStatus === 'EMITTED' && (
+                            <button onClick={() => {
+                              setPrintingOrder(order);
+                              setIsNfceVisual(true);
+                              setEditingPaymentMethod(false);
+                              setNewPaymentMethod(order.paymentMethod || 'DINHEIRO');
+                            }} className="p-2.5 text-emerald-600 hover:bg-emerald-50 rounded-2xl border border-emerald-100 shadow-sm transition-all active:scale-95" title="Reemitir Cupom Fiscal (NFC-e)">
+                              <Icons.Print className="w-5 h-5" />
+                            </button>
+                          )}
+                        </div>
+                      )}
                     </td>
                   </tr>
                 );
