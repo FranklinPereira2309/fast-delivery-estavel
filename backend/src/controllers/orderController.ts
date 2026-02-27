@@ -200,6 +200,15 @@ export const saveOrder = async (req: Request, res: Response) => {
 
             order.clientId = await syncClientStats(tx, { ...order, clientId }, oldStatus);
 
+            // Capture digital session info if available
+            if (tableNumIdx !== null) {
+                const tableSess = await tx.tableSession.findUnique({ where: { tableNumber: tableNumIdx } });
+                if (tableSess) {
+                    order.digitalPin = tableSess.pin;
+                    order.digitalToken = tableSess.sessionToken;
+                }
+            }
+
             // 3. Upsert Order
             return await tx.order.upsert({
                 where: { id: order.id },
@@ -223,6 +232,8 @@ export const saveOrder = async (req: Request, res: Response) => {
                     nfeUrl: order.nfeUrl || null,
                     nfeError: order.nfeError || null,
                     splitAmount1: (order.splitAmount1 !== null && order.splitAmount1 !== undefined) ? parseFloat(order.splitAmount1.toString()) : null,
+                    digitalPin: order.digitalPin || null,
+                    digitalToken: order.digitalToken || null,
                     items: {
                         deleteMany: {},
                         create: (order.items || []).map((item: any) => ({
@@ -261,6 +272,8 @@ export const saveOrder = async (req: Request, res: Response) => {
                     nfeUrl: order.nfeUrl || null,
                     nfeError: order.nfeError || null,
                     splitAmount1: (order.splitAmount1 !== null && order.splitAmount1 !== undefined) ? parseFloat(order.splitAmount1.toString()) : null,
+                    digitalPin: order.digitalPin || null,
+                    digitalToken: order.digitalToken || null,
                     items: {
                         create: (order.items || []).map((item: any) => ({
                             id: item.uid || item.id,
@@ -429,6 +442,36 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
                 }
             } else {
                 console.log(`[OrderController] KEEPING assignedAt for order ${id} as ${oldOrder.assignedAt?.toISOString()}`);
+            }
+
+            // Restore Table Session if reopening
+            if (oldStatus === 'DELIVERED' && newStatus !== 'DELIVERED' && oldOrder.type === 'TABLE' && oldOrder.tableNumber) {
+                if (oldOrder.digitalPin && oldOrder.digitalToken) {
+                    await tx.tableSession.upsert({
+                        where: { tableNumber: oldOrder.tableNumber },
+                        create: {
+                            tableNumber: oldOrder.tableNumber,
+                            status: 'occupied',
+                            clientId: oldOrder.clientId === 'ANONYMOUS' ? null : oldOrder.clientId,
+                            clientName: oldOrder.clientName,
+                            pin: oldOrder.digitalPin,
+                            sessionToken: oldOrder.digitalToken,
+                            isOriginDigitalMenu: oldOrder.isOriginDigitalMenu
+                        },
+                        update: {
+                            status: 'occupied',
+                            pin: oldOrder.digitalPin,
+                            sessionToken: oldOrder.digitalToken
+                        }
+                    }).catch((e: any) => console.error('Erro ao restaurar sessão de mesa:', e));
+
+                    // Notificar cardápio digital
+                    getIO().emit('tableStatusChanged', {
+                        tableNumber: oldOrder.tableNumber,
+                        status: 'occupied',
+                        action: 'refresh'
+                    });
+                }
             }
 
             const order = await tx.order.update({

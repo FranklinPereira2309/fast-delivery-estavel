@@ -177,7 +177,7 @@ export const saveTableSession = async (req: Request, res: Response) => {
 
         try {
             getIO().emit('tableStatusChanged', {
-                tableNumber: data.tableNumber,
+                tableNumber: Number(data.tableNumber),
                 status: data.status || 'occupied',
                 action: 'refresh'
             });
@@ -216,7 +216,7 @@ export const deleteTableSession = async (req: Request, res: Response) => {
 
     try {
         getIO().emit('tableStatusChanged', {
-            tableNumber: tableNum,
+            tableNumber: Number(tableNum),
             status: 'available',
             action: 'refresh'
         });

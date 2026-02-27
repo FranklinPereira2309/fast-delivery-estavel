@@ -76,7 +76,9 @@ export const verifyTable = async (req: Request, res: Response) => {
         if (session.status === 'billing') {
             return res.status(403).json({
                 message: 'Mesa bloqueada: fechamento de conta em andamento.',
-                status: 'billing'
+                status: 'billing',
+                clientName: session.clientName,
+                tableNumber: session.tableNumber
             });
         }
 

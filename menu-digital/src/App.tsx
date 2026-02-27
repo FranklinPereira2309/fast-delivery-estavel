@@ -126,15 +126,24 @@ function AppContent() {
         // 2. Handle Payment Completion (Table becomes available)
         if (data.status === 'available') {
           setIsBilling(false);
-          setIsSessionFinished(true);
+          setIsSessionFinished(true); // Triggers "Thank You" screen
           setCurrentPin(null);
           setIsOwner(false);
-          localStorage.removeItem(`sessionToken_${tableParam}`);
+          setIsPinRequired(false);
+          setCancellationMessage(null);
+          // IMPORTANTE: Não removemos o token imediatamente para permitir ver a tela de agradecimento.
+          // O token será removido ao clicar em "Nova Sessão" ou se uma nova sessão for detectada.
           return;
         }
 
-        // 3. Fallback: Fetch Data
-        fetchTableData();
+        // 3. Status is occupied or available (not billing, not just emptied)
+        // Clear billing or finished states if they were up, unless we are in a cancellation flow
+        if (!cancellationMessage) {
+          setIsBilling(false);
+          setIsSessionFinished(false);
+          setTableError(null);
+          fetchTableData();
+        }
       }
     };
 
@@ -163,7 +172,7 @@ function AppContent() {
       socket.off('store_status_changed', handleStoreStatus);
       socket.off('digitalOrderCancelled', handleCancellation);
     };
-  }, [fetchTableData, fetchStatus, tableParam, isBilling]);
+  }, [fetchTableData, fetchStatus, tableParam]);
 
   useEffect(() => {
     if (storeStatus.status === 'online' && storeStatus.next_status_change) {
@@ -235,7 +244,11 @@ function AppContent() {
               Agradecemos a preferência! <br /> Volte sempre para saborear o que temos de melhor.
             </p>
             <button
-              onClick={() => window.location.href = `/?mesa=${tableParam}`}
+              onClick={() => {
+                localStorage.removeItem(`sessionToken_${tableParam}`);
+                setIsSessionFinished(false);
+                window.location.reload(); // Recarregar para limpar estados e iniciar nova tentativa de entrada
+              }}
               className="px-8 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-full text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 border border-slate-700"
             >
               Nova Sessão

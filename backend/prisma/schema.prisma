@@ -164,6 +164,8 @@ model Order {
   nfeUrl       String?
   nfeError     String?
   splitAmount1 Float?
+  digitalPin   String? // Store PIN for session recovery on reopen
+  digitalToken String? // Store token for session recovery on reopen
 }
 
 model OrderItem {
