@@ -182,21 +182,34 @@ export const getTableConsumption = async (req: Request, res: Response) => {
             return res.status(401).json({ message: 'Sessão inválida ou não autorizada.' });
         }
 
-        // Return a cleaner structure for the frontend
+        // Return a cleaner structure for the frontend with grouping
+        const groupedItems = session.items.reduce((acc: any[], it) => {
+            const itemName = it.product.name;
+            const itemObservations = it.observations || '';
+            const existing = acc.find(x => x.name === itemName && x.observations === itemObservations);
+
+            if (existing) {
+                existing.quantity += it.quantity;
+            } else {
+                acc.push({
+                    id: it.id,
+                    name: itemName,
+                    price: it.price,
+                    quantity: it.quantity,
+                    imageUrl: it.product.imageUrl,
+                    isReady: it.isReady,
+                    observations: it.observations
+                });
+            }
+            return acc;
+        }, []);
+
         const consumption = {
             tableNumber: session.tableNumber,
             clientName: session.clientName,
             status: session.status,
             startTime: session.startTime,
-            items: session.items.map(it => ({
-                id: it.id,
-                name: it.product.name,
-                price: it.price,
-                quantity: it.quantity,
-                imageUrl: it.product.imageUrl,
-                isReady: it.isReady,
-                observations: it.observations
-            })),
+            items: groupedItems,
             total: session.items.reduce((acc, it) => acc + (it.price * it.quantity), 0)
         };
 
@@ -290,11 +303,12 @@ export const createOrder = async (req: Request, res: Response) => {
 
             const existingPending = session?.pendingReviewItems ? JSON.parse(session.pendingReviewItems) : [];
 
-            // Append new items, carrying over any observations
+            // Append new items, carrying over any observations and tracking who ordered
             const newItems = items.map((it: any) => ({
                 productId: it.productId,
                 quantity: it.quantity,
-                observations: observations || ''
+                observations: observations || '',
+                orderedBy: clientName || 'Digital'
             }));
 
             const newPending = [...existingPending, ...newItems];

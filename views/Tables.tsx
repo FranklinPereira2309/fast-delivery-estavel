@@ -210,7 +210,8 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
           type: SaleType.TABLE,
           createdAt: sess.startTime,
           tableNumber: selectedTable,
-          waiterId: sess.waiterId
+          waiterId: sess.waiterId,
+          isOriginDigitalMenu: sess.isOriginDigitalMenu || false
         };
         await db.saveOrder(kitchenOrder, currentUser);
       }
@@ -244,7 +245,7 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
           quantity: pi.quantity,
           price: product?.price || 0,
           isReady: false,
-          observations: pi.observations || ''
+          observations: pi.orderedBy ? `(${pi.orderedBy}) ${pi.observations || ''}`.trim() : (pi.observations || '')
         };
       });
 
@@ -285,7 +286,7 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
             ...sess,
             hasPendingDigital: false,
             pendingReviewItems: null as any
-          });
+          }, true);
         }
 
         await db.logAction(currentUser, 'TABLE_DIGITAL_REJECT', `Mesa ${tableNum}: Pedido digital rejeitado/excluído.`);

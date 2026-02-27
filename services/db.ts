@@ -54,7 +54,9 @@ class APIDBService {
 
   // Table Management
   public async getTableSessions(): Promise<TableSession[]> { return this.request<TableSession[]>('/tables'); }
-  public async saveTableSession(session: TableSession) { await this.request('/tables', { method: 'POST', body: JSON.stringify(session) }); }
+  public async saveTableSession(session: TableSession, isRejection: boolean = false) {
+    await this.request(`/tables?${isRejection ? 'rejection=true' : ''}`, { method: 'POST', body: JSON.stringify(session) });
+  }
   public async deleteTableSession(tableNumber: number, isCancellation: boolean = false) {
     await this.request(`/tables/${tableNumber}${isCancellation ? '?cancellation=true' : ''}`, { method: 'DELETE' });
   }
