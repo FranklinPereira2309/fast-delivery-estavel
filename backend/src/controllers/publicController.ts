@@ -324,7 +324,7 @@ export const createOrder = async (req: Request, res: Response) => {
             getIO().emit('newOrder', {
                 tableNumber: tableNumber,
                 action: 'refresh',
-                type: 'TABLE'
+                type: 'DIGITAL_PRE_ORDER'
             });
         } catch (e) {
             console.error('Socket.io error emitting newOrder:', e);

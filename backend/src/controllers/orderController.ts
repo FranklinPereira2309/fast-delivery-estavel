@@ -142,6 +142,13 @@ export const saveOrder = async (req: Request, res: Response) => {
             const itemsForInventory = order.items; // Use current items for stock calculation
             if (newStatus === 'DELIVERED' && oldStatus !== 'DELIVERED') {
                 await handleInventoryImpact(tx, itemsForInventory, 'DECREMENT', order.id);
+
+                // Reset do PIN/Sessão se for Mesa
+                if (order.type === 'TABLE' && order.tableNumber) {
+                    await tx.tableSession.deleteMany({
+                        where: { tableNumber: order.tableNumber }
+                    }).catch((e: any) => console.log('Sessão de mesa já removida ou inexistente:', e));
+                }
             } else if (newStatus !== 'DELIVERED' && oldStatus === 'DELIVERED') {
                 await handleInventoryImpact(tx, itemsForInventory, 'INCREMENT', order.id);
             }
@@ -334,6 +341,13 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
             // 1. Inventory Sync
             if (newStatus === 'DELIVERED' && oldStatus !== 'DELIVERED') {
                 await handleInventoryImpact(tx, oldOrder.items, 'DECREMENT', id as string);
+
+                // Reset do PIN/Sessão se for Mesa
+                if (oldOrder.type === 'TABLE' && oldOrder.tableNumber) {
+                    await tx.tableSession.deleteMany({
+                        where: { tableNumber: oldOrder.tableNumber }
+                    }).catch((e: any) => console.log('Sessão de mesa já removida ou inexistente:', e));
+                }
             } else if (newStatus !== 'DELIVERED' && oldStatus === 'DELIVERED') {
                 await handleInventoryImpact(tx, oldOrder.items, 'INCREMENT', id as string);
             }
