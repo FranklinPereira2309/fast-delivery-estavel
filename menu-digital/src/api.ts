@@ -2,8 +2,13 @@ import axios from 'axios';
 import { io } from 'socket.io-client';
 import { Product } from './types';
 
-// O Backend está rodando na porta 3000
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+const IS_DEV = import.meta.env.DEV;
+const host = window.location.hostname;
+const defaultApiPort = IS_DEV ? '3000' : window.location.port;
+const defaultApiStr = defaultApiPort ? `:${defaultApiPort}` : '';
+const fallbackUrl = `http://${host}${defaultApiStr}/api`;
+
+const BASE_URL = import.meta.env.VITE_API_URL || fallbackUrl;
 const API_URL = BASE_URL.endsWith('/public') ? BASE_URL : `${BASE_URL}/public`;
 const SOCKET_URL = BASE_URL.replace('/api', '');
 
