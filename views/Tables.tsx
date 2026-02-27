@@ -436,7 +436,7 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
   if (!settings) return null;
 
   return (
-    <div className={`flex flex-col h-full gap-8 rounded-[2rem] p-2 transition-all duration-300 ${isAlerting ? 'animate-notify-turquoise' : ''}`} onClick={(e) => {
+    <div className="flex flex-col h-full gap-8 rounded-[2rem] p-2 transition-all duration-300" onClick={(e) => {
       // Dismiss the alerting state if active, but without visual feedback on the container
       if (isAlerting) dismissAlert();
     }}>

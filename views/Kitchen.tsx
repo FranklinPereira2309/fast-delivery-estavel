@@ -160,7 +160,7 @@ const Kitchen: React.FC = () => {
   };
 
   return (
-    <div className={`space-y-6 rounded-[2rem] p-2 transition-all duration-300 ${isAlerting ? 'animate-notify-turquoise' : ''}`} onClick={() => { if (isAlerting) dismissAlert(); }}>
+    <div className="space-y-6 rounded-[2rem] p-2 transition-all duration-300" onClick={() => { if (isAlerting) dismissAlert(); }}>
       <div className="flex gap-6 border-b pb-2">
         <button onClick={() => setViewTab('FILA')} className={`pb-4 text-xl font-black uppercase transition-all ${viewTab === 'FILA' ? 'text-blue-600 border-b-4 border-blue-600' : 'text-slate-400 hover:text-slate-600'}`}>Fila de Produção</button>
         <button onClick={() => setViewTab('HISTORICO')} className={`pb-4 text-xl font-black uppercase transition-all ${viewTab === 'HISTORICO' ? 'text-blue-600 border-b-4 border-blue-600' : 'text-slate-400 hover:text-slate-600'}`}>Histórico de Itens</button>

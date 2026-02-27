@@ -206,7 +206,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
             const blinkClass = (isMonitor && shouldBlinkMonitor) ||
               (isPOS && shouldBlinkPOS) ||
               (isLogistics && (shouldBlinkLogistics || shouldBlinkLogisticsChat)) ||
-              (isKitchen && shouldBlinkKitchen) ||
+              (isKitchen && (isAlerting || shouldBlinkKitchen)) ||
               (isTables && (isAlerting || shouldBlinkTables))
               ? 'animate-notify-turquoise border-none' : '';
 
