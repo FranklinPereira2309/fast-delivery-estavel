@@ -72,6 +72,78 @@ const SalesMonitor: React.FC = () => {
     }
   };
 
+  const renderPaymentEditor = () => (
+    <div className="mt-2 pt-2 border-t border-dashed no-print w-full">
+      <div className="flex justify-between items-center bg-slate-50 p-2 rounded-lg border border-slate-100">
+        {editingPaymentMethod ? (
+          <div className="flex gap-2 w-full">
+            <select
+              value={newPaymentMethod}
+              onChange={(e) => setNewPaymentMethod(e.target.value)}
+              className="flex-1 text-[9px] font-black uppercase p-1 rounded border outline-none cursor-pointer"
+              disabled={isSavingPayment}
+            >
+              <option value="DINHEIRO">Dinheiro</option>
+              <option value="PIX">PIX</option>
+              <option value="CRÉDITO">Crédito</option>
+              <option value="DÉBITO">Débito</option>
+              <option value="PIX + DINHEIRO">PIX + Dinheiro</option>
+              <option value="CRÉDITO + DINHEIRO">Crédito + Dinheiro</option>
+              <option value="DÉBITO + DINHEIRO">Débito + Dinheiro</option>
+              <option value="PIX + CRÉDITO">PIX + Crédito</option>
+              <option value="CRÉDITO + DÉBITO">Crédito + Débito</option>
+              {/* Fallback caso seja um metodo composto customizado não mapeado acima e seja exatamente o original */}
+              {printingOrder?.paymentMethod && ![
+                'DINHEIRO', 'PIX', 'CRÉDITO', 'DÉBITO',
+                'PIX + DINHEIRO', 'CRÉDITO + DINHEIRO', 'DÉBITO + DINHEIRO',
+                'PIX + CRÉDITO', 'CRÉDITO + DÉBITO'
+              ].includes(printingOrder.paymentMethod) && (
+                  <option value={printingOrder.paymentMethod}>{printingOrder.paymentMethod}</option>
+                )}
+            </select>
+            <button
+              disabled={isSavingPayment}
+              onClick={async () => {
+                setIsSavingPayment(true);
+                try {
+                  const session = db.getCurrentSession();
+                  await db.updateOrderPaymentMethod(printingOrder!.id, newPaymentMethod, session?.user || { id: 'system', name: 'Sistema', email: '', password: '', permissions: [], createdAt: '' });
+                  setPrintingOrder({ ...printingOrder!, paymentMethod: newPaymentMethod });
+                  setOrders(prev => prev.map(o => o.id === printingOrder!.id ? { ...o, paymentMethod: newPaymentMethod } : o));
+                  setEditingPaymentMethod(false);
+                } catch (err) {
+                  console.error('Error updating payment', err);
+                } finally {
+                  setIsSavingPayment(false);
+                }
+              }}
+              className="bg-emerald-500 text-white px-2 py-1 rounded text-[8px] font-black uppercase"
+            >
+              Salvar
+            </button>
+            <button
+              onClick={() => setEditingPaymentMethod(false)}
+              className="bg-slate-200 text-slate-600 px-2 py-1 rounded text-[8px] font-black uppercase"
+            >
+              X
+            </button>
+          </div>
+        ) : (
+          <>
+            <p className="font-black text-[10px]">PAGTO: {printingOrder?.paymentMethod || 'DINHEIRO'}</p>
+            <button
+              onClick={() => setEditingPaymentMethod(true)}
+              className="text-[9px] text-blue-600 font-bold underline px-2"
+            >
+              Editar
+            </button>
+          </>
+        )}
+      </div>
+      <p className="font-black hidden print:block pt-1 text-[10px]">PAGTO: {printingOrder?.paymentMethod || 'DINHEIRO'}</p>
+    </div>
+  );
+
   // Agrupamento para o cupom de reemissão
   const groupedPrintingItems = useMemo(() => {
     if (!printingOrder) return [];
@@ -238,12 +310,14 @@ const SalesMonitor: React.FC = () => {
                   </table>
                 </div>
 
-                <div className="flex justify-between font-black uppercase text-xs">
+                <div className="flex justify-between font-black uppercase text-xs mt-2">
                   <span>Valor Total R$</span>
                   <span>{printingOrder.total.toFixed(2)}</span>
                 </div>
 
-                <div className="text-center space-y-2 mt-4 flex flex-col items-center">
+                {renderPaymentEditor()}
+
+                <div className="text-center space-y-2 mt-4 flex flex-col items-center border-t border-dashed pt-4">
                   <div className="w-32 h-32 bg-slate-50 border-2 border-slate-100 flex items-center justify-center">
                     <Icons.QrCode className="w-20 h-20 opacity-20" />
                   </div>
@@ -273,63 +347,7 @@ const SalesMonitor: React.FC = () => {
                   {printingOrder.tableNumber && <p className="font-black">MESA: {printingOrder.tableNumber}</p>}
                   <p>STATUS: {OrderStatusLabels[printingOrder.status]}</p>
 
-                  <div className="mt-2 pt-2 border-t border-dashed no-print">
-                    <div className="flex justify-between items-center bg-slate-50 p-2 rounded-lg border border-slate-100">
-                      {editingPaymentMethod ? (
-                        <div className="flex gap-2 w-full">
-                          <select
-                            value={newPaymentMethod}
-                            onChange={(e) => setNewPaymentMethod(e.target.value)}
-                            className="flex-1 text-[9px] font-black uppercase p-1 rounded border outline-none cursor-pointer"
-                            disabled={isSavingPayment}
-                          >
-                            <option value="DINHEIRO">Dinheiro</option>
-                            <option value="PIX">PIX</option>
-                            <option value="CRÉDITO">Crédito</option>
-                            <option value="DÉBITO">Débito</option>
-                          </select>
-                          <button
-                            disabled={isSavingPayment}
-                            onClick={async () => {
-                              setIsSavingPayment(true);
-                              try {
-                                const session = db.getCurrentSession();
-                                await db.updateOrderPaymentMethod(printingOrder.id, newPaymentMethod, session?.user || { id: 'system', name: 'Sistema', email: '', password: '', permissions: [], createdAt: '' });
-                                setPrintingOrder({ ...printingOrder, paymentMethod: newPaymentMethod });
-                                setOrders(prev => prev.map(o => o.id === printingOrder.id ? { ...o, paymentMethod: newPaymentMethod } : o));
-                                setEditingPaymentMethod(false);
-                              } catch (err) {
-                                console.error('Error updating payment', err);
-                              } finally {
-                                setIsSavingPayment(false);
-                              }
-                            }}
-                            className="bg-emerald-500 text-white px-2 py-1 rounded text-[8px] font-black uppercase"
-                          >
-                            Salvar
-                          </button>
-                          <button
-                            onClick={() => setEditingPaymentMethod(false)}
-                            className="bg-slate-200 text-slate-600 px-2 py-1 rounded text-[8px] font-black uppercase"
-                          >
-                            X
-                          </button>
-                        </div>
-                      ) : (
-                        <>
-                          <p className="font-black">PAGTO: {printingOrder.paymentMethod || 'DINHEIRO'}</p>
-                          <button
-                            onClick={() => setEditingPaymentMethod(true)}
-                            className="text-[9px] text-blue-600 font-bold underline px-2"
-                          >
-                            Editar
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  </div>
-
-                  <p className="font-black hidden print:block pt-1">PAGTO: {printingOrder.paymentMethod || 'DINHEIRO'}</p>
+                  {renderPaymentEditor()}
                 </div>
                 <div className="border-t border-dashed my-3 py-3">
                   {groupedPrintingItems.map(([id, data]) => (
