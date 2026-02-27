@@ -61,9 +61,12 @@ function AppContent() {
       setIsOwner(!!data.isOwner);
       setTableError(null);
       setIsPinRequired(false);
-      setIsBilling(false);
       setIsValidating(false);
-      setIsSessionFinished(false);
+      setIsBilling(data.status === 'billing');
+      // Only clear finished session if we are actually in an active state now
+      if (data.status === 'occupied' || data.status === 'billing') {
+        setIsSessionFinished(false);
+      }
     } catch (err: any) {
       if (err.status === 'billing') {
         setIsBilling(true);
@@ -112,7 +115,10 @@ function AppContent() {
     fetchStatus();
 
     const intervalId = setInterval(() => {
-      fetchTableData();
+      // Don't poll if we are already in a terminal state
+      if (!isSessionFinished && !cancellationMessage) {
+        fetchTableData();
+      }
       fetchStatus();
     }, 5000);
 
