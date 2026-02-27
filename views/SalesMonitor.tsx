@@ -227,7 +227,8 @@ const SalesMonitor: React.FC = () => {
                     </td>
                     <td className="px-8 py-5">
                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                        {order.deliveryFee ? `R$ ${order.deliveryFee.toFixed(2)}` : '--'}
+                        {order.deliveryFee ? `Entrega: R$ ${order.deliveryFee.toFixed(2)}` : ''}
+                        {order.appliedServiceFee ? `${order.deliveryFee ? ' | ' : ''}Serviço: R$ ${order.appliedServiceFee.toFixed(2)}` : (!order.deliveryFee ? '--' : '')}
                       </p>
                     </td>
                     <td className="px-8 py-5 text-right">
@@ -365,6 +366,12 @@ const SalesMonitor: React.FC = () => {
                   <div className="flex justify-between items-end mb-1">
                     <span className="font-black text-[9px] uppercase tracking-widest">TAXA ENTREGA:</span>
                     <span className="text-sm font-black">R$ {printingOrder.deliveryFee.toFixed(2)}</span>
+                  </div>
+                )}
+                {printingOrder.appliedServiceFee !== undefined && printingOrder.appliedServiceFee > 0 && (
+                  <div className="flex justify-between items-end mb-1">
+                    <span className="font-black text-[9px] uppercase tracking-widest">TAXA SERVIÇO:</span>
+                    <span className="text-sm font-black">R$ {printingOrder.appliedServiceFee.toFixed(2)}</span>
                   </div>
                 )}
                 <div className="flex justify-between items-end border-t border-dashed pt-2 mb-6">

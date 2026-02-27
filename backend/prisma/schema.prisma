@@ -164,6 +164,7 @@ model Order {
   nfeUrl       String?
   nfeError     String?
   splitAmount1 Float?
+  appliedServiceFee Float? // Optional Service Fee recorded at the time of order
   digitalPin   String? // Store PIN for session recovery on reopen
   digitalToken String? // Store token for session recovery on reopen
 }
@@ -243,6 +244,8 @@ model BusinessSettings {
   operatingHours  String @default("[]")
   orderTimeoutMinutes Int @default(5)
   maxChange       Float  @default(191)
+  serviceFeeStatus Boolean @default(true)
+  serviceFeePercentage Float @default(10)
 }
 
 model ChatMessage {

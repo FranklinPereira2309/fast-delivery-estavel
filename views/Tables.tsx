@@ -639,14 +639,26 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
                           <span className="font-black text-[13px]">R$ {(it.quantity * it.price).toFixed(2)}</span>
                         </div>
                       ))}
-                      <div className="pt-6 flex justify-between items-end"><span className="font-black text-[11px] uppercase opacity-50">Total Mesa:</span><span className="text-4xl font-black text-indigo-600">R$ {getSessForTable(selectedTable)?.items.reduce((acc, it) => acc + (it.price * it.quantity), 0).toFixed(2)}</span></div>
+                      {settings.serviceFeeStatus && (
+                        <div className="flex justify-between border-b border-dashed border-slate-200 pb-2 text-slate-500">
+                          <span className="font-bold text-[11px] uppercase">Taxa de Serviço ({settings.serviceFeePercentage || 10}%)</span>
+                          <span className="font-black text-[12px]">R$ {((getSessForTable(selectedTable)?.items.reduce((acc, it) => acc + (it.price * it.quantity), 0) || 0) * (settings.serviceFeePercentage || 10) / 100).toFixed(2)}</span>
+                        </div>
+                      )}
+                      <div className="pt-6 flex justify-between items-end"><span className="font-black text-[11px] uppercase opacity-50">Total Mesa:</span><span className="text-4xl font-black text-indigo-600">R$ {(
+                        (getSessForTable(selectedTable)?.items.reduce((acc, it) => acc + (it.price * it.quantity), 0) || 0) +
+                        (settings.serviceFeeStatus ? ((getSessForTable(selectedTable)?.items.reduce((acc, it) => acc + (it.price * it.quantity), 0) || 0) * (settings.serviceFeePercentage || 10) / 100) : 0)
+                      ).toFixed(2)}</span></div>
                     </div>
                   </div>
                 )}
 
                 {activeModalTab === 'CHECKOUT' && (
                   <div className="flex flex-col items-center justify-center h-full">
-                    <div className="text-center mb-8"><p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Valor Total da Conta</p><h4 className="text-6xl font-black text-slate-900 tracking-tighter">R$ {getSessForTable(selectedTable)?.items.reduce((acc, it) => acc + (it.price * it.quantity), 0).toFixed(2)}</h4></div>
+                    <div className="text-center mb-8"><p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Valor Total da Conta</p><h4 className="text-6xl font-black text-slate-900 tracking-tighter">R$ {(
+                      (getSessForTable(selectedTable)?.items.reduce((acc, it) => acc + (it.price * it.quantity), 0) || 0) +
+                      (settings.serviceFeeStatus ? ((getSessForTable(selectedTable)?.items.reduce((acc, it) => acc + (it.price * it.quantity), 0) || 0) * (settings.serviceFeePercentage || 10) / 100) : 0)
+                    ).toFixed(2)}</h4></div>
                     <div className="w-full max-w-2xl bg-slate-50 p-8 rounded-[2rem] border border-slate-100 space-y-6">
                       <div className="flex items-center justify-between"><label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Identificação do Cliente</label><button onClick={() => { setIsUnregisteredClient(!isUnregisteredClient); setSelectedClient(null); setManualClientName(''); setManualClientPhone(''); setManualClientAddress(''); setManualClientCep(''); setClientSearch(''); setManualClientEmail(''); setManualClientDocument(''); }} className={`text-[9px] font-black uppercase px-2 py-1 rounded-lg transition-all ${isUnregisteredClient ? 'bg-blue-600 text-white shadow-md' : 'bg-slate-200 text-slate-500'}`}>{isUnregisteredClient ? 'Mudar para Base' : 'Cliente Avulso?'}</button></div>
                       {isUnregisteredClient ? (
@@ -822,9 +834,18 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
             </div>
 
             <div className="border-t border-dashed border-slate-900 pt-4 mb-8">
+              {settings.serviceFeeStatus && (
+                <div className="flex justify-between items-end mb-1 opacity-70">
+                  <span className="font-black text-[9px] uppercase">Taxa Receb. ({settings.serviceFeePercentage || 10}%)</span>
+                  <span className="font-black text-[10px]">R$ {(((isConfirmingBilling ? printingPreBill : getSessForTable(selectedTable!))?.items.reduce((acc, it) => acc + (it.price * it.quantity), 0) || 0) * (settings.serviceFeePercentage || 10) / 100).toFixed(2)}</span>
+                </div>
+              )}
               <div className="flex justify-between items-end">
                 <span className="font-black text-[10px] uppercase opacity-50">Total Mesa:</span>
-                <span className="text-2xl font-black">R$ {(isConfirmingBilling ? printingPreBill : getSessForTable(selectedTable!))?.items.reduce((acc, it) => acc + (it.price * it.quantity), 0).toFixed(2)}</span>
+                <span className="text-2xl font-black">R$ {(
+                  ((isConfirmingBilling ? printingPreBill : getSessForTable(selectedTable!))?.items.reduce((acc, it) => acc + (it.price * it.quantity), 0) || 0) +
+                  (settings.serviceFeeStatus ? (((isConfirmingBilling ? printingPreBill : getSessForTable(selectedTable!))?.items.reduce((acc, it) => acc + (it.price * it.quantity), 0) || 0) * (settings.serviceFeePercentage || 10) / 100) : 0)
+                ).toFixed(2)}</span>
               </div>
             </div>
 

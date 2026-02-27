@@ -58,6 +58,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
   const [emitNfce, setEmitNfce] = useState<boolean>(false);
   const [isNfceFeedbackOpen, setIsNfceFeedbackOpen] = useState(false);
   const [isNfceVisual, setIsNfceVisual] = useState(false);
+  const [isServiceFeeAccepted, setIsServiceFeeAccepted] = useState(true);
   const [paymentData, setPaymentData] = useState({
     receivedAmount: '',
     cardHolder: '', // <-- Added Explicit Type Requirement Mapping later
@@ -539,7 +540,8 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       nfeStatus: emitNfce ? 'EMITTED' : undefined,
       nfeNumber: emitNfce ? `NFC-${Date.now()}` : undefined,
       nfeUrl: emitNfce ? `https://sefaz.gov.br/nfce/qrcode?p=${Date.now()}` : undefined,
-      splitAmount1: isSplitPayment ? parseFloat(splitAmount1.toString().replace(',', '.')) : undefined
+      splitAmount1: isSplitPayment ? parseFloat(splitAmount1.toString().replace(',', '.')) : undefined,
+      appliedServiceFee: (saleType === SaleType.TABLE && businessSettings?.serviceFeeStatus && isServiceFeeAccepted) ? (cart.reduce((acc, item) => acc + (item.price * item.quantity), 0) * (businessSettings.serviceFeePercentage || 10) / 100) : 0
     };
 
     console.log('Salvando pedido com metadados fiscais:', orderData);
@@ -746,8 +748,19 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
 
   const cartTotal = useMemo(() => {
     const itemsTotal = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
-    return saleType === SaleType.OWN_DELIVERY ? itemsTotal + deliveryFeeValue : itemsTotal;
-  }, [cart, saleType, deliveryFeeValue]);
+
+    let total = itemsTotal;
+    if (saleType === SaleType.OWN_DELIVERY) {
+      total += deliveryFeeValue;
+    }
+
+    if (saleType === SaleType.TABLE && businessSettings?.serviceFeeStatus && isServiceFeeAccepted) {
+      const feePercentage = businessSettings.serviceFeePercentage || 10;
+      total += (itemsTotal * feePercentage) / 100;
+    }
+
+    return total;
+  }, [cart, saleType, deliveryFeeValue, businessSettings, isServiceFeeAccepted]);
 
   const groupedPrintingItems = useMemo(() => {
     if (!printingOrder) return [];
@@ -1619,7 +1632,30 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                 </div>
               </div>
             )}
-            <div className="flex justify-between items-end mb-3 xl:mb-6 font-receipt">
+            {saleType === SaleType.TABLE && businessSettings?.serviceFeeStatus && (
+              <div className="flex flex-col gap-2 mb-4 bg-slate-50 p-4 rounded-3xl border border-slate-100/50">
+                <div className="flex justify-between items-center bg-white p-3 rounded-2xl border border-slate-100">
+                  <div>
+                    <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest block">Taxa Serviço {businessSettings.serviceFeePercentage}%</span>
+                    <span className="text-[8px] font-bold text-slate-400 uppercase">Opcional</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-black text-slate-800">
+                      + R$ {(cart.reduce((acc, item) => acc + (item.price * item.quantity), 0) * (businessSettings.serviceFeePercentage || 10) / 100).toFixed(2)}
+                    </span>
+                    <button
+                      type="button"
+                      className={`w-10 h-6 rounded-full transition-all relative ${isServiceFeeAccepted ? 'bg-emerald-500' : 'bg-slate-200'}`}
+                      onClick={() => setIsServiceFeeAccepted(!isServiceFeeAccepted)}
+                    >
+                      <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${isServiceFeeAccepted ? 'left-5' : 'left-1'}`}></div>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="flex justify-between items-end mb-3 xl:mb-6 font-receipt mt-2">
               <span className="font-black text-slate-400 uppercase text-[10px] tracking-widest">VALOR FINAL</span>
               <span className="text-2xl xl:text-4xl font-black text-blue-600 tracking-tighter">R$ {cartTotal.toFixed(2)}</span>
             </div>

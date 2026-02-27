@@ -384,6 +384,31 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings, onReset }) =
                                     <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Troco Máximo (R$)</h4>
                                     <input type="number" className="w-full p-4 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-blue-50 transition-all font-bold text-sm" value={settings.maxChange || 191} onChange={e => setSettings({ ...settings, maxChange: parseFloat(e.target.value) || 0 })} />
                                 </div>
+                                <div className="space-y-2 col-span-2 p-6 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-between">
+                                    <div>
+                                        <h4 className="text-[12px] font-black text-slate-800 uppercase tracking-widest">Cobrar Taxa de Serviço Opcional</h4>
+                                        <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase">Aplica % de comissão na venda pelo PDV de Mesas e Menu Digital</p>
+                                    </div>
+                                    <div className="flex items-center gap-4">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">%</span>
+                                            <input
+                                                type="number"
+                                                className={`w-20 p-3 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-50 transition-all font-black text-sm text-center ${!settings.serviceFeeStatus && 'opacity-50 cursor-not-allowed'}`}
+                                                value={settings.serviceFeePercentage !== undefined ? settings.serviceFeePercentage : 10}
+                                                disabled={!settings.serviceFeeStatus}
+                                                onChange={e => setSettings({ ...settings, serviceFeePercentage: parseFloat(e.target.value) || 0 })}
+                                            />
+                                        </div>
+                                        <button
+                                            type="button"
+                                            className={`w-14 h-8 rounded-full transition-all relative ${settings.serviceFeeStatus !== false ? 'bg-emerald-500' : 'bg-slate-200'}`}
+                                            onClick={() => setSettings({ ...settings, serviceFeeStatus: settings.serviceFeeStatus === false ? true : false })}
+                                        >
+                                            <div className={`absolute top-1 w-6 h-6 rounded-full bg-white transition-all ${settings.serviceFeeStatus !== false ? 'left-7' : 'left-1'}`}></div>
+                                        </button>
+                                    </div>
+                                </div>
                                 <div className="space-y-2 col-span-2">
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Endereço Completo</label>
                                     <input type="text" className="w-full p-4 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-blue-50 transition-all font-bold text-sm" value={settings.address} onChange={e => setSettings({ ...settings, address: e.target.value })} />

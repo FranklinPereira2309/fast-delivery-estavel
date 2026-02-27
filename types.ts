@@ -68,6 +68,9 @@ export interface BusinessSettings {
   isManuallyClosed: boolean;
   operatingHours: string;
   orderTimeoutMinutes: number;
+  maxChange?: number;
+  serviceFeeStatus?: boolean;
+  serviceFeePercentage?: number;
   // NFC-e Fields
   ie?: string;
   cscId?: string;
@@ -166,6 +169,7 @@ export interface Order {
   nfeError?: string;
   // Payment Breakdown for Cash Management
   splitAmount1?: number;
+  appliedServiceFee?: number;
 }
 
 export interface AuditLog {
