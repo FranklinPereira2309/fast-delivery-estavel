@@ -331,7 +331,7 @@ function AppContent() {
 
       {/* Floating Cart Placeholder */}
       {cart.length > 0 && !isCartOpen && (
-        <div className="fixed bottom-6 left-4 right-4 max-w-md mx-auto z-50 animate-slide-up">
+        <div className="fixed bottom-28 left-4 right-4 max-w-md mx-auto z-[60] animate-slide-up">
           <button onClick={() => setIsCartOpen(true)} className="w-full bg-slate-900 text-white rounded-2xl p-4 flex items-center justify-between shadow-2xl shadow-slate-900/40 transform active:scale-95 transition-all">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center font-black text-xs">
