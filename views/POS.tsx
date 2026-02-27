@@ -52,6 +52,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
   const [isClientModalOpen, setIsClientModalOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isSplitPayment, setIsSplitPayment] = useState(false);
+  const [isSplitModalOpen, setIsSplitModalOpen] = useState(false);
   const [paymentMethod2, setPaymentMethod2] = useState<string>('');
   const [splitAmount1, setSplitAmount1] = useState<string>('');
   const [splitAmount2, setSplitAmount2] = useState<string>('');
@@ -828,50 +829,22 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
               </div>
 
               {isSplitPayment && (
-                <div className="grid grid-cols-2 gap-4 animate-in slide-in-from-top-2 duration-300">
-                  <div className="bg-blue-50/50 p-4 rounded-[2rem] border border-blue-100 flex flex-col justify-center">
-                    <label className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-2 block">1º Pagamento (R$)</label>
-                    <input
-                      type="number"
-                      className="w-full p-4 bg-white border-2 border-blue-100 rounded-2xl text-lg font-black outline-none focus:border-blue-500 transition-all text-center"
-                      value={splitAmount1}
-                      onChange={e => setSplitAmount1(e.target.value)}
-                      placeholder="Valor 1"
-                    />
-                  </div>
-
-                  <div className="bg-slate-50 p-4 rounded-[2rem] border border-slate-100 flex flex-col justify-center text-center">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">2º Pagamento (R$)</label>
-                    <input
-                      type="number"
-                      className="w-full p-4 bg-white border-2 border-slate-100 rounded-2xl text-lg font-black outline-none focus:border-blue-500 transition-all text-center"
-                      value={splitAmount2 || (cartTotal - (parseFloat(splitAmount1) || 0)).toFixed(2)}
-                      onChange={e => setSplitAmount2(e.target.value)}
-                      placeholder="Valor 2"
-                    />
-                  </div>
-
-                  <div className="col-span-2 grid grid-cols-4 gap-2 bg-slate-100 p-2 rounded-[1.5rem] mt-2">
-                    {[
-                      { id: 'DINHEIRO', label: 'Dinheiro', icon: Icons.Dashboard },
-                      { id: 'PIX', label: 'PIX', icon: Icons.QrCode },
-                      { id: 'CRÉDITO', label: 'Crédito', icon: Icons.CreditCard },
-                      { id: 'DÉBITO', label: 'Débito', icon: Icons.CreditCard }
-                    ].map(method => (
-                      <button
-                        key={`method2-${method.id}`}
-                        onClick={() => setPaymentMethod2(method.id)}
-                        className={`flex flex-col items-center gap-1 py-3 rounded-2xl transition-all ${paymentMethod2 === method.id ? 'bg-white text-blue-600 shadow-md' : 'text-slate-400 hover:bg-slate-200'}`}
-                      >
-                        <span className="text-[8px] font-black uppercase tracking-widest">{method.label}</span>
-                      </button>
-                    ))}
-                  </div>
+                <div className="mt-4 animate-in slide-in-from-top-2">
+                  <button
+                    onClick={() => setIsSplitModalOpen(true)}
+                    className="w-full py-4 bg-indigo-50 border-2 border-indigo-200 hover:bg-indigo-100 text-indigo-700 rounded-2xl font-black uppercase text-[10px] tracking-widest transition-all shadow-sm flex flex-col items-center gap-2 group"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Icons.View className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                      Prosseguir para Pagamento Dividido
+                    </div>
+                    <span className="text-[8px] font-bold text-indigo-400 opacity-80">(Configurar Métodos em Tela Cheia)</span>
+                  </button>
                 </div>
               )}
             </div>
 
-            <div className="p-8 lg:p-10 overflow-y-auto">
+            <div className={`p-8 lg:p-10 overflow-y-auto ${isSplitPayment ? 'hidden' : ''}`}>
               <div className={`grid gap-6 ${isSplitPayment ? 'grid-cols-2' : 'grid-cols-1'}`}>
                 {/* 1º Método de Pagamento */}
                 <div>
@@ -979,133 +952,35 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                   )}
                 </div>
 
-                {/* 2º Método de Pagamento Condicional */}
-                {isSplitPayment && paymentMethod2 && (
-                  <div className="border-l border-slate-100 pl-6">
-                    <h4 className="text-[12px] font-black text-slate-400 uppercase tracking-widest mb-4 border-b border-slate-100 pb-2">2º Método ({paymentMethod2})</h4>
-
-                    {paymentMethod2 === 'DINHEIRO' && (
-                      <div className="space-y-6 animate-in zoom-in-95 duration-200 mb-6">
-                        <div className="space-y-2">
-                          <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Recebido Dinheiro (R$)</label>
-                          <input
-                            type="number"
-                            className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-[2rem] text-xl font-black outline-none focus:border-blue-500 transition-all"
-                            placeholder="0,00"
-                            value={paymentData2.receivedAmount}
-                            onChange={e => setPaymentData2({ ...paymentData2, receivedAmount: e.target.value })}
-                          />
-                        </div>
-                        {(() => {
-                          const amCash = parseFloat(splitAmount2) || (cartTotal - (parseFloat(splitAmount1) || 0));
-                          const received = parseFloat(paymentData2.receivedAmount) || 0;
-                          if (received > amCash && amCash > 0) {
-                            return (
-                              <div className="bg-green-50 p-4 rounded-[2rem] border border-green-100 flex items-center justify-between animate-in slide-in-from-top-2">
-                                <span className="text-xs font-black text-green-700 uppercase">Troco (2):</span>
-                                <span className="text-xl font-black text-green-600">R$ {(received - amCash).toFixed(2)}</span>
-                              </div>
-                            );
-                          }
-                          return null;
-                        })()}
-                      </div>
-                    )}
-
-                    {(paymentMethod2 === 'CRÉDITO' || paymentMethod2 === 'DÉBITO') && (
-                      <div className="space-y-4 animate-in zoom-in-95 duration-200">
-                        <div className="space-y-1">
-                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Titular do Cartão</label>
-                          <input
-                            type="text"
-                            className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-[1.5rem] text-sm font-black uppercase outline-none focus:border-blue-500 transition-all"
-                            placeholder="NOME IMPRESSO"
-                            value={paymentData2.cardName}
-                            onChange={e => setPaymentData2({ ...paymentData2, cardName: e.target.value })}
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Número do Cartão</label>
-                          <div className="relative">
-                            <input
-                              type="text"
-                              className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-[1.5rem] text-sm font-black outline-none focus:border-blue-500 transition-all pr-16"
-                              placeholder="0000 0000 0000 0000"
-                              value={paymentData2.cardNumber}
-                              onChange={e => setPaymentData2({ ...paymentData2, cardNumber: maskCardNumber(e.target.value) })}
-                            />
-                            <div className="absolute right-4 top-1/2 -translate-y-1/2 bg-white px-2 py-1 rounded-lg border border-slate-100 text-[8px] font-black text-blue-600 shadow-sm uppercase tracking-tighter">
-                              {getCardBrand(paymentData2.cardNumber)}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-1">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Validade</label>
-                            <input
-                              type="text"
-                              className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-[1.5rem] text-sm font-black outline-none focus:border-blue-500 transition-all text-center"
-                              placeholder="MM/AA"
-                              value={paymentData2.cardExpiry}
-                              onChange={e => setPaymentData2({ ...paymentData2, cardExpiry: maskExpiry(e.target.value) })}
-                            />
-                          </div>
-                          <div className="space-y-1">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">CVV</label>
-                            <input
-                              type="text"
-                              className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-[1.5rem] text-sm font-black outline-none focus:border-blue-500 transition-all text-center"
-                              placeholder="000"
-                              maxLength={3}
-                              value={paymentData2.cardCVV}
-                              onChange={e => setPaymentData2({ ...paymentData2, cardCVV: e.target.value.replace(/\D/g, '') })}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {paymentMethod2 === 'PIX' && (
-                      <div className="flex flex-col items-center py-4 animate-in zoom-in-95 duration-200">
-                        <div className="w-40 h-40 bg-slate-50 rounded-[2rem] border-4 border-blue-50 flex items-center justify-center mb-4 relative group overflow-hidden shadow-inner">
-                          <div className="text-slate-200"><Icons.QrCode className="w-20 h-20" /></div>
-                          <div className="absolute inset-0 bg-white/60 backdrop-blur-sm flex items-center justify-center flex-col gap-2 p-2 text-center">
-                            <div className="w-6 h-6 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-1"></div>
-                            <p className="text-[9px] font-black text-blue-800 uppercase leading-tight">Aguardando Pagamento...</p>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
+                {/* 2º Pagamento Migrado para Modal Exclusivo */}
               </div>
             </div>
+          </div>
 
-            <div className="p-8 lg:p-10 bg-slate-50 border-t border-slate-100 shrink-0 flex flex-col gap-4">
-              <div className="flex items-center justify-between px-4 py-2 bg-white rounded-2xl border border-slate-100">
-                <div className="flex items-center gap-3">
-                  <Icons.View className="w-5 h-5 text-blue-600" />
-                  <div>
-                    <p className="text-[10px] font-black uppercase tracking-tight">Emitir NFC-e Fiscal?</p>
-                    <p className="text-[8px] font-bold text-slate-400 uppercase">Nota Fiscal de Consumidor Eletrônica</p>
-                  </div>
+          <div className={`p-8 lg:p-10 bg-slate-50 border-t border-slate-100 shrink-0 flex flex-col gap-4 ${isSplitPayment ? 'hidden' : ''}`}>
+            <div className="flex items-center justify-between px-4 py-2 bg-white rounded-2xl border border-slate-100">
+              <div className="flex items-center gap-3">
+                <Icons.View className="w-5 h-5 text-blue-600" />
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-tight">Emitir NFC-e Fiscal?</p>
+                  <p className="text-[8px] font-bold text-slate-400 uppercase">Nota Fiscal de Consumidor Eletrônica</p>
                 </div>
-                <button
-                  onClick={() => setEmitNfce(!emitNfce)}
-                  className={`w-12 h-6 rounded-full transition-all relative ${emitNfce ? 'bg-emerald-600 ring-4 ring-emerald-500/20' : 'bg-slate-200'}`}
-                >
-                  <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${emitNfce ? 'left-7' : 'left-1'}`}></div>
-                </button>
               </div>
-
               <button
-                onClick={processPaymentAndFinalize}
-                className="w-full py-6 bg-blue-600 hover:bg-blue-700 text-white rounded-[2rem] font-black uppercase text-lg tracking-widest shadow-2xl shadow-blue-200 transition-all flex items-center justify-center gap-4 group"
+                onClick={() => setEmitNfce(!emitNfce)}
+                className={`w-12 h-6 rounded-full transition-all relative ${emitNfce ? 'bg-emerald-600 ring-4 ring-emerald-500/20' : 'bg-slate-200'}`}
               >
-                <span>Finalizar Pedido</span>
-                <Icons.View className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+                <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${emitNfce ? 'left-7' : 'left-1'}`}></div>
               </button>
             </div>
+
+            <button
+              onClick={processPaymentAndFinalize}
+              className="w-full py-6 bg-blue-600 hover:bg-blue-700 text-white rounded-[2rem] font-black uppercase text-lg tracking-widest shadow-2xl shadow-blue-200 transition-all flex items-center justify-center gap-4 group"
+            >
+              <span>Finalizar Pedido</span>
+              <Icons.View className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+            </button>
           </div>
         </div>
       )}
@@ -1851,335 +1726,685 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       }
 
       {/* MODAL DE ABERTURA DE CAIXA */}
-      {isOpeningModalOpen && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/90 backdrop-blur-xl animate-in fade-in duration-300">
-          <div className="bg-white w-[400px] rounded-[3rem] shadow-2xl overflow-hidden border border-slate-100 p-8 lg:p-10">
-            <div className="text-center mb-8">
-              <div className="w-20 h-20 bg-blue-50 rounded-[2rem] flex items-center justify-center mx-auto mb-6">
-                <Icons.Dashboard className="w-10 h-10 text-blue-600" />
-              </div>
-              <h2 className="text-xl font-black text-slate-800 uppercase tracking-tighter">Abertura de Caixa</h2>
-              <p className="text-[10px] font-bold text-slate-400 uppercase mt-2">Informe o saldo inicial para começar as operações</p>
-            </div>
-
-            <div className="space-y-6">
-              <div>
-                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 block">Saldo em Dinheiro (R$)</label>
-                <input
-                  autoFocus
-                  type="text"
-                  placeholder="0,00"
-                  value={initialBalanceInput}
-                  onChange={(e) => setInitialBalanceInput(e.target.value)}
-                  className="w-full p-5 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-blue-500 outline-none font-black text-xl text-center text-blue-600"
-                />
+      {
+        isOpeningModalOpen && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/90 backdrop-blur-xl animate-in fade-in duration-300">
+            <div className="bg-white w-[400px] rounded-[3rem] shadow-2xl overflow-hidden border border-slate-100 p-8 lg:p-10">
+              <div className="text-center mb-8">
+                <div className="w-20 h-20 bg-blue-50 rounded-[2rem] flex items-center justify-center mx-auto mb-6">
+                  <Icons.Dashboard className="w-10 h-10 text-blue-600" />
+                </div>
+                <h2 className="text-xl font-black text-slate-800 uppercase tracking-tighter">Abertura de Caixa</h2>
+                <p className="text-[10px] font-bold text-slate-400 uppercase mt-2">Informe o saldo inicial para começar as operações</p>
               </div>
 
-              <button
-                onClick={handleOpenCash}
-                className="w-full py-5 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl transition-all active:scale-95"
-              >
-                Abrir Caixa ✓
-              </button>
+              <div className="space-y-6">
+                <div>
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 block">Saldo em Dinheiro (R$)</label>
+                  <input
+                    autoFocus
+                    type="text"
+                    placeholder="0,00"
+                    value={initialBalanceInput}
+                    onChange={(e) => setInitialBalanceInput(e.target.value)}
+                    className="w-full p-5 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-blue-500 outline-none font-black text-xl text-center text-blue-600"
+                  />
+                </div>
+
+                <button
+                  onClick={handleOpenCash}
+                  className="w-full py-5 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl transition-all active:scale-95"
+                >
+                  Abrir Caixa ✓
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
       {/* MODAL DE FECHAMENTO DE CAIXA */}
-      {isClosingModalOpen && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/90 backdrop-blur-xl animate-in fade-in duration-300">
-          <div className="bg-white w-[500px] rounded-[3.5rem] shadow-2xl overflow-hidden border border-slate-100 p-8 lg:p-12 max-h-[90vh] overflow-y-auto">
-            <div className="text-center mb-8">
-              <div className="w-20 h-20 bg-orange-50 rounded-[2rem] flex items-center justify-center mx-auto mb-6 text-3xl">
-                💰
-              </div>
-              <h2 className="text-2xl font-black text-slate-800 uppercase tracking-tighter">Fechamento de Caixa</h2>
-              <p className="text-[10px] font-bold text-slate-400 uppercase mt-2 tracking-widest">Confirme os valores para encerrar o expediente</p>
-            </div>
-
-            <div className="flex gap-2 bg-slate-100 p-1.5 rounded-3xl mb-8">
-              <button
-                onClick={() => setClosingMode('MANUAL')}
-                className={`flex-1 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${closingMode === 'MANUAL' ? 'bg-white text-orange-600 shadow-xl' : 'text-slate-400 hover:text-slate-600'}`}
-              >
-                Fechamento Manual
-              </button>
-              <button
-                onClick={() => setClosingMode('SYSTEM')}
-                className={`flex-1 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${closingMode === 'SYSTEM' ? 'bg-white text-blue-600 shadow-xl' : 'text-slate-400 hover:text-slate-600'}`}
-              >
-                Pelo Sistema
-              </button>
-            </div>
-
-            {closingMode === 'SYSTEM' && (
-              <div className="mb-8 p-6 bg-blue-50/50 rounded-[2rem] border-2 border-dashed border-blue-200 animate-in slide-in-from-top-2">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center font-black">!</div>
-                  <p className="text-[10px] font-black text-blue-800 uppercase tracking-tight leading-tight">Autorização Admin Master Necessária para preenchimento automático.</p>
+      {
+        isClosingModalOpen && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/90 backdrop-blur-xl animate-in fade-in duration-300">
+            <div className="bg-white w-[500px] rounded-[3.5rem] shadow-2xl overflow-hidden border border-slate-100 p-8 lg:p-12 max-h-[90vh] overflow-y-auto">
+              <div className="text-center mb-8">
+                <div className="w-20 h-20 bg-orange-50 rounded-[2rem] flex items-center justify-center mx-auto mb-6 text-3xl">
+                  💰
                 </div>
-                <div className="space-y-4">
-                  <input
-                    type="password"
-                    placeholder="Senha do Admin Master"
-                    value={adminPassword}
-                    onChange={e => setAdminPassword(e.target.value)}
-                    className="w-full p-4 bg-white border-2 border-blue-100 rounded-2xl text-xs font-black outline-none focus:border-blue-600"
+                <h2 className="text-2xl font-black text-slate-800 uppercase tracking-tighter">Fechamento de Caixa</h2>
+                <p className="text-[10px] font-bold text-slate-400 uppercase mt-2 tracking-widest">Confirme os valores para encerrar o expediente</p>
+              </div>
+
+              <div className="flex gap-2 bg-slate-100 p-1.5 rounded-3xl mb-8">
+                <button
+                  onClick={() => setClosingMode('MANUAL')}
+                  className={`flex-1 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${closingMode === 'MANUAL' ? 'bg-white text-orange-600 shadow-xl' : 'text-slate-400 hover:text-slate-600'}`}
+                >
+                  Fechamento Manual
+                </button>
+                <button
+                  onClick={() => setClosingMode('SYSTEM')}
+                  className={`flex-1 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${closingMode === 'SYSTEM' ? 'bg-white text-blue-600 shadow-xl' : 'text-slate-400 hover:text-slate-600'}`}
+                >
+                  Pelo Sistema
+                </button>
+              </div>
+
+              {closingMode === 'SYSTEM' && (
+                <div className="mb-8 p-6 bg-blue-50/50 rounded-[2rem] border-2 border-dashed border-blue-200 animate-in slide-in-from-top-2">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center font-black">!</div>
+                    <p className="text-[10px] font-black text-blue-800 uppercase tracking-tight leading-tight">Autorização Admin Master Necessária para preenchimento automático.</p>
+                  </div>
+                  <div className="space-y-4">
+                    <input
+                      type="password"
+                      placeholder="Senha do Admin Master"
+                      value={adminPassword}
+                      onChange={e => setAdminPassword(e.target.value)}
+                      className="w-full p-4 bg-white border-2 border-blue-100 rounded-2xl text-xs font-black outline-none focus:border-blue-600"
+                    />
+                    <button
+                      onClick={handleSystemPreview}
+                      className="w-full py-4 bg-blue-600 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-blue-700 transition-all shadow-lg active:scale-95"
+                    >
+                      Gerar Relatório do Sistema
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-5">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Efetivo/Dinheiro (R$)</label>
+                    <input
+                      type="text"
+                      placeholder="0,00"
+                      value={closingReport.cash}
+                      onChange={(e) => setClosingReport(prev => ({ ...prev, cash: e.target.value.replace(',', '.') }))}
+                      className="w-full p-5 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-orange-500 outline-none font-black text-lg text-center"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Total em PIX (R$)</label>
+                    <input
+                      type="text"
+                      placeholder="0,00"
+                      value={closingReport.pix}
+                      onChange={(e) => setClosingReport(prev => ({ ...prev, pix: e.target.value.replace(',', '.') }))}
+                      className="w-full p-5 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-orange-500 outline-none font-black text-lg text-center"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Cartão Crédito (R$)</label>
+                    <input
+                      type="text"
+                      placeholder="0,00"
+                      value={closingReport.credit}
+                      onChange={(e) => setClosingReport(prev => ({ ...prev, credit: e.target.value.replace(',', '.') }))}
+                      className="w-full p-5 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-orange-500 outline-none font-black text-lg text-center"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Cartão Débito (R$)</label>
+                    <input
+                      type="text"
+                      placeholder="0,00"
+                      value={closingReport.debit}
+                      onChange={(e) => setClosingReport(prev => ({ ...prev, debit: e.target.value.replace(',', '.') }))}
+                      className="w-full p-5 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-orange-500 outline-none font-black text-lg text-center"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Notas / Observações</label>
+                  <textarea
+                    placeholder="Alguma observação relevante?"
+                    value={closingReport.observations}
+                    onChange={(e) => setClosingReport(prev => ({ ...prev, observations: e.target.value }))}
+                    className="w-full p-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-orange-500 outline-none font-bold text-xs"
+                    rows={2}
                   />
+                </div>
+
+                <div className="flex gap-3 pt-6">
                   <button
-                    onClick={handleSystemPreview}
-                    className="w-full py-4 bg-blue-600 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-blue-700 transition-all shadow-lg active:scale-95"
+                    onClick={() => setIsClosingModalOpen(false)}
+                    className="flex-1 py-5 font-black uppercase text-[10px] text-slate-400 hover:text-slate-600 transition-colors"
                   >
-                    Gerar Relatório do Sistema
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={handleCloseCash}
+                    className="flex-[2] py-5 bg-orange-600 hover:bg-orange-700 text-white rounded-3xl font-black uppercase text-xs tracking-widest shadow-2xl shadow-orange-100 transition-all active:scale-95"
+                  >
+                    Encerrar Caixa ✓
                   </button>
                 </div>
               </div>
-            )}
-
-            <div className="space-y-5">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Efetivo/Dinheiro (R$)</label>
-                  <input
-                    type="text"
-                    placeholder="0,00"
-                    value={closingReport.cash}
-                    onChange={(e) => setClosingReport(prev => ({ ...prev, cash: e.target.value.replace(',', '.') }))}
-                    className="w-full p-5 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-orange-500 outline-none font-black text-lg text-center"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Total em PIX (R$)</label>
-                  <input
-                    type="text"
-                    placeholder="0,00"
-                    value={closingReport.pix}
-                    onChange={(e) => setClosingReport(prev => ({ ...prev, pix: e.target.value.replace(',', '.') }))}
-                    className="w-full p-5 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-orange-500 outline-none font-black text-lg text-center"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Cartão Crédito (R$)</label>
-                  <input
-                    type="text"
-                    placeholder="0,00"
-                    value={closingReport.credit}
-                    onChange={(e) => setClosingReport(prev => ({ ...prev, credit: e.target.value.replace(',', '.') }))}
-                    className="w-full p-5 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-orange-500 outline-none font-black text-lg text-center"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Cartão Débito (R$)</label>
-                  <input
-                    type="text"
-                    placeholder="0,00"
-                    value={closingReport.debit}
-                    onChange={(e) => setClosingReport(prev => ({ ...prev, debit: e.target.value.replace(',', '.') }))}
-                    className="w-full p-5 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-orange-500 outline-none font-black text-lg text-center"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Notas / Observações</label>
-                <textarea
-                  placeholder="Alguma observação relevante?"
-                  value={closingReport.observations}
-                  onChange={(e) => setClosingReport(prev => ({ ...prev, observations: e.target.value }))}
-                  className="w-full p-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-orange-500 outline-none font-bold text-xs"
-                  rows={2}
-                />
-              </div>
-
-              <div className="flex gap-3 pt-6">
-                <button
-                  onClick={() => setIsClosingModalOpen(false)}
-                  className="flex-1 py-5 font-black uppercase text-[10px] text-slate-400 hover:text-slate-600 transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={handleCloseCash}
-                  className="flex-[2] py-5 bg-orange-600 hover:bg-orange-700 text-white rounded-3xl font-black uppercase text-xs tracking-widest shadow-2xl shadow-orange-100 transition-all active:scale-95"
-                >
-                  Encerrar Caixa ✓
-                </button>
-              </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
       {/* MODAL DE REVISÃO E RELATÓRIO DE CAIXA */}
-      {isReviewModalOpen && reviewSession && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/95 backdrop-blur-2xl animate-in fade-in duration-300 p-4">
-          <div className="bg-white w-full max-w-[800px] rounded-[3.5rem] shadow-2xl overflow-hidden border border-slate-100 flex flex-col max-h-[90vh]">
-            <div className="p-10 border-b border-slate-50 shrink-0 flex justify-between items-start">
-              <div className="flex items-center gap-6">
-                <div className="w-20 h-20 bg-blue-50 text-blue-600 rounded-[2rem] flex items-center justify-center text-4xl">
-                  📄
-                </div>
-                <div>
-                  <h2 className="text-3xl font-black text-slate-800 uppercase tracking-tighter">Relatório do Caixa</h2>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2 flex items-center gap-2">
-                    ID: {reviewSession.id.substring(0, 8)} • Usuário: {reviewSession.closedByName}
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => {
-                  setIsReviewModalOpen(false);
-                  setReviewSession(null);
-                  setAdminPassword('');
-                  setClosingReport({ cash: '', pix: '', credit: '', debit: '', observations: '' });
-                }}
-                className="w-14 h-14 flex items-center justify-center bg-slate-100 rounded-full text-slate-400 hover:bg-red-50 hover:text-red-500 transition-all font-black text-2xl"
-              >
-                ×
-              </button>
-            </div>
-
-            <div className="flex-1 overflow-y-auto p-10">
-              <div className="grid grid-cols-2 gap-8 mb-10">
-                <div className="bg-slate-50/50 p-8 rounded-[2.5rem] border border-slate-100">
-                  <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6">Valores por Categoria</h3>
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center bg-white p-4 rounded-2xl border border-slate-100">
-                      <span className="text-[10px] font-black text-slate-600 uppercase">Dinheiro</span>
-                      <span className="font-black text-slate-800">R$ {reviewSession.reportedCash.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between items-center bg-white p-4 rounded-2xl border border-slate-100">
-                      <span className="text-[10px] font-black text-slate-600 uppercase">PIX</span>
-                      <span className="font-black text-slate-800">R$ {reviewSession.reportedPix.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between items-center bg-white p-4 rounded-2xl border border-slate-100">
-                      <span className="text-[10px] font-black text-slate-600 uppercase">Crédito</span>
-                      <span className="font-black text-slate-800">R$ {reviewSession.reportedCredit.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between items-center bg-white p-4 rounded-2xl border border-slate-100">
-                      <span className="text-[10px] font-black text-slate-600 uppercase">Débito</span>
-                      <span className="font-black text-slate-800">R$ {reviewSession.reportedDebit.toFixed(2)}</span>
-                    </div>
+      {
+        isReviewModalOpen && reviewSession && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/95 backdrop-blur-2xl animate-in fade-in duration-300 p-4">
+            <div className="bg-white w-full max-w-[800px] rounded-[3.5rem] shadow-2xl overflow-hidden border border-slate-100 flex flex-col max-h-[90vh]">
+              <div className="p-10 border-b border-slate-50 shrink-0 flex justify-between items-start">
+                <div className="flex items-center gap-6">
+                  <div className="w-20 h-20 bg-blue-50 text-blue-600 rounded-[2rem] flex items-center justify-center text-4xl">
+                    📄
                   </div>
-                </div>
-
-                <div className="flex flex-col gap-4">
-                  <div className="bg-blue-600 p-8 rounded-[2.5rem] text-white shadow-2xl shadow-blue-200">
-                    <h3 className="text-[10px] font-black opacity-60 uppercase tracking-widest mb-1">Total Informado</h3>
-                    <p className="text-4xl font-black">R$ {(reviewSession.reportedCash + reviewSession.reportedPix + reviewSession.reportedCredit + reviewSession.reportedDebit).toFixed(2)}</p>
-                  </div>
-
-                  <div className={`p-8 rounded-[2.5rem] border-2 ${reviewSession.difference === 0 ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : (reviewSession.difference > 0 ? 'bg-blue-50 border-blue-100 text-blue-700' : 'bg-red-50 border-red-100 text-red-700')}`}>
-                    <h3 className="text-[10px] font-black opacity-60 uppercase tracking-widest mb-1">Diferença (vs Sistema)</h3>
-                    <p className="text-4xl font-black italic">R$ {reviewSession.difference.toFixed(2)}</p>
-                    <p className="text-[9px] font-black uppercase mt-2 opacity-80">
-                      {reviewSession.difference === 0 ? '✓ Valores em Conformidade' : (reviewSession.difference > 0 ? '↑ Sobra de Caixa Identificada' : '↓ Falta de Caixa Identificada')}
+                  <div>
+                    <h2 className="text-3xl font-black text-slate-800 uppercase tracking-tighter">Relatório do Caixa</h2>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2 flex items-center gap-2">
+                      ID: {reviewSession.id.substring(0, 8)} • Usuário: {reviewSession.closedByName}
                     </p>
                   </div>
                 </div>
+                <button
+                  onClick={() => {
+                    setIsReviewModalOpen(false);
+                    setReviewSession(null);
+                    setAdminPassword('');
+                    setClosingReport({ cash: '', pix: '', credit: '', debit: '', observations: '' });
+                  }}
+                  className="w-14 h-14 flex items-center justify-center bg-slate-100 rounded-full text-slate-400 hover:bg-red-50 hover:text-red-500 transition-all font-black text-2xl"
+                >
+                  ×
+                </button>
               </div>
 
-              {/* Editable Correction Area (Admin Only) */}
-              <div className="bg-slate-900 rounded-[3rem] p-10 text-white shadow-2xl">
-                <div className="flex justify-between items-center mb-10">
-                  <div>
-                    <h3 className="text-xl font-black uppercase tracking-tighter">Ajustes e Correções</h3>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase mt-1 tracking-widest">Apenas Administrador Master</p>
-                  </div>
-                  <Icons.Dashboard className="w-8 h-8 text-blue-500 opacity-40" />
-                </div>
-
-                <div className="grid grid-cols-2 gap-8 mb-8">
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Corrigir Dinheiro</label>
-                        <input
-                          type="text"
-                          className="w-full bg-white/10 border border-white/20 p-4 rounded-2xl font-black text-center text-blue-400 focus:bg-white/20 transition-all outline-none"
-                          value={closingReport.cash}
-                          onChange={e => setClosingReport(prev => ({ ...prev, cash: e.target.value.replace(',', '.') }))}
-                        />
+              <div className="flex-1 overflow-y-auto p-10">
+                <div className="grid grid-cols-2 gap-8 mb-10">
+                  <div className="bg-slate-50/50 p-8 rounded-[2.5rem] border border-slate-100">
+                    <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6">Valores por Categoria</h3>
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center bg-white p-4 rounded-2xl border border-slate-100">
+                        <span className="text-[10px] font-black text-slate-600 uppercase">Dinheiro</span>
+                        <span className="font-black text-slate-800">R$ {reviewSession.reportedCash.toFixed(2)}</span>
                       </div>
-                      <div className="space-y-2">
-                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Corrigir Pix</label>
-                        <input
-                          type="text"
-                          className="w-full bg-white/10 border border-white/20 p-4 rounded-2xl font-black text-center text-blue-400 focus:bg-white/20 transition-all outline-none"
-                          value={closingReport.pix}
-                          onChange={e => setClosingReport(prev => ({ ...prev, pix: e.target.value.replace(',', '.') }))}
-                        />
+                      <div className="flex justify-between items-center bg-white p-4 rounded-2xl border border-slate-100">
+                        <span className="text-[10px] font-black text-slate-600 uppercase">PIX</span>
+                        <span className="font-black text-slate-800">R$ {reviewSession.reportedPix.toFixed(2)}</span>
                       </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Corrigir Crédito</label>
-                        <input
-                          type="text"
-                          className="w-full bg-white/10 border border-white/20 p-4 rounded-2xl font-black text-center text-blue-400 focus:bg-white/20 transition-all outline-none"
-                          value={closingReport.credit}
-                          onChange={e => setClosingReport(prev => ({ ...prev, credit: e.target.value.replace(',', '.') }))}
-                        />
+                      <div className="flex justify-between items-center bg-white p-4 rounded-2xl border border-slate-100">
+                        <span className="text-[10px] font-black text-slate-600 uppercase">Crédito</span>
+                        <span className="font-black text-slate-800">R$ {reviewSession.reportedCredit.toFixed(2)}</span>
                       </div>
-                      <div className="space-y-2">
-                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Corrigir Débito</label>
-                        <input
-                          type="text"
-                          className="w-full bg-white/10 border border-white/20 p-4 rounded-2xl font-black text-center text-blue-400 focus:bg-white/20 transition-all outline-none"
-                          value={closingReport.debit}
-                          onChange={e => setClosingReport(prev => ({ ...prev, debit: e.target.value.replace(',', '.') }))}
-                        />
+                      <div className="flex justify-between items-center bg-white p-4 rounded-2xl border border-slate-100">
+                        <span className="text-[10px] font-black text-slate-600 uppercase">Débito</span>
+                        <span className="font-black text-slate-800">R$ {reviewSession.reportedDebit.toFixed(2)}</span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex flex-col gap-4 justify-between">
-                    <div className="space-y-2">
-                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Nova Observação</label>
-                      <textarea
-                        className="w-full bg-white/10 border border-white/20 p-4 rounded-2xl font-bold text-xs min-h-[100px] outline-none"
-                        value={closingReport.observations}
-                        onChange={e => setClosingReport(prev => ({ ...prev, observations: e.target.value }))}
-                      />
+                  <div className="flex flex-col gap-4">
+                    <div className="bg-blue-600 p-8 rounded-[2.5rem] text-white shadow-2xl shadow-blue-200">
+                      <h3 className="text-[10px] font-black opacity-60 uppercase tracking-widest mb-1">Total Informado</h3>
+                      <p className="text-4xl font-black">R$ {(reviewSession.reportedCash + reviewSession.reportedPix + reviewSession.reportedCredit + reviewSession.reportedDebit).toFixed(2)}</p>
                     </div>
-                    <div className="space-y-2">
-                      <label className="text-[9px] font-black text-blue-400 uppercase tracking-widest">Senha Admin Master</label>
-                      <input
-                        type="password"
-                        className="w-full bg-blue-600/20 border border-blue-500/30 p-4 rounded-2xl font-black text-center text-blue-400 outline-none"
-                        placeholder="••••••••"
-                        value={adminPassword}
-                        onChange={e => setAdminPassword(e.target.value)}
-                      />
+
+                    <div className={`p-8 rounded-[2.5rem] border-2 ${reviewSession.difference === 0 ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : (reviewSession.difference > 0 ? 'bg-blue-50 border-blue-100 text-blue-700' : 'bg-red-50 border-red-100 text-red-700')}`}>
+                      <h3 className="text-[10px] font-black opacity-60 uppercase tracking-widest mb-1">Diferença (vs Sistema)</h3>
+                      <p className="text-4xl font-black italic">R$ {reviewSession.difference.toFixed(2)}</p>
+                      <p className="text-[9px] font-black uppercase mt-2 opacity-80">
+                        {reviewSession.difference === 0 ? '✓ Valores em Conformidade' : (reviewSession.difference > 0 ? '↑ Sobra de Caixa Identificada' : '↓ Falta de Caixa Identificada')}
+                      </p>
                     </div>
                   </div>
                 </div>
 
-                <div className="flex gap-4">
-                  <button
-                    onClick={handleSaveReview}
-                    className="flex-1 py-5 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl transition-all active:scale-95"
-                  >
-                    Salvar Correções ✓
-                  </button>
-                  <button
-                    onClick={() => {
-                      window.print();
-                    }}
-                    className="flex-1 py-5 bg-white/10 hover:bg-white/20 text-white rounded-2xl font-black uppercase text-xs tracking-widest transition-all"
-                  >
-                    Imprimir Relatório 🖨️
-                  </button>
+                {/* Editable Correction Area (Admin Only) */}
+                <div className="bg-slate-900 rounded-[3rem] p-10 text-white shadow-2xl">
+                  <div className="flex justify-between items-center mb-10">
+                    <div>
+                      <h3 className="text-xl font-black uppercase tracking-tighter">Ajustes e Correções</h3>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase mt-1 tracking-widest">Apenas Administrador Master</p>
+                    </div>
+                    <Icons.Dashboard className="w-8 h-8 text-blue-500 opacity-40" />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-8 mb-8">
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Corrigir Dinheiro</label>
+                          <input
+                            type="text"
+                            className="w-full bg-white/10 border border-white/20 p-4 rounded-2xl font-black text-center text-blue-400 focus:bg-white/20 transition-all outline-none"
+                            value={closingReport.cash}
+                            onChange={e => setClosingReport(prev => ({ ...prev, cash: e.target.value.replace(',', '.') }))}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Corrigir Pix</label>
+                          <input
+                            type="text"
+                            className="w-full bg-white/10 border border-white/20 p-4 rounded-2xl font-black text-center text-blue-400 focus:bg-white/20 transition-all outline-none"
+                            value={closingReport.pix}
+                            onChange={e => setClosingReport(prev => ({ ...prev, pix: e.target.value.replace(',', '.') }))}
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Corrigir Crédito</label>
+                          <input
+                            type="text"
+                            className="w-full bg-white/10 border border-white/20 p-4 rounded-2xl font-black text-center text-blue-400 focus:bg-white/20 transition-all outline-none"
+                            value={closingReport.credit}
+                            onChange={e => setClosingReport(prev => ({ ...prev, credit: e.target.value.replace(',', '.') }))}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Corrigir Débito</label>
+                          <input
+                            type="text"
+                            className="w-full bg-white/10 border border-white/20 p-4 rounded-2xl font-black text-center text-blue-400 focus:bg-white/20 transition-all outline-none"
+                            value={closingReport.debit}
+                            onChange={e => setClosingReport(prev => ({ ...prev, debit: e.target.value.replace(',', '.') }))}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col gap-4 justify-between">
+                      <div className="space-y-2">
+                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Nova Observação</label>
+                        <textarea
+                          className="w-full bg-white/10 border border-white/20 p-4 rounded-2xl font-bold text-xs min-h-[100px] outline-none"
+                          value={closingReport.observations}
+                          onChange={e => setClosingReport(prev => ({ ...prev, observations: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[9px] font-black text-blue-400 uppercase tracking-widest">Senha Admin Master</label>
+                        <input
+                          type="password"
+                          className="w-full bg-blue-600/20 border border-blue-500/30 p-4 rounded-2xl font-black text-center text-blue-400 outline-none"
+                          placeholder="••••••••"
+                          value={adminPassword}
+                          onChange={e => setAdminPassword(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-4">
+                    <button
+                      onClick={handleSaveReview}
+                      className="flex-1 py-5 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl transition-all active:scale-95"
+                    >
+                      Salvar Correções ✓
+                    </button>
+                    <button
+                      onClick={() => {
+                        window.print();
+                      }}
+                      className="flex-1 py-5 bg-white/10 hover:bg-white/20 text-white rounded-2xl font-black uppercase text-xs tracking-widest transition-all"
+                    >
+                      Imprimir Relatório 🖨️
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      }
+      {/* NEW SPLIT PAYMENT MODAL */}
+      {
+        isSplitModalOpen && (
+          <div className="fixed inset-0 z-[300] flex items-center justify-center bg-slate-900/80 backdrop-blur-md animate-in zoom-in-95 duration-300 overflow-y-auto">
+            <div className="bg-white rounded-[3rem] shadow-2xl w-[95%] max-w-[1200px] border border-slate-100 flex flex-col my-8 min-h-[90vh]">
+              {/* Header */}
+              <div className="p-8 border-b border-slate-100 shrink-0 flex justify-between items-center bg-slate-50 rounded-t-[3rem]">
+                <div className="flex items-center gap-6">
+                  <div className="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-[1.5rem] flex items-center justify-center">
+                    <Icons.View className="w-8 h-8" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-black text-slate-800 uppercase tracking-tighter">Pagamento Dividido</h2>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Configure os dois métodos de recebimento</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-8">
+                  <div className="text-right">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Valor da Fatura</p>
+                    <p className="text-3xl font-black text-blue-600 tracking-tighter">R$ {cartTotal.toFixed(2)}</p>
+                  </div>
+                  <button
+                    onClick={() => setIsSplitModalOpen(false)}
+                    className="w-14 h-14 flex items-center justify-center bg-white border-2 border-slate-100 rounded-full text-slate-400 hover:bg-red-50 hover:text-red-500 hover:border-red-100 transition-all font-black text-2xl shadow-sm"
+                  >
+                    ×
+                  </button>
+                </div>
+              </div>
+
+              {/* Split Content Grid */}
+              <div className="flex-1 grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-slate-100 overflow-y-auto">
+
+                {/* --- COLUMN 1 --- */}
+                <div className="p-8 flex flex-col bg-white">
+                  <div className="flex items-center justify-between mb-8 cursor-pointer">
+                    <div className="flex items-center gap-3">
+                      <span className="w-8 h-8 rounded-full bg-slate-100 text-slate-500 font-black flex items-center justify-center text-xs">1</span>
+                      <h3 className="text-lg font-black text-slate-800 uppercase tracking-tighter">Primeiro Pagamento</h3>
+                    </div>
+                  </div>
+
+                  <div className="mb-6">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Valor a Cobrar (R$)</label>
+                    <input
+                      type="number"
+                      className="w-full mt-2 p-5 bg-blue-50/50 border-2 border-blue-100 focus:border-blue-500 rounded-[1.5rem] text-2xl font-black outline-none text-blue-700 transition-all placeholder:text-blue-200"
+                      value={splitAmount1}
+                      onChange={e => {
+                        setSplitAmount1(e.target.value);
+                        const m2 = cartTotal - parseFloat(e.target.value || '0');
+                        if (m2 >= 0) setSplitAmount2(m2.toFixed(2));
+                      }}
+                      placeholder="0.00"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-4 gap-2 bg-slate-50 p-2 rounded-[2rem] mb-8">
+                    {[
+                      { id: 'DINHEIRO', label: 'Dinheiro', icon: Icons.Dashboard },
+                      { id: 'PIX', label: 'PIX', icon: Icons.QrCode },
+                      { id: 'CRÉDITO', label: 'Crédito', icon: Icons.CreditCard },
+                      { id: 'DÉBITO', label: 'Débito', icon: Icons.CreditCard }
+                    ].map(method => (
+                      <button
+                        key={`method1-${method.id}`}
+                        onClick={() => setPaymentMethod(method.id)}
+                        className={`flex flex-col items-center gap-2 py-4 rounded-[1.5rem] transition-all ${paymentMethod === method.id ? 'bg-white text-blue-600 shadow-md ring-2 ring-blue-500/20' : 'text-slate-400 hover:bg-slate-200/50'}`}
+                      >
+                        <method.icon className="w-5 h-5" />
+                        <span className="text-[8px] font-black uppercase tracking-widest">{method.label}</span>
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="flex-1">
+                    {paymentMethod === 'DINHEIRO' && (
+                      <div className="space-y-6 animate-in zoom-in-95 duration-200">
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Valor Entregue pelo Cliente (R$)</label>
+                          <input
+                            type="number"
+                            className="w-full p-5 bg-slate-50 border-2 border-slate-100 rounded-[1.5rem] text-xl font-black outline-none focus:border-blue-500 transition-all"
+                            placeholder="0,00"
+                            value={paymentData.receivedAmount}
+                            onChange={e => setPaymentData({ ...paymentData, receivedAmount: e.target.value })}
+                          />
+                        </div>
+                        {(() => {
+                          const amCash = parseFloat(splitAmount1) || 0;
+                          const received = parseFloat(paymentData.receivedAmount) || 0;
+                          if (received > amCash && amCash > 0) {
+                            return (
+                              <div className="bg-emerald-50 p-5 rounded-[1.5rem] border-2 border-emerald-100 flex items-center justify-between animate-in slide-in-from-top-2">
+                                <span className="text-[10px] font-black text-emerald-700 uppercase tracking-widest">Troco a Devolver:</span>
+                                <span className="text-2xl font-black text-emerald-600">R$ {(received - amCash).toFixed(2)}</span>
+                              </div>
+                            );
+                          }
+                          return null;
+                        })()}
+                      </div>
+                    )}
+
+                    {(paymentMethod === 'CRÉDITO' || paymentMethod === 'DÉBITO') && (
+                      <div className="space-y-5 animate-in zoom-in-95 duration-200 bg-slate-50 p-6 rounded-[2rem]">
+                        <div className="space-y-2">
+                          <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Titular Impresso no Cartão *</label>
+                          <input
+                            type="text"
+                            className="w-full p-4 bg-white border border-slate-200 rounded-[1.25rem] text-sm font-black uppercase outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all shadow-sm"
+                            placeholder="EX: MARIA S SILVA"
+                            value={paymentData.cardName}
+                            onChange={e => setPaymentData({ ...paymentData, cardName: e.target.value })}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Número do Cartão *</label>
+                          <div className="relative">
+                            <input
+                              type="text"
+                              className="w-full p-4 bg-white border border-slate-200 rounded-[1.25rem] text-sm font-black outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all shadow-sm pr-16"
+                              placeholder="0000 0000 0000 0000"
+                              value={paymentData.cardNumber}
+                              onChange={e => setPaymentData({ ...paymentData, cardNumber: maskCardNumber(e.target.value) })}
+                            />
+                            <div className="absolute right-3 top-1/2 -translate-y-1/2 bg-slate-100 px-3 py-1.5 rounded-lg text-[9px] font-black text-slate-600 uppercase tracking-tighter shadow-sm">
+                              {getCardBrand(paymentData.cardNumber)}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Validade *</label>
+                            <input
+                              type="text"
+                              className="w-full p-4 bg-white border border-slate-200 rounded-[1.25rem] text-sm font-black outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all text-center shadow-sm"
+                              placeholder="MM/AA"
+                              value={paymentData.cardExpiry}
+                              onChange={e => setPaymentData({ ...paymentData, cardExpiry: maskExpiry(e.target.value) })}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">CVV *</label>
+                            <input
+                              type="text"
+                              className="w-full p-4 bg-white border border-slate-200 rounded-[1.25rem] text-sm font-black outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all text-center shadow-sm"
+                              placeholder="000"
+                              maxLength={3}
+                              value={paymentData.cardCVV}
+                              onChange={e => setPaymentData({ ...paymentData, cardCVV: e.target.value.replace(/\D/g, '') })}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {paymentMethod === 'PIX' && (
+                      <div className="flex flex-col items-center py-6 animate-in zoom-in-95 duration-200">
+                        <div className="w-56 h-56 bg-slate-50 rounded-[2.5rem] border-[6px] border-blue-50 flex items-center justify-center mb-6 relative group overflow-hidden shadow-inner">
+                          <div className="text-slate-200"><Icons.QrCode className="w-24 h-24" /></div>
+                          <div className="absolute inset-0 bg-white/70 backdrop-blur-md flex items-center justify-center flex-col gap-3 p-4 text-center">
+                            <div className="w-8 h-8 border-[5px] border-blue-600 border-t-transparent rounded-full animate-spin mb-1"></div>
+                            <p className="text-[10px] font-black text-blue-800 uppercase leading-snug tracking-widest cursor-default">Simulação<br />Aguardando Recebimento</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+
+                {/* --- COLUMN 2 --- */}
+                <div className="p-8 flex flex-col bg-slate-50">
+                  <div className="flex items-center justify-between mb-8 cursor-pointer relative">
+                    <div className="flex items-center gap-3">
+                      <span className="w-8 h-8 rounded-full bg-slate-200 text-slate-600 font-black flex items-center justify-center text-xs shadow-inner">2</span>
+                      <h3 className="text-lg font-black text-slate-800 uppercase tracking-tighter">Segundo Pagamento</h3>
+                    </div>
+                  </div>
+
+                  <div className="mb-6">
+                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Valor a Cobrar (R$)</label>
+                    <input
+                      type="number"
+                      className="w-full mt-2 p-5 bg-white border border-slate-200 focus:border-indigo-500 rounded-[1.5rem] text-2xl font-black outline-none text-indigo-700 transition-all shadow-sm placeholder:text-indigo-200"
+                      value={splitAmount2}
+                      onChange={e => {
+                        setSplitAmount2(e.target.value);
+                        const m1 = cartTotal - parseFloat(e.target.value || '0');
+                        if (m1 >= 0) setSplitAmount1(m1.toFixed(2));
+                      }}
+                      placeholder="0.00"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-4 gap-2 bg-slate-200/50 p-2 rounded-[2rem] mb-8">
+                    {[
+                      { id: 'DINHEIRO', label: 'Dinheiro', icon: Icons.Dashboard },
+                      { id: 'PIX', label: 'PIX', icon: Icons.QrCode },
+                      { id: 'CRÉDITO', label: 'Crédito', icon: Icons.CreditCard },
+                      { id: 'DÉBITO', label: 'Débito', icon: Icons.CreditCard }
+                    ].map(method => (
+                      <button
+                        key={`method2-${method.id}`}
+                        onClick={() => setPaymentMethod2(method.id)}
+                        className={`flex flex-col items-center gap-2 py-4 rounded-[1.5rem] transition-all ${paymentMethod2 === method.id ? 'bg-white text-indigo-600 shadow-md ring-2 ring-indigo-500/20' : 'text-slate-500 hover:bg-slate-300/50'}`}
+                      >
+                        <method.icon className="w-5 h-5" />
+                        <span className="text-[8px] font-black uppercase tracking-widest">{method.label}</span>
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="flex-1">
+                    {paymentMethod2 === 'DINHEIRO' && (
+                      <div className="space-y-6 animate-in zoom-in-95 duration-200">
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Valor Entregue pelo Cliente (R$)</label>
+                          <input
+                            type="number"
+                            className="w-full p-5 bg-white border-2 border-slate-200 rounded-[1.5rem] text-xl font-black outline-none focus:border-indigo-500 transition-all shadow-sm"
+                            placeholder="0,00"
+                            value={paymentData2.receivedAmount}
+                            onChange={e => setPaymentData2({ ...paymentData2, receivedAmount: e.target.value })}
+                          />
+                        </div>
+                        {(() => {
+                          const amCash = parseFloat(splitAmount2) || 0;
+                          const received = parseFloat(paymentData2.receivedAmount) || 0;
+                          if (received > amCash && amCash > 0) {
+                            return (
+                              <div className="bg-emerald-50 p-5 rounded-[1.5rem] border-2 border-emerald-100 flex items-center justify-between animate-in slide-in-from-top-2">
+                                <span className="text-[10px] font-black text-emerald-700 uppercase tracking-widest">Troco a Devolver:</span>
+                                <span className="text-2xl font-black text-emerald-600">R$ {(received - amCash).toFixed(2)}</span>
+                              </div>
+                            );
+                          }
+                          return null;
+                        })()}
+                      </div>
+                    )}
+
+                    {(paymentMethod2 === 'CRÉDITO' || paymentMethod2 === 'DÉBITO') && (
+                      <div className="space-y-5 animate-in zoom-in-95 duration-200 bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
+                        <div className="space-y-2">
+                          <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Titular Impresso no Cartão *</label>
+                          <input
+                            type="text"
+                            className="w-full p-4 bg-slate-50 border border-slate-200 rounded-[1.25rem] text-sm font-black uppercase outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all focus:bg-white"
+                            placeholder="EX: JOSE M SANTOS"
+                            value={paymentData2.cardName}
+                            onChange={e => setPaymentData2({ ...paymentData2, cardName: e.target.value })}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Número do Cartão *</label>
+                          <div className="relative">
+                            <input
+                              type="text"
+                              className="w-full p-4 bg-slate-50 border border-slate-200 rounded-[1.25rem] text-sm font-black outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all focus:bg-white pr-16"
+                              placeholder="0000 0000 0000 0000"
+                              value={paymentData2.cardNumber}
+                              onChange={e => setPaymentData2({ ...paymentData2, cardNumber: maskCardNumber(e.target.value) })}
+                            />
+                            <div className="absolute right-3 top-1/2 -translate-y-1/2 bg-white px-3 py-1.5 rounded-lg text-[9px] font-black text-slate-600 uppercase tracking-tighter shadow-sm border border-slate-100">
+                              {getCardBrand(paymentData2.cardNumber)}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Validade *</label>
+                            <input
+                              type="text"
+                              className="w-full p-4 bg-slate-50 border border-slate-200 rounded-[1.25rem] text-sm font-black outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all focus:bg-white text-center"
+                              placeholder="MM/AA"
+                              value={paymentData2.cardExpiry}
+                              onChange={e => setPaymentData2({ ...paymentData2, cardExpiry: maskExpiry(e.target.value) })}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">CVV *</label>
+                            <input
+                              type="text"
+                              className="w-full p-4 bg-slate-50 border border-slate-200 rounded-[1.25rem] text-sm font-black outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all focus:bg-white text-center"
+                              placeholder="000"
+                              maxLength={3}
+                              value={paymentData2.cardCVV}
+                              onChange={e => setPaymentData2({ ...paymentData2, cardCVV: e.target.value.replace(/\D/g, '') })}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {paymentMethod2 === 'PIX' && (
+                      <div className="flex flex-col items-center py-6 animate-in zoom-in-95 duration-200">
+                        <div className="w-56 h-56 bg-white rounded-[2.5rem] border-[6px] border-slate-100 flex items-center justify-center mb-6 relative group overflow-hidden shadow-sm">
+                          <div className="text-slate-200"><Icons.QrCode className="w-24 h-24" /></div>
+                          <div className="absolute inset-0 bg-white/70 backdrop-blur-md flex items-center justify-center flex-col gap-3 p-4 text-center">
+                            <div className="w-8 h-8 border-[5px] border-indigo-600 border-t-transparent rounded-full animate-spin mb-1"></div>
+                            <p className="text-[10px] font-black text-indigo-800 uppercase leading-snug tracking-widest cursor-default">Simulação<br />Aguardando Recebimento 2</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+              </div>
+
+              {/* Modal Footer Controls */}
+              <div className="p-8 border-t border-slate-200 bg-white rounded-b-[3rem] shrink-0 flex items-center justify-between">
+
+                <div className="flex items-center gap-3 bg-slate-100 px-5 py-3 rounded-2xl">
+                  <Icons.View className="w-5 h-5 text-slate-500" />
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-tight text-slate-700">Emitir Cupom Fiscal (NFC-e)?</p>
+                  </div>
+                  <button
+                    onClick={() => setEmitNfce(!emitNfce)}
+                    className={`w-12 h-6 rounded-full transition-all relative ml-6 ${emitNfce ? 'bg-emerald-600 ring-4 ring-emerald-500/20' : 'bg-slate-300'}`}
+                  >
+                    <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${emitNfce ? 'left-7' : 'left-1'}`}></div>
+                  </button>
+                </div>
+
+                <button
+                  onClick={() => {
+                    // The processPaymentAndFinalize handles all math parsing validations
+                    processPaymentAndFinalize();
+                  }}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-10 py-5 rounded-[2rem] font-black uppercase tracking-widest text-sm shadow-xl shadow-indigo-200 active:scale-95 transition-all flex items-center gap-3"
+                >
+                  <span>Finalizar Pagamento Dividido</span>
+                  <Icons.View className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          </div>
+        )
+      }
+
     </div >
   );
 };
