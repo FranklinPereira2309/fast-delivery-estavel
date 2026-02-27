@@ -67,7 +67,8 @@ export const verifyTable = async (req: Request, res: Response) => {
                 tableNumber,
                 status: 'available',
                 pin, // Retorna o PIN apenas no primeiro acesso (quem gera)
-                sessionToken
+                sessionToken,
+                isOwner: true
             });
         }
 
