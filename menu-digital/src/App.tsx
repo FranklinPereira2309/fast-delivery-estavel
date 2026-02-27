@@ -289,10 +289,9 @@ function AppContent() {
             </svg>
           </div>
           <div className="space-y-4">
-            <h1 className="text-3xl font-black uppercase tracking-tighter">Pedido Cancelado</h1>
-            <p className="text-slate-400 text-lg leading-relaxed">
+            <h1 className="text-3xl font-black uppercase tracking-tighter leading-tight text-white px-2">
               {cancellationMessage}
-            </p>
+            </h1>
           </div>
           <button
             onClick={() => setCancellationMessage(null)}

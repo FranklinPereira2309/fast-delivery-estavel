@@ -346,7 +346,7 @@ export const deleteOrder = async (req: Request, res: Response) => {
             if (orderDeleted && orderDeleted.isOriginDigitalMenu && orderDeleted.tableNumber) {
                 getIO().emit('digitalOrderCancelled', {
                     tableNumber: orderDeleted.tableNumber,
-                    message: "Esse pedido foi cancelado. Qualquer dúvida falar com o Garçom Responsável."
+                    message: "Pedido Cancelado, dúvidas pergunte ao Garçom"
                 });
             }
         } catch (e) {

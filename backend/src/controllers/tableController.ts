@@ -184,7 +184,7 @@ export const saveTableSession = async (req: Request, res: Response) => {
             if (rejection === 'true' && isDigitalAction) {
                 getIO().emit('digitalOrderCancelled', {
                     tableNumber: data.tableNumber,
-                    message: "Esse pedido foi cancelado. Qualquer dúvida falar com o Garçom Responsável."
+                    message: "Pedido Cancelado, dúvidas pergunte ao Garçom"
                 });
             }
         } catch (e) {
@@ -220,7 +220,7 @@ export const deleteTableSession = async (req: Request, res: Response) => {
         if (cancellation === 'true' && isDigitalAction) {
             getIO().emit('digitalOrderCancelled', {
                 tableNumber: tableNum,
-                message: "Esse pedido foi cancelado. Qualquer dúvida falar com o Garçom Responsável."
+                message: "Pedido Cancelado, dúvidas pergunte ao Garçom"
             });
         }
     } catch (e) {
