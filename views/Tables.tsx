@@ -154,7 +154,17 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
       observations: modalObservation || ''
     };
     const newItems: OrderItem[] = existingSess ? [...existingSess.items, newItem] : [newItem];
-    const startTime = existingSess?.startTime || new Date().toISOString();
+    let startTime = existingSess?.startTime ? new Date(existingSess.startTime).toISOString() : new Date().toISOString();
+
+    // If session is from a different day, reset startTime to now
+    if (existingSess?.startTime) {
+      const sessDate = new Date(existingSess.startTime);
+      const now = new Date();
+      if (sessDate.toDateString() !== now.toDateString()) {
+        console.log('Resetting stale session start time from', sessDate.toLocaleString(), 'to now');
+        startTime = now.toISOString();
+      }
+    }
 
     const newSess: TableSession = {
       tableNumber: selectedTable,

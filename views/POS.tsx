@@ -244,9 +244,20 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       // Retorna pedido da cozinha para 'REOPENED'
       const tableOrder = orders.find(o => o.id === `TABLE-${num}`);
       if (tableOrder) {
-        await db.updateOrderStatus(tableOrder.id, OrderStatus.REOPENED, currentUser!);
+        // If order is more than 4 hours old, reset its createdAt to now
+        const orderDate = new Date(tableOrder.createdAt);
+        const now = new Date();
+        const diffHours = (now.getTime() - orderDate.getTime()) / (1000 * 60 * 60);
+
+        const updatedOrder = { ...tableOrder, status: OrderStatus.REOPENED };
+        if (diffHours > 4 || orderDate.toDateString() !== now.toDateString()) {
+          console.log('Resetting stale order timestamp on reopen');
+          updatedOrder.createdAt = now.toISOString();
+        }
+
+        await db.saveOrder(updatedOrder, currentUser!);
         // UPDATE LOCAL ORDERS STATE
-        setOrders(prev => prev.map(o => o.id === tableOrder.id ? { ...o, status: OrderStatus.REOPENED } : o));
+        setOrders(prev => prev.map(o => o.id === tableOrder.id ? updatedOrder : o));
       }
 
       // REMOÇÃO IMEDIATA DA LISTA LOCAL
@@ -513,6 +524,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
     setTableNumberInput('');
     setCurrentOrderStatus(null);
     setEditingOrderId(null);
+    setPrintingOrder(null);
     setIsAvulso(false);
     setAvulsoData({ name: '', phone: '', address: '', cep: '', email: '', document: '' });
     setManualDeliveryFee(null);
