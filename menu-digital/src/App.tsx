@@ -137,13 +137,11 @@ function AppContent() {
         }
 
         // 3. Status is occupied or available (not billing, not just emptied)
-        // Clear billing or finished states if they were up, unless we are in a cancellation flow
-        if (!cancellationMessage) {
-          setIsBilling(false);
-          setIsSessionFinished(false);
-          setTableError(null);
-          fetchTableData();
-        }
+        // 3. Status is occupied or pending-digital
+        setIsBilling(false);
+        setIsSessionFinished(false);
+        setTableError(null);
+        fetchTableData();
       }
     };
 
@@ -155,9 +153,9 @@ function AppContent() {
       console.log('Socket digitalOrderCancelled received:', data);
       if (data.tableNumber === Number(tableParam)) {
         setCancellationMessage(data.message || "Pedido Cancelado, dúvidas pergunte ao Garçom");
-        // Clear billing or pin states if they were up
         setIsBilling(false);
         setIsPinRequired(false);
+        setIsSessionFinished(false); // Guarantee the Thank You screen doesn't overlap
       }
     };
 
@@ -214,6 +212,32 @@ function AppContent() {
     return (
       <div className="min-h-screen flex items-center justify-center p-6 bg-slate-900 text-white text-center">
         <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+      </div>
+    );
+  }
+
+  if (cancellationMessage) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-6 bg-slate-900 text-white text-center">
+        <div className="max-w-md w-full space-y-8 animate-fade-in animate-zoom-in">
+          <div className="w-24 h-24 bg-red-600 rounded-3xl mx-auto flex items-center justify-center shadow-2xl shadow-red-500/40 rotate-12">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </div>
+          <div className="space-y-4">
+            <h1 className="text-3xl font-black uppercase tracking-tighter leading-tight text-white px-2">
+              {cancellationMessage}
+            </h1>
+          </div>
+          <button
+            onClick={() => setCancellationMessage(null)}
+            className="w-full py-4 bg-slate-800 hover:bg-slate-700 text-white rounded-2xl font-black uppercase text-xs tracking-widest transition-all"
+          >
+            Entendi, voltar ao Menu
+          </button>
+          <p className="text-[10px] text-slate-500 pt-4 uppercase font-bold tracking-widest">Agradecemos a compreensão.</p>
+        </div>
       </div>
     );
   }
@@ -303,31 +327,7 @@ function AppContent() {
     );
   }
 
-  if (cancellationMessage) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-6 bg-slate-900 text-white text-center">
-        <div className="max-w-md w-full space-y-8 animate-fade-in animate-zoom-in">
-          <div className="w-24 h-24 bg-red-600 rounded-3xl mx-auto flex items-center justify-center shadow-2xl shadow-red-500/40 rotate-12">
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </div>
-          <div className="space-y-4">
-            <h1 className="text-3xl font-black uppercase tracking-tighter leading-tight text-white px-2">
-              {cancellationMessage}
-            </h1>
-          </div>
-          <button
-            onClick={() => setCancellationMessage(null)}
-            className="w-full py-4 bg-slate-800 hover:bg-slate-700 text-white rounded-2xl font-black uppercase text-xs tracking-widest transition-all"
-          >
-            Entendi, voltar ao Menu
-          </button>
-          <p className="text-[10px] text-slate-500 pt-4 uppercase font-bold tracking-widest">Agradecemos a compreensão.</p>
-        </div>
-      </div>
-    );
-  }
+
 
   if (isPinRequired) {
     return (
