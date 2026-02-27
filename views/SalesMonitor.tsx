@@ -315,10 +315,10 @@ const SalesMonitor: React.FC = () => {
                   <span>Subtotal R$</span>
                   <span>{(printingOrder.total - (printingOrder.deliveryFee || 0) - (printingOrder.appliedServiceFee || 0)).toFixed(2)}</span>
                 </div>
-                {printingOrder.appliedServiceFee !== undefined && (
+                {(typeof printingOrder.appliedServiceFee === 'number' || printingOrder.type === SaleType.TABLE) && (
                   <div className="flex justify-between font-black uppercase text-[10px] pb-1">
                     <span>Taxa Serviço R$</span>
-                    <span>{(printingOrder.appliedServiceFee).toFixed(2)}</span>
+                    <span>{(printingOrder.appliedServiceFee || 0).toFixed(2)}</span>
                   </div>
                 )}
                 {printingOrder.deliveryFee !== undefined && printingOrder.deliveryFee > 0 && (
@@ -384,10 +384,10 @@ const SalesMonitor: React.FC = () => {
                     <span className="text-sm font-black">R$ {printingOrder.deliveryFee.toFixed(2)}</span>
                   </div>
                 )}
-                {printingOrder.appliedServiceFee !== undefined && (
+                {(typeof printingOrder.appliedServiceFee === 'number' || printingOrder.type === SaleType.TABLE) && (
                   <div className="flex justify-between items-end mb-1">
                     <span className="font-black text-[9px] uppercase tracking-widest">TAXA SERVIÇO:</span>
-                    <span className="text-sm font-black">R$ {printingOrder.appliedServiceFee.toFixed(2)}</span>
+                    <span className="text-sm font-black">R$ {(printingOrder.appliedServiceFee || 0).toFixed(2)}</span>
                   </div>
                 )}
                 <div className="flex justify-between items-end border-t border-dashed pt-2 mb-6">
