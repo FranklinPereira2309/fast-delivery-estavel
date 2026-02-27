@@ -84,7 +84,7 @@ const handleInventoryImpact = async (tx: any, items: any[], type: 'DECREMENT' | 
         if (product && product.recipe && Array.isArray(product.recipe)) {
             for (const r of product.recipe) {
                 if (!r.inventoryItemId) continue;
-                const quantityToChange = r.quantity * item.quantity * r.wasteFactor;
+                const quantityToChange = parseFloat(r.quantity.toString()) * parseFloat(item.quantity.toString()) * parseFloat(r.wasteFactor.toString());
 
                 await tx.inventoryItem.update({
                     where: { id: r.inventoryItemId },
@@ -143,6 +143,9 @@ export const saveOrder = async (req: Request, res: Response) => {
             const oldStatus = existingOrder?.status;
             const oldDriverId = existingOrder?.driverId;
             const newStatus = order.status;
+            const tableNumIdx = order.tableNumber ? parseInt(order.tableNumber as string) : null;
+            const deliveryFeeNum = order.deliveryFee ? parseFloat(order.deliveryFee.toString()) : 0;
+            const totalNum = order.total ? parseFloat(order.total.toString()) : 0;
 
             // 1. Inventory Sync (Only on Finalization or Reversion)
             const itemsForInventory = order.items; // Use current items for stock calculation
@@ -150,9 +153,9 @@ export const saveOrder = async (req: Request, res: Response) => {
                 await handleInventoryImpact(tx, itemsForInventory, 'DECREMENT', order.id);
 
                 // Reset do PIN/Sessão se for Mesa
-                if (order.type === 'TABLE' && order.tableNumber) {
+                if (order.type === 'TABLE' && tableNumIdx !== null && !isNaN(tableNumIdx)) {
                     await tx.tableSession.deleteMany({
-                        where: { tableNumber: order.tableNumber }
+                        where: { tableNumber: tableNumIdx }
                     }).catch((e: any) => console.log('Sessão de mesa já removida ou inexistente:', e));
                 }
             } else if (newStatus !== 'DELIVERED' && oldStatus === 'DELIVERED') {
@@ -192,8 +195,8 @@ export const saveOrder = async (req: Request, res: Response) => {
                     driverId: driverId,
                     assignedAt: (driverId && driverId !== oldDriverId) ? new Date() : (driverId === null ? null : undefined),
                     waiterId: waiterId,
-                    total: order.total,
-                    deliveryFee: order.deliveryFee,
+                    total: totalNum,
+                    deliveryFee: deliveryFeeNum,
                     clientEmail: order.clientEmail || null,
                     clientDocument: order.clientDocument || null,
                     isOriginDigitalMenu: order.isOriginDigitalMenu !== undefined ? order.isOriginDigitalMenu : false, // Fix: Preserve Origin into Update
@@ -201,7 +204,7 @@ export const saveOrder = async (req: Request, res: Response) => {
                     nfeNumber: order.nfeNumber || null,
                     nfeUrl: order.nfeUrl || null,
                     nfeError: order.nfeError || null,
-                    splitAmount1: order.splitAmount1 !== undefined ? order.splitAmount1 : null,
+                    splitAmount1: order.splitAmount1 !== undefined ? parseFloat(order.splitAmount1.toString()) : null,
                     items: {
                         deleteMany: {},
                         create: order.items.map((item: any) => ({
@@ -222,14 +225,14 @@ export const saveOrder = async (req: Request, res: Response) => {
                     clientName: order.clientName,
                     clientAddress: order.clientAddress,
                     clientPhone: order.clientPhone,
-                    total: order.total,
-                    deliveryFee: order.deliveryFee,
+                    total: totalNum,
+                    deliveryFee: deliveryFeeNum,
                     status: order.status,
                     type: order.type,
                     paymentMethod: order.paymentMethod,
                     driverId: driverId,
                     assignedAt: driverId ? new Date() : null,
-                    tableNumber: order.tableNumber,
+                    tableNumber: tableNumIdx,
                     waiterId: waiterId,
                     clientEmail: order.clientEmail || null,
                     clientDocument: order.clientDocument || null,
@@ -238,7 +241,7 @@ export const saveOrder = async (req: Request, res: Response) => {
                     nfeNumber: order.nfeNumber || null,
                     nfeUrl: order.nfeUrl || null,
                     nfeError: order.nfeError || null,
-                    splitAmount1: order.splitAmount1 !== undefined ? order.splitAmount1 : null,
+                    splitAmount1: order.splitAmount1 !== undefined ? parseFloat(order.splitAmount1.toString()) : null,
                     items: {
                         create: order.items.map((item: any) => ({
                             id: item.uid,
@@ -258,7 +261,8 @@ export const saveOrder = async (req: Request, res: Response) => {
 
         if (isNewItemsAdded) {
             try {
-                getIO().emit('newOrder', { action: 'refresh', id: order.id, type: order.type, tableNumber: order.tableNumber });
+                const tableNumIdx = order.tableNumber ? parseInt(order.tableNumber as string) : null;
+                getIO().emit('newOrder', { action: 'refresh', id: order.id, type: order.type, tableNumber: tableNumIdx });
             } catch (e) {
                 console.error('Socket error emitting newOrder:', e);
             }
