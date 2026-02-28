@@ -68,7 +68,7 @@ const Receivables: React.FC<ReceivablesProps> = ({ currentUser, setActiveTab }) 
     const refreshData = async () => {
         try {
             const data = await db.getReceivables();
-            setReceivables(data);
+            setReceivables(data.filter((r: any) => r.status !== 'PAID'));
         } catch (err) {
             console.error("Error fetching receivables", err);
         }
@@ -80,9 +80,14 @@ const Receivables: React.FC<ReceivablesProps> = ({ currentUser, setActiveTab }) 
             message: `O débito de R$ ${receivable.amount.toFixed(2)} do cliente ${receivable.client.name} será enviado para a área de 'Aguardando Recebimento' no PDV. Deseja ir para lá agora?`,
             type: 'INFO',
             onCancel: closeAlert,
-            onConfirm: () => {
-                closeAlert();
-                setActiveTab('pos');
+            onConfirm: async () => {
+                try {
+                    await db.updateReceivable(receivable.id, { status: 'PROCESSING' });
+                    closeAlert();
+                    setActiveTab('pos');
+                } catch (err: any) {
+                    showAlert({ title: 'ERRO', message: err.message || 'Erro ao preparar recebimento.', type: 'DANGER' });
+                }
             }
         });
     };
@@ -219,9 +224,9 @@ const Receivables: React.FC<ReceivablesProps> = ({ currentUser, setActiveTab }) 
                         {filtered.map(receivable => {
                             const status = calculateStatus(receivable.dueDate);
                             return (
-                                <div key={receivable.id} className="bg-white border border-slate-100 rounded-[2rem] p-6 shadow-sm hover:shadow-xl transition-all group relative overflow-hidden">
-                                    <div className={`absolute top-0 right-0 px-4 py-1.5 rounded-bl-2xl text-[8px] font-black uppercase text-white ${status.color}`}>
-                                        {status.label}
+                                <div key={receivable.id} className={`bg-white border border-slate-100 rounded-[2rem] p-6 shadow-sm hover:shadow-xl transition-all group relative overflow-hidden ${receivable.status === 'PROCESSING' ? 'opacity-50 grayscale pointer-events-none' : ''}`}>
+                                    <div className={`absolute top-0 right-0 px-4 py-1.5 rounded-bl-2xl text-[8px] font-black uppercase text-white ${receivable.status === 'PROCESSING' ? 'bg-blue-600' : status.color}`}>
+                                        {receivable.status === 'PROCESSING' ? 'EM PROCESSAMENTO (PDV)' : status.label}
                                     </div>
 
                                     <div className="flex items-center gap-4 mb-6">

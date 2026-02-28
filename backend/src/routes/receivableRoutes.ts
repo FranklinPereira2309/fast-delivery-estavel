@@ -5,7 +5,7 @@ const router = express.Router();
 
 router.get('/', getReceivables);
 router.post('/', createReceivable);
-router.put('/:id', updateReceivable);
+router.patch('/:id', updateReceivable);
 router.delete('/:id', deleteReceivable);
 router.post('/:id/pay', receivePayment);
 

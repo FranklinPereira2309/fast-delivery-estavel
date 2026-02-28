@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Product, OrderItem, SaleType, Order, OrderStatus, OrderStatusLabels, User, Client, DeliveryDriver, TableSession, CashSession } from '../types';
+import { Product, OrderItem, SaleType, Order, OrderStatus, OrderStatusLabels, User, Client, DeliveryDriver, TableSession, CashSession, Receivable } from '../types';
 import { db, BusinessSettings } from '../services/db';
 import { socket } from '../services/socket';
 import { Icons, PLACEHOLDER_FOOD_IMAGE, formatImageUrl } from '../constants';
@@ -144,7 +144,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
     setClients(c);
     setPendingTables(ts.filter(t => t.status === 'billing'));
     setPendingCounterOrders(o.filter(order => order.type === SaleType.COUNTER && order.status === OrderStatus.READY));
-    setPendingReceivables(recs?.filter((r: any) => r.status === 'PENDING') || []);
+    setPendingReceivables(recs?.filter((r: any) => r.status === 'PROCESSING') || []);
     setActiveCashSession(cs);
   };
 
@@ -238,6 +238,19 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
     }
 
     setTimeout(() => setIsLoadingOrder(false), 500);
+  };
+
+  const handleReturnReceivable = async (id: string) => {
+    try {
+      await db.updateReceivable(id, { status: 'PENDING' });
+      if (isReceivingFiado === id) {
+        clearState();
+      }
+      await refreshAllData();
+      showAlert("Sucesso", "Débito devolvido para a lista de Recebimentos.", "SUCCESS");
+    } catch (err: any) {
+      showAlert("Erro", err.message || "Erro ao devolver débito.", "DANGER");
+    }
   };
 
   const loadReceivable = async (receivable: Receivable & { client: Client, order: Order }) => {
@@ -626,7 +639,15 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
     await refreshAllData();
   };
 
-  const clearState = () => {
+  const clearState = async () => {
+    if (isReceivingFiado) {
+      try {
+        await db.updateReceivable(isReceivingFiado, { status: 'PENDING' });
+        await refreshAllData();
+      } catch (err) {
+        console.error("Error reverting receivable status", err);
+      }
+    }
     setCart([]);
     setSelectedClient(null);
     setClientSearch('');
@@ -1338,20 +1359,33 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
 
               {/* Receivables (Fiado) */}
               {pendingReceivables.length > 0 && pendingReceivables.map(r => (
-                <button
+                <div
                   key={`receivable-${r.id}`}
-                  onClick={() => loadReceivable(r)}
                   className={`w-full p-4 bg-white rounded-2xl shadow-sm border border-transparent hover:border-emerald-500 hover:shadow-md transition-all text-left group ${isReceivingFiado === r.id ? 'ring-4 ring-emerald-500 border-emerald-500' : ''}`}
                 >
                   <div className="flex justify-between items-start">
-                    <p className="font-black text-slate-800 text-sm uppercase truncate max-w-[120px]">{r.client.name}</p>
-                    <span className="text-[8px] font-black bg-slate-900 text-white px-2 py-0.5 rounded-full uppercase">
-                      {getFriendlySaleType(r.order.type)}
-                    </span>
+                    <div className="flex-1 min-w-0 cursor-pointer" onClick={() => loadReceivable(r)}>
+                      <p className="font-black text-slate-800 text-sm uppercase truncate pr-2">{r.client.name}</p>
+                      <span className="text-[8px] font-black bg-slate-900 text-white px-2 py-0.5 rounded-full uppercase">
+                        {getFriendlySaleType(r.order.type)}
+                      </span>
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleReturnReceivable(r.id);
+                      }}
+                      className="w-8 h-8 flex items-center justify-center bg-red-50 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all shadow-sm"
+                      title="Devolver para Recebimentos"
+                    >
+                      -
+                    </button>
                   </div>
-                  <p className="text-[9px] font-black text-slate-400 uppercase mt-0.5 tracking-tighter">Débito: {new Date(r.createdAt).toLocaleDateString()}</p>
-                  <p className="text-[10px] font-bold text-emerald-600 mt-1 uppercase tracking-tighter">Total: R$ {r.amount.toFixed(2)}</p>
-                </button>
+                  <div className="cursor-pointer" onClick={() => loadReceivable(r)}>
+                    <p className="text-[9px] font-black text-slate-400 uppercase mt-0.5 tracking-tighter">Débito: {new Date(r.createdAt).toLocaleDateString()}</p>
+                    <p className="text-[10px] font-bold text-emerald-600 mt-1 uppercase tracking-tighter">Total: R$ {r.amount.toFixed(2)}</p>
+                  </div>
+                </div>
               ))}
 
               {pendingTables.length === 0 && pendingCounterOrders.length === 0 && pendingReceivables.length === 0 && (

@@ -64,13 +64,14 @@ export const createReceivable = async (req: Request, res: Response) => {
 export const updateReceivable = async (req: Request, res: Response) => {
     try {
         const id = req.params.id as string;
-        const { dueDate, observations } = req.body;
+        const { dueDate, observations, status } = req.body;
 
         const updated = await prisma.receivable.update({
             where: { id },
             data: {
                 ...(dueDate && { dueDate: new Date(dueDate) }),
-                ...(observations !== undefined && { observations })
+                ...(observations !== undefined && { observations }),
+                ...(status && { status })
             }
         });
 
@@ -111,16 +112,6 @@ export const receivePayment = async (req: Request, res: Response) => {
             return res.status(400).json({ error: 'Este título já foi pago' });
         }
 
-        // 1. Update Receivable Status
-        const updated = await prisma.receivable.update({
-            where: { id },
-            data: {
-                status: 'PAID',
-                paymentMethod,
-                paidAt: new Date()
-            }
-        });
-
         // 2. Inject value into current OPEN CashSession
         const openSession = await prisma.cashSession.findFirst({
             where: { status: 'OPEN' },
@@ -128,31 +119,21 @@ export const receivePayment = async (req: Request, res: Response) => {
         });
 
         if (openSession) {
-            // Find the user to log audit if needed
             const user = await prisma.user.findUnique({ where: { id: userId || openSession.openedBy } });
-
-            // Add to system totals based on paymentMethod
-            const updateData: any = {};
             const amount = receivable.amount;
+            const updateData: any = {};
 
-            if (paymentMethod === 'DINHEIRO') {
-                updateData.systemCash = { increment: amount };
-            } else if (paymentMethod === 'PIX') {
-                updateData.systemPix = { increment: amount };
-            } else if (paymentMethod === 'CRÉDITO') {
-                updateData.systemCredit = { increment: amount };
-            } else if (paymentMethod === 'DÉBITO') {
-                updateData.systemDebit = { increment: amount };
-            } else {
-                updateData.systemOthers = { increment: amount };
-            }
+            if (paymentMethod === 'DINHEIRO') updateData.systemCash = { increment: amount };
+            else if (paymentMethod === 'PIX') updateData.systemPix = { increment: amount };
+            else if (paymentMethod === 'CRÉDITO') updateData.systemCredit = { increment: amount };
+            else if (paymentMethod === 'DÉBITO') updateData.systemDebit = { increment: amount };
+            else updateData.systemOthers = { increment: amount };
 
             await prisma.cashSession.update({
                 where: { id: openSession.id },
                 data: updateData
             });
 
-            // Audit Log
             if (user) {
                 await prisma.auditLog.create({
                     data: {
@@ -165,7 +146,10 @@ export const receivePayment = async (req: Request, res: Response) => {
             }
         }
 
-        res.json(updated);
+        // 3. Delete Receivable (requested: excluded permanently on completion)
+        await prisma.receivable.delete({ where: { id } });
+
+        res.json({ success: true, message: 'Pagamento registrado e débito excluído.' });
     } catch (error) {
         console.error('Error receiving payment:', error);
         res.status(500).json({ error: 'Erro ao registrar pagamento do recebimento' });
