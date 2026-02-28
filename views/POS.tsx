@@ -1929,15 +1929,15 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       {
         isReviewModalOpen && reviewSession && (
           <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/95 backdrop-blur-2xl animate-in fade-in duration-300 p-4">
-            <div className="bg-white w-full max-w-[800px] rounded-[3.5rem] shadow-2xl overflow-hidden border border-slate-100 flex flex-col max-h-[90vh]">
-              <div className="p-10 border-b border-slate-50 shrink-0 flex justify-between items-start">
-                <div className="flex items-center gap-6">
-                  <div className="w-20 h-20 bg-blue-50 text-blue-600 rounded-[2rem] flex items-center justify-center text-4xl">
+            <div className="bg-white w-full max-w-[800px] rounded-[2rem] lg:rounded-[3.5rem] shadow-2xl overflow-hidden border border-slate-100 flex flex-col max-h-[90vh] print-container relative">
+              <div className="p-6 lg:p-10 border-b border-slate-50 shrink-0 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div className="flex items-center gap-4 lg:gap-6">
+                  <div className="w-16 h-16 lg:w-20 lg:h-20 bg-blue-50 text-blue-600 rounded-2xl lg:rounded-[2rem] flex items-center justify-center text-3xl lg:text-4xl shrink-0">
                     📄
                   </div>
                   <div>
-                    <h2 className="text-3xl font-black text-slate-800 uppercase tracking-tighter">Relatório do Caixa</h2>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2 flex items-center gap-2">
+                    <h2 className="text-2xl lg:text-3xl font-black text-slate-800 uppercase tracking-tighter leading-tight">Relatório do Caixa</h2>
+                    <p className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1 lg:mt-2 flex items-center gap-2">
                       ID: {reviewSession.id.substring(0, 8)} • Usuário: {reviewSession.closedByName}
                     </p>
                   </div>
@@ -1947,17 +1947,17 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                     setIsReviewModalOpen(false);
                     setReviewSession(null);
                     setAdminPassword('');
-                    setClosingReport({ cash: '', pix: '', credit: '', debit: '', observations: '' });
+                    setClosingReport({ cash: '', pix: '', credit: '', debit: '', others: '', observations: '' });
                   }}
-                  className="w-14 h-14 flex items-center justify-center bg-slate-100 rounded-full text-slate-400 hover:bg-red-50 hover:text-red-500 transition-all font-black text-2xl"
+                  className="w-12 h-12 lg:w-14 lg:h-14 flex items-center justify-center bg-slate-100 rounded-full text-slate-400 hover:bg-red-50 hover:text-red-500 transition-all font-black text-2xl absolute top-4 right-4 sm:static no-print"
                 >
                   ×
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-10">
-                <div className="grid grid-cols-2 gap-8 mb-10">
-                  <div className="bg-slate-50/50 p-8 rounded-[2.5rem] border border-slate-100">
+              <div className="flex-1 overflow-y-auto p-6 lg:p-10">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 mb-8 lg:mb-10">
+                  <div className="bg-slate-50/50 p-6 lg:p-8 rounded-[2rem] lg:rounded-[2.5rem] border border-slate-100">
                     <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6">Valores por Categoria</h3>
                     <div className="space-y-4">
                       <div className="flex justify-between items-center bg-white p-4 rounded-2xl border border-slate-100">
@@ -1984,15 +1984,15 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                   </div>
 
                   <div className="flex flex-col gap-4">
-                    <div className="bg-blue-600 p-8 rounded-[2.5rem] text-white shadow-2xl shadow-blue-200">
-                      <h3 className="text-[10px] font-black opacity-60 uppercase tracking-widest mb-1">Total Informado</h3>
-                      <p className="text-4xl font-black">R$ {((reviewSession.reportedCash || 0) + (reviewSession.reportedPix || 0) + (reviewSession.reportedCredit || 0) + (reviewSession.reportedDebit || 0) + (reviewSession.reportedOthers || 0)).toFixed(2)}</p>
+                    <div className="bg-blue-600 p-6 lg:p-8 rounded-[2rem] lg:rounded-[2.5rem] text-white shadow-xl lg:shadow-2xl shadow-blue-200">
+                      <h3 className="text-[9px] lg:text-[10px] font-black opacity-60 uppercase tracking-widest mb-1 lg:mb-2">Total Informado</h3>
+                      <p className="text-3xl lg:text-4xl font-black">R$ {((reviewSession.reportedCash || 0) + (reviewSession.reportedPix || 0) + (reviewSession.reportedCredit || 0) + (reviewSession.reportedDebit || 0) + (reviewSession.reportedOthers || 0)).toFixed(2)}</p>
                     </div>
 
-                    <div className={`p-8 rounded-[2.5rem] border-2 ${reviewSession.difference === 0 ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : (reviewSession.difference > 0 ? 'bg-blue-50 border-blue-100 text-blue-700' : 'bg-red-50 border-red-100 text-red-700')}`}>
-                      <h3 className="text-[10px] font-black opacity-60 uppercase tracking-widest mb-1">Diferença (vs Sistema)</h3>
-                      <p className="text-4xl font-black italic">R$ {reviewSession.difference.toFixed(2)}</p>
-                      <p className="text-[9px] font-black uppercase mt-2 opacity-80">
+                    <div className={`p-6 lg:p-8 rounded-[2rem] lg:rounded-[2.5rem] border-2 ${reviewSession.difference === 0 ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : (reviewSession.difference > 0 ? 'bg-blue-50 border-blue-100 text-blue-700' : 'bg-red-50 border-red-100 text-red-700')}`}>
+                      <h3 className="text-[9px] lg:text-[10px] font-black opacity-60 uppercase tracking-widest mb-1 lg:mb-2">Diferença (vs Sistema)</h3>
+                      <p className="text-3xl lg:text-4xl font-black italic">R$ {reviewSession.difference.toFixed(2)}</p>
+                      <p className="text-[8px] lg:text-[9px] font-black uppercase mt-2 opacity-80">
                         {reviewSession.difference === 0 ? '✓ Valores em Conformidade' : (reviewSession.difference > 0 ? '↑ Sobra de Caixa Identificada' : '↓ Falta de Caixa Identificada')}
                       </p>
                     </div>
@@ -2000,7 +2000,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                 </div>
 
                 {/* Buttons Area */}
-                <div className="bg-slate-900 rounded-[3rem] p-10 flex gap-4">
+                <div className="bg-slate-900 rounded-[2rem] lg:rounded-[3rem] p-6 lg:p-10 flex flex-col sm:flex-row gap-4 no-print">
                   <button
                     onClick={() => {
                       setClosingReport({
@@ -2036,22 +2036,22 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       {
         isAdjustModalOpen && reviewSession && (
           <div className="fixed inset-0 z-[250] flex items-center justify-center bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300 p-4">
-            <div className="bg-slate-900 w-full max-w-[800px] rounded-[3.5rem] shadow-2xl overflow-hidden border border-slate-700 flex flex-col max-h-[90vh]">
-              <div className="p-10 text-white overflow-y-auto">
-                <div className="flex justify-between items-center mb-10">
-                  <div>
-                    <h3 className="text-xl font-black uppercase tracking-tighter">Ajustes e Correções</h3>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase mt-1 tracking-widest">Apenas Administrador Master</p>
+            <div className="bg-slate-900 w-full max-w-[800px] rounded-[2.5rem] lg:rounded-[3.5rem] shadow-2xl overflow-hidden border border-slate-700 flex flex-col max-h-[90vh]">
+              <div className="p-6 lg:p-10 text-white overflow-y-auto">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 lg:mb-10 relative">
+                  <div className="pr-12">
+                    <h3 className="text-xl lg:text-2xl font-black uppercase tracking-tighter">Ajustes e Correções</h3>
+                    <p className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase mt-1 tracking-widest">Apenas Administrador Master</p>
                   </div>
                   <button
                     onClick={() => setIsAdjustModalOpen(false)}
-                    className="w-12 h-12 flex items-center justify-center bg-white/10 rounded-full text-slate-400 hover:bg-red-500 hover:text-white transition-all font-black text-xl"
+                    className="w-10 h-10 lg:w-12 lg:h-12 flex items-center justify-center bg-white/10 rounded-full text-slate-400 hover:bg-red-500 hover:text-white transition-all font-black text-xl absolute top-0 right-0 sm:static"
                   >
                     ×
                   </button>
                 </div>
 
-                <div className="grid grid-cols-2 gap-8 mb-8">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 mb-8">
                   <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
