@@ -674,7 +674,7 @@ const Logistics: React.FC = () => {
                   <p className="font-bold border-t border-dashed mt-2 pt-1 uppercase leading-tight">ENTREGA: {printingOrder.clientAddress}</p>
                 )}
                 {printingOrder.tableNumber && <p className="font-black">MESA: {printingOrder.tableNumber}</p>}
-                <p>MÉTODO: {printingOrder.paymentMethod || 'DINHEIRO'}</p>
+                <p>PAGTO: {printingOrder.paymentMethod || 'PENDENTE'}</p>
               </div>
 
               <div className="border-t border-dashed my-3 py-3">
@@ -722,7 +722,7 @@ const Logistics: React.FC = () => {
                 {printingHistoryOrder.clientAddress && (
                   <p className="font-bold border-t border-dashed mt-2 pt-1 uppercase leading-tight">ENTREGA: {printingHistoryOrder.clientAddress}</p>
                 )}
-                <p>MÉTODO: {printingHistoryOrder.paymentMethod || 'DINHEIRO'}</p>
+                <p>PAGTO: {printingHistoryOrder.paymentMethod || 'PENDENTE'}</p>
                 <p className="font-bold border-t border-dashed mt-2 pt-1 uppercase">ENTREGADOR: {getDriverName(printingHistoryOrder.driverId)}</p>
               </div>
 
