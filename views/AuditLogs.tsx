@@ -5,15 +5,21 @@ import { db } from '../services/db';
 
 const AuditLogs: React.FC = () => {
   const [logs, setLogs] = useState<AuditLog[]>([]);
+  const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
+  const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Fixed: Correctly awaiting async DB call in useEffect
+  // Allow filter refetch
+  const fetchLogs = async () => {
+    setIsLoading(true);
+    const allLogs = await db.getAuditLogs(startDate, endDate);
+    setLogs(allLogs);
+    setIsLoading(false);
+  };
+
   useEffect(() => {
-    const fetchLogs = async () => {
-      const allLogs = await db.getAuditLogs();
-      setLogs(allLogs);
-    };
     fetchLogs();
-  }, []);
+  }, [startDate, endDate]);
 
   const getActionColor = (action: AuditLog['action']) => {
     switch (action) {
@@ -25,21 +31,69 @@ const AuditLogs: React.FC = () => {
     }
   };
 
+  const handleDownloadCSV = () => {
+    if (logs.length === 0) return;
+    const headers = ['Data/Hora', 'Usuario_ID', 'Usuario_Nome', 'Acao', 'Detalhes'];
+    const rows = logs.map(log => [
+      new Date(log.timestamp).toLocaleString('pt-BR').replace(',', ''),
+      log.userId,
+      log.userName,
+      log.action,
+      `"${log.details.replace(/"/g, '""')}"`
+    ]);
+
+    const csvContent = "data:text/csv;charset=utf-8,"
+      + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `auditoria_sistema_${startDate}_a_${endDate}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  };
+
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h3 className="text-xl font-bold text-slate-800">Logs de Auditoria</h3>
           <p className="text-sm text-slate-500">Histórico completo de ações críticas do sistema.</p>
         </div>
-        <button 
-          // Fixed: Wrapped async call to refresh logs
-          onClick={async () => setLogs(await db.getAuditLogs())}
-          className="text-blue-600 text-sm font-bold flex items-center gap-2 hover:bg-blue-50 px-3 py-2 rounded-xl"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-          Atualizar
-        </button>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <input
+            type="date"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+            className="text-sm rounded-xl border border-slate-200 px-3 py-2 bg-slate-50 text-slate-700 outline-none focus:border-blue-500 transition-colors"
+          />
+          <span className="text-slate-400 text-sm">até</span>
+          <input
+            type="date"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+            className="text-sm rounded-xl border border-slate-200 px-3 py-2 bg-slate-50 text-slate-700 outline-none focus:border-blue-500 transition-colors"
+          />
+          <button
+            onClick={fetchLogs}
+            disabled={isLoading}
+            className="text-blue-600 disabled:opacity-50 text-sm font-bold flex items-center gap-2 hover:bg-blue-50 px-3 py-2 rounded-xl transition-all"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+            {isLoading ? 'Filtrando...' : 'Filtrar'}
+          </button>
+
+          <button
+            onClick={handleDownloadCSV}
+            disabled={logs.length === 0}
+            className="bg-emerald-500 disabled:bg-slate-300 disabled:cursor-not-allowed hover:bg-emerald-600 text-white shadow-sm text-sm font-bold flex items-center gap-2 px-3 py-2 rounded-xl transition-all"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" /></svg>
+            Baixar CSV
+          </button>
+        </div>
       </div>
 
       <div className="max-h-[500px] overflow-y-auto border border-slate-100 rounded-2xl">

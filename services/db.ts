@@ -52,16 +52,24 @@ class APIDBService {
 
   // Waiters
   public async getWaiters(): Promise<Waiter[]> { return this.request<Waiter[]>('/waiters'); }
-  public async saveWaiter(waiter: Waiter) { await this.request('/waiters', { method: 'POST', body: JSON.stringify(waiter) }); }
-  public async deleteWaiter(id: string) { await this.request(`/waiters/${id}`, { method: 'DELETE' }); }
+  public async saveWaiter(waiter: Waiter) {
+    await this.request('/waiters', { method: 'POST', body: JSON.stringify(waiter) });
+    await this.logAction(this.getCurrentSession()?.user || null, 'SYSTEM_UPDATE', waiter.id ? `Garçom editado: ${waiter.name}` : `Novo garçom cadastrado: ${waiter.name}`);
+  }
+  public async deleteWaiter(id: string) {
+    await this.request(`/waiters/${id}`, { method: 'DELETE' });
+    await this.logAction(this.getCurrentSession()?.user || null, 'SYSTEM_DELETE', `Garçom removido: ${id}`);
+  }
 
   // Table Management
   public async getTableSessions(): Promise<TableSession[]> { return this.request<TableSession[]>('/tables'); }
   public async saveTableSession(session: TableSession, isRejection: boolean = false) {
     await this.request(`/tables?${isRejection ? 'rejection=true' : ''}`, { method: 'POST', body: JSON.stringify(session) });
+    await this.logAction(this.getCurrentSession()?.user || null, 'SYSTEM_UPDATE', `Sessão da mesa ${session.tableNumber} salva/atualizada.`);
   }
   public async deleteTableSession(tableNumber: number, isCancellation: boolean = false) {
     await this.request(`/tables/${tableNumber}${isCancellation ? '?cancellation=true' : ''}`, { method: 'DELETE' });
+    await this.logAction(this.getCurrentSession()?.user || null, 'SYSTEM_DELETE', `Sessão da mesa ${tableNumber} cancelada/removida.`);
   }
 
   public async logAction(user: User | null, action: AuditLog['action'], details: string) {
@@ -122,24 +130,43 @@ class APIDBService {
 
   // Drivers
   public async getDrivers(): Promise<DeliveryDriver[]> { return this.request<DeliveryDriver[]>('/drivers'); }
-  public async saveDriver(driver: DeliveryDriver) { await this.request('/drivers', { method: 'POST', body: JSON.stringify(driver) }); }
-  public async deleteDriver(id: string) { await this.request(`/drivers/${id}`, { method: 'DELETE' }); }
+  public async saveDriver(driver: DeliveryDriver) {
+    await this.request('/drivers', { method: 'POST', body: JSON.stringify(driver) });
+    await this.logAction(this.getCurrentSession()?.user || null, 'SYSTEM_UPDATE', driver.id ? `Driver editado: ${driver.name}` : `Novo driver cadastrado: ${driver.name}`);
+  }
+  public async deleteDriver(id: string) {
+    await this.request(`/drivers/${id}`, { method: 'DELETE' });
+    await this.logAction(this.getCurrentSession()?.user || null, 'SYSTEM_DELETE', `Driver deletado: ${id}`);
+  }
 
   // Inventory
   public async getInventory(): Promise<InventoryItem[]> { return this.request<InventoryItem[]>('/inventory'); }
-  public async saveInventoryItem(item: InventoryItem) { await this.request('/inventory', { method: 'POST', body: JSON.stringify(item) }); }
-  public async deleteInventoryItem(id: string) { await this.request(`/inventory/${id}`, { method: 'DELETE' }); }
+  public async saveInventoryItem(item: InventoryItem) {
+    await this.request('/inventory', { method: 'POST', body: JSON.stringify(item) });
+    await this.logAction(this.getCurrentSession()?.user || null, 'SYSTEM_UPDATE', item.id ? `Item de estoque editado: ${item.name}` : `Novo item de estoque: ${item.name}`);
+  }
+  public async deleteInventoryItem(id: string) {
+    await this.request(`/inventory/${id}`, { method: 'DELETE' });
+    await this.logAction(this.getCurrentSession()?.user || null, 'SYSTEM_DELETE', `Item de estoque deletado: ${id}`);
+  }
 
   // Products
   public async getProducts(): Promise<Product[]> { return this.request<Product[]>('/products'); }
-  public async saveProduct(product: Product) { await this.request('/products', { method: 'POST', body: JSON.stringify(product) }); }
-  public async deleteProduct(id: string) { await this.request(`/products/${id}`, { method: 'DELETE' }); }
+  public async saveProduct(product: Product) {
+    await this.request('/products', { method: 'POST', body: JSON.stringify(product) });
+    await this.logAction(this.getCurrentSession()?.user || null, 'SYSTEM_UPDATE', product.id ? `Produto editado: ${product.name}` : `Novo produto criado: ${product.name}`);
+  }
+  public async deleteProduct(id: string) {
+    await this.request(`/products/${id}`, { method: 'DELETE' });
+    await this.logAction(this.getCurrentSession()?.user || null, 'SYSTEM_DELETE', `Produto deletado: ${id}`);
+  }
   public async updateProductRecipe(productId: string, recipe: RecipeItem[]) {
     const products = await this.getProducts();
     const prod = products.find(p => p.id === productId);
     if (prod) {
       prod.recipe = recipe;
       await this.saveProduct(prod);
+      await this.logAction(this.getCurrentSession()?.user || null, 'SYSTEM_UPDATE', `Ficha técnica editada: Produto ${prod.name}`);
     }
   }
 
@@ -225,26 +252,48 @@ class APIDBService {
 
   public async saveSettings(s: BusinessSettings) {
     await this.request('/settings', { method: 'POST', body: JSON.stringify(s) });
+    await this.logAction(this.getCurrentSession()?.user || null, 'SYSTEM_UPDATE', `Configurações da loja alteradas.`);
   }
 
   // Users & CRM
   public async getUsers(): Promise<User[]> { return this.request<User[]>('/users'); }
-  public async saveUser(u: User) { await this.request('/users', { method: 'POST', body: JSON.stringify(u) }); }
-  public async deleteUser(id: string) { await this.request(`/users/${id}`, { method: 'DELETE' }); }
-  public async toggleUserStatus(id: string, active: boolean) { await this.request('/users/toggle-status', { method: 'POST', body: JSON.stringify({ id, active }) }); }
-  public async resetUser(id: string) { await this.request('/users/reset', { method: 'POST', body: JSON.stringify({ id }) }); }
+  public async saveUser(u: User) {
+    await this.request('/users', { method: 'POST', body: JSON.stringify(u) });
+    await this.logAction(this.getCurrentSession()?.user || null, 'SYSTEM_UPDATE', `Usuário salvo/editado: ${u.name}`);
+  }
+  public async deleteUser(id: string) {
+    await this.request(`/users/${id}`, { method: 'DELETE' });
+    await this.logAction(this.getCurrentSession()?.user || null, 'SYSTEM_DELETE', `Usuário excluído: ${id}`);
+  }
+  public async toggleUserStatus(id: string, active: boolean) {
+    await this.request('/users/toggle-status', { method: 'POST', body: JSON.stringify({ id, active }) });
+    await this.logAction(this.getCurrentSession()?.user || null, 'SYSTEM_UPDATE', `Status do usuário ${id} alterado para ${active ? 'Ativo' : 'Inativo'}.`);
+  }
+  public async resetUser(id: string) {
+    await this.request('/users/reset', { method: 'POST', body: JSON.stringify({ id }) });
+    await this.logAction(this.getCurrentSession()?.user || null, 'SYSTEM_UPDATE', `Senha do usuário ${id} resetada.`);
+  }
 
   public async getClients(): Promise<Client[]> { return this.request<Client[]>('/clients'); }
-  public async saveClient(c: Client) { await this.request('/clients', { method: 'POST', body: JSON.stringify(c) }); }
+  public async saveClient(c: Client) {
+    await this.request('/clients', { method: 'POST', body: JSON.stringify(c) });
+    await this.logAction(this.getCurrentSession()?.user || null, 'SYSTEM_UPDATE', c.id ? `Cliente atualizado: ${c.name}` : `Novo cliente cadastrado: ${c.name}`);
+  }
   public async deleteClient(id: string, user: User) {
     await this.request(`/clients/${id}`, {
       method: 'DELETE',
       body: JSON.stringify({ user })
     });
+    await this.logAction(this.getCurrentSession()?.user || null, 'SYSTEM_DELETE', `Cliente deletado: ${id}`);
   }
 
-  public async getAuditLogs(): Promise<AuditLog[]> {
-    return this.request<AuditLog[]>('/audit');
+  public async getAuditLogs(startDate?: string, endDate?: string): Promise<AuditLog[]> {
+    let path = '/audit';
+    const params = new URLSearchParams();
+    if (startDate) params.append('start', startDate);
+    if (endDate) params.append('end', endDate);
+    if (params.toString()) path += `?${params.toString()}`;
+    return this.request<AuditLog[]>(path);
   }
 
   public async getInventoryMovements(startDate?: string, endDate?: string): Promise<InventoryMovement[]> {
@@ -282,17 +331,21 @@ class APIDBService {
   }
 
   public async openCashSession(initialBalance: number, user: User): Promise<CashSession> {
-    return this.request<CashSession>('/cash/open', {
+    const session = await this.request<CashSession>('/cash/open', {
       method: 'POST',
       body: JSON.stringify({ initialBalance, user })
     });
+    await this.logAction(user, 'SYSTEM_UPDATE', `Caixa aberto. Saldo Inicial: R$ ${initialBalance.toFixed(2)}`);
+    return session;
   }
 
   public async closeCashSession(sessionId: string, reports: { cash: number, pix: number, credit: number, debit: number, others?: number, observations?: string }, user: User): Promise<CashSession> {
-    return this.request<CashSession>(`/cash/close`, {
+    const session = await this.request<CashSession>(`/cash/close`, {
       method: 'POST',
       body: JSON.stringify({ sessionId, ...reports, user })
     });
+    await this.logAction(user, 'SYSTEM_UPDATE', `Caixa fechado (Sessão: ${sessionId}).`);
+    return session;
   }
 
   public async getClosurePreview(): Promise<{ systemCash: number, systemPix: number, systemCredit: number, systemDebit: number, totalSales: number }> {
@@ -300,10 +353,12 @@ class APIDBService {
   }
 
   public async updateCashSession(data: { id: string, cash: number, pix: number, credit: number, debit: number, others?: number, observations?: string, user: User }): Promise<CashSession> {
-    return this.request<CashSession>('/cash/update', {
+    const session = await this.request<CashSession>('/cash/update', {
       method: 'PATCH',
       body: JSON.stringify(data)
     });
+    await this.logAction(data.user, 'SYSTEM_UPDATE', `Revisão manual nos saldos do caixa fechado (Sessão: ${data.id}).`);
+    return session;
   }
 
   public async getCashSessions(startDate?: string, endDate?: string): Promise<CashSession[]> {
@@ -316,10 +371,12 @@ class APIDBService {
   }
 
   public async reopenCashSession(sessionId: string, user: User): Promise<CashSession> {
-    return this.request<CashSession>('/cash/reopen', {
+    const session = await this.request<CashSession>('/cash/reopen', {
       method: 'POST',
       body: JSON.stringify({ sessionId, user })
     });
+    await this.logAction(user, 'SYSTEM_UPDATE', `Caixa reaberto (Sessão: ${sessionId}).`);
+    return session;
   }
 
   // Feedbacks
