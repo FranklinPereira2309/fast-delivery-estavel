@@ -1748,7 +1748,13 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       {
         isOpeningModalOpen && (
           <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/90 backdrop-blur-xl animate-in fade-in duration-300">
-            <div className="bg-white w-[400px] rounded-[3rem] shadow-2xl overflow-hidden border border-slate-100 p-8 lg:p-10">
+            <div className="bg-white w-[400px] rounded-[3rem] shadow-2xl overflow-hidden border border-slate-100 p-8 lg:p-10 relative">
+              <button
+                onClick={() => setIsOpeningModalOpen(false)}
+                className="w-10 h-10 lg:w-12 lg:h-12 flex items-center justify-center bg-slate-50 rounded-full text-slate-400 hover:bg-red-50 hover:text-red-500 transition-all font-black text-xl absolute top-6 right-6"
+              >
+                ×
+              </button>
               <div className="text-center mb-8">
                 <div className="w-20 h-20 bg-blue-50 rounded-[2rem] flex items-center justify-center mx-auto mb-6">
                   <Icons.Dashboard className="w-10 h-10 text-blue-600" />
