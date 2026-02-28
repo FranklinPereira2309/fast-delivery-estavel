@@ -266,6 +266,9 @@ export const saveOrder = async (req: Request, res: Response) => {
                     appliedServiceFee: (order.appliedServiceFee !== null && order.appliedServiceFee !== undefined) ? parseFloat(order.appliedServiceFee.toString()) : null,
                     digitalPin: order.digitalPin || null,
                     digitalToken: order.digitalToken || null,
+                    mpPreferenceId: order.mpPreferenceId !== undefined ? order.mpPreferenceId : undefined,
+                    mpPaymentId: order.mpPaymentId !== undefined ? order.mpPaymentId : undefined,
+                    paymentStatus: order.paymentStatus !== undefined ? order.paymentStatus : undefined,
                     items: {
                         deleteMany: {},
                         create: (order.items || []).map((item: any) => ({
@@ -307,6 +310,9 @@ export const saveOrder = async (req: Request, res: Response) => {
                     appliedServiceFee: (order.appliedServiceFee !== null && order.appliedServiceFee !== undefined) ? parseFloat(order.appliedServiceFee.toString()) : null,
                     digitalPin: order.digitalPin || null,
                     digitalToken: order.digitalToken || null,
+                    mpPreferenceId: order.mpPreferenceId || null,
+                    mpPaymentId: order.mpPaymentId || null,
+                    paymentStatus: order.paymentStatus || 'PENDING',
                     items: {
                         create: (order.items || []).map((item: any) => ({
                             id: item.uid || item.id,

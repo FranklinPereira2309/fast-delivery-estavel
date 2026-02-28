@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@google/genai": "^1.40.0",
+    "@mercadopago/sdk-react": "^1.0.7",
     "axios": "^1.13.5",
     "lucide-react": "^0.575.0",
     "pdf-lib": "^1.17.1",
