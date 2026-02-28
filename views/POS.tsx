@@ -794,11 +794,28 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
               >
                 ×
               </button>
-              <div className="flex items-center gap-4 mb-4 px-2">
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Selecione 01 Método</span>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 px-2 mt-2 pr-16 lg:pr-20">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                  Selecione 01 Método
+                </span>
+                <button
+                  onClick={() => {
+                    setIsPaymentModalOpen(false);
+                    setPaymentMethod('DINHEIRO');
+                    setPaymentMethod2('DINHEIRO');
+                    // Calcula a divisão e vai pra tela
+                    setSplitAmount1((cartTotal / 2).toFixed(2));
+                    setSplitAmount2((cartTotal / 2).toFixed(2));
+                    setIsSplitModalOpen(true);
+                  }}
+                  className="text-[10px] font-black uppercase tracking-widest px-4 py-2.5 rounded-full transition-all bg-indigo-50 text-indigo-600 hover:bg-indigo-100 border border-indigo-100 shadow-sm active:scale-95 flex items-center justify-center gap-2"
+                >
+                  <Icons.View className="w-3 h-3 text-indigo-500" />
+                  + Selecionar 02 Métodos
+                </button>
               </div>
 
-              <div className={`grid gap-3 bg-slate-100 p-2 rounded-[2rem] mb-4 grid-cols-4`}>
+              <div className={`grid gap-3 bg-slate-100 p-2 rounded-[2rem] mb-4 grid-cols-2 md:grid-cols-4 mt-6`}>
                 {[
                   { id: 'DINHEIRO', label: 'Dinheiro', icon: Icons.Dashboard },
                   { id: 'PIX', label: 'PIX', icon: Icons.QrCode },
@@ -820,13 +837,16 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                 <div className={`grid gap-6 grid-cols-1`}>
                   {/* 1º Método de Pagamento */}
                   <div>
+                    {/* Always show the total amount */}
+                    <div className="p-6 bg-blue-50/50 rounded-[2rem] border-2 border-blue-100 flex flex-col items-center justify-center mb-6 relative overflow-hidden shadow-sm">
+                      <div className="absolute -right-4 -top-4 w-24 h-24 bg-blue-400/10 rounded-full blur-xl"></div>
+                      <div className="absolute -left-4 -bottom-4 w-24 h-24 bg-blue-600/10 rounded-full blur-xl"></div>
+                      <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-1 relative z-10">Total da Compra</span>
+                      <span className="text-4xl md:text-5xl font-black text-blue-700 tracking-tighter relative z-10">R$ {cartTotal.toFixed(2)}</span>
+                    </div>
 
                     {paymentMethod === 'DINHEIRO' && (
                       <div className="space-y-6 animate-in zoom-in-95 duration-200 mb-6">
-                        <div className="p-6 bg-blue-50/50 rounded-[2rem] border-2 border-blue-100 flex flex-col items-center justify-center">
-                          <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-1">Total da Compra</span>
-                          <span className="text-4xl font-black text-blue-700 tracking-tighter">R$ {cartTotal.toFixed(2)}</span>
-                        </div>
 
                         <div className="space-y-2">
                           <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Recebido Dinheiro (R$)</label>
