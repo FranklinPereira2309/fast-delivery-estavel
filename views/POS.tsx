@@ -242,7 +242,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
 
   const loadReceivable = async (receivable: Receivable & { client: Client, order: Order }) => {
     setIsLoadingOrder(true);
-    setCart(receivable.order.items);
+    setCart(receivable.order.items || []);
     setSaleType(receivable.order.type);
     setIsReceivingFiado(receivable.id);
     setEditingOrderId(receivable.orderId);
@@ -794,16 +794,18 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
 
   const groupedCart = useMemo(() => {
     const grouped: Record<string, { product: Product | undefined, quantity: number, price: number }> = {};
-    cart.forEach(item => {
-      if (!grouped[item.productId]) {
-        grouped[item.productId] = {
-          product: products.find(p => p.id === item.productId),
-          quantity: 0,
-          price: item.price
-        };
-      }
-      grouped[item.productId].quantity += item.quantity;
-    });
+    if (Array.isArray(cart)) {
+      cart.forEach(item => {
+        if (!grouped[item.productId]) {
+          grouped[item.productId] = {
+            product: products.find(p => p.id === item.productId),
+            quantity: 0,
+            price: item.price
+          };
+        }
+        grouped[item.productId].quantity += item.quantity;
+      });
+    }
     return Object.entries(grouped);
   }, [cart, products]);
 
@@ -833,16 +835,18 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
   const groupedPrintingItems = useMemo(() => {
     if (!printingOrder) return [];
     const grouped: Record<string, { product: Product | undefined, quantity: number, price: number }> = {};
-    printingOrder.items.forEach(item => {
-      if (!grouped[item.productId]) {
-        grouped[item.productId] = {
-          product: products.find(p => p.id === item.productId),
-          quantity: 0,
-          price: item.price
-        };
-      }
-      grouped[item.productId].quantity += item.quantity;
-    });
+    if (printingOrder && Array.isArray(printingOrder.items)) {
+      printingOrder.items.forEach(item => {
+        if (!grouped[item.productId]) {
+          grouped[item.productId] = {
+            product: products.find(p => p.id === item.productId),
+            quantity: 0,
+            price: item.price
+          };
+        }
+        grouped[item.productId].quantity += item.quantity;
+      });
+    }
     return Object.entries(grouped);
   }, [printingOrder, products]);
 

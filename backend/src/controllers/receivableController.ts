@@ -16,8 +16,12 @@ export const getReceivables = async (req: Request, res: Response) => {
         const receivables = await prisma.receivable.findMany({
             where: filter,
             include: {
-                client: { select: { name: true, phone: true } },
-                order: { select: { id: true, total: true, createdAt: true } }
+                client: true,
+                order: {
+                    include: {
+                        items: true
+                    }
+                }
             },
             orderBy: { dueDate: 'asc' }
         });
