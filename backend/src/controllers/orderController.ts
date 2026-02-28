@@ -24,7 +24,7 @@ export const getAllOrders = async (req: Request, res: Response) => {
 };
 
 export const getOrderById = async (req: Request, res: Response) => {
-    const { id } = req.params;
+    const id = req.params.id as string;
     try {
         const order = await prisma.order.findUnique({
             where: { id },
@@ -361,7 +361,7 @@ export const saveOrder = async (req: Request, res: Response) => {
 };
 
 export const deleteOrder = async (req: Request, res: Response) => {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const { user, reason } = req.body;
 
     let orderDeleted: any = null;
@@ -433,7 +433,7 @@ export const deleteOrder = async (req: Request, res: Response) => {
 };
 
 export const updateOrderStatus = async (req: Request, res: Response) => {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const { status, driverId, user, paymentMethod } = req.body;
 
     try {
@@ -580,7 +580,7 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
 };
 
 export const updateOrderItems = async (req: Request, res: Response) => {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const { items, user } = req.body;
 
     try {
@@ -655,7 +655,7 @@ export const updateOrderItems = async (req: Request, res: Response) => {
 };
 
 export const updateOrderPaymentMethod = async (req: Request, res: Response) => {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const { paymentMethod, user } = req.body;
 
     try {

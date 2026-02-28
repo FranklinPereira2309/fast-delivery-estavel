@@ -56,6 +56,11 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
     const [driverEndDate, setDriverEndDate] = useState(getLocalIsoDate());
     const [selectedDriverId, setSelectedDriverId] = useState<string>('TODOS');
 
+    // Receivables Filters
+    const [receivableFilterStatus, setReceivableFilterStatus] = useState<'ALL' | 'OVERDUE' | 'UPCOMING'>('ALL');
+    const [receivableStartDate, setReceivableStartDate] = useState(getLocalIsoDate());
+    const [receivableEndDate, setReceivableEndDate] = useState(getLocalIsoDate());
+
     const uniquePaymentMethods = useMemo(() => {
         const methods = new Set<string>(['TODOS', 'DINHEIRO', 'CARTÃO', 'PIX', 'CRÉDITO', 'DÉBITO']);
         orders.forEach(o => {
@@ -628,8 +633,18 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
             const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
             const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-            const pendingReceivables = receivables.filter(r => r.status === 'PENDING');
-            const totalPending = pendingReceivables.reduce((sum, r) => sum + r.amount, 0);
+            // Filter receivables based on current state
+            const filteredReceivables = receivables.filter(r => {
+                const withinDate = getLocalIsoDate(new Date(r.createdAt)) >= receivableStartDate && getLocalIsoDate(new Date(r.createdAt)) <= receivableEndDate;
+                const isOverdue = new Date(r.dueDate) < new Date();
+                const matchesStatus =
+                    receivableFilterStatus === 'ALL' ? r.status === 'PENDING' :
+                        receivableFilterStatus === 'OVERDUE' ? (r.status === 'PENDING' && isOverdue) :
+                            (r.status === 'PENDING' && !isOverdue);
+                return withinDate && matchesStatus;
+            });
+
+            const totalAmount = filteredReceivables.reduce((sum, r) => sum + r.amount, 0);
 
             let page = pdfDoc.addPage([595.28, 841.89]);
             const { width, height } = page.getSize();
@@ -640,32 +655,48 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
             y -= 25;
             page.drawText(businessSettings.name, { x: 50, y, size: 12, font: fontBold });
             y -= 15;
-            page.drawText(`Documento de Conferência - Emitido em: ${new Date().toLocaleString('pt-BR')}`, { x: 50, y, size: 10, font });
+            page.drawText(`Filtro: ${receivableFilterStatus === 'ALL' ? 'Todos Pendentes' : receivableFilterStatus === 'OVERDUE' ? 'Apenas Vencidos' : 'A Vencer'}`, { x: 50, y, size: 10, font });
+            y -= 15;
+            page.drawText(`Período de Pedido: ${new Date(receivableStartDate + 'T00:00:00').toLocaleDateString('pt-BR')} a ${new Date(receivableEndDate + 'T00:00:00').toLocaleDateString('pt-BR')}`, { x: 50, y, size: 10, font });
+            y -= 15;
+            page.drawText(`Emitido em: ${new Date().toLocaleString('pt-BR')}`, { x: 50, y, size: 10, font });
 
             y -= 30;
-            page.drawText(`TOTAL EM ABERTO: R$ ${totalPending.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, { x: 50, y, size: 14, font: fontBold });
+            page.drawText(`TOTAL SELECIONADO: R$ ${totalAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, { x: 50, y, size: 14, font: fontBold });
 
             y -= 40;
             // Table Header
             page.drawRectangle({ x: 50, y: y - 5, width: width - 100, height: 20, color: rgb(0.9, 0.9, 0.9) });
             page.drawText('CLIENTE', { x: 55, y, size: 8, font: fontBold });
-            page.drawText('PEDIDO', { x: 200, y, size: 8, font: fontBold });
-            page.drawText('DESDE', { x: 280, y, size: 8, font: fontBold });
+            page.drawText('TELEFONE', { x: 180, y, size: 8, font: fontBold });
+            page.drawText('DATA PEDIDO', { x: 280, y, size: 8, font: fontBold });
             page.drawText('VENCIMENTO', { x: 380, y, size: 8, font: fontBold });
-            page.drawText('VALOR', { x: 500, y, size: 8, font: fontBold });
+            page.drawText('STATUS', { x: 470, y, size: 8, font: fontBold });
+            page.drawText('VALOR', { x: 535, y, size: 8, font: fontBold });
             y -= 25;
 
-            for (const r of pendingReceivables) {
+            for (const r of filteredReceivables) {
                 if (y < 70) {
                     page = pdfDoc.addPage([595.28, 841.89]);
                     y = page.getHeight() - 50;
                 }
 
-                page.drawText(r.client.name.substring(0, 30), { x: 55, y, size: 8, font });
-                page.drawText(`#${r.orderId.substring(0, 8)}`, { x: 200, y, size: 8, font });
-                page.drawText(new Date(r.createdAt).toLocaleDateString('pt-BR'), { x: 280, y, size: 8, font });
-                page.drawText(new Date(r.dueDate).toLocaleDateString('pt-BR'), { x: 380, y, size: 8, font });
-                page.drawText(`R$ ${r.amount.toFixed(2)}`, { x: 500, y, size: 8, font: fontBold });
+                const createdAt = new Date(r.createdAt);
+                const isOverdue = new Date(r.dueDate) < new Date();
+
+                page.drawText(r.client?.name.substring(0, 25) || 'N/A', { x: 55, y, size: 7, font });
+                page.drawText(r.client?.phone || 'N/A', { x: 180, y, size: 7, font });
+                page.drawText(`${createdAt.toLocaleDateString('pt-BR')} ${createdAt.toLocaleTimeString('pt-BR').substring(0, 5)}`, { x: 280, y, size: 7, font });
+                page.drawText(new Date(r.dueDate).toLocaleDateString('pt-BR'), { x: 380, y, size: 7, font });
+
+                page.drawText(isOverdue ? 'VENCIDO' : 'EM DIA', {
+                    x: 470, y,
+                    size: 7,
+                    font: fontBold,
+                    color: isOverdue ? rgb(0.8, 0, 0) : rgb(0, 0.5, 0)
+                });
+
+                page.drawText(`R$ ${r.amount.toFixed(2)}`, { x: 535, y, size: 7, font: fontBold });
 
                 y -= 18;
             }
@@ -1307,6 +1338,106 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
                     </div>
                 )}
 
+                {/* CARD RELATÓRIO DE RECEBIMENTOS (FIADO) */}
+                {activeTab === 'RECEIVABLES' && (
+                    <div className="bg-white p-10 rounded-[3rem] shadow-sm border border-slate-100 flex flex-col h-max animate-in fade-in zoom-in-95">
+                        <div className="mb-8">
+                            <h3 className="text-2xl font-black text-slate-800 uppercase tracking-tighter flex items-center gap-3">
+                                <span className="p-3 bg-blue-50 text-blue-600 rounded-2xl"><Icons.Receivables /></span>
+                                Recebimentos (Fiado)
+                            </h3>
+                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-2 ml-14">Lista de clientes com débitos pendentes e vencimentos</p>
+                        </div>
+
+                        <div className="space-y-6 mb-8">
+                            <div className="grid grid-cols-4 gap-4">
+                                <div className="space-y-2 col-span-1">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Início (Pedido)</label>
+                                    <input type="date" value={receivableStartDate} onChange={e => setReceivableStartDate(e.target.value)} className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-sm" />
+                                </div>
+                                <div className="space-y-2 col-span-1">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Fim (Pedido)</label>
+                                    <input type="date" value={receivableEndDate} onChange={e => setReceivableEndDate(e.target.value)} className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-sm" />
+                                </div>
+                                <div className="space-y-2 col-span-2">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Status de Vencimento</label>
+                                    <select
+                                        value={receivableFilterStatus}
+                                        onChange={e => setReceivableFilterStatus(e.target.value as any)}
+                                        className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-sm"
+                                    >
+                                        <option value="ALL">TODOS OS PENDENTES</option>
+                                        <option value="OVERDUE">APENAS VENCIDOS</option>
+                                        <option value="UPCOMING">A VENCER</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="overflow-x-auto border border-slate-100 rounded-3xl">
+                            <table className="w-full text-left">
+                                <thead className="bg-slate-50 text-[10px] font-black text-slate-400 p-4 border-b border-slate-100">
+                                    <tr>
+                                        <th className="p-4 uppercase tracking-widest">Cliente / Telefone</th>
+                                        <th className="p-4 uppercase tracking-widest">Data Pedido</th>
+                                        <th className="p-4 uppercase tracking-widest">Vencimento</th>
+                                        <th className="p-4 uppercase tracking-widest">Status</th>
+                                        <th className="p-4 uppercase tracking-widest">Valor</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="text-[11px] font-bold text-slate-600 divide-y divide-slate-50">
+                                    {receivables
+                                        .filter(r => {
+                                            const withinDate = getLocalIsoDate(new Date(r.createdAt)) >= receivableStartDate && getLocalIsoDate(new Date(r.createdAt)) <= receivableEndDate;
+                                            const isOverdue = new Date(r.dueDate) < new Date();
+                                            const matchesStatus =
+                                                receivableFilterStatus === 'ALL' ? r.status === 'PENDING' :
+                                                    receivableFilterStatus === 'OVERDUE' ? (r.status === 'PENDING' && isOverdue) :
+                                                        (r.status === 'PENDING' && !isOverdue);
+                                            return withinDate && matchesStatus;
+                                        })
+                                        .map(r => {
+                                            const isOverdue = new Date(r.dueDate) < new Date();
+                                            const createdAt = new Date(r.createdAt);
+                                            return (
+                                                <tr key={r.id} className="hover:bg-slate-50/50 transition-colors">
+                                                    <td className="p-4">
+                                                        <div className="flex flex-col">
+                                                            <span className="text-slate-800">{r.client?.name || 'N/A'}</span>
+                                                            <span className="text-[9px] text-slate-400">{r.client?.phone || 'N/A'}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="p-4">
+                                                        <div className="flex flex-col">
+                                                            <span>{createdAt.toLocaleDateString('pt-BR')}</span>
+                                                            <span className="text-[9px] text-slate-400">{createdAt.toLocaleTimeString('pt-BR').substring(0, 5)}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="p-4">{new Date(r.dueDate).toLocaleDateString('pt-BR')}</td>
+                                                    <td className="p-4">
+                                                        <span className={`px-2 py-1 rounded-lg text-[9px] uppercase font-black ${isOverdue ? 'bg-red-50 text-red-500' : 'bg-emerald-50 text-emerald-500'}`}>
+                                                            {isOverdue ? 'Vencido' : 'Em Dia'}
+                                                        </span>
+                                                    </td>
+                                                    <td className="p-4 font-black">R$ {r.amount.toFixed(2)}</td>
+                                                </tr>
+                                            );
+                                        })}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <button
+                            onClick={() => generateReceivablesPDF(false)}
+                            className="mt-8 w-full py-6 bg-slate-900 hover:bg-black text-white rounded-[2rem] font-black uppercase text-xs tracking-widest shadow-xl transition-all flex items-center justify-center gap-3"
+                        >
+                            <Icons.Print />
+                            Visualizar Relatório de Recebimentos
+                        </button>
+                    </div>
+                )}
+
+
             </div>
 
             {/* MODAL DE PREVIEW DO PDF */}
@@ -1327,6 +1458,7 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
                                         else if (previewType === 'DRIVERS') generateDriversPDF(true);
                                         else if (previewType === 'INVENTORY') generateInventoryPDF(true);
                                         else if (previewType === 'CASH') generateCashPDF(true);
+                                        else if (previewType === 'RECEIVABLES') generateReceivablesPDF(true);
                                     }}
                                     className="bg-slate-900 text-white px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all flex items-center gap-2"
                                 >
