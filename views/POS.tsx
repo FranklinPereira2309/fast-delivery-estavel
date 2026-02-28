@@ -1586,23 +1586,15 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
               <button onClick={clearState} className="w-full mt-2 text-slate-400 font-black uppercase text-[10px] tracking-widest hover:text-slate-600 transition-colors">Limpar Seleção</button>
             )}
 
-            {/* ATALHO DIRETO PARA PAGAMENTO DIVIDIDO (Requisitado) */}
-            {(!editingOrderId && cart.length > 0) && (
+            {/* ATALHO DIRETO PARA PAGAMENTO (Requisitado: Somente Delivery) */}
+            {(!editingOrderId && cart.length > 0 && saleType === SaleType.OWN_DELIVERY) && (
               <button
                 onClick={() => {
-                  if (saleType === SaleType.OWN_DELIVERY) {
-                    setIsPaymentModalOpen(true);
-                  } else {
-                    setPaymentMethod('DINHEIRO');
-                    setPaymentMethod2('DINHEIRO');
-                    setSplitAmount1((cartTotal / 2).toFixed(2));
-                    setSplitAmount2((cartTotal / 2).toFixed(2));
-                    setIsSplitModalOpen(true);
-                  }
+                  setIsPaymentModalOpen(true);
                 }}
                 className="w-full mt-3 bg-slate-100 hover:bg-slate-200 text-slate-600 py-4 xl:py-5 rounded-xl xl:rounded-2xl shadow-sm uppercase text-[10px] font-black tracking-widest transition-all active:scale-95 flex flex-col items-center justify-center gap-1"
               >
-                <span>{saleType === SaleType.OWN_DELIVERY ? 'Pagamento Normal' : 'Prosseguir para Pagamento Dividido'}</span>
+                <span>Realizar Pagamento</span>
               </button>
             )}
           </div>
