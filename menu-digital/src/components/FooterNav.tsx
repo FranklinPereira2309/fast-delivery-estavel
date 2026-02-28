@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { fetchConsumption, submitFeedback } from '../api';
+import { fetchConsumption, submitFeedback, createPaymentPreference } from '../api';
+import { Wallet } from '@mercadopago/sdk-react';
 
 interface FooterNavProps {
     tableNumber: string;
@@ -11,6 +12,10 @@ const FooterNav: React.FC<FooterNavProps> = ({ tableNumber, isOwner, pin }) => {
     const [activeModal, setActiveModal] = useState<'consumption' | 'feedback' | 'pin' | null>(null);
     const [consumption, setConsumption] = useState<any>(null);
     const [loadingConsumption, setLoadingConsumption] = useState(false);
+
+    // Mercado Pago State
+    const [mpPreferenceId, setMpPreferenceId] = useState<string | null>(null);
+    const [generatingPayment, setGeneratingPayment] = useState(false);
 
     // Feedback state
     const [feedbackName, setFeedbackName] = useState('');
@@ -150,6 +155,39 @@ const FooterNav: React.FC<FooterNavProps> = ({ tableNumber, isOwner, pin }) => {
                                                 <div className="pt-6 border-t border-slate-100 flex justify-between items-center">
                                                     <span className="font-black text-slate-400 uppercase tracking-widest text-xs">Total Consumido</span>
                                                     <span className="text-2xl font-black text-blue-600">R$ {consumption.total.toFixed(2)}</span>
+                                                </div>
+
+                                                <div className="pt-4 flex flex-col gap-2">
+                                                    {!mpPreferenceId ? (
+                                                        <button
+                                                            onClick={async () => {
+                                                                setGeneratingPayment(true);
+                                                                try {
+                                                                    const pref = await createPaymentPreference({
+                                                                        items: consumption.items,
+                                                                        total: consumption.total,
+                                                                        orderType: 'TABLE',
+                                                                        clientName: `Mesa ${tableNumber} Digit.`
+                                                                    });
+                                                                    setMpPreferenceId(pref.id);
+                                                                } catch (e: any) {
+                                                                    alert(e.message || "Erro ao gerar PIX/Cartão.");
+                                                                } finally {
+                                                                    setGeneratingPayment(false);
+                                                                }
+                                                            }}
+                                                            disabled={generatingPayment || consumption.total <= 0}
+                                                            className="w-full bg-[#009EE3] text-white font-black py-4 rounded-xl shadow-lg hover:bg-[#008ACA] disabled:opacity-50 transition-all uppercase tracking-tight flex items-center justify-center gap-2"
+                                                        >
+                                                            {generatingPayment ? 'Gerando Pagamento...' : 'Pagar Agora Seguramente'}
+                                                        </button>
+                                                    ) : (
+                                                        <div className="w-full h-full fade-in zoom-in border border-slate-100 rounded-xl p-2 bg-slate-50">
+                                                            <Wallet
+                                                                initialization={{ preferenceId: mpPreferenceId, redirectMode: 'self' }}
+                                                            />
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </>
                                         ) : (
