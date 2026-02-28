@@ -55,6 +55,18 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
     const [driverEndDate, setDriverEndDate] = useState(getLocalIsoDate());
     const [selectedDriverId, setSelectedDriverId] = useState<string>('TODOS');
 
+    const uniquePaymentMethods = useMemo(() => {
+        const methods = new Set<string>(['TODOS', 'DINHEIRO', 'CARTÃO', 'PIX', 'CRÉDITO', 'DÉBITO']);
+        orders.forEach(o => {
+            if (o.paymentMethod) {
+                methods.add(o.paymentMethod.toUpperCase());
+            }
+        });
+        methods.delete('TODOS');
+        const sortedMethods = Array.from(methods).sort();
+        return ['TODOS', ...sortedMethods];
+    }, [orders]);
+
     useEffect(() => {
         fetchData();
     }, []);
@@ -159,7 +171,8 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
             const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
             const filteredOrders = orders.filter(o => {
-                const orderDate = o.createdAt.split('T')[0];
+                const orderDateObj = new Date(o.createdAt);
+                const orderDate = getLocalIsoDate(orderDateObj);
                 const inDate = orderDate >= salesStartDate && orderDate <= salesEndDate;
                 const inPayment = salesPayment === 'TODOS' || o.paymentMethod === salesPayment;
 
@@ -177,6 +190,11 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
             const orderCount = filteredOrders.length;
             const avgTicket = orderCount > 0 ? totalRevenue / orderCount : 0;
 
+            const filteredCashSessions = await db.getCashSessions(salesStartDate, salesEndDate);
+            const totalInitialCash = filteredCashSessions.reduce((sum, cs) => sum + cs.initialBalance, 0);
+            const totalReportedCash = filteredCashSessions.reduce((sum, cs) => sum + (cs.reportedCash || 0), 0);
+            const totalDiff = filteredCashSessions.reduce((sum, cs) => sum + (cs.difference || 0), 0);
+
             let page = pdfDoc.addPage([595.28, 841.89]);
             const { width, height } = page.getSize();
             let y = height - 50;
@@ -192,13 +210,22 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
 
             y -= 40;
             // KPIs
-            page.drawText('RESUMO FINANCEIRO', { x: 50, y, size: 12, font: fontBold });
+            page.drawText('RESUMO FINANCEIRO (VENDAS)', { x: 50, y, size: 12, font: fontBold });
             y -= 20;
             page.drawText(`Faturamento Total: R$ ${totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, { x: 50, y, size: 10, font });
             y -= 15;
             page.drawText(`Volume de Vendas: ${orderCount}`, { x: 50, y, size: 10, font });
             y -= 15;
             page.drawText(`Ticket Médio: R$ ${avgTicket.toFixed(2)}`, { x: 50, y, size: 10, font });
+
+            y -= 30;
+            page.drawText('RESUMO DE CAIXA', { x: 50, y, size: 12, font: fontBold });
+            y -= 20;
+            page.drawText(`Total de Dinheiro Inicial (Aberturas): R$ ${totalInitialCash.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, { x: 50, y, size: 10, font });
+            y -= 15;
+            page.drawText(`Total de Dinheiro Relatado (Fechamentos): R$ ${totalReportedCash.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, { x: 50, y, size: 10, font });
+            y -= 15;
+            page.drawText(`Falta/Sobra de Caixa (Diferenças): R$ ${totalDiff.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, { x: 50, y, size: 10, font });
 
             y -= 40;
             // Table Header
@@ -744,10 +771,9 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Pagamento</label>
                                     <select value={salesPayment} onChange={e => setSalesPayment(e.target.value)} className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-sm">
-                                        <option value="TODOS">TODOS</option>
-                                        <option value="DINHEIRO">DINHEIRO</option>
-                                        <option value="CARTÃO">CARTÃO</option>
-                                        <option value="PIX">PIX</option>
+                                        {uniquePaymentMethods.map(pm => (
+                                            <option key={pm} value={pm}>{pm}</option>
+                                        ))}
                                     </select>
                                 </div>
                                 <div className="space-y-2">
