@@ -108,7 +108,7 @@ const SalesMonitor: React.FC = () => {
                 setIsSavingPayment(true);
                 try {
                   const session = db.getCurrentSession();
-                  await db.updateOrderPaymentMethod(printingOrder!.id, newPaymentMethod, session?.user || { id: 'system', name: 'Sistema', email: '', password: '', permissions: [], createdAt: '' });
+                  await db.updateOrderPaymentMethod(printingOrder!.id, newPaymentMethod, session?.user || { id: 'system', name: 'Sistema', email: '', password: '', permissions: [], createdAt: '', active: true });
                   setPrintingOrder({ ...printingOrder!, paymentMethod: newPaymentMethod });
                   setOrders(prev => prev.map(o => o.id === printingOrder!.id ? { ...o, paymentMethod: newPaymentMethod } : o));
                   setEditingPaymentMethod(false);

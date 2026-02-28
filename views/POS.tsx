@@ -2305,27 +2305,27 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       {/* NEW SPLIT PAYMENT MODAL */}
       {
         isSplitModalOpen && (
-          <div className="fixed inset-0 z-[300] flex items-center justify-center bg-slate-900/80 backdrop-blur-md animate-in zoom-in-95 duration-300 overflow-y-auto">
-            <div className="bg-white rounded-[3rem] shadow-2xl w-[95%] max-w-[1200px] border border-slate-100 flex flex-col my-8 min-h-[90vh]">
+          <div className="fixed inset-0 z-[300] flex items-center justify-center bg-slate-900/80 backdrop-blur-md animate-in zoom-in-95 duration-300 overflow-y-auto w-full h-full p-2">
+            <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-[900px] border border-slate-100 flex flex-col my-auto max-h-[95vh]">
               {/* Header */}
-              <div className="p-8 border-b border-slate-100 shrink-0 flex justify-between items-center bg-slate-50 rounded-t-[3rem]">
-                <div className="flex items-center gap-6">
-                  <div className="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-[1.5rem] flex items-center justify-center">
-                    <Icons.View className="w-8 h-8" />
+              <div className="p-4 lg:p-6 border-b border-slate-100 shrink-0 flex justify-between items-center bg-slate-50 rounded-t-[2rem]">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-[1rem] flex items-center justify-center">
+                    <Icons.View className="w-5 h-5" />
                   </div>
                   <div>
-                    <h2 className="text-2xl font-black text-slate-800 uppercase tracking-tighter">Pagamento Dividido</h2>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Configure os dois métodos de recebimento</p>
+                    <h2 className="text-lg font-black text-slate-800 uppercase tracking-tighter">Pagamento Dividido</h2>
+                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Configure os dois métodos</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-8">
+                <div className="flex items-center gap-6">
                   <div className="text-right">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Valor da Fatura</p>
-                    <p className="text-3xl font-black text-blue-600 tracking-tighter">R$ {cartTotal.toFixed(2)}</p>
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Valor da Fatura</p>
+                    <p className="text-2xl font-black text-blue-600 tracking-tighter">R$ {cartTotal.toFixed(2)}</p>
                   </div>
                   <button
                     onClick={() => setIsSplitModalOpen(false)}
-                    className="w-14 h-14 flex items-center justify-center bg-white border-2 border-slate-100 rounded-full text-slate-400 hover:bg-red-50 hover:text-red-500 hover:border-red-100 transition-all font-black text-2xl shadow-sm"
+                    className="w-10 h-10 flex items-center justify-center bg-white border-2 border-slate-100 rounded-full text-slate-400 hover:bg-red-50 hover:text-red-500 hover:border-red-100 transition-all font-black text-xl shadow-sm"
                   >
                     ×
                   </button>
@@ -2336,16 +2336,15 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
               <div className="flex-1 grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-slate-100 overflow-y-auto">
 
                 {/* --- COLUMN 1 --- */}
-                <div className="p-6 flex flex-col bg-white">
-                  <div className="flex items-center justify-between mb-4 cursor-pointer">
+                <div className="p-4 flex flex-col bg-white">
+                  <div className="flex items-center justify-between mb-3 cursor-pointer">
                     <div className="flex items-center gap-2">
-                      <span className="w-6 h-6 rounded-full bg-slate-100 text-slate-500 font-black flex items-center justify-center text-[10px]">1</span>
-                      <h3 className="text-sm font-black text-slate-800 uppercase tracking-tighter">Primeiro Pagamento</h3>
+                      <span className="w-5 h-5 rounded-full bg-slate-100 text-slate-500 font-black flex items-center justify-center text-[9px]">1</span>
+                      <h3 className="text-xs font-black text-slate-800 uppercase tracking-tighter">Primeiro Pagamento</h3>
                     </div>
                   </div>
 
-
-                  <div className="grid grid-cols-5 gap-2 bg-slate-50 p-2 rounded-2xl mb-6">
+                  <div className="grid grid-cols-5 gap-2 bg-slate-50 p-2 rounded-xl mb-3">
                     {[
                       { id: 'DINHEIRO', label: 'Dinheiro', icon: Icons.Dashboard },
                       { id: 'PIX', label: 'PIX', icon: Icons.QrCode },
@@ -2356,7 +2355,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                       <button
                         key={`method1-${method.id}`}
                         onClick={() => setPaymentMethod(method.id)}
-                        className={`flex flex-col items-center justify-center gap-1 py-3 rounded-xl transition-all ${paymentMethod === method.id ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-200/50'}`}
+                        className={`flex flex-col items-center justify-center gap-1 py-1.5 rounded-lg transition-all ${paymentMethod === method.id ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-200/50'}`}
                       >
                         <method.icon className="w-4 h-4" />
                         <span className="text-[7px] font-black uppercase tracking-widest">{method.label}</span>
@@ -2365,12 +2364,12 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                   </div>
 
                   <div className="flex-1">
-                    <div className="mb-6 p-4 bg-indigo-50 rounded-2xl border border-indigo-100 relative overflow-hidden animate-in fade-in duration-300">
-                      <div className="absolute -right-4 -top-4 w-16 h-16 bg-blue-400/10 rounded-full blur-xl"></div>
-                      <label className="text-[10px] font-black text-indigo-800 uppercase tracking-widest ml-1 relative z-10">Valor a passar em {paymentMethod || 'Dinheiro'} (R$)</label>
+                    <div className="mb-3 p-3 bg-indigo-50 rounded-2xl border border-indigo-100 relative overflow-hidden animate-in fade-in duration-300">
+                      <div className="absolute -right-4 -top-4 w-12 h-12 bg-blue-400/10 rounded-full blur-xl"></div>
+                      <label className="text-[9px] font-black text-indigo-800 uppercase tracking-widest ml-1 relative z-10">Valor a passar em {paymentMethod || 'Dinheiro'} (R$)</label>
                       <input
                         type="number"
-                        className="relative z-10 w-full mt-2 p-4 bg-white border-2 border-indigo-200 focus:border-indigo-500 rounded-2xl text-2xl font-black outline-none text-indigo-700 transition-all shadow-sm focus:ring-4 focus:ring-indigo-500/10"
+                        className="relative z-10 w-full mt-1 p-3 bg-white border-2 border-indigo-200 focus:border-indigo-500 rounded-xl text-xl font-black outline-none text-indigo-700 transition-all shadow-sm focus:ring-4 focus:ring-indigo-500/10"
                         value={splitAmount1}
                         onChange={e => {
                           setSplitAmount1(e.target.value);
@@ -2381,12 +2380,12 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                       />
                     </div>
                     {paymentMethod === 'DINHEIRO' && (
-                      <div className="space-y-4 animate-in zoom-in-95 duration-200">
+                      <div className="space-y-2 animate-in zoom-in-95 duration-200">
                         <div className="space-y-1">
-                          <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Valor Entregue pelo Cliente (R$)</label>
+                          <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-1">Valor Entregue pelo Cliente (R$)</label>
                           <input
                             type="number"
-                            className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-lg font-black outline-none focus:border-indigo-500 transition-all"
+                            className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-base font-black outline-none focus:border-indigo-500 transition-all"
                             placeholder="0,00"
                             value={paymentData.receivedAmount}
                             onChange={e => setPaymentData({ ...paymentData, receivedAmount: e.target.value })}
@@ -2397,9 +2396,9 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                           const received = parseFloat(paymentData.receivedAmount) || 0;
                           if (received > amCash && amCash > 0) {
                             return (
-                              <div className="bg-emerald-50 p-4 mt-4 rounded-2xl border border-emerald-100 flex items-center justify-between animate-in slide-in-from-top-2">
-                                <span className="text-[9px] font-black text-emerald-700 uppercase tracking-widest">Troco a Devolver:</span>
-                                <span className="text-xl font-black text-emerald-600">R$ {(received - amCash).toFixed(2)}</span>
+                              <div className="bg-emerald-50 p-3 mt-2 rounded-xl border border-emerald-100 flex items-center justify-between animate-in slide-in-from-top-2">
+                                <span className="text-[8px] font-black text-emerald-700 uppercase tracking-widest">Troco a Devolver:</span>
+                                <span className="text-lg font-black text-emerald-600">R$ {(received - amCash).toFixed(2)}</span>
                               </div>
                             );
                           }
@@ -2409,48 +2408,48 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                     )}
 
                     {(paymentMethod === 'CRÉDITO' || paymentMethod === 'DÉBITO') && (
-                      <div className="space-y-3 animate-in zoom-in-95 duration-200 bg-slate-50 p-4 rounded-xl">
+                      <div className="space-y-2 animate-in zoom-in-95 duration-200 bg-slate-50 p-3 rounded-xl">
                         <div className="space-y-1">
-                          <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest ml-1">Titular Impresso no Cartão *</label>
+                          <label className="text-[7px] font-black text-slate-400 uppercase tracking-widest ml-1">Titular Impresso no Cartão *</label>
                           <input
                             type="text"
-                            className="w-full p-3 bg-white border border-slate-200 rounded-xl text-xs font-black uppercase outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all shadow-sm"
+                            className="w-full p-2 bg-white border border-slate-200 rounded-lg text-xs font-black uppercase outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition-all shadow-sm"
                             placeholder="EX: MARIA S SILVA"
                             value={paymentData.cardName}
                             onChange={e => setPaymentData({ ...paymentData, cardName: e.target.value })}
                           />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest ml-1">Número do Cartão *</label>
+                          <label className="text-[7px] font-black text-slate-400 uppercase tracking-widest ml-1">Número do Cartão *</label>
                           <div className="relative">
                             <input
                               type="text"
-                              className="w-full p-3 bg-white border border-slate-200 rounded-xl text-xs font-black outline-none focus:border-blue-500 transition-all shadow-sm pr-16"
+                              className="w-full p-2 bg-white border border-slate-200 rounded-lg text-xs font-black outline-none focus:border-blue-500 transition-all shadow-sm pr-16"
                               placeholder="0000 0000 0000 0000"
                               value={paymentData.cardNumber}
                               onChange={e => setPaymentData({ ...paymentData, cardNumber: maskCardNumber(e.target.value) })}
                             />
-                            <div className="absolute right-2 top-1/2 -translate-y-1/2 bg-slate-100 px-2 py-1 rounded-md text-[8px] font-black text-slate-600 uppercase shadow-sm">
+                            <div className="absolute right-2 top-1/2 -translate-y-1/2 bg-slate-100 px-2 py-0.5 rounded-md text-[7px] font-black text-slate-600 uppercase shadow-sm">
                               {getCardBrand(paymentData.cardNumber)}
                             </div>
                           </div>
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-2 gap-3">
                           <div className="space-y-1">
-                            <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest ml-1">Validade *</label>
+                            <label className="text-[7px] font-black text-slate-400 uppercase tracking-widest ml-1">Validade *</label>
                             <input
                               type="text"
-                              className="w-full p-3 bg-white border border-slate-200 rounded-xl text-xs font-black outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all text-center shadow-sm"
+                              className="w-full p-2 bg-white border border-slate-200 rounded-lg text-xs font-black outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition-all text-center shadow-sm"
                               placeholder="MM/AA"
                               value={paymentData.cardExpiry}
                               onChange={e => setPaymentData({ ...paymentData, cardExpiry: maskExpiry(e.target.value) })}
                             />
                           </div>
                           <div className="space-y-1">
-                            <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest ml-1">CVV *</label>
+                            <label className="text-[7px] font-black text-slate-400 uppercase tracking-widest ml-1">CVV *</label>
                             <input
                               type="text"
-                              className="w-full p-3 bg-white border border-slate-200 rounded-xl text-xs font-black outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all text-center shadow-sm"
+                              className="w-full p-2 bg-white border border-slate-200 rounded-lg text-xs font-black outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition-all text-center shadow-sm"
                               placeholder="000"
                               maxLength={3}
                               value={paymentData.cardCVV}
@@ -2462,12 +2461,12 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                     )}
 
                     {paymentMethod === 'PIX' && (
-                      <div className="flex flex-col items-center py-4 animate-in zoom-in-95 duration-200">
-                        <div className="w-40 h-40 bg-slate-50 rounded-[2rem] border-[4px] border-blue-50 flex items-center justify-center mb-4 relative group overflow-hidden shadow-inner">
-                          <div className="text-slate-200"><Icons.QrCode className="w-20 h-20" /></div>
-                          <div className="absolute inset-0 bg-white/70 backdrop-blur-md flex items-center justify-center flex-col gap-2 p-2 text-center">
-                            <div className="w-6 h-6 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                            <p className="text-[8px] font-black text-blue-800 uppercase leading-tight cursor-default">Aguardando...</p>
+                      <div className="flex flex-col items-center py-2 animate-in zoom-in-95 duration-200">
+                        <div className="w-28 h-28 bg-slate-50 rounded-[1.5rem] border-[4px] border-blue-50 flex items-center justify-center mb-2 relative group overflow-hidden shadow-inner">
+                          <div className="text-slate-200"><Icons.QrCode className="w-16 h-16" /></div>
+                          <div className="absolute inset-0 bg-white/70 backdrop-blur-md flex items-center justify-center flex-col gap-1 p-2 text-center">
+                            <div className="w-5 h-5 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                            <p className="text-[7px] font-black text-blue-800 uppercase leading-tight cursor-default">Aguardando...</p>
                           </div>
                         </div>
                       </div>
@@ -2477,16 +2476,15 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
 
 
                 {/* --- COLUMN 2 --- */}
-                <div className="p-6 flex flex-col bg-slate-50">
-                  <div className="flex items-center justify-between mb-4 cursor-pointer relative">
+                <div className="p-4 flex flex-col bg-slate-50">
+                  <div className="flex items-center justify-between mb-3 cursor-pointer relative">
                     <div className="flex items-center gap-2">
-                      <span className="w-6 h-6 rounded-full bg-slate-200 text-slate-600 font-black flex items-center justify-center text-[10px] shadow-inner">2</span>
-                      <h3 className="text-sm font-black text-slate-800 uppercase tracking-tighter">Segundo Pagamento</h3>
+                      <span className="w-5 h-5 rounded-full bg-slate-200 text-slate-600 font-black flex items-center justify-center text-[9px] shadow-inner">2</span>
+                      <h3 className="text-xs font-black text-slate-800 uppercase tracking-tighter">Segundo Pagamento</h3>
                     </div>
                   </div>
 
-
-                  <div className="grid grid-cols-5 gap-2 bg-slate-200/50 p-2 rounded-2xl mb-6">
+                  <div className="grid grid-cols-5 gap-2 bg-slate-200/50 p-2 rounded-xl mb-3">
                     {[
                       { id: 'DINHEIRO', label: 'Dinheiro', icon: Icons.Dashboard },
                       { id: 'PIX', label: 'PIX', icon: Icons.QrCode },
@@ -2497,7 +2495,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                       <button
                         key={`method2-${method.id}`}
                         onClick={() => setPaymentMethod2(method.id)}
-                        className={`flex flex-col items-center gap-1 py-3 rounded-xl transition-all ${paymentMethod2 === method.id ? 'bg-white text-indigo-600 shadow-md ring-2 ring-indigo-500/20' : 'text-slate-500 hover:bg-slate-300/50'}`}
+                        className={`flex flex-col items-center gap-1 py-1.5 rounded-lg transition-all ${paymentMethod2 === method.id ? 'bg-white text-indigo-600 shadow-md ring-2 ring-indigo-500/20' : 'text-slate-500 hover:bg-slate-300/50'}`}
                       >
                         <method.icon className="w-4 h-4" />
                         <span className="text-[7px] font-black uppercase tracking-widest">{method.label}</span>
@@ -2506,12 +2504,12 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                   </div>
 
                   <div className="flex-1">
-                    <div className="mb-6 p-4 bg-indigo-50 rounded-2xl border border-indigo-100 relative overflow-hidden animate-in fade-in duration-300">
-                      <div className="absolute -right-4 -top-4 w-16 h-16 bg-blue-400/10 rounded-full blur-xl"></div>
-                      <label className="text-[10px] font-black text-indigo-800 uppercase tracking-widest ml-1 relative z-10">Valor a passar em {paymentMethod2 || 'Dinheiro'} (R$)</label>
+                    <div className="mb-3 p-3 bg-indigo-50 rounded-2xl border border-indigo-100 relative overflow-hidden animate-in fade-in duration-300">
+                      <div className="absolute -right-4 -top-4 w-12 h-12 bg-blue-400/10 rounded-full blur-xl"></div>
+                      <label className="text-[9px] font-black text-indigo-800 uppercase tracking-widest ml-1 relative z-10">Valor a passar em {paymentMethod2 || 'Dinheiro'} (R$)</label>
                       <input
                         type="number"
-                        className="relative z-10 w-full mt-2 p-4 bg-white border-2 border-indigo-200 focus:border-indigo-500 rounded-2xl text-2xl font-black outline-none text-indigo-700 transition-all shadow-sm focus:ring-4 focus:ring-indigo-500/10"
+                        className="relative z-10 w-full mt-1 p-3 bg-white border-2 border-indigo-200 focus:border-indigo-500 rounded-xl text-xl font-black outline-none text-indigo-700 transition-all shadow-sm focus:ring-4 focus:ring-indigo-500/10"
                         value={splitAmount2}
                         onChange={e => {
                           setSplitAmount2(e.target.value);
@@ -2522,12 +2520,12 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                       />
                     </div>
                     {paymentMethod2 === 'DINHEIRO' && (
-                      <div className="space-y-4 animate-in zoom-in-95 duration-200">
+                      <div className="space-y-2 animate-in zoom-in-95 duration-200">
                         <div className="space-y-1">
-                          <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Valor Recebido (R$)</label>
+                          <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-1">Valor Recebido (R$)</label>
                           <input
                             type="number"
-                            className="w-full p-4 bg-white border-2 border-slate-200 rounded-2xl text-lg font-black outline-none focus:border-indigo-500 transition-all shadow-sm"
+                            className="w-full p-3 bg-white border-2 border-slate-200 rounded-xl text-base font-black outline-none focus:border-indigo-500 transition-all shadow-sm"
                             placeholder="0,00"
                             value={paymentData2.receivedAmount}
                             onChange={e => setPaymentData2({ ...paymentData2, receivedAmount: e.target.value })}
@@ -2538,9 +2536,9 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                           const received = parseFloat(paymentData2.receivedAmount) || 0;
                           if (received > amCash && amCash > 0) {
                             return (
-                              <div className="bg-emerald-50 p-4 mt-4 rounded-2xl border border-emerald-100 flex items-center justify-between animate-in slide-in-from-top-2">
-                                <span className="text-[9px] font-black text-emerald-700 uppercase tracking-widest">Troco a Devolver:</span>
-                                <span className="text-xl font-black text-emerald-600">R$ {(received - amCash).toFixed(2)}</span>
+                              <div className="bg-emerald-50 p-3 mt-2 rounded-xl border border-emerald-100 flex items-center justify-between animate-in slide-in-from-top-2">
+                                <span className="text-[8px] font-black text-emerald-700 uppercase tracking-widest">Troco a Devolver:</span>
+                                <span className="text-lg font-black text-emerald-600">R$ {(received - amCash).toFixed(2)}</span>
                               </div>
                             );
                           }
@@ -2550,48 +2548,48 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                     )}
 
                     {(paymentMethod2 === 'CRÉDITO' || paymentMethod2 === 'DÉBITO') && (
-                      <div className="space-y-3 animate-in zoom-in-95 duration-200 bg-white p-4 rounded-xl shadow-sm border border-slate-100">
+                      <div className="space-y-2 animate-in zoom-in-95 duration-200 bg-white p-3 rounded-xl shadow-sm border border-slate-100">
                         <div className="space-y-1">
-                          <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-1">Titular Impresso no Cartão *</label>
+                          <label className="text-[7px] font-black text-slate-500 uppercase tracking-widest ml-1">Titular Impresso no Cartão *</label>
                           <input
                             type="text"
-                            className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-black uppercase outline-none focus:border-indigo-500 transition-all focus:bg-white"
+                            className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-black uppercase outline-none focus:border-indigo-500 transition-all focus:bg-white"
                             placeholder="EX: JOSE M SANTOS"
                             value={paymentData2.cardName}
                             onChange={e => setPaymentData2({ ...paymentData2, cardName: e.target.value })}
                           />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-1">Número do Cartão *</label>
+                          <label className="text-[7px] font-black text-slate-500 uppercase tracking-widest ml-1">Número do Cartão *</label>
                           <div className="relative">
                             <input
                               type="text"
-                              className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-black uppercase outline-none focus:border-indigo-500 transition-all focus:bg-white pr-16"
+                              className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-black uppercase outline-none focus:border-indigo-500 transition-all focus:bg-white pr-16"
                               placeholder="0000 0000 0000 0000"
                               value={paymentData2.cardNumber}
                               onChange={e => setPaymentData2({ ...paymentData2, cardNumber: maskCardNumber(e.target.value) })}
                             />
-                            <div className="absolute right-2 top-1/2 -translate-y-1/2 bg-white px-2 py-1 rounded-md text-[8px] font-black text-slate-600 uppercase shadow-sm border border-slate-100">
+                            <div className="absolute right-2 top-1/2 -translate-y-1/2 bg-white px-2 py-0.5 rounded-md text-[7px] font-black text-slate-600 uppercase shadow-sm border border-slate-100">
                               {getCardBrand(paymentData2.cardNumber)}
                             </div>
                           </div>
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-2 gap-3">
                           <div className="space-y-1">
-                            <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-1">Validade *</label>
+                            <label className="text-[7px] font-black text-slate-500 uppercase tracking-widest ml-1">Validade *</label>
                             <input
                               type="text"
-                              className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-black uppercase outline-none focus:border-indigo-500 transition-all focus:bg-white text-center"
+                              className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-black uppercase outline-none focus:border-indigo-500 transition-all focus:bg-white text-center"
                               placeholder="MM/AA"
                               value={paymentData2.cardExpiry}
                               onChange={e => setPaymentData2({ ...paymentData2, cardExpiry: maskExpiry(e.target.value) })}
                             />
                           </div>
                           <div className="space-y-1">
-                            <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-1">CVV *</label>
+                            <label className="text-[7px] font-black text-slate-500 uppercase tracking-widest ml-1">CVV *</label>
                             <input
                               type="text"
-                              className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-black uppercase outline-none focus:border-indigo-500 transition-all focus:bg-white text-center"
+                              className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-black uppercase outline-none focus:border-indigo-500 transition-all focus:bg-white text-center"
                               placeholder="000"
                               maxLength={3}
                               value={paymentData2.cardCVV}
@@ -2603,12 +2601,12 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                     )}
 
                     {paymentMethod2 === 'PIX' && (
-                      <div className="flex flex-col items-center py-4 animate-in zoom-in-95 duration-200">
-                        <div className="w-40 h-40 bg-white rounded-[2rem] border-[4px] border-slate-100 flex items-center justify-center mb-4 relative group overflow-hidden shadow-sm">
-                          <div className="text-slate-200"><Icons.QrCode className="w-20 h-20" /></div>
-                          <div className="absolute inset-0 bg-white/70 backdrop-blur-md flex items-center justify-center flex-col gap-2 p-2 text-center">
-                            <div className="w-6 h-6 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-                            <p className="text-[8px] font-black text-indigo-800 uppercase leading-tight">Aguardando...</p>
+                      <div className="flex flex-col items-center py-2 animate-in zoom-in-95 duration-200">
+                        <div className="w-28 h-28 bg-white rounded-[1.5rem] border-[4px] border-slate-100 flex items-center justify-center mb-2 relative group overflow-hidden shadow-sm">
+                          <div className="text-slate-200"><Icons.QrCode className="w-16 h-16" /></div>
+                          <div className="absolute inset-0 bg-white/70 backdrop-blur-md flex items-center justify-center flex-col gap-1 p-2 text-center">
+                            <div className="w-5 h-5 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+                            <p className="text-[7px] font-black text-indigo-800 uppercase leading-tight">Aguardando...</p>
                           </div>
                         </div>
                       </div>
@@ -2619,19 +2617,19 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
               </div>
 
               {/* Modal Footer Controls */}
-              <div className="p-4 lg:p-6 border-t border-slate-200 bg-white rounded-b-[3rem] shrink-0 flex items-center justify-between">
+              <div className="p-3 lg:p-4 border-t border-slate-200 bg-white rounded-b-[2rem] shrink-0 flex items-center justify-between">
                 <div>
                   {!!isReceivingFiado && (
-                    <div className="flex items-center gap-2 bg-slate-100 px-4 py-2 rounded-xl">
-                      <Icons.View className="w-5 h-5 text-slate-500" />
+                    <div className="flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded-lg">
+                      <Icons.View className="w-4 h-4 text-slate-500" />
                       <div>
-                        <p className="text-[10px] font-black uppercase tracking-tight text-slate-700">Emitir Cupom Fiscal (NFC-e)?</p>
+                        <p className="text-[9px] font-black uppercase tracking-tight text-slate-700">Emitir Cupom Fiscal (NFC-e)?</p>
                       </div>
                       <button
                         onClick={() => setEmitNfce(!emitNfce)}
-                        className={`w-12 h-6 rounded-full transition-all relative ml-6 ${emitNfce ? 'bg-emerald-600 ring-4 ring-emerald-500/20' : 'bg-slate-300'}`}
+                        className={`w-10 h-5 rounded-full transition-all relative ml-4 ${emitNfce ? 'bg-emerald-600 ring-2 ring-emerald-500/20' : 'bg-slate-300'}`}
                       >
-                        <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${emitNfce ? 'left-7' : 'left-1'}`}></div>
+                        <div className={`absolute top-[2px] w-4 h-4 rounded-full bg-white transition-all ${emitNfce ? 'left-5' : 'left-0.5'}`}></div>
                       </button>
                     </div>
                   )}
@@ -2641,7 +2639,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                   onClick={() => {
                     processPaymentAndFinalize();
                   }}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-3xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-indigo-200 active:scale-95 transition-all flex items-center gap-2"
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-2xl font-black uppercase tracking-widest text-[9px] shadow-lg shadow-indigo-200 active:scale-95 transition-all flex items-center gap-2"
                 >
                   <span>Finalizar Pagamento Dividido</span>
                   <Icons.View className="w-4 h-4" />

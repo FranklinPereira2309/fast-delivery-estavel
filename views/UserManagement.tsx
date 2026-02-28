@@ -87,7 +87,8 @@ const UserManagement: React.FC = () => {
       email: formData.email,
       password: formData.password,
       permissions: formData.permissions,
-      createdAt: editingUser?.createdAt || new Date().toISOString()
+      createdAt: editingUser?.createdAt || new Date().toISOString(),
+      active: editingUser?.active ?? true
     };
 
     await db.saveUser(userData);
