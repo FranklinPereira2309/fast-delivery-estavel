@@ -24,7 +24,7 @@ function AppContent() {
   const [currentPin, setCurrentPin] = useState<string | null>(null);
   const [isOwner, setIsOwner] = useState(false);
   const [isSessionFinished, setIsSessionFinished] = useState(false);
-  const [toast, setToast] = useState<{ message: string; type: 'info' | 'error' | 'success' } | null>(null);
+  const [banner, setBanner] = useState<{ message: string; type: 'info' | 'error' | 'success' } | null>(null);
 
   // Ref para rastrear estados terminais em tempo real e evitar "stale closures"
   const terminalStateRef = useRef({
@@ -176,10 +176,8 @@ function AppContent() {
       if (data.tableNumber === Number(tableParam)) {
         setIsBilling(false);
         setIsPinRequired(false);
-        // Em vez de bloquear a tela toda, mostra um Toast
-        setToast({ message: data.message || "Pedido Cancelado, dúvidas pergunte ao Garçom", type: 'error' });
-        // Limpar toast após 8 segundos
-        setTimeout(() => setToast(null), 8000);
+        // Exibe um Banner no topo
+        setBanner({ message: data.message || "Pedido Cancelado, dúvidas pergunte ao Garçom", type: 'error' });
       }
     };
 
@@ -241,29 +239,29 @@ function AppContent() {
     );
   }
 
-  // Toast de Notificação
-  const renderToast = () => {
-    if (!toast) return null;
+  // Banner de Notificação no Topo
+  const renderBanner = () => {
+    if (!banner) return null;
     return (
-      <div className="fixed top-24 left-4 right-4 z-[100] animate-slide-up-fade">
-        <div className={`p-4 rounded-2xl shadow-2xl flex items-center gap-3 border ${toast.type === 'error' ? 'bg-red-600 border-red-500 text-white' : 'bg-slate-900 border-slate-800 text-white'}`}>
-          <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center shrink-0">
-            {toast.type === 'error' ? (
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+      <div className={`w-full z-[100] animate-slide-down shadow-lg border-b ${banner.type === 'error' ? 'bg-red-600 border-red-500 text-white' : 'bg-slate-900 border-slate-800 text-white'}`}>
+        <div className="max-w-md mx-auto p-4 flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+            {banner.type === 'error' ? (
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
             ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             )}
           </div>
           <div className="flex-1">
-            <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Notificação</p>
-            <p className="text-xs font-bold leading-tight uppercase">{toast.message}</p>
+            <p className="text-[9px] font-black uppercase tracking-[0.2em] opacity-80">Aviso do Sistema</p>
+            <p className="text-xs font-bold leading-tight uppercase">{banner.message}</p>
           </div>
-          <button onClick={() => setToast(null)} className="p-2 opacity-50 hover:opacity-100">
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <button onClick={() => setBanner(null)} className="p-2 bg-black/10 hover:bg-black/20 rounded-full transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
@@ -416,7 +414,7 @@ function AppContent() {
 
   return (
     <div className="min-h-screen max-w-md mx-auto relative shadow-2xl bg-slate-50 overflow-hidden">
-      {renderToast()}
+      {renderBanner()}
       {/* Header Fixo */}
       <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-100 p-4 pt-6 flex justify-between items-center">
         <div>
