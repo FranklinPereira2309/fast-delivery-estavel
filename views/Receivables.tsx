@@ -12,8 +12,6 @@ interface ReceivablesProps {
 const Receivables: React.FC<ReceivablesProps> = ({ currentUser }) => {
     const [receivables, setReceivables] = useState<(Receivable & { client: Client })[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingReceivable, setEditingReceivable] = useState<any>(null);
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
     const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
     const [isEditItemsOpen, setIsEditItemsOpen] = useState(false);
@@ -38,13 +36,22 @@ const Receivables: React.FC<ReceivablesProps> = ({ currentUser }) => {
 
     const [adminPassword, setAdminPassword] = useState('');
 
-    const showAlert = (config: Partial<typeof alertConfig>) => {
-        setAlertConfig(prev => ({ ...prev, isOpen: true, ...config }));
-    };
-
     const closeAlert = () => {
         setAlertConfig(prev => ({ ...prev, isOpen: false }));
         setAdminPassword('');
+    };
+
+    const showAlert = (config: Partial<typeof alertConfig>) => {
+        setAlertConfig({
+            isOpen: true,
+            title: '',
+            message: '',
+            type: 'INFO',
+            onConfirm: closeAlert,
+            onCancel: undefined,
+            showPasswordInput: false,
+            ...config
+        });
     };
 
     useEffect(() => {
