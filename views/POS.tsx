@@ -492,7 +492,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
         const shouldEmit = emitNfce;
 
         setIsReceivingFiado(null); // Prevents clearState from trying to revert a deleted receivable
-        await clearState();
+        await clearState(true); // Skip revert of the fiado status since it was just paid and deleted
         await refreshAllData();
 
         if (shouldEmit && currentOrderData) {
@@ -672,8 +672,8 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
     await refreshAllData();
   };
 
-  const clearState = async () => {
-    if (isReceivingFiado) {
+  const clearState = async (skipRevertFiado: boolean = false) => {
+    if (isReceivingFiado && !skipRevertFiado) {
       try {
         await db.updateReceivable(isReceivingFiado, { status: 'PENDING' });
         await refreshAllData();
@@ -1725,7 +1725,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
             </button>
 
             {editingOrderId && (
-              <button onClick={clearState} className="w-full mt-2 text-slate-400 font-black uppercase text-[10px] tracking-widest hover:text-slate-600 transition-colors">
+              <button onClick={() => clearState()} className="w-full mt-2 text-slate-400 font-black uppercase text-[10px] tracking-widest hover:text-slate-600 transition-colors">
                 {isReceivingFiado ? 'Limpar / Devolver p/ Lista' : 'Limpar Seleção'}
               </button>
             )}
