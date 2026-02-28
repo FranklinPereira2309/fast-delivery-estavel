@@ -180,6 +180,17 @@ class APIDBService {
     });
   }
 
+  public async getOrderById(id: string): Promise<Order> {
+    return this.request<Order>(`/orders/${id}`);
+  }
+
+  public async updateOrderItems(id: string, items: { productId: string, quantity: number, price: number, observations?: string }[], user: User): Promise<Order> {
+    return this.request<Order>(`/orders/${id}/items`, {
+      method: 'PUT',
+      body: JSON.stringify({ items, user })
+    });
+  }
+
   public async updateOrderPaymentMethod(orderId: string, paymentMethod: string, user: User) {
     await this.request(`/orders/${orderId}/payment`, {
       method: 'PATCH',

@@ -23,6 +23,20 @@ export const getAllOrders = async (req: Request, res: Response) => {
     res.json(orders.map(mapOrderResponse));
 };
 
+export const getOrderById = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    try {
+        const order = await prisma.order.findUnique({
+            where: { id },
+            include: { items: true }
+        });
+        if (!order) return res.status(404).json({ error: 'Pedido não encontrado' });
+        res.json(mapOrderResponse(order));
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
 const syncClientStats = async (tx: any, order: any, oldStatus?: string) => {
     const isNewFinalization = order.status === 'DELIVERED' && oldStatus !== 'DELIVERED';
     const isReverting = order.status !== 'DELIVERED' && oldStatus === 'DELIVERED';
@@ -565,6 +579,81 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
     }
 };
 
+export const updateOrderItems = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const { items, user } = req.body;
+
+    try {
+        const result = await prisma.$transaction(async (tx: any) => {
+            const order = await tx.order.findUnique({
+                where: { id },
+                include: { items: true }
+            });
+
+            if (!order) throw new Error('Pedido não encontrado');
+
+            // Restriction: Block Delivery orders already DELIVERED
+            if (['OWN_DELIVERY', 'APP_DELIVERY'].includes(order.type) && order.status === 'DELIVERED') {
+                throw new Error('Não é permitido editar itens de entregas Delivery já concluídas.');
+            }
+
+            // 1. Return old items to inventory
+            await handleInventoryImpact(tx, order.items, 'INCREMENT', id);
+
+            // 2. Calculate new total
+            const newTotal = items.reduce((sum: number, item: any) => sum + (parseFloat(item.price) * parseFloat(item.quantity)), 0) + (order.deliveryFee || 0);
+
+            // 3. Update order items and total
+            const updatedOrder = await tx.order.update({
+                where: { id },
+                data: {
+                    total: newTotal,
+                    items: {
+                        deleteMany: {},
+                        create: items.map((item: any) => ({
+                            id: `item-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                            productId: item.productId,
+                            quantity: Math.round(parseFloat(item.quantity)),
+                            price: parseFloat(item.price),
+                            observations: item.observations || null
+                        }))
+                    }
+                },
+                include: { items: true }
+            });
+
+            // 4. Subtract new items from inventory
+            await handleInventoryImpact(tx, updatedOrder.items, 'DECREMENT', id);
+
+            // 5. Update associated Receivable if it exists
+            await tx.receivable.updateMany({
+                where: { orderId: id },
+                data: { amount: newTotal }
+            });
+
+            // 6. Audit Log
+            if (user) {
+                await tx.auditLog.create({
+                    data: {
+                        userId: user.id,
+                        userName: user.name,
+                        action: 'EDIT_ORDER_ITEMS',
+                        details: `Itens do pedido ${id} alterados. Novo total: R$ ${newTotal.toFixed(2)}`
+                    }
+                });
+            }
+
+            return updatedOrder;
+        });
+
+        getIO().emit('orderStatusChanged', { action: 'refresh', id });
+        res.json(mapOrderResponse(result));
+    } catch (error: any) {
+        console.error('Error updating order items:', error);
+        res.status(500).json({ error: error.message });
+    }
+};
+
 export const updateOrderPaymentMethod = async (req: Request, res: Response) => {
     const { id } = req.params;
     const { paymentMethod, user } = req.body;
@@ -602,4 +691,5 @@ export const updateOrderPaymentMethod = async (req: Request, res: Response) => {
         res.status(500).json({ error: error.message });
     }
 };
+
 
