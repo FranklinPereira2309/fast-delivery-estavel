@@ -24,19 +24,17 @@ function AppContent() {
   const [currentPin, setCurrentPin] = useState<string | null>(null);
   const [isOwner, setIsOwner] = useState(false);
   const [isSessionFinished, setIsSessionFinished] = useState(false);
-  const [cancellationMessage, setCancellationMessage] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: 'info' | 'error' | 'success' } | null>(null);
 
   // Ref para rastrear estados terminais em tempo real e evitar "stale closures"
   const terminalStateRef = useRef({
-    finished: false,
-    cancellation: null as string | null
+    finished: false
   });
 
   // Função centralizada para atualizar estados terminais imediatamente
-  const updateTerminalState = useCallback((finished: boolean, cancellation: string | null) => {
-    terminalStateRef.current = { finished, cancellation };
+  const updateTerminalState = useCallback((finished: boolean) => {
+    terminalStateRef.current = { finished };
     setIsSessionFinished(finished);
-    setCancellationMessage(cancellation);
   }, []);
 
   // Status da Loja
@@ -78,10 +76,7 @@ function AppContent() {
       setIsBilling(data.status === 'billing');
       // Only clear finished session if we are actually in an active state now
       if (data.status === 'occupied' || data.status === 'billing') {
-        // preserve a active cancellation message if it exists
-        if (!terminalStateRef.current.cancellation) {
-          updateTerminalState(false, null);
-        }
+        updateTerminalState(false);
       }
     } catch (err: any) {
       if (err.status === 'billing') {
@@ -100,13 +95,10 @@ function AppContent() {
         const token = localStorage.getItem(`sessionToken_${tableParam}`);
         if (token && (err.message?.includes('não autorizada') || err.status === 401)) {
           localStorage.removeItem(`sessionToken_${tableParam}`);
-          // Apenas assume tela de "Obrigado" se não houver um cancelamento sendo exibido
-          if (!terminalStateRef.current.cancellation) {
-            updateTerminalState(true, null);
-          }
+          updateTerminalState(true);
         } else {
           // Só exibe erro de mesa se não estivermos exibindo uma tela final
-          if (!terminalStateRef.current.finished && !terminalStateRef.current.cancellation) {
+          if (!terminalStateRef.current.finished) {
             setTableError(err.message || 'Erro ao validar a mesa.');
           }
         }
@@ -138,7 +130,7 @@ function AppContent() {
 
     const intervalId = setInterval(() => {
       // Usamos a ref para garantir que o setInterval leia o valor MAIS RECENTE sem precisar recriar o hook
-      if (!terminalStateRef.current.finished && !terminalStateRef.current.cancellation) {
+      if (!terminalStateRef.current.finished) {
         fetchTableData();
       }
       fetchStatus();
@@ -158,26 +150,18 @@ function AppContent() {
 
         // 2. Handle Payment Completion (Table becomes available)
         if (data.status === 'available') {
-          // Usa a ref para não sofrer do problema de Stale Closure
-          if (terminalStateRef.current.cancellation) {
-            console.log('Skipping Thank You screen because cancellation is active');
-            return;
-          }
-
           setIsBilling(false);
           setCurrentPin(null);
           setIsOwner(false);
           setIsPinRequired(false);
           // Triggers "Thank You" screen
-          updateTerminalState(true, null);
+          updateTerminalState(true);
           return;
         }
 
         // 3. Status is occupied or pending-digital
         setIsBilling(false);
-        if (!terminalStateRef.current.cancellation) {
-          updateTerminalState(false, null);
-        }
+        updateTerminalState(false);
         setTableError(null);
         fetchTableData();
       }
@@ -192,8 +176,10 @@ function AppContent() {
       if (data.tableNumber === Number(tableParam)) {
         setIsBilling(false);
         setIsPinRequired(false);
-        // Atualiza a ref e os states de imediato; "finished" fica false para a tela de cancelamento assumir
-        updateTerminalState(false, data.message || "Pedido Cancelado, dúvidas pergunte ao Garçom");
+        // Em vez de bloquear a tela toda, mostra um Toast
+        setToast({ message: data.message || "Pedido Cancelado, dúvidas pergunte ao Garçom", type: 'error' });
+        // Limpar toast após 8 segundos
+        setTimeout(() => setToast(null), 8000);
       }
     };
 
@@ -209,7 +195,7 @@ function AppContent() {
       socket.off('store_status_changed', handleStoreStatus);
       socket.off('digitalOrderCancelled', handleCancellation);
     };
-  }, [fetchTableData, fetchStatus, tableParam]);
+  }, [fetchTableData, fetchStatus, tableParam, updateTerminalState]);
 
   useEffect(() => {
     if (storeStatus.status === 'online' && storeStatus.next_status_change) {
@@ -255,48 +241,36 @@ function AppContent() {
     );
   }
 
-  if (cancellationMessage) {
+  // Toast de Notificação
+  const renderToast = () => {
+    if (!toast) return null;
     return (
-      <div className="min-h-screen flex items-center justify-center p-6 bg-slate-900 text-white text-center overflow-hidden">
-        {/* Decorative elements */}
-        <div className="absolute top-[-10%] right-[-10%] w-64 h-64 bg-red-600/10 rounded-full blur-[100px]"></div>
-        <div className="absolute bottom-[-10%] left-[-10%] w-64 h-64 bg-red-400/10 rounded-full blur-[100px]"></div>
-
-        <div className="max-w-md w-full space-y-10 relative z-10 animate-fade-in animate-zoom-in">
-          <div className="relative mx-auto w-32 h-32">
-            <div className="absolute inset-0 bg-red-500/20 rounded-full animate-pulse"></div>
-            <div className="relative w-32 h-32 bg-gradient-to-br from-red-600 to-red-800 rounded-[2.5rem] flex items-center justify-center shadow-2xl shadow-red-500/40 transform rotate-3">
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-16 h-16 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <div className="fixed top-24 left-4 right-4 z-[100] animate-slide-up-fade">
+        <div className={`p-4 rounded-2xl shadow-2xl flex items-center gap-3 border ${toast.type === 'error' ? 'bg-red-600 border-red-500 text-white' : 'bg-slate-900 border-slate-800 text-white'}`}>
+          <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+            {toast.type === 'error' ? (
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
               </svg>
-            </div>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            )}
           </div>
-
-          <div className="space-y-4">
-            <div className="inline-block px-4 py-1.5 bg-red-500/10 border border-red-500/20 rounded-full mb-2">
-              <span className="text-[10px] font-black uppercase tracking-[0.3em] text-red-400">Atenção</span>
-            </div>
-            <h1 className="text-4xl font-black uppercase tracking-tighter leading-none text-white">Pedido <br /> Recusado</h1>
-            <p className="text-slate-400 text-lg leading-relaxed max-w-[280px] mx-auto font-medium">
-              {cancellationMessage}
-            </p>
+          <div className="flex-1">
+            <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Notificação</p>
+            <p className="text-xs font-bold leading-tight uppercase">{toast.message}</p>
           </div>
-
-          <div className="space-y-6 pt-4">
-            <button
-              onClick={() => updateTerminalState(false, null)}
-              className="w-full py-5 bg-white text-slate-900 rounded-[2rem] font-black uppercase text-xs tracking-widest transition-all hover:bg-slate-100 active:scale-95 shadow-xl shadow-white/5"
-            >
-              Voltar ao Menu
-            </button>
-            <p className="text-[10px] text-slate-500 font-black uppercase tracking-[0.2em] max-w-[240px] mx-auto opacity-60">
-              o garçom poderá lhe informar o motivo da recusa
-            </p>
-          </div>
+          <button onClick={() => setToast(null)} className="p-2 opacity-50 hover:opacity-100">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
       </div>
     );
-  }
+  };
 
   if (isSessionFinished) {
     return (
@@ -326,7 +300,7 @@ function AppContent() {
             <button
               onClick={() => {
                 localStorage.removeItem(`sessionToken_${tableParam}`);
-                updateTerminalState(false, null);
+                updateTerminalState(false);
                 window.location.reload(); // Recarregar para limpar estados e iniciar nova tentativa de entrada
               }}
               className="px-8 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-full text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 border border-slate-700"
@@ -382,8 +356,6 @@ function AppContent() {
       </div>
     );
   }
-
-
 
   if (isPinRequired) {
     return (
@@ -444,6 +416,7 @@ function AppContent() {
 
   return (
     <div className="min-h-screen max-w-md mx-auto relative shadow-2xl bg-slate-50 overflow-hidden">
+      {renderToast()}
       {/* Header Fixo */}
       <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-100 p-4 pt-6 flex justify-between items-center">
         <div>

@@ -325,7 +325,7 @@ export const saveOrder = async (req: Request, res: Response) => {
 
 export const deleteOrder = async (req: Request, res: Response) => {
     const { id } = req.params;
-    const { user } = req.body;
+    const { user, reason } = req.body;
 
     let orderDeleted: any = null;
 
@@ -383,7 +383,7 @@ export const deleteOrder = async (req: Request, res: Response) => {
             if (orderDeleted && orderDeleted.isOriginDigitalMenu && orderDeleted.tableNumber) {
                 getIO().emit('digitalOrderCancelled', {
                     tableNumber: orderDeleted.tableNumber,
-                    message: "Pedido Cancelado, dúvidas pergunte ao Garçom"
+                    message: reason || "Pedido Cancelado, dúvidas pergunte ao Garçom"
                 });
             }
         } catch (e) {

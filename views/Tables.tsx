@@ -206,8 +206,12 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
       sess.items.splice(itemIdx, 1);
 
       if (sess.items.length === 0) {
+        let reason = undefined;
+        if (sess.isOriginDigitalMenu) {
+          reason = window.prompt("Informe o motivo do cancelamento para o cliente (Cardápio Digital):") || undefined;
+        }
         await db.deleteTableSession(selectedTable, true); // true = cancellation
-        await db.deleteOrder(`TABLE-${selectedTable}`, currentUser);
+        await db.deleteOrder(`TABLE-${selectedTable}`, currentUser, reason);
       } else {
         await db.saveTableSession({ ...sess });
         const kitchenOrder: Order = {

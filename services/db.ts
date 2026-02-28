@@ -175,10 +175,10 @@ class APIDBService {
     });
   }
 
-  public async deleteOrder(id: string, user: User) {
+  public async deleteOrder(id: string, user: User, reason?: string) {
     await this.request(`/orders/${id}`, {
       method: 'DELETE',
-      body: JSON.stringify({ user })
+      body: JSON.stringify({ user, reason })
     });
   }
 
