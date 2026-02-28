@@ -195,6 +195,42 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
             const totalReportedCash = filteredCashSessions.reduce((sum, cs) => sum + (cs.reportedCash || 0), 0);
             const totalDiff = filteredCashSessions.reduce((sum, cs) => sum + (cs.difference || 0), 0);
 
+            let totalDinheiro = 0;
+            let totalCredito = 0;
+            let totalDebito = 0;
+            let totalPix = 0;
+            let totalOutros = 0;
+
+            filteredOrders.forEach(o => {
+                const method = (o.paymentMethod || '').toUpperCase();
+                const total = o.total || 0;
+                const split1 = o.splitAmount1 || 0;
+                const split2 = total - split1;
+
+                if (method.includes('+')) {
+                    const parts = method.split('+').map(p => p.trim());
+                    // Part 1
+                    if (parts[0].includes('DINHEIRO')) totalDinheiro += split1;
+                    else if (parts[0].includes('CRÉDITO')) totalCredito += split1;
+                    else if (parts[0].includes('DÉBITO')) totalDebito += split1;
+                    else if (parts[0].includes('PIX')) totalPix += split1;
+                    else totalOutros += split1;
+                    // Part 2
+                    if (parts[1].includes('DINHEIRO')) totalDinheiro += split2;
+                    else if (parts[1].includes('CRÉDITO')) totalCredito += split2;
+                    else if (parts[1].includes('DÉBITO')) totalDebito += split2;
+                    else if (parts[1].includes('PIX')) totalPix += split2;
+                    else totalOutros += split2;
+                } else {
+                    if (method.includes('DINHEIRO')) totalDinheiro += total;
+                    else if (method.includes('CRÉDITO')) totalCredito += total;
+                    else if (method.includes('DÉBITO')) totalDebito += total;
+                    else if (method.includes('PIX')) totalPix += total;
+                    else totalOutros += total;
+                }
+            });
+
+            // Adjust starting Y position for the extra lines
             let page = pdfDoc.addPage([595.28, 841.89]);
             const { width, height } = page.getSize();
             let y = height - 50;
@@ -208,15 +244,30 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
             y -= 15;
             page.drawText(`Período: ${new Date(salesStartDate + 'T00:00:00').toLocaleDateString('pt-BR')} a ${new Date(salesEndDate + 'T00:00:00').toLocaleDateString('pt-BR')}`, { x: 50, y, size: 10, font });
 
-            y -= 40;
+            y -= 30;
             // KPIs
             page.drawText('RESUMO FINANCEIRO (VENDAS)', { x: 50, y, size: 12, font: fontBold });
             y -= 20;
-            page.drawText(`Faturamento Total: R$ ${totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, { x: 50, y, size: 10, font });
+            page.drawText(`Faturamento Total: R$ ${totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, { x: 50, y, size: 10, font: fontBold, color: rgb(0, 0.4, 0) });
             y -= 15;
             page.drawText(`Volume de Vendas: ${orderCount}`, { x: 50, y, size: 10, font });
             y -= 15;
             page.drawText(`Ticket Médio: R$ ${avgTicket.toFixed(2)}`, { x: 50, y, size: 10, font });
+
+            y -= 30;
+            page.drawText('VENDAS POR FORMA DE PAGAMENTO', { x: 50, y, size: 12, font: fontBold });
+            y -= 20;
+            page.drawText(`Dinheiro: R$ ${totalDinheiro.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, { x: 50, y, size: 10, font });
+            y -= 15;
+            page.drawText(`Cartão de Crédito: R$ ${totalCredito.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, { x: 50, y, size: 10, font });
+            y -= 15;
+            page.drawText(`Cartão de Débito: R$ ${totalDebito.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, { x: 50, y, size: 10, font });
+            y -= 15;
+            page.drawText(`PIX: R$ ${totalPix.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, { x: 50, y, size: 10, font });
+            if (totalOutros > 0) {
+                y -= 15;
+                page.drawText(`Outros: R$ ${totalOutros.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, { x: 50, y, size: 10, font });
+            }
 
             y -= 30;
             page.drawText('RESUMO DE CAIXA', { x: 50, y, size: 12, font: fontBold });
@@ -227,7 +278,7 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
             y -= 15;
             page.drawText(`Falta/Sobra de Caixa (Diferenças): R$ ${totalDiff.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, { x: 50, y, size: 10, font });
 
-            y -= 40;
+            y -= 30;
             // Table Header
             page.drawRectangle({ x: 50, y: y - 5, width: width - 100, height: 20, color: rgb(0.95, 0.95, 0.95) });
             page.drawText('DATA', { x: 55, y, size: 7, font: fontBold });
