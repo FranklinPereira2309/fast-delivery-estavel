@@ -280,6 +280,8 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
             y -= 15;
             page.drawText(`Total de Dinheiro Físico Declarado (Fechamentos de Caixa): R$ ${totalReportedCash.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, { x: 50, y, size: 10, font });
             y -= 15;
+            page.drawText(`Lucro Líquido Declarado em Dinheiro (Sobra após retirar o Troco): R$ ${(totalReportedCash - totalInitialCash).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, { x: 50, y, size: 10, font: fontBold, color: rgb(0, 0.4, 0) });
+            y -= 15;
             page.drawText(`Falta/Sobra de Caixa (Diferenças): R$ ${totalDiff.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, { x: 50, y, size: 10, font });
 
             y -= 40;
