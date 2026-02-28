@@ -173,6 +173,10 @@ model Order {
   digitalPin   String? // Store PIN for session recovery on reopen
   digitalToken String? // Store token for session recovery on reopen
   receivables  Receivable[]
+  // Mercado Pago
+  mpPreferenceId String?
+  mpPaymentId    String?
+  paymentStatus  String? @default("PENDING") // PENDING, APPROVED, REJECTED
 }
 
 model Receivable {

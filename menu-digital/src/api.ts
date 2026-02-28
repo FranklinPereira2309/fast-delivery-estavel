@@ -119,3 +119,13 @@ export const fetchConsumption = async (tableNumber: string) => {
         throw error.response?.data || { message: 'Erro ao buscar extrato.' };
     }
 };
+
+export const createPaymentPreference = async (payload: any) => {
+    try {
+        const response = await axios.post(`${BASE_URL}/payments/create-preference`, payload);
+        return response.data;
+    } catch (error: any) {
+        console.error('Error creating MP preference', error);
+        throw error.response?.data || { message: 'Erro ao gerar pagamento online.' };
+    }
+};
