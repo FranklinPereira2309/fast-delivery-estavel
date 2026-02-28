@@ -87,6 +87,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
   const [isOpeningModalOpen, setIsOpeningModalOpen] = useState(false);
   const [isClosingModalOpen, setIsClosingModalOpen] = useState(false);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [isAdjustModalOpen, setIsAdjustModalOpen] = useState(false);
   const [closingMode, setClosingMode] = useState<'MANUAL' | 'SYSTEM'>('MANUAL');
   const [adminPassword, setAdminPassword] = useState('');
   const [reviewSession, setReviewSession] = useState<CashSession | null>(null);
@@ -703,6 +704,8 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
 
       const updated = await db.updateCashSession(reports);
       setReviewSession(updated);
+      setIsAdjustModalOpen(false);
+      setAdminPassword('');
       showAlert("Sucesso", "Lançamentos corrigidos com sucesso!", "INFO");
     } catch (e: any) {
       showAlert("Erro", e.message || "Erro ao salvar correções.", "DANGER");
@@ -1996,109 +1999,142 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                   </div>
                 </div>
 
-                {/* Editable Correction Area (Admin Only) */}
-                <div className="bg-slate-900 rounded-[3rem] p-10 text-white shadow-2xl">
-                  <div className="flex justify-between items-center mb-10">
-                    <div>
-                      <h3 className="text-xl font-black uppercase tracking-tighter">Ajustes e Correções</h3>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase mt-1 tracking-widest">Apenas Administrador Master</p>
-                    </div>
-                    <Icons.Dashboard className="w-8 h-8 text-blue-500 opacity-40" />
+                {/* Buttons Area */}
+                <div className="bg-slate-900 rounded-[3rem] p-10 flex gap-4">
+                  <button
+                    onClick={() => {
+                      setClosingReport({
+                        cash: String(reviewSession.reportedCash || 0),
+                        pix: String(reviewSession.reportedPix || 0),
+                        credit: String(reviewSession.reportedCredit || 0),
+                        debit: String(reviewSession.reportedDebit || 0),
+                        others: String(reviewSession.reportedOthers || 0),
+                        observations: reviewSession.observations || ''
+                      });
+                      setIsAdjustModalOpen(true);
+                    }}
+                    className="flex-1 py-5 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl transition-all active:scale-95 flex items-center justify-center gap-2"
+                  >
+                    <Icons.Dashboard /> Ajustes e Correções
+                  </button>
+                  <button
+                    onClick={() => {
+                      window.print();
+                    }}
+                    className="flex-[2] py-5 bg-white/10 hover:bg-white/20 text-white rounded-2xl font-black uppercase text-xs tracking-widest transition-all"
+                  >
+                    Imprimir Relatório 🖨️
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )
+      }
+
+      {/* MODAL DE AJUSTES E CORREÇÕES (ADMIN ONLY) */}
+      {
+        isAdjustModalOpen && reviewSession && (
+          <div className="fixed inset-0 z-[250] flex items-center justify-center bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300 p-4">
+            <div className="bg-slate-900 w-full max-w-[800px] rounded-[3.5rem] shadow-2xl overflow-hidden border border-slate-700 flex flex-col max-h-[90vh]">
+              <div className="p-10 text-white overflow-y-auto">
+                <div className="flex justify-between items-center mb-10">
+                  <div>
+                    <h3 className="text-xl font-black uppercase tracking-tighter">Ajustes e Correções</h3>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase mt-1 tracking-widest">Apenas Administrador Master</p>
                   </div>
+                  <button
+                    onClick={() => setIsAdjustModalOpen(false)}
+                    className="w-12 h-12 flex items-center justify-center bg-white/10 rounded-full text-slate-400 hover:bg-red-500 hover:text-white transition-all font-black text-xl"
+                  >
+                    ×
+                  </button>
+                </div>
 
-                  <div className="grid grid-cols-2 gap-8 mb-8">
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Corrigir Dinheiro</label>
-                          <input
-                            type="text"
-                            className="w-full bg-white/10 border border-white/20 p-4 rounded-2xl font-black text-center text-blue-400 focus:bg-white/20 transition-all outline-none"
-                            value={closingReport.cash}
-                            onChange={e => setClosingReport(prev => ({ ...prev, cash: e.target.value.replace(',', '.') }))}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Corrigir Pix</label>
-                          <input
-                            type="text"
-                            className="w-full bg-white/10 border border-white/20 p-4 rounded-2xl font-black text-center text-blue-400 focus:bg-white/20 transition-all outline-none"
-                            value={closingReport.pix}
-                            onChange={e => setClosingReport(prev => ({ ...prev, pix: e.target.value.replace(',', '.') }))}
-                          />
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Corrigir Crédito</label>
-                          <input
-                            type="text"
-                            className="w-full bg-white/10 border border-white/20 p-4 rounded-2xl font-black text-center text-blue-400 focus:bg-white/20 transition-all outline-none"
-                            value={closingReport.credit}
-                            onChange={e => setClosingReport(prev => ({ ...prev, credit: e.target.value.replace(',', '.') }))}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Corrigir Débito</label>
-                          <input
-                            type="text"
-                            className="w-full bg-white/10 border border-white/20 p-4 rounded-2xl font-black text-center text-blue-400 focus:bg-white/20 transition-all outline-none"
-                            value={closingReport.debit}
-                            onChange={e => setClosingReport(prev => ({ ...prev, debit: e.target.value.replace(',', '.') }))}
-                          />
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-1 gap-4">
-                        <div className="space-y-2">
-                          <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Corrigir Outros (Permuta/Fiado)</label>
-                          <input
-                            type="text"
-                            className="w-full bg-white/10 border border-white/20 p-4 rounded-2xl font-black text-center text-emerald-400 focus:bg-white/20 transition-all outline-none"
-                            value={closingReport.others}
-                            onChange={e => setClosingReport(prev => ({ ...prev, others: e.target.value.replace(',', '.') }))}
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-col gap-4 justify-between">
+                <div className="grid grid-cols-2 gap-8 mb-8">
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Nova Observação</label>
-                        <textarea
-                          className="w-full bg-white/10 border border-white/20 p-4 rounded-2xl font-bold text-xs min-h-[100px] outline-none"
-                          value={closingReport.observations}
-                          onChange={e => setClosingReport(prev => ({ ...prev, observations: e.target.value }))}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-[9px] font-black text-blue-400 uppercase tracking-widest">Senha Admin Master</label>
+                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Corrigir Dinheiro</label>
                         <input
-                          type="password"
-                          className="w-full bg-blue-600/20 border border-blue-500/30 p-4 rounded-2xl font-black text-center text-blue-400 outline-none"
-                          placeholder="••••••••"
-                          value={adminPassword}
-                          onChange={e => setAdminPassword(e.target.value)}
+                          type="text"
+                          className="w-full bg-white/10 border border-white/20 p-4 rounded-2xl font-black text-center text-blue-400 focus:bg-white/20 transition-all outline-none"
+                          value={closingReport.cash}
+                          onChange={e => setClosingReport(prev => ({ ...prev, cash: e.target.value.replace(',', '.') }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Corrigir Pix</label>
+                        <input
+                          type="text"
+                          className="w-full bg-white/10 border border-white/20 p-4 rounded-2xl font-black text-center text-blue-400 focus:bg-white/20 transition-all outline-none"
+                          value={closingReport.pix}
+                          onChange={e => setClosingReport(prev => ({ ...prev, pix: e.target.value.replace(',', '.') }))}
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Corrigir Crédito</label>
+                        <input
+                          type="text"
+                          className="w-full bg-white/10 border border-white/20 p-4 rounded-2xl font-black text-center text-blue-400 focus:bg-white/20 transition-all outline-none"
+                          value={closingReport.credit}
+                          onChange={e => setClosingReport(prev => ({ ...prev, credit: e.target.value.replace(',', '.') }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Corrigir Débito</label>
+                        <input
+                          type="text"
+                          className="w-full bg-white/10 border border-white/20 p-4 rounded-2xl font-black text-center text-blue-400 focus:bg-white/20 transition-all outline-none"
+                          value={closingReport.debit}
+                          onChange={e => setClosingReport(prev => ({ ...prev, debit: e.target.value.replace(',', '.') }))}
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Corrigir Outros (Permuta/Fiado)</label>
+                        <input
+                          type="text"
+                          className="w-full bg-white/10 border border-white/20 p-4 rounded-2xl font-black text-center text-emerald-400 focus:bg-white/20 transition-all outline-none"
+                          value={closingReport.others}
+                          onChange={e => setClosingReport(prev => ({ ...prev, others: e.target.value.replace(',', '.') }))}
                         />
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex gap-4">
-                    <button
-                      onClick={handleSaveReview}
-                      className="flex-1 py-5 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl transition-all active:scale-95"
-                    >
-                      Salvar Correções ✓
-                    </button>
-                    <button
-                      onClick={() => {
-                        window.print();
-                      }}
-                      className="flex-1 py-5 bg-white/10 hover:bg-white/20 text-white rounded-2xl font-black uppercase text-xs tracking-widest transition-all"
-                    >
-                      Imprimir Relatório 🖨️
-                    </button>
+                  <div className="flex flex-col gap-4 justify-between">
+                    <div className="space-y-2">
+                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Nova Observação</label>
+                      <textarea
+                        className="w-full bg-white/10 border border-white/20 p-4 rounded-2xl font-bold text-xs min-h-[100px] outline-none"
+                        value={closingReport.observations}
+                        onChange={e => setClosingReport(prev => ({ ...prev, observations: e.target.value }))}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[9px] font-black text-blue-400 uppercase tracking-widest">Senha Admin Master</label>
+                      <input
+                        type="password"
+                        className="w-full bg-blue-600/20 border border-blue-500/30 p-4 rounded-2xl font-black text-center text-blue-400 outline-none"
+                        placeholder="••••••••"
+                        value={adminPassword}
+                        onChange={e => setAdminPassword(e.target.value)}
+                      />
+                    </div>
                   </div>
+                </div>
+
+                <div className="flex gap-4">
+                  <button
+                    onClick={handleSaveReview}
+                    className="flex-1 py-5 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl transition-all active:scale-95"
+                  >
+                    Salvar Correções ✓
+                  </button>
                 </div>
               </div>
             </div>
