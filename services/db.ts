@@ -72,8 +72,7 @@ class APIDBService {
   }
 
   public async resetDatabase(): Promise<void> {
-    // In a production app, this would be highly restricted or removed.
-    // For now, let's just clear local session.
+    await this.request('/maintenance/reset', { method: 'POST' });
     localStorage.removeItem(AUTH_KEY);
   }
 
