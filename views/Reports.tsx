@@ -95,8 +95,9 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
     const handleSaveEdit = async () => {
         if (!editingSession || !currentUser) return;
 
-        if (adminPassword !== currentUser.password) {
-            return showAlert("Senha Incorreta", "Informe a senha do Admin Master para autorizar a alteração.", "DANGER");
+        const isValidAdmin = await db.verifyAdminPassword(adminPassword);
+        if (!isValidAdmin) {
+            return showAlert("Senha Incorreta", "A senha fornecida não pertence a um Admin Master válido.", "DANGER");
         }
 
         try {
@@ -106,6 +107,7 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
                 pix: editingSession.reportedPix || 0,
                 credit: editingSession.reportedCredit || 0,
                 debit: editingSession.reportedDebit || 0,
+                others: editingSession.reportedOthers || 0,
                 observations: editingSession.observations || '',
                 user: currentUser
             });
@@ -685,8 +687,8 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
                 if (s.status === 'CLOSED') {
                     y -= 5;
                     page.drawRectangle({ x: 60, y: y - 25, width: 480, height: 25, color: rgb(0.98, 0.98, 0.98) });
-                    page.drawText(`Relatado: Dinheiro: R$ ${(s.reportedCash || 0).toFixed(2)} | Pix: R$ ${(s.reportedPix || 0).toFixed(2)} | Crédito: R$ ${(s.reportedCredit || 0).toFixed(2)} | Débito: R$ ${(s.reportedDebit || 0).toFixed(2)}`, { x: 70, y: y - 10, size: 6, font });
-                    page.drawText(`Sistema: Dinheiro: R$ ${(s.systemCash || 0).toFixed(2)} | Pix: R$ ${(s.systemPix || 0).toFixed(2)} | Crédito: R$ ${(s.systemCredit || 0).toFixed(2)} | Débito: R$ ${(s.systemDebit || 0).toFixed(2)}`, { x: 70, y: y - 20, size: 6, font });
+                    page.drawText(`Relatado: Dinheiro: R$ ${(s.reportedCash || 0).toFixed(2)} | Pix: R$ ${(s.reportedPix || 0).toFixed(2)} | Crédito: R$ ${(s.reportedCredit || 0).toFixed(2)} | Débito: R$ ${(s.reportedDebit || 0).toFixed(2)} | Outros: R$ ${(s.reportedOthers || 0).toFixed(2)}`, { x: 70, y: y - 10, size: 5.5, font });
+                    page.drawText(`Sistema: Dinheiro: R$ ${(s.systemCash || 0).toFixed(2)} | Pix: R$ ${(s.systemPix || 0).toFixed(2)} | Crédito: R$ ${(s.systemCredit || 0).toFixed(2)} | Débito: R$ ${(s.systemDebit || 0).toFixed(2)} | Outros: R$ ${(s.systemOthers || 0).toFixed(2)}`, { x: 70, y: y - 20, size: 5.5, font });
                     y -= 35;
                 }
             }
@@ -1126,14 +1128,14 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
                         </button>
                         {/* MODAL DE EDIÇÃO DO RELATÓRIO DE CAIXA */}
                         {isEditReportModalOpen && editingSession && (
-                            <div className="fixed inset-0 z-[130] flex items-center justify-center p-12 bg-slate-900/90 backdrop-blur-xl animate-in fade-in duration-300">
+                            <div className="fixed inset-0 z-[130] flex items-center justify-center p-12 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
                                 <div className="bg-white rounded-[4rem] shadow-2xl w-full max-w-2xl flex flex-col overflow-hidden">
                                     <div className="p-10 border-b border-slate-100 bg-slate-50">
                                         <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter flex items-center gap-3">
                                             <span className="p-3 bg-amber-50 text-amber-600 rounded-2xl"><Icons.Edit /></span>
                                             Corrigir Relatório de Caixa
                                         </h3>
-                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-2 ml-14">Apenas Admin Master pode realizar alterações</p>
+                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-2 ml-14">Apenas Admin Master pode autorizar e salvar alterações</p>
                                     </div>
 
                                     <div className="p-10 space-y-8">
@@ -1172,6 +1174,15 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
                                                     value={editingSession.reportedDebit || 0}
                                                     onChange={e => setEditingSession({ ...editingSession, reportedDebit: parseFloat(e.target.value.replace(',', '.')) || 0 })}
                                                     className="w-full p-5 bg-slate-50 border-none rounded-[1.5rem] font-bold text-lg"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Outros (R$)</label>
+                                                <input
+                                                    type="text"
+                                                    value={editingSession.reportedOthers || 0}
+                                                    onChange={e => setEditingSession({ ...editingSession, reportedOthers: parseFloat(e.target.value.replace(',', '.')) || 0 })}
+                                                    className="w-full p-5 bg-slate-50 border-none rounded-[1.5rem] font-bold text-lg text-emerald-600"
                                                 />
                                             </div>
                                         </div>

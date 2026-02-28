@@ -32,6 +32,27 @@ export const login = async (req: Request, res: Response) => {
     }
 };
 
+export const verifyAdminPassword = async (req: Request, res: Response) => {
+    const { password } = req.body;
+
+    try {
+        const adminUser = await prisma.user.findFirst({
+            where: {
+                password,
+                permissions: { has: 'ADMIN' }
+            }
+        });
+
+        if (adminUser) {
+            res.json({ valid: true });
+        } else {
+            res.status(401).json({ valid: false, message: 'Senha inválida ou o usuário não é um Admin.' });
+        }
+    } catch (error) {
+        res.status(500).json({ error: 'Erro ao verificar permissão.' });
+    }
+};
+
 export const logout = async (req: Request, res: Response) => {
     const { userId } = req.body;
 

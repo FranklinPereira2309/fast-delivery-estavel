@@ -98,6 +98,18 @@ class APIDBService {
     }
   }
 
+  public async verifyAdminPassword(password: string): Promise<boolean> {
+    try {
+      const resp = await this.request<{ valid: boolean }>('/auth/verify-admin', {
+        method: 'POST',
+        body: JSON.stringify({ password })
+      });
+      return resp.valid;
+    } catch (e) {
+      return false;
+    }
+  }
+
   public async logout() {
     const session = this.getCurrentSession();
     if (session) {
@@ -264,7 +276,7 @@ class APIDBService {
     });
   }
 
-  public async closeCashSession(sessionId: string, reports: { cash: number, pix: number, credit: number, debit: number, observations?: string }, user: User): Promise<CashSession> {
+  public async closeCashSession(sessionId: string, reports: { cash: number, pix: number, credit: number, debit: number, others?: number, observations?: string }, user: User): Promise<CashSession> {
     return this.request<CashSession>(`/cash/close`, {
       method: 'POST',
       body: JSON.stringify({ sessionId, ...reports, user })
@@ -275,7 +287,7 @@ class APIDBService {
     return this.request<{ systemCash: number, systemPix: number, systemCredit: number, systemDebit: number, totalSales: number }>('/cash/preview');
   }
 
-  public async updateCashSession(data: { id: string, cash: number, pix: number, credit: number, debit: number, observations?: string, user: User }): Promise<CashSession> {
+  public async updateCashSession(data: { id: string, cash: number, pix: number, credit: number, debit: number, others?: number, observations?: string, user: User }): Promise<CashSession> {
     return this.request<CashSession>('/cash/update', {
       method: 'PATCH',
       body: JSON.stringify(data)

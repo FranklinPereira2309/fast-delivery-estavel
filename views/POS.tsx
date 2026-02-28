@@ -96,6 +96,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
     pix: '',
     credit: '',
     debit: '',
+    others: '',
     observations: ''
   });
 
@@ -649,7 +650,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
     }
 
     // Validar preenchimento
-    if (closingReport.cash === '' || closingReport.pix === '' || closingReport.credit === '' || closingReport.debit === '') {
+    if (closingReport.cash === '' || closingReport.pix === '' || closingReport.credit === '' || closingReport.debit === '' || closingReport.others === '') {
       showAlert("Atenção", "Por favor, preencha todos os campos de valores para o fechamento.", "DANGER");
       return;
     }
@@ -660,6 +661,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
         pix: parseFloat(closingReport.pix.toString().replace(',', '.')),
         credit: parseFloat(closingReport.credit.toString().replace(',', '.')),
         debit: parseFloat(closingReport.debit.toString().replace(',', '.')),
+        others: parseFloat(closingReport.others.toString().replace(',', '.')),
         observations: closingReport.observations
       };
 
@@ -681,8 +683,10 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
 
   const handleSaveReview = async () => {
     if (!reviewSession) return;
-    if (adminPassword !== currentUser.password) {
-      return showAlert("Acesso Negado", "Senha do Admin Master necessária para salvar correções.", "DANGER");
+
+    const isValidAdmin = await db.verifyAdminPassword(adminPassword);
+    if (!isValidAdmin) {
+      return showAlert("Acesso Negado", "Senha fornecida não pertence a um Admin Master válido.", "DANGER");
     }
 
     try {
@@ -692,6 +696,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
         pix: parseFloat(closingReport.pix.toString().replace(',', '.')),
         credit: parseFloat(closingReport.credit.toString().replace(',', '.')),
         debit: parseFloat(closingReport.debit.toString().replace(',', '.')),
+        others: parseFloat(closingReport.others.toString().replace(',', '.')),
         observations: closingReport.observations,
         user: currentUser
       };
@@ -1873,6 +1878,19 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                   </div>
                 </div>
 
+                <div className="grid grid-cols-1 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Outros (Fiado, Permuta, etc) (R$)</label>
+                    <input
+                      type="text"
+                      placeholder="0,00"
+                      value={closingReport.others}
+                      onChange={(e) => setClosingReport(prev => ({ ...prev, others: e.target.value.replace(',', '.') }))}
+                      className="w-full p-5 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-orange-500 outline-none font-black text-lg text-center text-emerald-600"
+                    />
+                  </div>
+                </div>
+
                 <div>
                   <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Notas / Observações</label>
                   <textarea
@@ -1953,7 +1971,11 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                       </div>
                       <div className="flex justify-between items-center bg-white p-4 rounded-2xl border border-slate-100">
                         <span className="text-[10px] font-black text-slate-600 uppercase">Débito</span>
-                        <span className="font-black text-slate-800">R$ {reviewSession.reportedDebit.toFixed(2)}</span>
+                        <span className="font-black text-slate-800">R$ {(reviewSession.reportedDebit || 0).toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between items-center bg-emerald-50 p-4 rounded-2xl border border-emerald-100">
+                        <span className="text-[10px] font-black text-emerald-600 uppercase">Outros</span>
+                        <span className="font-black text-emerald-800">R$ {(reviewSession.reportedOthers || 0).toFixed(2)}</span>
                       </div>
                     </div>
                   </div>
@@ -1961,7 +1983,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                   <div className="flex flex-col gap-4">
                     <div className="bg-blue-600 p-8 rounded-[2.5rem] text-white shadow-2xl shadow-blue-200">
                       <h3 className="text-[10px] font-black opacity-60 uppercase tracking-widest mb-1">Total Informado</h3>
-                      <p className="text-4xl font-black">R$ {(reviewSession.reportedCash + reviewSession.reportedPix + reviewSession.reportedCredit + reviewSession.reportedDebit).toFixed(2)}</p>
+                      <p className="text-4xl font-black">R$ {((reviewSession.reportedCash || 0) + (reviewSession.reportedPix || 0) + (reviewSession.reportedCredit || 0) + (reviewSession.reportedDebit || 0) + (reviewSession.reportedOthers || 0)).toFixed(2)}</p>
                     </div>
 
                     <div className={`p-8 rounded-[2.5rem] border-2 ${reviewSession.difference === 0 ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : (reviewSession.difference > 0 ? 'bg-blue-50 border-blue-100 text-blue-700' : 'bg-red-50 border-red-100 text-red-700')}`}>
@@ -2023,6 +2045,17 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                             className="w-full bg-white/10 border border-white/20 p-4 rounded-2xl font-black text-center text-blue-400 focus:bg-white/20 transition-all outline-none"
                             value={closingReport.debit}
                             onChange={e => setClosingReport(prev => ({ ...prev, debit: e.target.value.replace(',', '.') }))}
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 gap-4">
+                        <div className="space-y-2">
+                          <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Corrigir Outros (Permuta/Fiado)</label>
+                          <input
+                            type="text"
+                            className="w-full bg-white/10 border border-white/20 p-4 rounded-2xl font-black text-center text-emerald-400 focus:bg-white/20 transition-all outline-none"
+                            value={closingReport.others}
+                            onChange={e => setClosingReport(prev => ({ ...prev, others: e.target.value.replace(',', '.') }))}
                           />
                         </div>
                       </div>

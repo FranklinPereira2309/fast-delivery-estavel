@@ -95,7 +95,7 @@ export const getClosurePreview = async (req: Request, res: Response) => {
 };
 
 export const closeCashSession = async (req: Request, res: Response) => {
-    const { sessionId, cash, pix, credit, debit, observations, user } = req.body;
+    const { sessionId, cash, pix, credit, debit, others, observations, user } = req.body;
 
     const session = await prisma.cashSession.findUnique({
         where: { id: sessionId }
@@ -107,7 +107,7 @@ export const closeCashSession = async (req: Request, res: Response) => {
 
     const totals = await calculateSessionTotals(session.openedAt);
 
-    const totalReported = parseFloat(cash) + parseFloat(pix) + parseFloat(credit) + parseFloat(debit);
+    const totalReported = parseFloat(cash) + parseFloat(pix) + parseFloat(credit) + parseFloat(debit) + parseFloat(others || 0);
     const difference = totalReported - totals.totalSales;
 
     const updatedSession = await prisma.cashSession.update({
@@ -121,10 +121,12 @@ export const closeCashSession = async (req: Request, res: Response) => {
             reportedPix: parseFloat(pix),
             reportedCredit: parseFloat(credit),
             reportedDebit: parseFloat(debit),
+            reportedOthers: parseFloat(others || 0),
             systemCash: totals.systemCash,
             systemPix: totals.systemPix,
             systemCredit: totals.systemCredit,
             systemDebit: totals.systemDebit,
+            systemOthers: totals.systemOthers,
             totalSales: totals.totalSales,
             difference,
             observations
@@ -135,7 +137,7 @@ export const closeCashSession = async (req: Request, res: Response) => {
 };
 
 export const updateCashSession = async (req: Request, res: Response) => {
-    const { id, cash, pix, credit, debit, observations, user } = req.body;
+    const { id, cash, pix, credit, debit, others, observations, user } = req.body;
 
     const session = await prisma.cashSession.findUnique({
         where: { id }
@@ -152,10 +154,11 @@ export const updateCashSession = async (req: Request, res: Response) => {
         systemPix: session.systemPix || 0,
         systemCredit: session.systemCredit || 0,
         systemDebit: session.systemDebit || 0,
+        systemOthers: session.systemOthers || 0,
         totalSales: session.totalSales || 0
     };
 
-    const totalReported = parseFloat(cash) + parseFloat(pix) + parseFloat(credit) + parseFloat(debit);
+    const totalReported = parseFloat(cash) + parseFloat(pix) + parseFloat(credit) + parseFloat(debit) + parseFloat(others || 0);
     const difference = totalReported - totals.totalSales;
 
     const updated = await prisma.cashSession.update({
@@ -165,6 +168,7 @@ export const updateCashSession = async (req: Request, res: Response) => {
             reportedPix: parseFloat(pix),
             reportedCredit: parseFloat(credit),
             reportedDebit: parseFloat(debit),
+            reportedOthers: parseFloat(others || 0),
             difference,
             observations,
             closedByName: `${session.closedByName} (Alt: ${user.name})`
