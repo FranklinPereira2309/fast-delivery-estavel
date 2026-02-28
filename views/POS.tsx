@@ -491,6 +491,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
         // Preserve emission state over the clearState execution loop
         const shouldEmit = emitNfce;
 
+        setIsReceivingFiado(null); // Prevents clearState from trying to revert a deleted receivable
         await clearState();
         await refreshAllData();
 
@@ -939,18 +940,22 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                 </button>
               </div>
 
-              <div className={`grid gap-3 bg-slate-100 p-2 rounded-[2rem] mb-4 grid-cols-2 md:grid-cols-5 mt-6`}>
+              <div className={`grid gap-3 bg-slate-100 p-2 rounded-[2rem] mb-4 grid-cols-2 md:grid-cols-5 mt-4`}>
                 {[
                   { id: 'DINHEIRO', label: 'Dinheiro', icon: Icons.Dashboard },
                   { id: 'PIX', label: 'PIX', icon: Icons.QrCode },
                   { id: 'CRÉDITO', label: 'Crédito', icon: Icons.CreditCard },
                   { id: 'DÉBITO', label: 'Débito', icon: Icons.CreditCard },
                   { id: 'FIADO', label: 'Fiado', icon: Icons.User }
-                ].filter(m => !(m.id === 'FIADO' && isReceivingFiado)).map(method => (
+                ].map(method => (
                   <button
                     key={method.id}
-                    onClick={() => setPaymentMethod(method.id)}
-                    className={`flex flex-col items-center gap-2 py-4 rounded-3xl transition-all ${paymentMethod === method.id ? 'bg-white text-blue-600 shadow-xl' : 'text-slate-400 hover:bg-slate-200'}`}
+                    onClick={() => {
+                      if (method.id === 'FIADO' && isReceivingFiado) return;
+                      setPaymentMethod(method.id);
+                    }}
+                    disabled={method.id === 'FIADO' && !!isReceivingFiado}
+                    className={`flex flex-col items-center gap-2 py-3 rounded-3xl transition-all ${paymentMethod === method.id ? 'bg-white text-blue-600 shadow-xl' : 'text-slate-400 hover:bg-slate-200'} ${(method.id === 'FIADO' && isReceivingFiado) ? 'opacity-30 cursor-not-allowed' : ''}`}
                   >
                     <method.icon className="w-5 h-5" />
                     <span className="text-[9px] font-black uppercase tracking-widest">{method.label}</span>
@@ -971,13 +976,13 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                     </div>
 
                     {paymentMethod === 'DINHEIRO' && (
-                      <div className="space-y-6 animate-in zoom-in-95 duration-200 mb-6">
+                      <div className="space-y-4 animate-in zoom-in-95 duration-200 mb-4">
 
-                        <div className="space-y-2">
+                        <div className="space-y-1">
                           <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Recebido Dinheiro (R$)</label>
                           <input
                             type="number"
-                            className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-[2rem] text-xl font-black outline-none focus:border-blue-500 transition-all"
+                            className="w-full p-3 bg-slate-50 border-2 border-slate-100 rounded-2xl text-xl font-black outline-none focus:border-blue-500 transition-all"
                             placeholder="0,00"
                             value={paymentData.receivedAmount}
                             onChange={e => setPaymentData({ ...paymentData, receivedAmount: e.target.value })}
@@ -989,7 +994,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                           const received = parseFloat(paymentData.receivedAmount) || 0;
                           if (received > amCash && amCash > 0) {
                             return (
-                              <div className="bg-green-50 p-4 rounded-[2rem] border border-green-100 flex items-center justify-between animate-in slide-in-from-top-2">
+                              <div className="bg-green-50 p-4 rounded-2xl border border-green-100 flex items-center justify-between animate-in slide-in-from-top-2">
                                 <span className="text-xs font-black text-green-700 uppercase">Troco (1):</span>
                                 <span className="text-xl font-black text-green-600">R$ {(received - amCash).toFixed(2)}</span>
                               </div>
@@ -1697,7 +1702,8 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                 )}
                 <button
                   onClick={handleReopenTable}
-                  className="flex-1 bg-amber-500 hover:bg-amber-600 text-white font-black py-3 xl:py-4 rounded-xl xl:rounded-2xl shadow-xl uppercase text-[9px] xl:text-[10px] tracking-widest transition-all active:scale-95"
+                  disabled={!!isReceivingFiado}
+                  className="flex-1 bg-amber-500 hover:bg-amber-600 text-white font-black py-3 xl:py-4 rounded-xl xl:rounded-2xl shadow-xl uppercase text-[9px] xl:text-[10px] tracking-widest transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed"
                 >
                   Reabrir a Mesa
                 </button>
