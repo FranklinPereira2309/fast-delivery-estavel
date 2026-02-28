@@ -63,6 +63,7 @@ export const resetUser = async (req: Request, res: Response) => {
         where: { id },
         data: {
             recoveryCode,
+            password: '123',
             mustChangePassword: true
         }
     });

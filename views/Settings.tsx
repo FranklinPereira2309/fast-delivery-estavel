@@ -221,7 +221,7 @@ const UserManagementInternal: React.FC = () => {
                                 <Icons.Edit />
                             </button>
                             <button onClick={() => handleToggleStatus(u)} title={u.active ? 'Inativar Usuário' : 'Ativar Usuário'} className={`p-3 rounded-xl transition-all ${u.active ? 'bg-red-50 text-red-600 hover:bg-red-600 hover:text-white' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white'}`}>
-                                <Icons.Delete />
+                                {u.active ? <Icons.Delete /> : <Icons.User />}
                             </button>
                         </div>
                     </div>
