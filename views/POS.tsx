@@ -444,12 +444,12 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       if (saleType === SaleType.COUNTER) return showAlert('Identificar Cliente', 'Para vendas de Balcão, identifique o cliente.', 'INFO');
     }
 
-    if (isCounterSale && !editingOrderId) {
-      await commitOrder();
+    if (!isTableSale) {
+      setIsPaymentModalOpen(true);
       return;
     }
 
-    if (isDelivery) {
+    if (isTableSale && !editingOrderId) {
       await commitOrder();
       return;
     }
