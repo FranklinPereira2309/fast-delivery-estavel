@@ -86,6 +86,9 @@ const UserManagementInternal: React.FC = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingUser, setEditingUser] = useState<User | null>(null);
     const [formData, setFormData] = useState({ name: '', email: '', password: '', phone: '', permissions: [] as string[] });
+    const [alertConfig, setAlertConfig] = useState<{ isOpen: boolean, title: string, message: string, type: 'SUCCESS' | 'ERROR' | 'DANGER' | 'INFO', onConfirm?: () => void }>({
+        isOpen: false, title: '', message: '', type: 'SUCCESS'
+    });
 
     const applyPhoneMask = (value: string) => {
         const v = value.replace(/\D/g, '').slice(0, 11);
@@ -126,15 +129,68 @@ const UserManagementInternal: React.FC = () => {
         refresh();
     };
 
+    const handleToggleStatus = async (user: User) => {
+        const action = user.active ? 'inativar' : 'ativar';
+        setAlertConfig({
+            isOpen: true,
+            title: `${action.toUpperCase()} USUÁRIO`,
+            message: `Tem certeza que deseja ${action} o acesso do usuário ${user.name}?`,
+            type: user.active ? 'DANGER' : 'INFO',
+            onConfirm: async () => {
+                await db.toggleUserStatus(user.id, !user.active);
+                refresh();
+                setAlertConfig(prev => ({ ...prev, isOpen: false }));
+            }
+        });
+    };
+
+    const handleResetUser = async (user: User) => {
+        setAlertConfig({
+            isOpen: true,
+            title: 'RESET DE SEGURANÇA',
+            message: `O código de recuperação de ${user.name} será reiniciado e será exigida uma nova senha no próximo login. Prosseguir?`,
+            type: 'DANGER',
+            onConfirm: async () => {
+                await db.resetUser(user.id);
+                refresh();
+                setAlertConfig(prev => ({ ...prev, isOpen: false }));
+            }
+        });
+    };
+
     const handleDeleteUser = async (id: string) => {
-        if (confirm("Tem certeza que deseja remover este usuário?")) {
-            await db.deleteUser(id);
-            refresh();
-        }
+        setAlertConfig({
+            isOpen: true,
+            title: 'EXCLUIR USUÁRIO',
+            message: 'Tem certeza que deseja remover permanentemente este usuário? Isso pode causar erros se ele possuir registros vinculados (Auditoria, etc). Recomendamos INATIVAR.',
+            type: 'DANGER',
+            onConfirm: async () => {
+                try {
+                    await db.deleteUser(id);
+                    refresh();
+                    setAlertConfig(prev => ({ ...prev, isOpen: false }));
+                } catch (e: any) {
+                    setAlertConfig({
+                        isOpen: true,
+                        title: 'ERRO NA EXCLUSÃO',
+                        message: 'Não foi possível excluir o usuário pois ele possui históricos vinculados. Use a opção INATIVAR.',
+                        type: 'ERROR'
+                    });
+                }
+            }
+        });
     };
 
     return (
         <div className="space-y-6">
+            <CustomAlert
+                isOpen={alertConfig.isOpen}
+                title={alertConfig.title}
+                message={alertConfig.message}
+                type={alertConfig.type}
+                onConfirm={alertConfig.onConfirm || (() => setAlertConfig(prev => ({ ...prev, isOpen: false })))}
+                onCancel={() => setAlertConfig(prev => ({ ...prev, isOpen: false }))}
+            />
             <div className="flex justify-between items-center">
                 <div>
                     <h3 className="text-xl font-black text-slate-800 uppercase tracking-tighter">Controle de Acesso (ACL)</h3>
@@ -144,21 +200,27 @@ const UserManagementInternal: React.FC = () => {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {users.map(u => (
-                    <div key={u.id} className="bg-white p-6 rounded-[2rem] border border-slate-100 flex justify-between items-center group hover:shadow-xl transition-all">
+                    <div key={u.id} className={`bg-white p-6 rounded-[2rem] border border-slate-100 flex justify-between items-center group hover:shadow-xl transition-all ${!u.active ? 'opacity-50 grayscale' : ''}`}>
                         <div>
-                            <p className="font-black text-slate-800 uppercase text-xs">{u.name}</p>
+                            <div className="flex items-center gap-2">
+                                <p className="font-black text-slate-800 uppercase text-xs">{u.name}</p>
+                                {!u.active && <span className="text-[8px] bg-red-100 text-red-600 font-black px-2 py-0.5 rounded-full uppercase tracking-widest">Inativo</span>}
+                            </div>
                             <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest mt-1">{u.permissions.join(' • ')}</p>
                             {u.phone && <p className="text-[9px] text-blue-500 font-bold mt-1">{u.phone}</p>}
                         </div>
                         <div className="flex gap-2">
+                            <button onClick={() => handleResetUser(u)} title="Resetar Segurança" className="p-3 bg-amber-50 text-amber-600 rounded-xl hover:bg-amber-600 hover:text-white transition-all">
+                                <Icons.Clock />
+                            </button>
                             <button onClick={() => {
                                 setEditingUser(u);
                                 setFormData({ name: u.name, email: u.email, password: '', phone: u.phone || '', permissions: u.permissions });
                                 setIsModalOpen(true);
-                            }} className="p-3 bg-slate-50 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition-all">
+                            }} title="Editar Dados" className="p-3 bg-slate-50 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition-all">
                                 <Icons.Edit />
                             </button>
-                            <button onClick={() => handleDeleteUser(u.id)} className="p-3 bg-red-50 text-red-600 rounded-xl hover:bg-red-600 hover:text-white transition-all">
+                            <button onClick={() => handleToggleStatus(u)} title={u.active ? 'Inativar Usuário' : 'Ativar Usuário'} className={`p-3 rounded-xl transition-all ${u.active ? 'bg-red-50 text-red-600 hover:bg-red-600 hover:text-white' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white'}`}>
                                 <Icons.Delete />
                             </button>
                         </div>

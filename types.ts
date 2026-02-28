@@ -53,6 +53,7 @@ export interface User {
   phone?: string;
   recoveryCode?: string;
   mustChangePassword?: boolean;
+  active: boolean;
   permissions: string[];
   createdAt: string;
 }

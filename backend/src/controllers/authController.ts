@@ -13,6 +13,10 @@ export const login = async (req: Request, res: Response) => {
         });
 
         if (user) {
+            if (!user.active) {
+                return res.status(403).json({ message: 'Esta conta está inativada. Entre em contato com o administrador.' });
+            }
+
             // Create a log entry
             await prisma.auditLog.create({
                 data: {

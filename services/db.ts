@@ -231,6 +231,8 @@ class APIDBService {
   public async getUsers(): Promise<User[]> { return this.request<User[]>('/users'); }
   public async saveUser(u: User) { await this.request('/users', { method: 'POST', body: JSON.stringify(u) }); }
   public async deleteUser(id: string) { await this.request(`/users/${id}`, { method: 'DELETE' }); }
+  public async toggleUserStatus(id: string, active: boolean) { await this.request('/users/toggle-status', { method: 'POST', body: JSON.stringify({ id, active }) }); }
+  public async resetUser(id: string) { await this.request('/users/reset', { method: 'POST', body: JSON.stringify({ id }) }); }
 
   public async getClients(): Promise<Client[]> { return this.request<Client[]>('/clients'); }
   public async saveClient(c: Client) { await this.request('/clients', { method: 'POST', body: JSON.stringify(c) }); }
