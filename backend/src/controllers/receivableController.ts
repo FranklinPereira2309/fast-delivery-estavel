@@ -6,7 +6,8 @@ const prisma = new PrismaClient();
 // List all receivables, optionally filtered by status or clientId
 export const getReceivables = async (req: Request, res: Response) => {
     try {
-        const { status, clientId } = req.query;
+        const status = req.query.status as string;
+        const clientId = req.query.clientId as string;
         const filter: any = {};
 
         if (status) filter.status = status;
@@ -58,7 +59,7 @@ export const createReceivable = async (req: Request, res: Response) => {
 // Update receivable (e.g. dueDate or observations)
 export const updateReceivable = async (req: Request, res: Response) => {
     try {
-        const { id } = req.params;
+        const id = req.params.id as string;
         const { dueDate, observations } = req.body;
 
         const updated = await prisma.receivable.update({
@@ -79,7 +80,7 @@ export const updateReceivable = async (req: Request, res: Response) => {
 // Delete receivable (Admin Master Only)
 export const deleteReceivable = async (req: Request, res: Response) => {
     try {
-        const { id } = req.params;
+        const id = req.params.id as string;
         await prisma.receivable.delete({ where: { id } });
         res.json({ success: true });
     } catch (error) {
@@ -91,7 +92,7 @@ export const deleteReceivable = async (req: Request, res: Response) => {
 // Mark as PAID and inject into CashSession
 export const receivePayment = async (req: Request, res: Response) => {
     try {
-        const { id } = req.params;
+        const id = req.params.id as string;
         const { paymentMethod, userId } = req.body;
 
         if (!paymentMethod) {
@@ -154,7 +155,7 @@ export const receivePayment = async (req: Request, res: Response) => {
                         userId: user.id,
                         userName: user.name,
                         action: 'RECEBIMENTO_FIADO',
-                        details: `Baixa de fiado R$ ${amount.toFixed(2)} do cliente ${receivable.client.name} em ${paymentMethod}`
+                        details: `Baixa de fiado R$ ${amount.toFixed(2)} do cliente ${(receivable as any).client?.name || 'N/A'} em ${paymentMethod}`
                     }
                 });
             }
