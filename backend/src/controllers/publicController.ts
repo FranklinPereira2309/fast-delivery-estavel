@@ -22,7 +22,7 @@ export const getProducts = async (req: Request, res: Response) => {
 };
 
 export const verifyTable = async (req: Request, res: Response) => {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const tableNumber = parseInt(id as string);
     const token = req.headers.authorization?.replace('Bearer ', '');
 
@@ -165,7 +165,7 @@ export const validatePin = async (req: Request, res: Response) => {
 };
 
 export const getTableConsumption = async (req: Request, res: Response) => {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const tableNumber = parseInt(id as string);
     const token = req.headers.authorization?.replace('Bearer ', '');
 

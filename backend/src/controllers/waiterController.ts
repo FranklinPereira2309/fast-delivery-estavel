@@ -17,7 +17,7 @@ export const saveWaiter = async (req: Request, res: Response) => {
 };
 
 export const deleteWaiter = async (req: Request, res: Response) => {
-    const { id } = req.params;
+    const id = req.params.id as string;
     await prisma.waiter.delete({ where: { id: id as string } });
     res.json({ message: 'Garçom removido' });
 };

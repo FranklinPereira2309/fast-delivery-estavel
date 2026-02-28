@@ -60,7 +60,7 @@ export const saveInventoryItem = async (req: Request, res: Response) => {
 };
 
 export const deleteInventoryItem = async (req: Request, res: Response) => {
-    const { id } = req.params;
+    const id = req.params.id as string;
     await prisma.inventoryItem.delete({ where: { id: id as string } });
     res.json({ message: 'Item de estoque removido' });
 };

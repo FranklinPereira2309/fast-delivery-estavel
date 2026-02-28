@@ -41,7 +41,7 @@ export const saveProduct = async (req: Request, res: Response) => {
 };
 
 export const deleteProduct = async (req: Request, res: Response) => {
-    const { id } = req.params;
+    const id = req.params.id as string;
     await prisma.product.delete({ where: { id: id as string } });
     res.json({ message: 'Produto removido' });
 };

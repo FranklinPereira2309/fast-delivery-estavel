@@ -17,7 +17,7 @@ export const saveClient = async (req: Request, res: Response) => {
 };
 
 export const deleteClient = async (req: Request, res: Response) => {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const { user } = req.body;
 
     if (!user?.permissions?.includes('admin')) {

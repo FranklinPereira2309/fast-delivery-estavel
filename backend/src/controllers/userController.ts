@@ -17,7 +17,7 @@ export const saveUser = async (req: Request, res: Response) => {
 };
 
 export const deleteUser = async (req: Request, res: Response) => {
-    const { id } = req.params;
+    const id = req.params.id as string;
     await prisma.user.delete({ where: { id: id as string } });
     res.json({ message: 'Usuário removido' });
 };
