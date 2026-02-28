@@ -912,14 +912,14 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       {isPaymentModalOpen && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
           <div className="bg-white w-[600px] max-w-[95vw] rounded-[3rem] shadow-2xl overflow-hidden border border-slate-100 flex flex-col max-h-[90vh]">
-            <div className="p-8 lg:p-10 border-b border-slate-50 shrink-0 relative">
+            <div className="p-4 lg:p-6 border-b border-slate-50 shrink-0 relative">
               <button
                 onClick={() => setIsPaymentModalOpen(false)}
-                className="absolute right-8 top-8 w-12 h-12 flex items-center justify-center bg-slate-100 rounded-full text-slate-400 hover:bg-red-50 hover:text-red-500 transition-all font-black text-2xl z-10"
+                className="absolute right-4 top-4 w-10 h-10 flex items-center justify-center bg-slate-100 rounded-full text-slate-400 hover:bg-red-50 hover:text-red-500 transition-all font-black text-xl z-10"
               >
                 ×
               </button>
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 px-2 mt-2 pr-16 lg:pr-20">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2 px-2 mt-2 pr-12 lg:pr-16">
                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                   Selecione 01 Método
                 </span>
@@ -940,7 +940,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                 </button>
               </div>
 
-              <div className={`grid gap-3 bg-slate-100 p-2 rounded-[2rem] mb-4 grid-cols-2 md:grid-cols-5 mt-4`}>
+              <div className={`grid gap-2 bg-slate-100 p-2 rounded-3xl mb-2 grid-cols-2 md:grid-cols-5 mt-2`}>
                 {[
                   { id: 'DINHEIRO', label: 'Dinheiro', icon: Icons.Dashboard },
                   { id: 'PIX', label: 'PIX', icon: Icons.QrCode },
@@ -963,20 +963,20 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                 ))}
               </div>
 
-              <div className={`p-8 lg:p-10 overflow-y-auto`}>
-                <div className={`grid gap-6 grid-cols-1`}>
+              <div className={`p-4 lg:p-6 overflow-y-auto`}>
+                <div className={`grid gap-4 grid-cols-1`}>
                   {/* 1º Método de Pagamento */}
                   <div>
                     {/* Always show the total amount */}
-                    <div className="p-6 bg-blue-50/50 rounded-[2rem] border-2 border-blue-100 flex flex-col items-center justify-center mb-6 relative overflow-hidden shadow-sm">
+                    <div className="p-4 bg-blue-50/50 rounded-[2rem] border-2 border-blue-100 flex flex-col items-center justify-center mb-4 relative overflow-hidden shadow-sm">
                       <div className="absolute -right-4 -top-4 w-24 h-24 bg-blue-400/10 rounded-full blur-xl"></div>
                       <div className="absolute -left-4 -bottom-4 w-24 h-24 bg-blue-600/10 rounded-full blur-xl"></div>
                       <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-1 relative z-10">Total da Compra</span>
-                      <span className="text-4xl md:text-5xl font-black text-blue-700 tracking-tighter relative z-10">R$ {cartTotal.toFixed(2)}</span>
+                      <span className="text-3xl md:text-4xl font-black text-blue-700 tracking-tighter relative z-10">R$ {cartTotal.toFixed(2)}</span>
                     </div>
 
                     {paymentMethod === 'DINHEIRO' && (
-                      <div className="space-y-4 animate-in zoom-in-95 duration-200 mb-4">
+                      <div className="space-y-2 animate-in zoom-in-95 duration-200 mb-2">
 
                         <div className="space-y-1">
                           <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Recebido Dinheiro (R$)</label>
@@ -1076,7 +1076,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
               </div>
             </div>
 
-            <div className={`p-8 lg:p-10 bg-slate-50 border-t border-slate-100 shrink-0 flex flex-col gap-4`}>
+            <div className={`p-4 lg:p-6 bg-slate-50 border-t border-slate-100 shrink-0 flex flex-col gap-2`}>
               {!!isReceivingFiado && (
                 <div className="flex items-center justify-between px-4 py-2 bg-white rounded-2xl border border-slate-100">
                   <div className="flex items-center gap-3">
@@ -1097,10 +1097,10 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
 
               <button
                 onClick={processPaymentAndFinalize}
-                className="w-full py-6 bg-blue-600 hover:bg-blue-700 text-white rounded-[2rem] font-black uppercase text-lg tracking-widest shadow-2xl shadow-blue-200 transition-all flex items-center justify-center gap-4 group"
+                className="w-full py-4 lg:py-5 bg-blue-600 hover:bg-blue-700 text-white rounded-[2rem] font-black uppercase text-lg tracking-widest shadow-2xl shadow-blue-200 transition-all flex items-center justify-center gap-3 group"
               >
                 <span>Finalizar Pedido</span>
-                <Icons.View className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+                <Icons.View className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </button>
             </div>
           </div>
