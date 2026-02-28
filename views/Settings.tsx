@@ -85,7 +85,15 @@ const UserManagementInternal: React.FC = () => {
     const [users, setUsers] = useState<User[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingUser, setEditingUser] = useState<User | null>(null);
-    const [formData, setFormData] = useState({ name: '', email: '', password: '', permissions: [] as string[] });
+    const [formData, setFormData] = useState({ name: '', email: '', password: '', phone: '', permissions: [] as string[] });
+
+    const applyPhoneMask = (value: string) => {
+        const v = value.replace(/\D/g, '').slice(0, 11);
+        if (v.length <= 2) return v;
+        if (v.length <= 3) return `(${v.slice(0, 2)}) ${v.slice(2)}`;
+        if (v.length <= 7) return `(${v.slice(0, 2)}) ${v.slice(2, 3)} ${v.slice(3)}`;
+        return `(${v.slice(0, 2)}) ${v.slice(2, 3)} ${v.slice(3, 7)}-${v.slice(7)}`;
+    };
 
     const availableModules = [
         { id: 'dashboard', label: 'Dashboard' },
@@ -118,6 +126,13 @@ const UserManagementInternal: React.FC = () => {
         refresh();
     };
 
+    const handleDeleteUser = async (id: string) => {
+        if (confirm("Tem certeza que deseja remover este usuário?")) {
+            await db.deleteUser(id);
+            refresh();
+        }
+    };
+
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center">
@@ -125,7 +140,7 @@ const UserManagementInternal: React.FC = () => {
                     <h3 className="text-xl font-black text-slate-800 uppercase tracking-tighter">Controle de Acesso (ACL)</h3>
                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Defina permissões e usuários do sistema</p>
                 </div>
-                <button onClick={() => { setEditingUser(null); setFormData({ name: '', email: '', password: '', permissions: ['dashboard'] }); setIsModalOpen(true); }} className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-100 transition-all">+ Novo Usuário</button>
+                <button onClick={() => { setEditingUser(null); setFormData({ name: '', email: '', password: '', phone: '', permissions: ['dashboard'] }); setIsModalOpen(true); }} className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-100 transition-all">+ Novo Usuário</button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {users.map(u => (
@@ -133,14 +148,20 @@ const UserManagementInternal: React.FC = () => {
                         <div>
                             <p className="font-black text-slate-800 uppercase text-xs">{u.name}</p>
                             <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest mt-1">{u.permissions.join(' • ')}</p>
+                            {u.phone && <p className="text-[9px] text-blue-500 font-bold mt-1">{u.phone}</p>}
                         </div>
-                        <button onClick={() => {
-                            setEditingUser(u);
-                            setFormData({ name: u.name, email: u.email, password: u.password, permissions: u.permissions });
-                            setIsModalOpen(true);
-                        }} className="p-3 bg-slate-50 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition-all">
-                            <Icons.Edit />
-                        </button>
+                        <div className="flex gap-2">
+                            <button onClick={() => {
+                                setEditingUser(u);
+                                setFormData({ name: u.name, email: u.email, password: '', phone: u.phone || '', permissions: u.permissions });
+                                setIsModalOpen(true);
+                            }} className="p-3 bg-slate-50 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition-all">
+                                <Icons.Edit />
+                            </button>
+                            <button onClick={() => handleDeleteUser(u.id)} className="p-3 bg-red-50 text-red-600 rounded-xl hover:bg-red-600 hover:text-white transition-all">
+                                <Icons.Delete />
+                            </button>
+                        </div>
                     </div>
                 ))}
             </div>
@@ -150,10 +171,12 @@ const UserManagementInternal: React.FC = () => {
                     <div className="bg-white rounded-[3rem] shadow-2xl p-10 w-full max-w-lg border border-white/20 animate-in zoom-in duration-200">
                         <h4 className="text-2xl font-black text-slate-800 uppercase tracking-tighter mb-8">{editingUser ? 'Editar' : 'Novo'} Usuário</h4>
                         <form onSubmit={handleSave} className="space-y-6">
-                            <input type="text" placeholder="Nome" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="w-full p-4 bg-slate-100 border-none rounded-2xl outline-none font-bold text-sm" />
-                            <input type="email" placeholder="E-mail" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} className="w-full p-4 bg-slate-100 border-none rounded-2xl outline-none font-bold text-sm" />
-                            <input type="password" placeholder="Senha" value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })} className="w-full p-4 bg-slate-100 border-none rounded-2xl outline-none font-bold text-sm" />
-
+                            <input type="text" placeholder="Nome" value={formData.name} required onChange={e => setFormData({ ...formData, name: e.target.value })} className="w-full p-4 bg-slate-100 border-none rounded-2xl outline-none font-bold text-sm" />
+                            <input type="email" placeholder="E-mail" value={formData.email} required onChange={e => setFormData({ ...formData, email: e.target.value })} className="w-full p-4 bg-slate-100 border-none rounded-2xl outline-none font-bold text-sm" />
+                            <input type="text" placeholder="Telefone: (00) 9 0000-0000" value={formData.phone} required onChange={e => setFormData({ ...formData, phone: applyPhoneMask(e.target.value) })} className="w-full p-4 bg-slate-100 border-none rounded-2xl outline-none font-bold text-sm" />
+                            {!editingUser && (
+                                <input type="password" placeholder="Senha" value={formData.password} required onChange={e => setFormData({ ...formData, password: e.target.value })} className="w-full p-4 bg-slate-100 border-none rounded-2xl outline-none font-bold text-sm" />
+                            )}
                             <div className="pt-6 border-t border-slate-100">
                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Módulos Permitidos:</p>
                                 <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-2 custom-scrollbar">

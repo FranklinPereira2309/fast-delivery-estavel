@@ -350,6 +350,25 @@ class APIDBService {
       body: JSON.stringify(data)
     });
   }
+
+  public async verifyRecoveryCode(email: string, recoveryCode: string): Promise<boolean> {
+    try {
+      const resp = await this.request<{ valid: boolean }>('/auth/recovery/verify', {
+        method: 'POST',
+        body: JSON.stringify({ email, recoveryCode })
+      });
+      return resp.valid;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  public async resetPassword(data: { email: string, recoveryCode: string, newPassword: string }): Promise<any> {
+    return this.request('/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  }
 }
 
 export const db = new APIDBService();

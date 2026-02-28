@@ -50,6 +50,9 @@ export interface User {
   name: string;
   email: string;
   password: string;
+  phone?: string;
+  recoveryCode?: string;
+  mustChangePassword?: boolean;
   permissions: string[];
   createdAt: string;
 }

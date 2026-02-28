@@ -25,6 +25,8 @@ async function main() {
       email: adminEmail,
       name: 'Administrador Master',
       password: 'admin', // Altere após o primeiro acesso
+      recoveryCode: 'ADMIN1',
+      mustChangePassword: true,
       permissions: [
         'dashboard',
         'pos',

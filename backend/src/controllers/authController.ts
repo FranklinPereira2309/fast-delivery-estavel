@@ -73,3 +73,52 @@ export const logout = async (req: Request, res: Response) => {
         res.status(500).json({ error: 'Erro ao realizar logout' });
     }
 };
+
+export const verifyRecoveryCode = async (req: Request, res: Response) => {
+    const { email, recoveryCode } = req.body;
+    try {
+        const user = await prisma.user.findFirst({
+            where: { email, recoveryCode }
+        });
+        if (user) {
+            res.json({ valid: true });
+        } else {
+            res.status(401).json({ valid: false, message: 'Código de recuperação ou e-mail inválido.' });
+        }
+    } catch (error) {
+        res.status(500).json({ error: 'Erro ao verificar código.' });
+    }
+};
+
+export const resetPassword = async (req: Request, res: Response) => {
+    const { email, recoveryCode, newPassword } = req.body;
+    try {
+        const user = await prisma.user.findFirst({
+            where: { email, recoveryCode }
+        });
+        if (user) {
+            await prisma.user.update({
+                where: { id: user.id },
+                data: {
+                    password: newPassword,
+                    mustChangePassword: false
+                }
+            });
+
+            await prisma.auditLog.create({
+                data: {
+                    userId: user.id,
+                    userName: user.name,
+                    action: 'PASSWORD_RESET',
+                    details: `Usuário ${user.name} redefiniu sua própria senha.`
+                }
+            });
+
+            res.json({ message: 'Senha redefinida com sucesso.' });
+        } else {
+            res.status(401).json({ message: 'Ação não autorizada ou código inválido.' });
+        }
+    } catch (error) {
+        res.status(500).json({ error: 'Erro ao redefinir senha.' });
+    }
+};

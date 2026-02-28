@@ -60,6 +60,8 @@ export const resetSystem = async (req: Request, res: Response) => {
                     email: 'admin@admin.com',
                     name: 'Administrador Master',
                     password: 'admin',
+                    recoveryCode: 'ADMIN1',
+                    mustChangePassword: true,
                     permissions: [
                         'dashboard',
                         'pos',
