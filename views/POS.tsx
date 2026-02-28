@@ -2109,20 +2109,6 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                     </div>
                   </div>
 
-                  <div className="mb-4">
-                    <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Valor a Cobrar (R$)</label>
-                    <input
-                      type="number"
-                      className="w-full mt-1 p-3 bg-slate-50 border border-slate-200 focus:border-indigo-500 rounded-2xl text-lg font-black outline-none text-indigo-700 transition-all placeholder:text-indigo-200"
-                      value={splitAmount1}
-                      onChange={e => {
-                        setSplitAmount1(e.target.value);
-                        const m2 = cartTotal - parseFloat(e.target.value || '0');
-                        if (m2 >= 0) setSplitAmount2(m2.toFixed(2));
-                      }}
-                      placeholder="0.00"
-                    />
-                  </div>
 
                   <div className="grid grid-cols-4 gap-2 bg-slate-50 p-2 rounded-2xl mb-6">
                     {[
@@ -2143,6 +2129,21 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                   </div>
 
                   <div className="flex-1">
+                    <div className="mb-6 p-4 bg-indigo-50 rounded-2xl border border-indigo-100 relative overflow-hidden animate-in fade-in duration-300">
+                      <div className="absolute -right-4 -top-4 w-16 h-16 bg-blue-400/10 rounded-full blur-xl"></div>
+                      <label className="text-[10px] font-black text-indigo-800 uppercase tracking-widest ml-1 relative z-10">Valor a passar em {paymentMethod || 'Dinheiro'} (R$)</label>
+                      <input
+                        type="number"
+                        className="relative z-10 w-full mt-2 p-4 bg-white border-2 border-indigo-200 focus:border-indigo-500 rounded-2xl text-2xl font-black outline-none text-indigo-700 transition-all shadow-sm focus:ring-4 focus:ring-indigo-500/10"
+                        value={splitAmount1}
+                        onChange={e => {
+                          setSplitAmount1(e.target.value);
+                          const m2 = cartTotal - parseFloat(e.target.value || '0');
+                          if (m2 >= 0) setSplitAmount2(m2.toFixed(2));
+                        }}
+                        placeholder="0.00"
+                      />
+                    </div>
                     {paymentMethod === 'DINHEIRO' && (
                       <div className="space-y-4 animate-in zoom-in-95 duration-200">
                         <div className="space-y-1">
@@ -2248,20 +2249,6 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                     </div>
                   </div>
 
-                  <div className="mb-4">
-                    <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Valor a Cobrar (R$)</label>
-                    <input
-                      type="number"
-                      className="w-full mt-1 p-3 bg-white border border-slate-200 focus:border-indigo-500 rounded-2xl text-lg font-black outline-none text-indigo-700 transition-all shadow-sm placeholder:text-indigo-200"
-                      value={splitAmount2}
-                      onChange={e => {
-                        setSplitAmount2(e.target.value);
-                        const m1 = cartTotal - parseFloat(e.target.value || '0');
-                        if (m1 >= 0) setSplitAmount1(m1.toFixed(2));
-                      }}
-                      placeholder="0.00"
-                    />
-                  </div>
 
                   <div className="grid grid-cols-4 gap-2 bg-slate-200/50 p-2 rounded-2xl mb-6">
                     {[
@@ -2282,6 +2269,21 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                   </div>
 
                   <div className="flex-1">
+                    <div className="mb-6 p-4 bg-indigo-50 rounded-2xl border border-indigo-100 relative overflow-hidden animate-in fade-in duration-300">
+                      <div className="absolute -right-4 -top-4 w-16 h-16 bg-blue-400/10 rounded-full blur-xl"></div>
+                      <label className="text-[10px] font-black text-indigo-800 uppercase tracking-widest ml-1 relative z-10">Valor a passar em {paymentMethod2 || 'Dinheiro'} (R$)</label>
+                      <input
+                        type="number"
+                        className="relative z-10 w-full mt-2 p-4 bg-white border-2 border-indigo-200 focus:border-indigo-500 rounded-2xl text-2xl font-black outline-none text-indigo-700 transition-all shadow-sm focus:ring-4 focus:ring-indigo-500/10"
+                        value={splitAmount2}
+                        onChange={e => {
+                          setSplitAmount2(e.target.value);
+                          const m1 = cartTotal - parseFloat(e.target.value || '0');
+                          if (m1 >= 0) setSplitAmount1(m1.toFixed(2));
+                        }}
+                        placeholder="0.00"
+                      />
+                    </div>
                     {paymentMethod2 === 'DINHEIRO' && (
                       <div className="space-y-4 animate-in zoom-in-95 duration-200">
                         <div className="space-y-1">
