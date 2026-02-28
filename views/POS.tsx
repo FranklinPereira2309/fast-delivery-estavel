@@ -710,7 +710,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
   };
 
   const handleReopenCash = async (sessionId: string) => {
-    if (!currentUser || currentUser.role !== 'ADMIN') {
+    if (!currentUser || !currentUser.permissions.includes('settings')) {
       return showAlert("Acesso Negado", "Apenas administradores podem reabrir o caixa.", "DANGER");
     }
     try {

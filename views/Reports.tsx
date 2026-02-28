@@ -140,7 +140,7 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
     };
 
     const handleReopen = async (sessionId: string) => {
-        if (!currentUser || currentUser.role !== 'ADMIN') {
+        if (!currentUser || !currentUser.permissions.includes('settings')) {
             alert("Apenas administradores podem reabrir caixa.");
             return;
         }
