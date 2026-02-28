@@ -6,6 +6,12 @@ import { socket } from '../services/socket';
 import { Icons, PLACEHOLDER_FOOD_IMAGE, formatImageUrl } from '../constants';
 import CustomAlert from '../components/CustomAlert';
 import { validateEmail, validateCPF, validateCNPJ, maskPhone, maskDocument, validateCreditCard, getCardBrand, maskCardNumber, maskExpiry, toTitleCase } from '../services/validationUtils';
+import { initMercadoPago, Wallet } from '@mercadopago/sdk-react';
+
+// Substitua pela sua chave pública REAL ou vinda do backend
+// Para testes, o usuário informou que já tem as chaves.
+const MP_PUBLIC_KEY = 'TEST-f0761e67-7393-4700-84c4-72ed7026df21'; // Exemplo de teste
+initMercadoPago(MP_PUBLIC_KEY, { locale: 'pt-BR' });
 
 interface POSProps {
   currentUser: User;
@@ -79,6 +85,9 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
     cardCVV: '',
     pixStatus: 'idle' as 'idle' | 'generating' | 'waiting' | 'paid'
   });
+  const [mpPreferenceId, setMpPreferenceId] = useState<string | null>(null);
+  const [isGeneratingMP, setIsGeneratingMP] = useState(false);
+
   const [alertConfig, setAlertConfig] = useState<{ isOpen: boolean, title: string, message: string, onConfirm: () => void, type: 'INFO' | 'DANGER' | 'SUCCESS' }>({
     isOpen: false, title: '', message: '', onConfirm: () => { }, type: 'INFO'
   });
@@ -568,6 +577,63 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
     setIsPaymentModalOpen(true);
   };
 
+  const handleCreateMPPreference = async () => {
+    try {
+      setIsGeneratingMP(true);
+      const items = cart.map(it => ({
+        productId: it.productId,
+        name: it.name,
+        price: it.price * (it.quantity || 1),
+        quantity: 1
+      }));
+
+      const clientName = selectedClient?.name || avulsoData.name || 'PDV-Venda';
+      const response = await fetch(`${(import.meta as any).env.VITE_API_URL || 'http://localhost:3000/api'}/payments/create-preference`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items,
+          total: cartTotal,
+          clientName
+        })
+      });
+
+      if (!response.ok) throw new Error('Erro ao gerar pagamento online.');
+      const data = await response.json();
+      setMpPreferenceId(data.id);
+    } catch (err: any) {
+      showAlert("Vix...", err.message || "Erro no Mercado Pago", "DANGER");
+    } finally {
+      setIsGeneratingMP(false);
+    }
+  };
+
+  const handleCreateMPPreferenceInSplit = async (isFirst: boolean) => {
+    try {
+      setIsGeneratingMP(true);
+      const amount = isFirst ? parseFloat(splitAmount1) : parseFloat(splitAmount2);
+
+      const clientName = selectedClient?.name || avulsoData.name || 'PDV-Split';
+      const response = await fetch(`${(import.meta as any).env.VITE_API_URL || 'http://localhost:3000/api'}/payments/create-preference`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: [{ productId: 'SPLIT_MP', name: 'Pagamento Parcial', price: amount, quantity: 1 }],
+          total: amount,
+          clientName
+        })
+      });
+
+      if (!response.ok) throw new Error('Erro ao gerar pagamento online.');
+      const data = await response.json();
+      setMpPreferenceId(data.id);
+    } catch (err: any) {
+      showAlert("Vix...", err.message || "Erro no Mercado Pago", "DANGER");
+    } finally {
+      setIsGeneratingMP(false);
+    }
+  };
+
   const commitOrder = async () => {
     const isTableSale = saleType === SaleType.TABLE;
     const isCounterSale = saleType === SaleType.COUNTER;
@@ -952,6 +1018,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                   { id: 'PIX', label: 'PIX', icon: Icons.QrCode },
                   { id: 'CRÉDITO', label: 'Crédito', icon: Icons.CreditCard },
                   { id: 'DÉBITO', label: 'Débito', icon: Icons.CreditCard },
+                  { id: 'MERCADOPAGO', label: 'M. Pago', icon: Icons.CreditCard },
                   { id: 'FIADO', label: 'Fiado', icon: Icons.User }
                 ].map(method => (
                   <button
@@ -1061,6 +1128,32 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                             />
                           </div>
                         </div>
+                      </div>
+                    )}
+
+                    {paymentMethod === 'MERCADOPAGO' && (
+                      <div className="flex flex-col items-center py-4 animate-in zoom-in-95 duration-200">
+                        {!mpPreferenceId ? (
+                          <button
+                            onClick={handleCreateMPPreference}
+                            disabled={isGeneratingMP}
+                            className="w-full py-4 bg-blue-600 text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl flex items-center justify-center gap-2 hover:bg-blue-700 disabled:opacity-50"
+                          >
+                            {isGeneratingMP ? (
+                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            ) : 'Gerar QR / Pagamento Online'}
+                          </button>
+                        ) : (
+                          <div className="w-full">
+                            <Wallet initialization={{ preferenceId: mpPreferenceId!, redirectMode: 'self' }} />
+                            <button
+                              onClick={() => setMpPreferenceId(null)}
+                              className="w-full mt-4 text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-slate-600"
+                            >
+                              Trocar / Reiniciar Pagamento
+                            </button>
+                          </div>
+                        )}
                       </div>
                     )}
 
@@ -2460,6 +2553,24 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                       </div>
                     )}
 
+                    {paymentMethod === 'MERCADOPAGO' && (
+                      <div className="flex flex-col items-center py-2 animate-in zoom-in-95 duration-200">
+                        {!mpPreferenceId ? (
+                          <button
+                            onClick={() => handleCreateMPPreferenceInSplit(true)}
+                            disabled={isGeneratingMP}
+                            className="w-full py-3 bg-blue-600 text-white rounded-xl font-black uppercase text-[10px] tracking-widest shadow-md hover:bg-blue-700 disabled:opacity-50"
+                          >
+                            {isGeneratingMP ? '...' : 'Gerar Transação'}
+                          </button>
+                        ) : (
+                          <div className="w-full">
+                            <Wallet initialization={{ preferenceId: mpPreferenceId!, redirectMode: 'self' }} />
+                          </div>
+                        )}
+                      </div>
+                    )}
+
                     {paymentMethod === 'PIX' && (
                       <div className="flex flex-col items-center py-2 animate-in zoom-in-95 duration-200">
                         <div className="w-28 h-28 bg-slate-50 rounded-[1.5rem] border-[4px] border-blue-50 flex items-center justify-center mb-2 relative group overflow-hidden shadow-inner">
@@ -2597,6 +2708,24 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                             />
                           </div>
                         </div>
+                      </div>
+                    )}
+
+                    {paymentMethod2 === 'MERCADOPAGO' && (
+                      <div className="flex flex-col items-center py-2 animate-in zoom-in-95 duration-200">
+                        {!mpPreferenceId ? (
+                          <button
+                            onClick={() => handleCreateMPPreferenceInSplit(false)}
+                            disabled={isGeneratingMP}
+                            className="w-full py-3 bg-blue-600 text-white rounded-xl font-black uppercase text-[10px] tracking-widest shadow-md hover:bg-blue-700 disabled:opacity-50"
+                          >
+                            {isGeneratingMP ? '...' : 'Gerar Transação'}
+                          </button>
+                        ) : (
+                          <div className="w-full">
+                            <Wallet initialization={{ preferenceId: mpPreferenceId!, redirectMode: 'self' }} />
+                          </div>
+                        )}
                       </div>
                     )}
 
