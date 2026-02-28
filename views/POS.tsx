@@ -1555,10 +1555,10 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                 handleFinalize();
               }}
               disabled={cart.length === 0 || (saleType === SaleType.TABLE && !tableNumberInput)}
-              className={`w-full text-white font-black py-4 xl:py-5 rounded-xl xl:rounded-2xl shadow-xl uppercase text-[10px] tracking-widest transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed ${(saleType === SaleType.COUNTER && !editingOrderId) ? 'bg-orange-500 hover:bg-orange-600' : 'bg-blue-600 hover:bg-blue-700'
+              className={`w-full text-white font-black py-4 xl:py-5 rounded-xl xl:rounded-2xl shadow-xl uppercase text-[10px] tracking-widest transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed ${((saleType === SaleType.COUNTER && !editingOrderId) || saleType === SaleType.OWN_DELIVERY) ? 'bg-orange-500 hover:bg-orange-600' : 'bg-blue-600 hover:bg-blue-700'
                 }`}
             >
-              {(saleType === SaleType.COUNTER && !editingOrderId) ? 'Enviar p/ Produção' : 'Finalizar e Receber'}
+              {((saleType === SaleType.COUNTER && !editingOrderId) || saleType === SaleType.OWN_DELIVERY) ? 'Enviar p/ Produção' : 'Finalizar e Receber'}
             </button>
 
             {editingOrderId && (
@@ -1569,15 +1569,19 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
             {(!editingOrderId && cart.length > 0) && (
               <button
                 onClick={() => {
-                  setPaymentMethod('DINHEIRO');
-                  setPaymentMethod2('DINHEIRO');
-                  setSplitAmount1((cartTotal / 2).toFixed(2));
-                  setSplitAmount2((cartTotal / 2).toFixed(2));
-                  setIsSplitModalOpen(true);
+                  if (saleType === SaleType.OWN_DELIVERY) {
+                    setIsPaymentModalOpen(true);
+                  } else {
+                    setPaymentMethod('DINHEIRO');
+                    setPaymentMethod2('DINHEIRO');
+                    setSplitAmount1((cartTotal / 2).toFixed(2));
+                    setSplitAmount2((cartTotal / 2).toFixed(2));
+                    setIsSplitModalOpen(true);
+                  }
                 }}
                 className="w-full mt-3 bg-slate-100 hover:bg-slate-200 text-slate-600 py-4 xl:py-5 rounded-xl xl:rounded-2xl shadow-sm uppercase text-[10px] font-black tracking-widest transition-all active:scale-95 flex flex-col items-center justify-center gap-1"
               >
-                <span>Prosseguir para Pagamento Dividido</span>
+                <span>{saleType === SaleType.OWN_DELIVERY ? 'Pagamento Normal' : 'Prosseguir para Pagamento Dividido'}</span>
               </button>
             )}
           </div>
