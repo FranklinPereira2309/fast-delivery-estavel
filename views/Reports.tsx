@@ -272,13 +272,17 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
             y -= 30;
             page.drawText('RESUMO DE CAIXA', { x: 50, y, size: 12, font: fontBold });
             y -= 20;
-            page.drawText(`Total de Dinheiro Inicial (Aberturas): R$ ${totalInitialCash.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, { x: 50, y, size: 10, font });
+            page.drawText(`Dinheiro das Vendas (Período): R$ ${totalDinheiro.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, { x: 50, y, size: 10, font });
             y -= 15;
-            page.drawText(`Total de Dinheiro Relatado (Fechamentos): R$ ${totalReportedCash.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, { x: 50, y, size: 10, font });
+            page.drawText(`Fundo de Troco (Aberturas de Caixa): R$ ${totalInitialCash.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, { x: 50, y, size: 10, font });
+            y -= 15;
+            page.drawText(`Total de Dinheiro Físico Esperado (Vendas + Troco): R$ ${(totalDinheiro + totalInitialCash).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, { x: 50, y, size: 10, font: fontBold });
+            y -= 15;
+            page.drawText(`Total de Dinheiro Físico Declarado (Fechamentos de Caixa): R$ ${totalReportedCash.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, { x: 50, y, size: 10, font });
             y -= 15;
             page.drawText(`Falta/Sobra de Caixa (Diferenças): R$ ${totalDiff.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, { x: 50, y, size: 10, font });
 
-            y -= 30;
+            y -= 40;
             // Table Header
             page.drawRectangle({ x: 50, y: y - 5, width: width - 100, height: 20, color: rgb(0.95, 0.95, 0.95) });
             page.drawText('DATA', { x: 55, y, size: 7, font: fontBold });
