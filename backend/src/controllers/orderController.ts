@@ -263,6 +263,7 @@ export const saveOrder = async (req: Request, res: Response) => {
                     nfeUrl: order.nfeUrl || null,
                     nfeError: order.nfeError || null,
                     splitAmount1: (order.splitAmount1 !== null && order.splitAmount1 !== undefined) ? parseFloat(order.splitAmount1.toString()) : null,
+                    appliedServiceFee: (order.appliedServiceFee !== null && order.appliedServiceFee !== undefined) ? parseFloat(order.appliedServiceFee.toString()) : null,
                     digitalPin: order.digitalPin || null,
                     digitalToken: order.digitalToken || null,
                     items: {
@@ -303,6 +304,7 @@ export const saveOrder = async (req: Request, res: Response) => {
                     nfeUrl: order.nfeUrl || null,
                     nfeError: order.nfeError || null,
                     splitAmount1: (order.splitAmount1 !== null && order.splitAmount1 !== undefined) ? parseFloat(order.splitAmount1.toString()) : null,
+                    appliedServiceFee: (order.appliedServiceFee !== null && order.appliedServiceFee !== undefined) ? parseFloat(order.appliedServiceFee.toString()) : null,
                     digitalPin: order.digitalPin || null,
                     digitalToken: order.digitalToken || null,
                     items: {

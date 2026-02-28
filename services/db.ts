@@ -332,10 +332,10 @@ class APIDBService {
     return this.request<any[]>('/receivables');
   }
 
-  public async receivePayment(id: string, paymentMethod: string, user: User): Promise<any> {
+  public async receivePayment(id: string, paymentMethod: string, user: User, nfeData?: any): Promise<any> {
     return this.request(`/receivables/${id}/pay`, {
       method: 'POST',
-      body: JSON.stringify({ paymentMethod, user })
+      body: JSON.stringify({ paymentMethod, user, nfeData })
     });
   }
 

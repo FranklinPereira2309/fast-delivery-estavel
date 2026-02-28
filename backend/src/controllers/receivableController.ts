@@ -98,7 +98,7 @@ export const deleteReceivable = async (req: Request, res: Response) => {
 export const receivePayment = async (req: Request, res: Response) => {
     try {
         const id = req.params.id as string;
-        const { paymentMethod, userId } = req.body;
+        const { paymentMethod, userId, nfeData } = req.body;
 
         if (!paymentMethod) {
             return res.status(400).json({ error: 'Método de pagamento obrigatório' });
@@ -144,9 +144,20 @@ export const receivePayment = async (req: Request, res: Response) => {
                     }
                 });
             }
+        } // End if (openSession) block
+
+        // 3. Sync Payment Method and NFC-e back to the original Order
+        if (receivable.orderId) {
+            await prisma.order.update({
+                where: { id: receivable.orderId },
+                data: {
+                    paymentMethod,
+                    ...(nfeData || {})
+                }
+            });
         }
 
-        // 3. Delete Receivable (requested: excluded permanently on completion)
+        // 4. Delete Receivable (requested: excluded permanently on completion)
         await prisma.receivable.delete({ where: { id } });
 
         res.json({ success: true, message: 'Pagamento registrado e débito excluído.' });

@@ -469,22 +469,28 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
     if (isReceivingFiado) {
       try {
         const method = isSplitModalOpen ? `${paymentMethod} + ${paymentMethod2}` : paymentMethod;
-        await db.receivePayment(isReceivingFiado, method, currentUser);
 
-        // We need the order data before clearing state so we can print the NFC-e
+        let nfeData: any = undefined;
         let currentOrderData = null;
+
         if (emitNfce) {
+          nfeData = {
+            nfeStatus: 'EMITTED',
+            nfeNumber: `NFC-${Date.now()}`,
+            nfeUrl: `https://sefaz.gov.br/nfce/qrcode?p=${Date.now()}`
+          };
+
           const rec = pendingReceivables.find(r => r.id === isReceivingFiado);
           if (rec) {
             currentOrderData = {
               ...rec.order,
               paymentMethod: method,
-              nfeStatus: 'EMITTED',
-              nfeNumber: `NFC-${Date.now()}`,
-              nfeUrl: `https://sefaz.gov.br/nfce/qrcode?p=${Date.now()}`
+              ...nfeData
             };
           }
         }
+
+        await db.receivePayment(isReceivingFiado, method, currentUser, nfeData);
 
         showAlert("Sucesso", "Recebimento concluído e registrado no caixa.", "SUCCESS");
 
