@@ -211,12 +211,11 @@ export const reopenCashSession = async (req: Request, res: Response) => {
 export const getCashSessions = async (req: Request, res: Response) => {
     const { start, end } = req.query;
 
-    // Use inclusive filtering by treating the dates as strings or being more flexible with bounds
     const sessions = await prisma.cashSession.findMany({
         where: {
             openedAt: {
-                gte: start ? new Date(`${start}T00:00:00.000Z`) : undefined,
-                lte: end ? new Date(`${end}T23:59:59.999Z`) : undefined
+                gte: start ? new Date(`${start}T00:00:00.000-03:00`) : undefined,
+                lte: end ? new Date(`${end}T23:59:59.999-03:00`) : undefined
             }
         },
         orderBy: { openedAt: 'desc' }

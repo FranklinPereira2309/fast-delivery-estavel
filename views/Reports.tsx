@@ -425,7 +425,8 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
             const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
             const filteredOrders = orders.filter(o => {
-                const orderDate = o.createdAt.split('T')[0];
+                const orderDateObj = new Date(o.createdAt);
+                const orderDate = getLocalIsoDate(orderDateObj);
                 const inDate = orderDate >= driverStartDate && orderDate <= driverEndDate;
                 const inDriver = selectedDriverId === 'TODOS' || o.driverId === selectedDriverId;
                 return inDate && inDriver && o.type === SaleType.OWN_DELIVERY && o.status === OrderStatus.DELIVERED;
@@ -437,7 +438,8 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
             const totalProductsValue = totalRevenue - totalDeliveryFees;
 
             const filteredRejections = rejections.filter(r => {
-                const rejDate = r.timestamp.split('T')[0];
+                const rejDateObj = new Date(r.timestamp);
+                const rejDate = getLocalIsoDate(rejDateObj);
                 const inDate = rejDate >= driverStartDate && rejDate <= driverEndDate;
                 const inDriver = selectedDriverId === 'TODOS' || r.driverId === selectedDriverId;
                 return inDate && inDriver;
@@ -599,8 +601,13 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
                     y = page.getHeight() - 50;
                 }
 
-                const openedAt = new Date(s.openedAt).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
-                const closedAt = s.closedAt ? new Date(s.closedAt).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : 'ABERTO';
+                const dtOpened = new Date(s.openedAt);
+                const openedAt = `${dtOpened.toLocaleDateString('pt-BR')} ${dtOpened.toLocaleTimeString('pt-BR').substring(0, 5)}`;
+                let closedAt = 'ABERTO';
+                if (s.closedAt) {
+                    const dtClosed = new Date(s.closedAt);
+                    closedAt = `${dtClosed.toLocaleDateString('pt-BR')} ${dtClosed.toLocaleTimeString('pt-BR').substring(0, 5)}`;
+                }
 
                 page.drawText(openedAt, { x: 55, y, size: 7, font });
                 page.drawText(closedAt, { x: 150, y, size: 7, font });
@@ -621,8 +628,8 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
                 if (s.status === 'CLOSED') {
                     y -= 5;
                     page.drawRectangle({ x: 60, y: y - 25, width: 480, height: 25, color: rgb(0.98, 0.98, 0.98) });
-                    page.drawText(`Relatado: Dinheiro: R$ ${s.reportedCash?.toFixed(2)} | Pix: R$ ${s.reportedPix?.toFixed(2)} | Crédito: R$ ${s.reportedCredit?.toFixed(2)} | Débito: R$ ${s.reportedDebit?.toFixed(2)}`, { x: 70, y: y - 10, size: 6, font });
-                    page.drawText(`Sistema: Dinheiro: R$ ${s.systemCash?.toFixed(2)} | Pix: R$ ${s.systemPix?.toFixed(2)} | Crédito: R$ ${s.systemCredit?.toFixed(2)} | Débito: R$ ${s.systemDebit?.toFixed(2)}`, { x: 70, y: y - 20, size: 6, font });
+                    page.drawText(`Relatado: Dinheiro: R$ ${(s.reportedCash || 0).toFixed(2)} | Pix: R$ ${(s.reportedPix || 0).toFixed(2)} | Crédito: R$ ${(s.reportedCredit || 0).toFixed(2)} | Débito: R$ ${(s.reportedDebit || 0).toFixed(2)}`, { x: 70, y: y - 10, size: 6, font });
+                    page.drawText(`Sistema: Dinheiro: R$ ${(s.systemCash || 0).toFixed(2)} | Pix: R$ ${(s.systemPix || 0).toFixed(2)} | Crédito: R$ ${(s.systemCredit || 0).toFixed(2)} | Débito: R$ ${(s.systemDebit || 0).toFixed(2)}`, { x: 70, y: y - 20, size: 6, font });
                     y -= 35;
                 }
             }
