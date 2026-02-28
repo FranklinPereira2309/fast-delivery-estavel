@@ -324,7 +324,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
     // Troco Máximo Validation Rule
     const maxChangeAllowed = businessSettings?.maxChange ?? 191;
 
-    if (!isSplitPayment) {
+    if (!isSplitModalOpen) {
       if (paymentMethod === 'DINHEIRO') {
         const received = parseFloat(paymentData.receivedAmount);
         if (isNaN(received) || received < total) {
@@ -417,6 +417,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
     }
 
     setIsPaymentModalOpen(false);
+    setIsSplitModalOpen(false);
   };
 
   const handleFinalize = async () => {
@@ -532,7 +533,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       status: (isCounterSale && !editingOrderId) || isDelivery ? OrderStatus.PREPARING : OrderStatus.DELIVERED,
       type: saleType,
       createdAt: existingOrderId ? orders.find(o => o.id === existingOrderId)?.createdAt || new Date().toISOString() : new Date().toISOString(),
-      paymentMethod: isSplitPayment ? `${paymentMethod} + ${paymentMethod2}` : paymentMethod,
+      paymentMethod: isSplitModalOpen ? `${paymentMethod} + ${paymentMethod2}` : paymentMethod,
       driverId: existingOrder?.driverId,
       deliveryFee: (saleType === SaleType.OWN_DELIVERY) ? deliveryFeeValue : undefined,
       tableNumber: isTableSale ? finalTableNum! : undefined,
@@ -541,7 +542,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       nfeStatus: emitNfce ? 'EMITTED' : undefined,
       nfeNumber: emitNfce ? `NFC-${Date.now()}` : undefined,
       nfeUrl: emitNfce ? `https://sefaz.gov.br/nfce/qrcode?p=${Date.now()}` : undefined,
-      splitAmount1: isSplitPayment ? parseFloat(splitAmount1.toString().replace(',', '.')) : undefined,
+      splitAmount1: isSplitModalOpen ? parseFloat(splitAmount1.toString().replace(',', '.')) : undefined,
       appliedServiceFee: (saleType === SaleType.TABLE && businessSettings?.serviceFeeStatus && isServiceFeeAccepted) ? (cart.reduce((acc, item) => acc + (item.price * item.quantity), 0) * (businessSettings.serviceFeePercentage || 10) / 100) : 0
     };
 

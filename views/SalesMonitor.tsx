@@ -313,15 +313,15 @@ const SalesMonitor: React.FC = () => {
 
                 <div className="flex justify-between font-black uppercase text-[10px] mt-2 border-b border-dashed pb-1">
                   <span>Subtotal R$</span>
-                  <span>{(printingOrder.total - (printingOrder.deliveryFee || 0) - (printingOrder.appliedServiceFee || 0)).toFixed(2)}</span>
+                  <span>{(printingOrder.total - (printingOrder.type === SaleType.OWN_DELIVERY ? (printingOrder.deliveryFee || 0) : 0) - (printingOrder.type === SaleType.TABLE ? (printingOrder.appliedServiceFee || 0) : 0)).toFixed(2)}</span>
                 </div>
-                {(typeof printingOrder.appliedServiceFee === 'number' || printingOrder.type === SaleType.TABLE) && (
+                {printingOrder.type === SaleType.TABLE && typeof printingOrder.appliedServiceFee === 'number' && (
                   <div className="flex justify-between font-black uppercase text-[10px] pb-1">
                     <span>Taxa Serviço R$</span>
                     <span>{(printingOrder.appliedServiceFee || 0).toFixed(2)}</span>
                   </div>
                 )}
-                {printingOrder.deliveryFee !== undefined && printingOrder.deliveryFee > 0 && (
+                {printingOrder.type === SaleType.OWN_DELIVERY && printingOrder.deliveryFee !== undefined && printingOrder.deliveryFee > 0 && (
                   <div className="flex justify-between font-black uppercase text-[10px] pb-1">
                     <span>Acrés./Entrega R$</span>
                     <span>{(printingOrder.deliveryFee).toFixed(2)}</span>
@@ -376,15 +376,15 @@ const SalesMonitor: React.FC = () => {
                 </div>
                 <div className="flex justify-between items-end border-t border-dashed pt-4 mb-1">
                   <span className="font-black text-[9px] uppercase tracking-widest">SUBTOTAL:</span>
-                  <span className="text-sm font-black">R$ {(printingOrder.total - (printingOrder.deliveryFee || 0) - (printingOrder.appliedServiceFee || 0)).toFixed(2)}</span>
+                  <span className="text-sm font-black">R$ {(printingOrder.total - (printingOrder.type === SaleType.OWN_DELIVERY ? (printingOrder.deliveryFee || 0) : 0) - (printingOrder.type === SaleType.TABLE ? (printingOrder.appliedServiceFee || 0) : 0)).toFixed(2)}</span>
                 </div>
-                {printingOrder.deliveryFee !== undefined && printingOrder.deliveryFee > 0 && (
+                {printingOrder.type === SaleType.OWN_DELIVERY && printingOrder.deliveryFee !== undefined && printingOrder.deliveryFee > 0 && (
                   <div className="flex justify-between items-end mb-1">
                     <span className="font-black text-[9px] uppercase tracking-widest">TAXA ENTREGA:</span>
                     <span className="text-sm font-black">R$ {printingOrder.deliveryFee.toFixed(2)}</span>
                   </div>
                 )}
-                {(typeof printingOrder.appliedServiceFee === 'number' || printingOrder.type === SaleType.TABLE) && (
+                {printingOrder.type === SaleType.TABLE && typeof printingOrder.appliedServiceFee === 'number' && (
                   <div className="flex justify-between items-end mb-1">
                     <span className="font-black text-[9px] uppercase tracking-widest">TAXA SERVIÇO:</span>
                     <span className="text-sm font-black">R$ {(printingOrder.appliedServiceFee || 0).toFixed(2)}</span>
