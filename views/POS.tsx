@@ -795,22 +795,10 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                 ×
               </button>
               <div className="flex items-center gap-4 mb-4 px-2">
-                <button
-                  onClick={() => {
-                    setIsSplitPayment(!isSplitPayment);
-                    if (!isSplitPayment) {
-                      setPaymentMethod2('PIX');
-                      setSplitAmount1((cartTotal / 2).toFixed(2));
-                    }
-                  }}
-                  className={`text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-full transition-all ${isSplitPayment ? 'bg-blue-600 text-white shadow-md' : 'bg-slate-100 text-slate-500'}`}
-                >
-                  {isSplitPayment ? '✓ Pagamento Dividido' : '+ Dividir Pagamento'}
-                </button>
-                {isSplitPayment && <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Selecione 02 Métodos</span>}
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Selecione 01 Método</span>
               </div>
 
-              <div className={`grid gap-3 bg-slate-100 p-2 rounded-[2rem] mb-4 ${isSplitPayment ? 'grid-cols-2' : 'grid-cols-4'}`}>
+              <div className={`grid gap-3 bg-slate-100 p-2 rounded-[2rem] mb-4 grid-cols-4`}>
                 {[
                   { id: 'DINHEIRO', label: 'Dinheiro', icon: Icons.Dashboard },
                   { id: 'PIX', label: 'PIX', icon: Icons.QrCode },
@@ -828,159 +816,141 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                 ))}
               </div>
 
-              {isSplitPayment && (
-                <div className="mt-4 animate-in slide-in-from-top-2">
-                  <button
-                    onClick={() => setIsSplitModalOpen(true)}
-                    className="w-full py-4 bg-indigo-50 border-2 border-indigo-200 hover:bg-indigo-100 text-indigo-700 rounded-2xl font-black uppercase text-[10px] tracking-widest transition-all shadow-sm flex flex-col items-center gap-2 group"
-                  >
-                    <div className="flex items-center gap-2">
-                      <Icons.View className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                      Prosseguir para Pagamento Dividido
-                    </div>
-                    <span className="text-[8px] font-bold text-indigo-400 opacity-80">(Configurar Métodos em Tela Cheia)</span>
-                  </button>
-                </div>
-              )}
-            </div>
+              <div className={`p-8 lg:p-10 overflow-y-auto`}>
+                <div className={`grid gap-6 grid-cols-1`}>
+                  {/* 1º Método de Pagamento */}
+                  <div>
 
-            <div className={`p-8 lg:p-10 overflow-y-auto ${isSplitPayment ? 'hidden' : ''}`}>
-              <div className={`grid gap-6 ${isSplitPayment ? 'grid-cols-2' : 'grid-cols-1'}`}>
-                {/* 1º Método de Pagamento */}
-                <div>
-                  {isSplitPayment && <h4 className="text-[12px] font-black text-slate-400 uppercase tracking-widest mb-4 border-b border-slate-100 pb-2">1º Método ({paymentMethod})</h4>}
-
-                  {paymentMethod === 'DINHEIRO' && (
-                    <div className="space-y-6 animate-in zoom-in-95 duration-200 mb-6">
-                      {!isSplitPayment && (
+                    {paymentMethod === 'DINHEIRO' && (
+                      <div className="space-y-6 animate-in zoom-in-95 duration-200 mb-6">
                         <div className="p-6 bg-blue-50/50 rounded-[2rem] border-2 border-blue-100 flex flex-col items-center justify-center">
                           <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-1">Total da Compra</span>
                           <span className="text-4xl font-black text-blue-700 tracking-tighter">R$ {cartTotal.toFixed(2)}</span>
                         </div>
-                      )}
 
-                      <div className="space-y-2">
-                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Recebido Dinheiro (R$)</label>
-                        <input
-                          type="number"
-                          className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-[2rem] text-xl font-black outline-none focus:border-blue-500 transition-all"
-                          placeholder="0,00"
-                          value={paymentData.receivedAmount}
-                          onChange={e => setPaymentData({ ...paymentData, receivedAmount: e.target.value })}
-                          autoFocus={!isSplitPayment}
-                        />
+                        <div className="space-y-2">
+                          <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Recebido Dinheiro (R$)</label>
+                          <input
+                            type="number"
+                            className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-[2rem] text-xl font-black outline-none focus:border-blue-500 transition-all"
+                            placeholder="0,00"
+                            value={paymentData.receivedAmount}
+                            onChange={e => setPaymentData({ ...paymentData, receivedAmount: e.target.value })}
+                            autoFocus={!isSplitPayment}
+                          />
+                        </div>
+                        {(() => {
+                          const amCash = cartTotal;
+                          const received = parseFloat(paymentData.receivedAmount) || 0;
+                          if (received > amCash && amCash > 0) {
+                            return (
+                              <div className="bg-green-50 p-4 rounded-[2rem] border border-green-100 flex items-center justify-between animate-in slide-in-from-top-2">
+                                <span className="text-xs font-black text-green-700 uppercase">Troco (1):</span>
+                                <span className="text-xl font-black text-green-600">R$ {(received - amCash).toFixed(2)}</span>
+                              </div>
+                            );
+                          }
+                          return null;
+                        })()}
                       </div>
-                      {(() => {
-                        const amCash = !isSplitPayment ? cartTotal : (parseFloat(splitAmount1) || 0);
-                        const received = parseFloat(paymentData.receivedAmount) || 0;
-                        if (received > amCash && amCash > 0) {
-                          return (
-                            <div className="bg-green-50 p-4 rounded-[2rem] border border-green-100 flex items-center justify-between animate-in slide-in-from-top-2">
-                              <span className="text-xs font-black text-green-700 uppercase">Troco (1):</span>
-                              <span className="text-xl font-black text-green-600">R$ {(received - amCash).toFixed(2)}</span>
-                            </div>
-                          );
-                        }
-                        return null;
-                      })()}
-                    </div>
-                  )}
+                    )}
 
-                  {(paymentMethod === 'CRÉDITO' || paymentMethod === 'DÉBITO') && (
-                    <div className="space-y-4 animate-in zoom-in-95 duration-200">
-                      <div className="space-y-1">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Titular do Cartão</label>
-                        <input
-                          type="text"
-                          className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-[1.5rem] text-sm font-black uppercase outline-none focus:border-blue-500 transition-all"
-                          placeholder="NOME IMPRESSO"
-                          value={paymentData.cardName}
-                          onChange={e => setPaymentData({ ...paymentData, cardName: e.target.value })}
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Número do Cartão</label>
-                        <div className="relative">
+                    {(paymentMethod === 'CRÉDITO' || paymentMethod === 'DÉBITO') && (
+                      <div className="space-y-3 animate-in zoom-in-95 duration-200">
+                        <div className="space-y-1">
+                          <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest ml-1">Titular Impresso no Cartão *</label>
                           <input
                             type="text"
-                            className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-[1.5rem] text-sm font-black outline-none focus:border-blue-500 transition-all pr-16"
-                            placeholder="0000 0000 0000 0000"
-                            value={paymentData.cardNumber}
-                            onChange={e => setPaymentData({ ...paymentData, cardNumber: maskCardNumber(e.target.value) })}
+                            className="w-full p-3 bg-white border border-slate-200 rounded-xl text-xs font-black uppercase outline-none focus:border-blue-500 transition-all shadow-sm"
+                            placeholder="NOME IMPRESSO"
+                            value={paymentData.cardName}
+                            onChange={e => setPaymentData({ ...paymentData, cardName: e.target.value })}
                           />
-                          <div className="absolute right-4 top-1/2 -translate-y-1/2 bg-white px-2 py-1 rounded-lg border border-slate-100 text-[8px] font-black text-blue-600 shadow-sm uppercase tracking-tighter">
-                            {getCardBrand(paymentData.cardNumber)}
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest ml-1">Número do Cartão *</label>
+                          <div className="relative">
+                            <input
+                              type="text"
+                              className="w-full p-3 bg-white border border-slate-200 rounded-xl text-xs font-black outline-none focus:border-blue-500 transition-all shadow-sm pr-16"
+                              placeholder="0000 0000 0000 0000"
+                              value={paymentData.cardNumber}
+                              onChange={e => setPaymentData({ ...paymentData, cardNumber: maskCardNumber(e.target.value) })}
+                            />
+                            <div className="absolute right-2 top-1/2 -translate-y-1/2 bg-slate-100 px-2 py-1 rounded-md text-[8px] font-black text-slate-600 uppercase shadow-sm">
+                              {getCardBrand(paymentData.cardNumber)}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-1">
+                            <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest ml-1">Validade *</label>
+                            <input
+                              type="text"
+                              className="w-full p-3 bg-white border border-slate-200 rounded-xl text-xs font-black outline-none focus:border-blue-500 transition-all text-center shadow-sm"
+                              placeholder="MM/AA"
+                              value={paymentData.cardExpiry}
+                              onChange={e => setPaymentData({ ...paymentData, cardExpiry: maskExpiry(e.target.value) })}
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest ml-1">CVV *</label>
+                            <input
+                              type="text"
+                              className="w-full p-3 bg-white border border-slate-200 rounded-xl text-xs font-black outline-none focus:border-blue-500 transition-all text-center shadow-sm"
+                              placeholder="000"
+                              maxLength={3}
+                              value={paymentData.cardCVV}
+                              onChange={e => setPaymentData({ ...paymentData, cardCVV: e.target.value.replace(/\D/g, '') })}
+                            />
                           </div>
                         </div>
                       </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-1">
-                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Validade</label>
-                          <input
-                            type="text"
-                            className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-[1.5rem] text-sm font-black outline-none focus:border-blue-500 transition-all text-center"
-                            placeholder="MM/AA"
-                            value={paymentData.cardExpiry}
-                            onChange={e => setPaymentData({ ...paymentData, cardExpiry: maskExpiry(e.target.value) })}
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">CVV</label>
-                          <input
-                            type="text"
-                            className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-[1.5rem] text-sm font-black outline-none focus:border-blue-500 transition-all text-center"
-                            placeholder="000"
-                            maxLength={3}
-                            value={paymentData.cardCVV}
-                            onChange={e => setPaymentData({ ...paymentData, cardCVV: e.target.value.replace(/\D/g, '') })}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  )}
+                    )}
 
-                  {paymentMethod === 'PIX' && (
-                    <div className="flex flex-col items-center py-4 animate-in zoom-in-95 duration-200">
-                      <div className="w-40 h-40 bg-slate-50 rounded-[2rem] border-4 border-blue-50 flex items-center justify-center mb-4 relative group overflow-hidden shadow-inner">
-                        <div className="text-slate-200"><Icons.QrCode className="w-20 h-20" /></div>
-                        <div className="absolute inset-0 bg-white/60 backdrop-blur-sm flex items-center justify-center flex-col gap-2 p-2 text-center">
-                          <div className="w-6 h-6 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-1"></div>
-                          <p className="text-[9px] font-black text-blue-800 uppercase leading-tight">Aguardando Pagamento...</p>
+                    {paymentMethod === 'PIX' && (
+                      <div className="flex flex-col items-center py-4 animate-in zoom-in-95 duration-200">
+                        <div className="w-40 h-40 bg-slate-50 rounded-[2rem] border-4 border-blue-50 flex items-center justify-center mb-4 relative group overflow-hidden shadow-inner">
+                          <div className="text-slate-200"><Icons.QrCode className="w-20 h-20" /></div>
+                          <div className="absolute inset-0 bg-white/60 backdrop-blur-sm flex items-center justify-center flex-col gap-2 p-2 text-center">
+                            <div className="w-6 h-6 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-1"></div>
+                            <p className="text-[9px] font-black text-blue-800 uppercase leading-tight">Aguardando Pagamento...</p>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
+
+                  {/* 2º Pagamento Migrado para Modal Exclusivo */}
                 </div>
-
-                {/* 2º Pagamento Migrado para Modal Exclusivo */}
               </div>
             </div>
-          </div>
 
-          <div className={`p-8 lg:p-10 bg-slate-50 border-t border-slate-100 shrink-0 flex flex-col gap-4 ${isSplitPayment ? 'hidden' : ''}`}>
-            <div className="flex items-center justify-between px-4 py-2 bg-white rounded-2xl border border-slate-100">
-              <div className="flex items-center gap-3">
-                <Icons.View className="w-5 h-5 text-blue-600" />
-                <div>
-                  <p className="text-[10px] font-black uppercase tracking-tight">Emitir NFC-e Fiscal?</p>
-                  <p className="text-[8px] font-bold text-slate-400 uppercase">Nota Fiscal de Consumidor Eletrônica</p>
+            <div className={`p-8 lg:p-10 bg-slate-50 border-t border-slate-100 shrink-0 flex flex-col gap-4`}>
+              <div className="flex items-center justify-between px-4 py-2 bg-white rounded-2xl border border-slate-100">
+                <div className="flex items-center gap-3">
+                  <Icons.View className="w-5 h-5 text-blue-600" />
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-tight">Emitir NFC-e Fiscal?</p>
+                    <p className="text-[8px] font-bold text-slate-400 uppercase">Nota Fiscal de Consumidor Eletrônica</p>
+                  </div>
                 </div>
+                <button
+                  onClick={() => setEmitNfce(!emitNfce)}
+                  className={`w-12 h-6 rounded-full transition-all relative ${emitNfce ? 'bg-emerald-600 ring-4 ring-emerald-500/20' : 'bg-slate-200'}`}
+                >
+                  <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${emitNfce ? 'left-7' : 'left-1'}`}></div>
+                </button>
               </div>
+
               <button
-                onClick={() => setEmitNfce(!emitNfce)}
-                className={`w-12 h-6 rounded-full transition-all relative ${emitNfce ? 'bg-emerald-600 ring-4 ring-emerald-500/20' : 'bg-slate-200'}`}
+                onClick={processPaymentAndFinalize}
+                className="w-full py-6 bg-blue-600 hover:bg-blue-700 text-white rounded-[2rem] font-black uppercase text-lg tracking-widest shadow-2xl shadow-blue-200 transition-all flex items-center justify-center gap-4 group"
               >
-                <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${emitNfce ? 'left-7' : 'left-1'}`}></div>
+                <span>Finalizar Pedido</span>
+                <Icons.View className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
               </button>
             </div>
-
-            <button
-              onClick={processPaymentAndFinalize}
-              className="w-full py-6 bg-blue-600 hover:bg-blue-700 text-white rounded-[2rem] font-black uppercase text-lg tracking-widest shadow-2xl shadow-blue-200 transition-all flex items-center justify-center gap-4 group"
-            >
-              <span>Finalizar Pedido</span>
-              <Icons.View className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
-            </button>
           </div>
         </div>
       )}
@@ -1573,6 +1543,22 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
             {editingOrderId && (
               <button onClick={clearState} className="w-full mt-2 text-slate-400 font-black uppercase text-[10px] tracking-widest hover:text-slate-600 transition-colors">Limpar Seleção</button>
             )}
+
+            {/* ATALHO DIRETO PARA PAGAMENTO DIVIDIDO (Requisitado) */}
+            {(!editingOrderId && cart.length > 0) && (
+              <button
+                onClick={() => {
+                  setPaymentMethod('DINHEIRO');
+                  setPaymentMethod2('DINHEIRO');
+                  setSplitAmount1((cartTotal / 2).toFixed(2));
+                  setSplitAmount2((cartTotal / 2).toFixed(2));
+                  setIsSplitModalOpen(true);
+                }}
+                className="w-full mt-3 bg-slate-100 hover:bg-slate-200 text-slate-600 py-4 xl:py-5 rounded-xl xl:rounded-2xl shadow-sm uppercase text-[10px] font-black tracking-widest transition-all active:scale-95 flex flex-col items-center justify-center gap-1"
+              >
+                <span>Prosseguir para Pagamento Dividido</span>
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -2095,19 +2081,19 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
               <div className="flex-1 grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-slate-100 overflow-y-auto">
 
                 {/* --- COLUMN 1 --- */}
-                <div className="p-8 flex flex-col bg-white">
-                  <div className="flex items-center justify-between mb-8 cursor-pointer">
-                    <div className="flex items-center gap-3">
-                      <span className="w-8 h-8 rounded-full bg-slate-100 text-slate-500 font-black flex items-center justify-center text-xs">1</span>
-                      <h3 className="text-lg font-black text-slate-800 uppercase tracking-tighter">Primeiro Pagamento</h3>
+                <div className="p-6 flex flex-col bg-white">
+                  <div className="flex items-center justify-between mb-4 cursor-pointer">
+                    <div className="flex items-center gap-2">
+                      <span className="w-6 h-6 rounded-full bg-slate-100 text-slate-500 font-black flex items-center justify-center text-[10px]">1</span>
+                      <h3 className="text-sm font-black text-slate-800 uppercase tracking-tighter">Primeiro Pagamento</h3>
                     </div>
                   </div>
 
-                  <div className="mb-6">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Valor a Cobrar (R$)</label>
+                  <div className="mb-4">
+                    <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Valor a Cobrar (R$)</label>
                     <input
                       type="number"
-                      className="w-full mt-2 p-5 bg-blue-50/50 border-2 border-blue-100 focus:border-blue-500 rounded-[1.5rem] text-2xl font-black outline-none text-blue-700 transition-all placeholder:text-blue-200"
+                      className="w-full mt-1 p-3 bg-slate-50 border border-slate-200 focus:border-indigo-500 rounded-2xl text-lg font-black outline-none text-indigo-700 transition-all placeholder:text-indigo-200"
                       value={splitAmount1}
                       onChange={e => {
                         setSplitAmount1(e.target.value);
@@ -2118,7 +2104,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                     />
                   </div>
 
-                  <div className="grid grid-cols-4 gap-2 bg-slate-50 p-2 rounded-[2rem] mb-8">
+                  <div className="grid grid-cols-4 gap-2 bg-slate-50 p-2 rounded-2xl mb-6">
                     {[
                       { id: 'DINHEIRO', label: 'Dinheiro', icon: Icons.Dashboard },
                       { id: 'PIX', label: 'PIX', icon: Icons.QrCode },
@@ -2128,22 +2114,22 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                       <button
                         key={`method1-${method.id}`}
                         onClick={() => setPaymentMethod(method.id)}
-                        className={`flex flex-col items-center gap-2 py-4 rounded-[1.5rem] transition-all ${paymentMethod === method.id ? 'bg-white text-blue-600 shadow-md ring-2 ring-blue-500/20' : 'text-slate-400 hover:bg-slate-200/50'}`}
+                        className={`flex flex-col items-center justify-center gap-1 py-3 rounded-xl transition-all ${paymentMethod === method.id ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-200/50'}`}
                       >
-                        <method.icon className="w-5 h-5" />
-                        <span className="text-[8px] font-black uppercase tracking-widest">{method.label}</span>
+                        <method.icon className="w-4 h-4" />
+                        <span className="text-[7px] font-black uppercase tracking-widest">{method.label}</span>
                       </button>
                     ))}
                   </div>
 
                   <div className="flex-1">
                     {paymentMethod === 'DINHEIRO' && (
-                      <div className="space-y-6 animate-in zoom-in-95 duration-200">
-                        <div className="space-y-2">
-                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Valor Entregue pelo Cliente (R$)</label>
+                      <div className="space-y-4 animate-in zoom-in-95 duration-200">
+                        <div className="space-y-1">
+                          <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Valor Entregue pelo Cliente (R$)</label>
                           <input
                             type="number"
-                            className="w-full p-5 bg-slate-50 border-2 border-slate-100 rounded-[1.5rem] text-xl font-black outline-none focus:border-blue-500 transition-all"
+                            className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-lg font-black outline-none focus:border-indigo-500 transition-all"
                             placeholder="0,00"
                             value={paymentData.receivedAmount}
                             onChange={e => setPaymentData({ ...paymentData, receivedAmount: e.target.value })}
@@ -2154,9 +2140,9 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                           const received = parseFloat(paymentData.receivedAmount) || 0;
                           if (received > amCash && amCash > 0) {
                             return (
-                              <div className="bg-emerald-50 p-5 rounded-[1.5rem] border-2 border-emerald-100 flex items-center justify-between animate-in slide-in-from-top-2">
-                                <span className="text-[10px] font-black text-emerald-700 uppercase tracking-widest">Troco a Devolver:</span>
-                                <span className="text-2xl font-black text-emerald-600">R$ {(received - amCash).toFixed(2)}</span>
+                              <div className="bg-emerald-50 p-4 mt-4 rounded-2xl border border-emerald-100 flex items-center justify-between animate-in slide-in-from-top-2">
+                                <span className="text-[9px] font-black text-emerald-700 uppercase tracking-widest">Troco a Devolver:</span>
+                                <span className="text-xl font-black text-emerald-600">R$ {(received - amCash).toFixed(2)}</span>
                               </div>
                             );
                           }
@@ -2166,48 +2152,48 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                     )}
 
                     {(paymentMethod === 'CRÉDITO' || paymentMethod === 'DÉBITO') && (
-                      <div className="space-y-5 animate-in zoom-in-95 duration-200 bg-slate-50 p-6 rounded-[2rem]">
-                        <div className="space-y-2">
-                          <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Titular Impresso no Cartão *</label>
+                      <div className="space-y-3 animate-in zoom-in-95 duration-200 bg-slate-50 p-4 rounded-xl">
+                        <div className="space-y-1">
+                          <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest ml-1">Titular Impresso no Cartão *</label>
                           <input
                             type="text"
-                            className="w-full p-4 bg-white border border-slate-200 rounded-[1.25rem] text-sm font-black uppercase outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all shadow-sm"
+                            className="w-full p-3 bg-white border border-slate-200 rounded-xl text-xs font-black uppercase outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all shadow-sm"
                             placeholder="EX: MARIA S SILVA"
                             value={paymentData.cardName}
                             onChange={e => setPaymentData({ ...paymentData, cardName: e.target.value })}
                           />
                         </div>
-                        <div className="space-y-2">
-                          <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Número do Cartão *</label>
+                        <div className="space-y-1">
+                          <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest ml-1">Número do Cartão *</label>
                           <div className="relative">
                             <input
                               type="text"
-                              className="w-full p-4 bg-white border border-slate-200 rounded-[1.25rem] text-sm font-black outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all shadow-sm pr-16"
+                              className="w-full p-3 bg-white border border-slate-200 rounded-xl text-xs font-black outline-none focus:border-blue-500 transition-all shadow-sm pr-16"
                               placeholder="0000 0000 0000 0000"
                               value={paymentData.cardNumber}
                               onChange={e => setPaymentData({ ...paymentData, cardNumber: maskCardNumber(e.target.value) })}
                             />
-                            <div className="absolute right-3 top-1/2 -translate-y-1/2 bg-slate-100 px-3 py-1.5 rounded-lg text-[9px] font-black text-slate-600 uppercase tracking-tighter shadow-sm">
+                            <div className="absolute right-2 top-1/2 -translate-y-1/2 bg-slate-100 px-2 py-1 rounded-md text-[8px] font-black text-slate-600 uppercase shadow-sm">
                               {getCardBrand(paymentData.cardNumber)}
                             </div>
                           </div>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Validade *</label>
+                          <div className="space-y-1">
+                            <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest ml-1">Validade *</label>
                             <input
                               type="text"
-                              className="w-full p-4 bg-white border border-slate-200 rounded-[1.25rem] text-sm font-black outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all text-center shadow-sm"
+                              className="w-full p-3 bg-white border border-slate-200 rounded-xl text-xs font-black outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all text-center shadow-sm"
                               placeholder="MM/AA"
                               value={paymentData.cardExpiry}
                               onChange={e => setPaymentData({ ...paymentData, cardExpiry: maskExpiry(e.target.value) })}
                             />
                           </div>
-                          <div className="space-y-2">
-                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">CVV *</label>
+                          <div className="space-y-1">
+                            <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest ml-1">CVV *</label>
                             <input
                               type="text"
-                              className="w-full p-4 bg-white border border-slate-200 rounded-[1.25rem] text-sm font-black outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all text-center shadow-sm"
+                              className="w-full p-3 bg-white border border-slate-200 rounded-xl text-xs font-black outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all text-center shadow-sm"
                               placeholder="000"
                               maxLength={3}
                               value={paymentData.cardCVV}
@@ -2219,12 +2205,12 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                     )}
 
                     {paymentMethod === 'PIX' && (
-                      <div className="flex flex-col items-center py-6 animate-in zoom-in-95 duration-200">
-                        <div className="w-56 h-56 bg-slate-50 rounded-[2.5rem] border-[6px] border-blue-50 flex items-center justify-center mb-6 relative group overflow-hidden shadow-inner">
-                          <div className="text-slate-200"><Icons.QrCode className="w-24 h-24" /></div>
-                          <div className="absolute inset-0 bg-white/70 backdrop-blur-md flex items-center justify-center flex-col gap-3 p-4 text-center">
-                            <div className="w-8 h-8 border-[5px] border-blue-600 border-t-transparent rounded-full animate-spin mb-1"></div>
-                            <p className="text-[10px] font-black text-blue-800 uppercase leading-snug tracking-widest cursor-default">Simulação<br />Aguardando Recebimento</p>
+                      <div className="flex flex-col items-center py-4 animate-in zoom-in-95 duration-200">
+                        <div className="w-40 h-40 bg-slate-50 rounded-[2rem] border-[4px] border-blue-50 flex items-center justify-center mb-4 relative group overflow-hidden shadow-inner">
+                          <div className="text-slate-200"><Icons.QrCode className="w-20 h-20" /></div>
+                          <div className="absolute inset-0 bg-white/70 backdrop-blur-md flex items-center justify-center flex-col gap-2 p-2 text-center">
+                            <div className="w-6 h-6 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                            <p className="text-[8px] font-black text-blue-800 uppercase leading-tight cursor-default">Aguardando...</p>
                           </div>
                         </div>
                       </div>
@@ -2234,19 +2220,19 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
 
 
                 {/* --- COLUMN 2 --- */}
-                <div className="p-8 flex flex-col bg-slate-50">
-                  <div className="flex items-center justify-between mb-8 cursor-pointer relative">
-                    <div className="flex items-center gap-3">
-                      <span className="w-8 h-8 rounded-full bg-slate-200 text-slate-600 font-black flex items-center justify-center text-xs shadow-inner">2</span>
-                      <h3 className="text-lg font-black text-slate-800 uppercase tracking-tighter">Segundo Pagamento</h3>
+                <div className="p-6 flex flex-col bg-slate-50">
+                  <div className="flex items-center justify-between mb-4 cursor-pointer relative">
+                    <div className="flex items-center gap-2">
+                      <span className="w-6 h-6 rounded-full bg-slate-200 text-slate-600 font-black flex items-center justify-center text-[10px] shadow-inner">2</span>
+                      <h3 className="text-sm font-black text-slate-800 uppercase tracking-tighter">Segundo Pagamento</h3>
                     </div>
                   </div>
 
-                  <div className="mb-6">
-                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Valor a Cobrar (R$)</label>
+                  <div className="mb-4">
+                    <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Valor a Cobrar (R$)</label>
                     <input
                       type="number"
-                      className="w-full mt-2 p-5 bg-white border border-slate-200 focus:border-indigo-500 rounded-[1.5rem] text-2xl font-black outline-none text-indigo-700 transition-all shadow-sm placeholder:text-indigo-200"
+                      className="w-full mt-1 p-3 bg-white border border-slate-200 focus:border-indigo-500 rounded-2xl text-lg font-black outline-none text-indigo-700 transition-all shadow-sm placeholder:text-indigo-200"
                       value={splitAmount2}
                       onChange={e => {
                         setSplitAmount2(e.target.value);
@@ -2257,7 +2243,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                     />
                   </div>
 
-                  <div className="grid grid-cols-4 gap-2 bg-slate-200/50 p-2 rounded-[2rem] mb-8">
+                  <div className="grid grid-cols-4 gap-2 bg-slate-200/50 p-2 rounded-2xl mb-6">
                     {[
                       { id: 'DINHEIRO', label: 'Dinheiro', icon: Icons.Dashboard },
                       { id: 'PIX', label: 'PIX', icon: Icons.QrCode },
@@ -2267,22 +2253,22 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                       <button
                         key={`method2-${method.id}`}
                         onClick={() => setPaymentMethod2(method.id)}
-                        className={`flex flex-col items-center gap-2 py-4 rounded-[1.5rem] transition-all ${paymentMethod2 === method.id ? 'bg-white text-indigo-600 shadow-md ring-2 ring-indigo-500/20' : 'text-slate-500 hover:bg-slate-300/50'}`}
+                        className={`flex flex-col items-center gap-1 py-3 rounded-xl transition-all ${paymentMethod2 === method.id ? 'bg-white text-indigo-600 shadow-md ring-2 ring-indigo-500/20' : 'text-slate-500 hover:bg-slate-300/50'}`}
                       >
-                        <method.icon className="w-5 h-5" />
-                        <span className="text-[8px] font-black uppercase tracking-widest">{method.label}</span>
+                        <method.icon className="w-4 h-4" />
+                        <span className="text-[7px] font-black uppercase tracking-widest">{method.label}</span>
                       </button>
                     ))}
                   </div>
 
                   <div className="flex-1">
                     {paymentMethod2 === 'DINHEIRO' && (
-                      <div className="space-y-6 animate-in zoom-in-95 duration-200">
-                        <div className="space-y-2">
-                          <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Valor Entregue pelo Cliente (R$)</label>
+                      <div className="space-y-4 animate-in zoom-in-95 duration-200">
+                        <div className="space-y-1">
+                          <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Valor Recebido (R$)</label>
                           <input
                             type="number"
-                            className="w-full p-5 bg-white border-2 border-slate-200 rounded-[1.5rem] text-xl font-black outline-none focus:border-indigo-500 transition-all shadow-sm"
+                            className="w-full p-4 bg-white border-2 border-slate-200 rounded-2xl text-lg font-black outline-none focus:border-indigo-500 transition-all shadow-sm"
                             placeholder="0,00"
                             value={paymentData2.receivedAmount}
                             onChange={e => setPaymentData2({ ...paymentData2, receivedAmount: e.target.value })}
@@ -2293,9 +2279,9 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                           const received = parseFloat(paymentData2.receivedAmount) || 0;
                           if (received > amCash && amCash > 0) {
                             return (
-                              <div className="bg-emerald-50 p-5 rounded-[1.5rem] border-2 border-emerald-100 flex items-center justify-between animate-in slide-in-from-top-2">
-                                <span className="text-[10px] font-black text-emerald-700 uppercase tracking-widest">Troco a Devolver:</span>
-                                <span className="text-2xl font-black text-emerald-600">R$ {(received - amCash).toFixed(2)}</span>
+                              <div className="bg-emerald-50 p-4 mt-4 rounded-2xl border border-emerald-100 flex items-center justify-between animate-in slide-in-from-top-2">
+                                <span className="text-[9px] font-black text-emerald-700 uppercase tracking-widest">Troco a Devolver:</span>
+                                <span className="text-xl font-black text-emerald-600">R$ {(received - amCash).toFixed(2)}</span>
                               </div>
                             );
                           }
@@ -2305,48 +2291,48 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                     )}
 
                     {(paymentMethod2 === 'CRÉDITO' || paymentMethod2 === 'DÉBITO') && (
-                      <div className="space-y-5 animate-in zoom-in-95 duration-200 bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
-                        <div className="space-y-2">
-                          <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Titular Impresso no Cartão *</label>
+                      <div className="space-y-3 animate-in zoom-in-95 duration-200 bg-white p-4 rounded-xl shadow-sm border border-slate-100">
+                        <div className="space-y-1">
+                          <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-1">Titular Impresso no Cartão *</label>
                           <input
                             type="text"
-                            className="w-full p-4 bg-slate-50 border border-slate-200 rounded-[1.25rem] text-sm font-black uppercase outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all focus:bg-white"
+                            className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-black uppercase outline-none focus:border-indigo-500 transition-all focus:bg-white"
                             placeholder="EX: JOSE M SANTOS"
                             value={paymentData2.cardName}
                             onChange={e => setPaymentData2({ ...paymentData2, cardName: e.target.value })}
                           />
                         </div>
-                        <div className="space-y-2">
-                          <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Número do Cartão *</label>
+                        <div className="space-y-1">
+                          <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-1">Número do Cartão *</label>
                           <div className="relative">
                             <input
                               type="text"
-                              className="w-full p-4 bg-slate-50 border border-slate-200 rounded-[1.25rem] text-sm font-black outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all focus:bg-white pr-16"
+                              className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-black uppercase outline-none focus:border-indigo-500 transition-all focus:bg-white pr-16"
                               placeholder="0000 0000 0000 0000"
                               value={paymentData2.cardNumber}
                               onChange={e => setPaymentData2({ ...paymentData2, cardNumber: maskCardNumber(e.target.value) })}
                             />
-                            <div className="absolute right-3 top-1/2 -translate-y-1/2 bg-white px-3 py-1.5 rounded-lg text-[9px] font-black text-slate-600 uppercase tracking-tighter shadow-sm border border-slate-100">
+                            <div className="absolute right-2 top-1/2 -translate-y-1/2 bg-white px-2 py-1 rounded-md text-[8px] font-black text-slate-600 uppercase shadow-sm border border-slate-100">
                               {getCardBrand(paymentData2.cardNumber)}
                             </div>
                           </div>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Validade *</label>
+                          <div className="space-y-1">
+                            <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-1">Validade *</label>
                             <input
                               type="text"
-                              className="w-full p-4 bg-slate-50 border border-slate-200 rounded-[1.25rem] text-sm font-black outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all focus:bg-white text-center"
+                              className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-black uppercase outline-none focus:border-indigo-500 transition-all focus:bg-white text-center"
                               placeholder="MM/AA"
                               value={paymentData2.cardExpiry}
                               onChange={e => setPaymentData2({ ...paymentData2, cardExpiry: maskExpiry(e.target.value) })}
                             />
                           </div>
-                          <div className="space-y-2">
-                            <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">CVV *</label>
+                          <div className="space-y-1">
+                            <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-1">CVV *</label>
                             <input
                               type="text"
-                              className="w-full p-4 bg-slate-50 border border-slate-200 rounded-[1.25rem] text-sm font-black outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all focus:bg-white text-center"
+                              className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-black uppercase outline-none focus:border-indigo-500 transition-all focus:bg-white text-center"
                               placeholder="000"
                               maxLength={3}
                               value={paymentData2.cardCVV}
@@ -2358,12 +2344,12 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                     )}
 
                     {paymentMethod2 === 'PIX' && (
-                      <div className="flex flex-col items-center py-6 animate-in zoom-in-95 duration-200">
-                        <div className="w-56 h-56 bg-white rounded-[2.5rem] border-[6px] border-slate-100 flex items-center justify-center mb-6 relative group overflow-hidden shadow-sm">
-                          <div className="text-slate-200"><Icons.QrCode className="w-24 h-24" /></div>
-                          <div className="absolute inset-0 bg-white/70 backdrop-blur-md flex items-center justify-center flex-col gap-3 p-4 text-center">
-                            <div className="w-8 h-8 border-[5px] border-indigo-600 border-t-transparent rounded-full animate-spin mb-1"></div>
-                            <p className="text-[10px] font-black text-indigo-800 uppercase leading-snug tracking-widest cursor-default">Simulação<br />Aguardando Recebimento 2</p>
+                      <div className="flex flex-col items-center py-4 animate-in zoom-in-95 duration-200">
+                        <div className="w-40 h-40 bg-white rounded-[2rem] border-[4px] border-slate-100 flex items-center justify-center mb-4 relative group overflow-hidden shadow-sm">
+                          <div className="text-slate-200"><Icons.QrCode className="w-20 h-20" /></div>
+                          <div className="absolute inset-0 bg-white/70 backdrop-blur-md flex items-center justify-center flex-col gap-2 p-2 text-center">
+                            <div className="w-6 h-6 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+                            <p className="text-[8px] font-black text-indigo-800 uppercase leading-tight">Aguardando...</p>
                           </div>
                         </div>
                       </div>
@@ -2374,9 +2360,8 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
               </div>
 
               {/* Modal Footer Controls */}
-              <div className="p-8 border-t border-slate-200 bg-white rounded-b-[3rem] shrink-0 flex items-center justify-between">
-
-                <div className="flex items-center gap-3 bg-slate-100 px-5 py-3 rounded-2xl">
+              <div className="p-4 lg:p-6 border-t border-slate-200 bg-white rounded-b-[3rem] shrink-0 flex items-center justify-between">
+                <div className="flex items-center gap-2 bg-slate-100 px-4 py-2 rounded-xl">
                   <Icons.View className="w-5 h-5 text-slate-500" />
                   <div>
                     <p className="text-[10px] font-black uppercase tracking-tight text-slate-700">Emitir Cupom Fiscal (NFC-e)?</p>
@@ -2391,13 +2376,12 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
 
                 <button
                   onClick={() => {
-                    // The processPaymentAndFinalize handles all math parsing validations
                     processPaymentAndFinalize();
                   }}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-10 py-5 rounded-[2rem] font-black uppercase tracking-widest text-sm shadow-xl shadow-indigo-200 active:scale-95 transition-all flex items-center gap-3"
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-3xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-indigo-200 active:scale-95 transition-all flex items-center gap-2"
                 >
                   <span>Finalizar Pagamento Dividido</span>
-                  <Icons.View className="w-5 h-5" />
+                  <Icons.View className="w-4 h-4" />
                 </button>
               </div>
             </div>
