@@ -26,7 +26,26 @@ const port = process.env.PORT || 3000;
 const server = http.createServer(app);
 initSocket(server);
 
-app.use(cors());
+const allowedOrigins = [
+    'https://delivery-fast-frontend.onrender.com',
+    'https://cardapio-fast-delivery.onrender.com',
+    'http://localhost:5173',
+    'http://localhost:3000'
+];
+
+app.use(cors({
+    origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            console.warn(`Origin ${origin} not explicitly allowed by CORS, but allowing for debugging.`);
+            callback(null, true);
+        }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
+}));
 app.use(express.json());
 
 // Routes
