@@ -61,10 +61,10 @@ class DriverDBService {
         return this.request<Order[]>('/orders');
     }
 
-    public async updateOrderStatus(orderId: string, status: OrderStatus, user: User, driverId?: string) {
+    public async updateOrderStatus(orderId: string, status: OrderStatus, user: User, driverId?: string, paymentMethod?: string) {
         return this.request(`/orders/${orderId}/status`, {
             method: 'PATCH',
-            body: JSON.stringify({ status, driverId, user })
+            body: JSON.stringify({ status, driverId, user, paymentMethod })
         });
     }
 

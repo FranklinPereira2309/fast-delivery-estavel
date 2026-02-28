@@ -130,7 +130,7 @@ const SalesMonitor: React.FC = () => {
           </div>
         ) : (
           <>
-            <p className="font-black text-[10px]">PAGTO: {printingOrder?.paymentMethod || 'DINHEIRO'}</p>
+            <p className="font-black text-[10px]">PAGTO: {printingOrder?.paymentMethod || 'PENDENTE'}</p>
             <button
               onClick={() => setEditingPaymentMethod(true)}
               className="text-[9px] text-blue-600 font-bold underline px-2"
@@ -140,7 +140,7 @@ const SalesMonitor: React.FC = () => {
           </>
         )}
       </div>
-      <p className="font-black hidden print:block pt-1 text-[10px]">PAGTO: {printingOrder?.paymentMethod || 'DINHEIRO'}</p>
+      <p className="font-black hidden print:block pt-1 text-[10px]">PAGTO: {printingOrder?.paymentMethod || 'PENDENTE'}</p>
     </div>
   );
 

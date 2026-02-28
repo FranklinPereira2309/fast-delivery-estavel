@@ -397,7 +397,7 @@ export const deleteOrder = async (req: Request, res: Response) => {
 
 export const updateOrderStatus = async (req: Request, res: Response) => {
     const { id } = req.params;
-    const { status, driverId, user } = req.body;
+    const { status, driverId, user, paymentMethod } = req.body;
 
     try {
         const result = await prisma.$transaction(async (tx: any) => {
@@ -436,7 +436,8 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
 
             const updateData: any = {
                 status,
-                driverId: resolvedDriverId
+                driverId: resolvedDriverId,
+                paymentMethod: paymentMethod !== undefined ? paymentMethod : undefined
             };
 
             if (resolvedDriverId && resolvedDriverId !== oldOrder.driverId) {

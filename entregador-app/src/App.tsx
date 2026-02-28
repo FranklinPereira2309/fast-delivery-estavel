@@ -67,6 +67,7 @@ const App: React.FC = () => {
   const [printingHistoryOrder, setPrintingHistoryOrder] = useState<Order | null>(null);
   const [storeStatus, setStoreStatus] = useState<{ status: 'online' | 'offline' }>({ status: 'offline' });
   const [customAlertMessage, setCustomAlertMessage] = useState<string | null>(null);
+  const [selectedPayments, setSelectedPayments] = useState<Record<string, string>>({});
 
   // Chat states
   const [messages, setMessages] = useState<any[]>([]);
@@ -247,10 +248,10 @@ const App: React.FC = () => {
     }
   };
 
-  const updateDeliveryStatus = async (orderId: string, status: OrderStatus, forceDriverId?: string | null) => {
+  const updateDeliveryStatus = async (orderId: string, status: OrderStatus, forceDriverId?: string | null, paymentMethod?: string) => {
     if (!currentUser) return;
     // Fix: Allow empty string to pass through for de-assignment
-    await db.updateOrderStatus(orderId, status, currentUser, forceDriverId === undefined ? undefined : (forceDriverId as string));
+    await db.updateOrderStatus(orderId, status, currentUser, forceDriverId === undefined ? undefined : (forceDriverId as string), paymentMethod);
     refreshData();
   };
 
@@ -462,32 +463,64 @@ const App: React.FC = () => {
                     <span className="text-xl font-black text-slate-900">R$ {order.total.toFixed(2)}</span>
                   </div>
                   <div className="flex gap-2">
-                    <button onClick={() => setPrintingOrder(order)} className="p-3 bg-slate-900 text-white rounded-2xl shadow-xl active:scale-90 transition-all">
-                      <Icons.Print className="w-5 h-5" />
-                    </button>
-                    {order.status === OrderStatus.READY ? (
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => updateDeliveryStatus(order.id, OrderStatus.READY, '')}
-                          className="px-4 py-3 bg-slate-100 text-slate-500 rounded-2xl font-black uppercase text-[10px] tracking-widest active:scale-95 transition-all"
-                        >
-                          Rejeitar
-                        </button>
-                        <button
-                          onClick={() => updateDeliveryStatus(order.id, OrderStatus.OUT_FOR_DELIVERY, driver.id)}
-                          className="px-6 py-3 bg-blue-600 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-blue-500/30 active:scale-95 transition-all"
-                        >
-                          Aceitar
-                        </button>
-                      </div>
-                    ) : (
-                      <button
-                        onClick={() => updateDeliveryStatus(order.id, OrderStatus.DELIVERED)}
-                        className="px-6 py-3 bg-emerald-500 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-emerald-500/30 active:scale-95 transition-all"
-                      >
-                        Finalizar
+                    <div className="flex gap-2 items-center">
+                      <button onClick={() => setPrintingOrder(order)} className="p-3 bg-slate-900 text-white rounded-2xl shadow-xl active:scale-90 transition-all">
+                        <Icons.Print className="w-5 h-5" />
                       </button>
-                    )}
+                      {order.status === OrderStatus.READY ? (
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => updateDeliveryStatus(order.id, OrderStatus.READY, '')}
+                            className="px-4 py-3 bg-slate-100 text-slate-500 rounded-2xl font-black uppercase text-[10px] tracking-widest active:scale-95 transition-all"
+                          >
+                            Rejeitar
+                          </button>
+                          <button
+                            onClick={() => updateDeliveryStatus(order.id, OrderStatus.OUT_FOR_DELIVERY, driver.id)}
+                            className="px-6 py-3 bg-blue-600 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-blue-500/30 active:scale-95 transition-all"
+                          >
+                            Aceitar
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col gap-2 items-end">
+                          {(!order.paymentMethod || order.paymentMethod === "") ? (
+                            <div className="flex flex-col gap-1 items-end mb-1">
+                              <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest mr-1">Selecionar Pagamento:</span>
+                              <div className="flex gap-1">
+                                {['DINHEIRO', 'PIX', 'CARTÃO'].map(m => (
+                                  <button
+                                    key={m}
+                                    onClick={() => setSelectedPayments(prev => ({ ...prev, [order.id]: m }))}
+                                    className={`px-3 py-1.5 rounded-lg text-[8px] font-black uppercase transition-all ${selectedPayments[order.id] === m ? 'bg-blue-600 text-white shadow-md' : 'bg-slate-100 text-slate-400'}`}
+                                  >
+                                    {m}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="flex flex-col items-end mb-1">
+                              <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest mr-1">Pagamento Definido:</span>
+                              <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">{order.paymentMethod}</span>
+                            </div>
+                          )}
+
+                          <button
+                            onClick={() => {
+                              const payMethod = order.paymentMethod || selectedPayments[order.id];
+                              if (!payMethod) {
+                                return alert("Por favor, selecione a forma de pagamento antes de finalizar.");
+                              }
+                              updateDeliveryStatus(order.id, OrderStatus.DELIVERED, undefined, payMethod);
+                            }}
+                            className="px-6 py-3 bg-emerald-500 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-emerald-500/30 active:scale-95 transition-all w-full"
+                          >
+                            Finalizar
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -622,6 +655,10 @@ const App: React.FC = () => {
             <div className="flex flex-col gap-1 mb-4 text-xs font-bold text-slate-800">
               <p>CLIENTE: {printingOrder.clientName}</p>
               <p className="leading-tight mt-1 bg-slate-50 p-3 rounded-xl border border-slate-100">DESTINO: {printingOrder.clientAddress}</p>
+              <p className="mt-1 flex justify-between">
+                <span>PAGAMENTO:</span>
+                <span className="text-blue-600 uppercase">{printingOrder.paymentMethod || 'PENDENTE'}</span>
+              </p>
             </div>
             <div className="border-y border-dashed border-slate-200 py-3 mb-4 max-h-40 overflow-y-auto custom-scrollbar">
               {groupedPrintingItems.map(([id, data]) => (
@@ -657,6 +694,7 @@ const App: React.FC = () => {
               {printingHistoryOrder.clientAddress && (
                 <p className="font-bold border-t border-dashed mt-2 pt-1 uppercase leading-tight">ENTREGA: {printingHistoryOrder.clientAddress}</p>
               )}
+              <p className="font-bold border-t border-dashed mt-2 pt-1 uppercase">PAGAMENTO: {printingHistoryOrder.paymentMethod || 'DINHEIRO'}</p>
               <p className="font-bold border-t border-dashed mt-2 pt-1 uppercase">ENTREGADOR: {driver.name}</p>
             </div>
             <div className="flex justify-between items-center border-t border-dashed pt-4 mb-2 text-[10px] uppercase font-black">

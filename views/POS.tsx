@@ -1684,7 +1684,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                       <p className="font-bold border-t border-dashed mt-2 pt-1 uppercase leading-tight">ENTREGA: {printingOrder.clientAddress}</p>
                     )}
                     {printingOrder.tableNumber && <p className="font-black">MESA: {printingOrder.tableNumber}</p>}
-                    <p>MÉTODO: {printingOrder.paymentMethod || 'DINHEIRO'}</p>
+                    <p>MÉTODO: {printingOrder.paymentMethod || 'PENDENTE'}</p>
                   </div>
                   <div className="border-t border-dashed my-3 py-3">
                     {groupedPrintingItems.map(([id, data]) => (
