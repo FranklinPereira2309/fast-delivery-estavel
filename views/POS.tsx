@@ -45,6 +45,8 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
 
   const [pendingTables, setPendingTables] = useState<TableSession[]>([]);
   const [pendingCounterOrders, setPendingCounterOrders] = useState<Order[]>([]);
+  const [pendingReceivables, setPendingReceivables] = useState<(Receivable & { client: Client, order: Order })[]>([]);
+  const [isReceivingFiado, setIsReceivingFiado] = useState<string | null>(null);
   const [isLoadingOrder, setIsLoadingOrder] = useState(false);
   const [manualDeliveryFee, setManualDeliveryFee] = useState<number | null>(null);
   const [currentOrderStatus, setCurrentOrderStatus] = useState<OrderStatus | null>(null);
@@ -77,7 +79,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
     cardCVV: '',
     pixStatus: 'idle' as 'idle' | 'generating' | 'waiting' | 'paid'
   });
-  const [alertConfig, setAlertConfig] = useState<{ isOpen: boolean, title: string, message: string, onConfirm: () => void, type: 'INFO' | 'DANGER' }>({
+  const [alertConfig, setAlertConfig] = useState<{ isOpen: boolean, title: string, message: string, onConfirm: () => void, type: 'INFO' | 'DANGER' | 'SUCCESS' }>({
     isOpen: false, title: '', message: '', onConfirm: () => { }, type: 'INFO'
   });
 
@@ -101,7 +103,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
     observations: ''
   });
 
-  const showAlert = (title: string, message: string, type: 'INFO' | 'DANGER' = 'INFO') => {
+  const showAlert = (title: string, message: string, type: 'INFO' | 'DANGER' | 'SUCCESS' = 'INFO') => {
     setAlertConfig({ isOpen: true, title, message, onConfirm: () => setAlertConfig(prev => ({ ...prev, isOpen: false })), type });
   };
 
@@ -127,13 +129,14 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
   }, []);
 
   const refreshAllData = async () => {
-    const [p, o, s, c, ts, cs] = await Promise.all([
+    const [p, o, s, c, ts, cs, recs] = await Promise.all([
       db.getProducts(),
       db.getOrders(),
       db.getSettings(),
       db.getClients(),
       db.getTableSessions(),
-      db.getActiveCashSession()
+      db.getActiveCashSession(),
+      db.getReceivables()
     ]);
     setProducts(p);
     setOrders(o);
@@ -141,6 +144,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
     setClients(c);
     setPendingTables(ts.filter(t => t.status === 'billing'));
     setPendingCounterOrders(o.filter(order => order.type === SaleType.COUNTER && order.status === OrderStatus.READY));
+    setPendingReceivables(recs?.filter((r: any) => r.status === 'PENDING') || []);
     setActiveCashSession(cs);
   };
 
@@ -151,6 +155,11 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
     if (editingOrderId) {
       setSelectedProductForCart(null);
       return showAlert("Ação Bloqueada", "Não é possível adicionar itens a um pedido pronto que está sendo recebido.", "DANGER");
+    }
+
+    if (isReceivingFiado) {
+      setSelectedProductForCart(null);
+      return showAlert("Ação Bloqueada", "Não é permitido adicionar ou excluir itens em um título de recebimento (Fiado). Utilize o módulo Recebimentos para ajustes.", "DANGER");
     }
 
     if (saleType === SaleType.TABLE && tableNumberInput) {
@@ -226,6 +235,23 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
 
     if (order.deliveryFee !== undefined) {
       setManualDeliveryFee(order.deliveryFee);
+    }
+
+    setTimeout(() => setIsLoadingOrder(false), 500);
+  };
+
+  const loadReceivable = async (receivable: Receivable & { client: Client, order: Order }) => {
+    setIsLoadingOrder(true);
+    setCart(receivable.order.items);
+    setSaleType(receivable.order.type);
+    setIsReceivingFiado(receivable.id);
+    setEditingOrderId(receivable.orderId);
+    setSelectedClient(receivable.client);
+    setTableNumber(receivable.order.tableNumber || '');
+    setTableNumberInput(receivable.order.tableNumber?.toString() || '');
+
+    if (receivable.order.deliveryFee) {
+      setManualDeliveryFee(receivable.order.deliveryFee);
     }
 
     setTimeout(() => setIsLoadingOrder(false), 500);
@@ -423,6 +449,25 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       }
     }
 
+    if (!isSplitModalOpen && paymentMethod === 'FIADO' && isReceivingFiado) {
+      return showAlert("Ação Inválida", "Não é possível pagar um título de FIADO usando a modalidade FIADO novamente.", "DANGER");
+    }
+
+    if (isReceivingFiado) {
+      try {
+        const method = isSplitModalOpen ? `${paymentMethod} + ${paymentMethod2}` : paymentMethod;
+        await db.receivePayment(isReceivingFiado, method, currentUser);
+        showAlert("Sucesso", "Recebimento concluído e registrado no caixa.", "SUCCESS");
+        clearState();
+        await refreshAllData();
+      } catch (err: any) {
+        showAlert("Erro", err.message || "Erro ao processar recebimento.", "DANGER");
+      }
+      setIsPaymentModalOpen(false);
+      setIsSplitModalOpen(false);
+      return;
+    }
+
     await commitOrder();
 
     if (emitNfce) {
@@ -594,6 +639,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
     setAvulsoData({ name: '', phone: '', address: '', cep: '', email: '', document: '' });
     setManualDeliveryFee(null);
     setIsSplitPayment(false);
+    setIsReceivingFiado(null);
     setPaymentMethod2('');
     setSplitAmount1('');
     setEmitNfce(false);
@@ -1286,7 +1332,25 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                 </button>
               ))}
 
-              {pendingTables.length === 0 && pendingCounterOrders.length === 0 && (
+              {/* Receivables (Fiado) */}
+              {pendingReceivables.length > 0 && pendingReceivables.map(r => (
+                <button
+                  key={`receivable-${r.id}`}
+                  onClick={() => loadReceivable(r)}
+                  className={`w-full p-4 bg-white rounded-2xl shadow-sm border border-transparent hover:border-emerald-500 hover:shadow-md transition-all text-left group ${isReceivingFiado === r.id ? 'ring-4 ring-emerald-500 border-emerald-500' : ''}`}
+                >
+                  <div className="flex justify-between items-start">
+                    <p className="font-black text-slate-800 text-sm uppercase truncate max-w-[120px]">{r.client.name}</p>
+                    <span className="text-[8px] font-black bg-slate-900 text-white px-2 py-0.5 rounded-full uppercase">
+                      {getFriendlySaleType(r.order.type)}
+                    </span>
+                  </div>
+                  <p className="text-[9px] font-black text-slate-400 uppercase mt-0.5 tracking-tighter">Débito: {new Date(r.createdAt).toLocaleDateString()}</p>
+                  <p className="text-[10px] font-bold text-emerald-600 mt-1 uppercase tracking-tighter">Total: R$ {r.amount.toFixed(2)}</p>
+                </button>
+              ))}
+
+              {pendingTables.length === 0 && pendingCounterOrders.length === 0 && pendingReceivables.length === 0 && (
                 <div className="text-center py-10 opacity-40">
                   <p className="text-[10px] text-slate-400 font-bold uppercase italic">Nada pendente</p>
                 </div>
@@ -1484,7 +1548,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                   <p className="font-black uppercase text-slate-800">{data.product?.name || '...'}</p>
                   <p className="text-slate-400 font-bold">{data.quantity} x R$ {data.price.toFixed(2)}</p>
                 </div>
-                {!editingOrderId && (
+                {!editingOrderId && !isReceivingFiado && (
                   <button onClick={() => {
                     setCart(prev => {
                       const idx = prev.findLastIndex(it => it.productId === id);
@@ -1583,7 +1647,9 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
             </button>
 
             {editingOrderId && (
-              <button onClick={clearState} className="w-full mt-2 text-slate-400 font-black uppercase text-[10px] tracking-widest hover:text-slate-600 transition-colors">Limpar Seleção</button>
+              <button onClick={clearState} className="w-full mt-2 text-slate-400 font-black uppercase text-[10px] tracking-widest hover:text-slate-600 transition-colors">
+                {isReceivingFiado ? 'Limpar / Devolver p/ Lista' : 'Limpar Seleção'}
+              </button>
             )}
 
             {/* ATALHO DIRETO PARA PAGAMENTO (Requisitado: Somente Delivery) */}

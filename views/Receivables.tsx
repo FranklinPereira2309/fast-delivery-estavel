@@ -7,9 +7,10 @@ import CustomAlert from '../components/CustomAlert';
 
 interface ReceivablesProps {
     currentUser: User;
+    setActiveTab: (tab: string) => void;
 }
 
-const Receivables: React.FC<ReceivablesProps> = ({ currentUser }) => {
+const Receivables: React.FC<ReceivablesProps> = ({ currentUser, setActiveTab }) => {
     const [receivables, setReceivables] = useState<(Receivable & { client: Client })[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -75,18 +76,13 @@ const Receivables: React.FC<ReceivablesProps> = ({ currentUser }) => {
 
     const handleReceive = (receivable: Receivable & { client: Client }) => {
         showAlert({
-            title: 'RECEBER PAGAMENTO',
-            message: `Deseja registrar o recebimento de R$ ${receivable.amount.toFixed(2)} do cliente ${receivable.client.name}?`,
-            type: 'SUCCESS',
-            onConfirm: async () => {
-                try {
-                    await db.receivePayment(receivable.id, 'DIRETAMENTE', currentUser);
-                    closeAlert();
-                    refreshData();
-                    showAlert({ title: 'SUCESSO', message: 'Recebimento registrado e injetado no caixa do dia.', type: 'SUCCESS' });
-                } catch (err: any) {
-                    showAlert({ title: 'ERRO', message: err.message || 'Erro ao processar recebimento.', type: 'DANGER' });
-                }
+            title: 'RECEBER NO PDV',
+            message: `O débito de R$ ${receivable.amount.toFixed(2)} do cliente ${receivable.client.name} será enviado para a área de 'Aguardando Recebimento' no PDV. Deseja ir para lá agora?`,
+            type: 'INFO',
+            onCancel: closeAlert,
+            onConfirm: () => {
+                closeAlert();
+                setActiveTab('pos');
             }
         });
     };
