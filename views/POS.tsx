@@ -444,12 +444,12 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       if (saleType === SaleType.COUNTER) return showAlert('Identificar Cliente', 'Para vendas de Balcão, identifique o cliente.', 'INFO');
     }
 
-    if (!isTableSale) {
-      setIsPaymentModalOpen(true);
+    if (isCounterSale && !editingOrderId) {
+      await commitOrder();
       return;
     }
 
-    if (isTableSale && !editingOrderId) {
+    if (isDelivery) {
       await commitOrder();
       return;
     }
@@ -533,7 +533,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       status: (isCounterSale && !editingOrderId) || isDelivery ? OrderStatus.PREPARING : OrderStatus.DELIVERED,
       type: saleType,
       createdAt: existingOrderId ? orders.find(o => o.id === existingOrderId)?.createdAt || new Date().toISOString() : new Date().toISOString(),
-      paymentMethod: isSplitModalOpen ? `${paymentMethod} + ${paymentMethod2}` : paymentMethod,
+      paymentMethod: (isPaymentModalOpen || isSplitModalOpen) ? (isSplitModalOpen ? `${paymentMethod} + ${paymentMethod2}` : paymentMethod) : undefined,
       driverId: existingOrder?.driverId,
       deliveryFee: (saleType === SaleType.OWN_DELIVERY) ? deliveryFeeValue : undefined,
       tableNumber: isTableSale ? finalTableNum! : undefined,
