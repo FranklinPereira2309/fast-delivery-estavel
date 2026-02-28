@@ -5,6 +5,7 @@ import { db, BusinessSettings } from '../services/db';
 import { Icons } from '../constants';
 import { socket, chatUnreadManager } from '../services/socket';
 import CustomAlert from '../components/CustomAlert';
+import { getLocalIsoDate } from '../services/dateUtils';
 
 const BlinkCSS = () => (
   <style>{`
@@ -68,8 +69,8 @@ const FleetManagement: React.FC<{ refreshLogistics: () => void }> = ({ refreshLo
       setEditingDriver(driver);
       setFormData({
         name: driver.name, phone: driver.phone, email: driver.email || '', address: driver.address || '',
-        plate: driver.vehicle.plate === 'N/A' ? '' : driver.vehicle.plate,
-        model: driver.vehicle.model, brand: driver.vehicle.brand, type: driver.vehicle.type
+        plate: driver.vehiclePlate === 'N/A' ? '' : driver.vehiclePlate,
+        model: driver.vehicleModel, brand: driver.vehicleBrand, type: driver.vehicleType
       });
     } else {
       setEditingDriver(null);
@@ -83,10 +84,8 @@ const FleetManagement: React.FC<{ refreshLogistics: () => void }> = ({ refreshLo
     const driver: DeliveryDriver = {
       id: editingDriver?.id || `DRV-${Date.now()}`,
       name: formData.name, phone: formData.phone, email: formData.email, address: formData.address,
-      vehicle: {
-        plate: formData.type === 'Bicicleta' ? 'N/A' : (formData.plate || '---'),
-        model: formData.model, brand: formData.brand, type: formData.type
-      },
+      vehiclePlate: formData.type === 'Bicicleta' ? 'N/A' : (formData.plate || '---'),
+      vehicleModel: formData.model, vehicleBrand: formData.brand, vehicleType: formData.type,
       status: editingDriver?.status || 'AVAILABLE'
     };
     await db.saveDriver(driver);
@@ -133,14 +132,14 @@ const FleetManagement: React.FC<{ refreshLogistics: () => void }> = ({ refreshLo
             <div className="flex items-center gap-4 mb-4">
               <div className="w-12 h-12 bg-slate-900 text-white rounded-2xl flex items-center justify-center font-black uppercase tracking-widest text-sm">{driver.name.substring(0, 2)}</div>
               <div className="flex-1 min-w-0">
-                <p className="font-black text-slate-800 uppercase text-xs truncate">{driver.name} {driver.vehicle.type === 'Bicicleta' && '🚲'}</p>
-                <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">{driver.vehicle.brand} {driver.vehicle.model}</p>
+                <p className="font-black text-slate-800 uppercase text-xs truncate">{driver.name} {driver.vehicleType === 'Bicicleta' && '🚲'}</p>
+                <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">{driver.vehicleBrand} {driver.vehicleModel}</p>
               </div>
             </div>
             <div className="flex justify-between items-center pt-4 border-t border-slate-50">
               <div className="flex flex-col">
                 <span className="text-[8px] font-black text-slate-300 uppercase tracking-[0.2em] mb-1">Identificação / Placa</span>
-                <span className="font-mono text-[10px] font-black text-slate-600 uppercase">{driver.vehicle.plate || 'N/A'}</span>
+                <span className="font-mono text-[10px] font-black text-slate-600 uppercase">{driver.vehiclePlate || 'N/A'}</span>
               </div>
               <div className="flex gap-1">
                 <button onClick={() => openModal(driver)} className="p-2 text-slate-200 hover:text-blue-500 transition-all"><Icons.Edit /></button>
@@ -225,8 +224,8 @@ const Logistics: React.FC = () => {
 
   const [activeTab, setActiveTab] = useState<'PENDING' | 'HISTORY' | 'CHAT' | 'FROTA'>('PENDING');
   const [historyOrders, setHistoryOrders] = useState<Order[]>([]);
-  const [historyStartDate, setHistoryStartDate] = useState(new Date().toISOString().split('T')[0]);
-  const [historyEndDate, setHistoryEndDate] = useState(new Date().toISOString().split('T')[0]);
+  const [historyStartDate, setHistoryStartDate] = useState(getLocalIsoDate());
+  const [historyEndDate, setHistoryEndDate] = useState(getLocalIsoDate());
   const [historyDriverId, setHistoryDriverId] = useState<string>('TODOS');
   const [printingHistoryOrder, setPrintingHistoryOrder] = useState<Order | null>(null);
 
@@ -457,7 +456,7 @@ const Logistics: React.FC = () => {
                     <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-black uppercase shadow-md">{getDriverName(order.driverId).charAt(0)}</div>
                     <div className="flex-1">
                       <p className="text-xs font-black text-blue-900 truncate">Com: {getDriverName(order.driverId)}</p>
-                      <p className="text-[9px] text-blue-400 font-black uppercase mt-0.5">Veículo: {drivers.find(d => d.id === order.driverId)?.vehicle.plate || 'N/A'}</p>
+                      <p className="text-[9px] text-blue-400 font-black uppercase mt-0.5">Veículo: {drivers.find(d => d.id === order.driverId)?.vehiclePlate || 'N/A'}</p>
                     </div>
                   </div>
                   {order.status === OrderStatus.READY && order.driverId ? (
@@ -508,7 +507,7 @@ const Logistics: React.FC = () => {
                     <p className="text-sm font-black text-slate-800 truncate">{driver.name}</p>
                     <div className="flex items-center gap-1.5 mt-0.5">
                       <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Conectado</span>
+                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Conectado / {driver.vehiclePlate}</span>
                     </div>
                   </div>
                 </button>

@@ -5,6 +5,7 @@ import { Order, OrderStatus, SaleType, Client, Product, DeliveryDriver, Inventor
 import { Icons } from '../constants';
 import CustomAlert from '../components/CustomAlert';
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
+import { getLocalIsoDate } from '../services/dateUtils';
 
 interface ReportsProps {
     currentUser: User | null;
@@ -19,8 +20,8 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
     const [rejections, setRejections] = useState<OrderRejection[]>([]);
 
     // Sales Filters
-    const [salesStartDate, setSalesStartDate] = useState(new Date().toISOString().split('T')[0]);
-    const [salesEndDate, setSalesEndDate] = useState(new Date().toISOString().split('T')[0]);
+    const [salesStartDate, setSalesStartDate] = useState(getLocalIsoDate());
+    const [salesEndDate, setSalesEndDate] = useState(getLocalIsoDate());
     const [salesPayment, setSalesPayment] = useState<string>('TODOS');
     const [salesModality, setSalesModality] = useState<string>('TODOS');
     const [salesOrigin, setSalesOrigin] = useState<'TODOS' | 'FISICO' | 'DIGITAL'>('TODOS');
@@ -29,13 +30,13 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
     const [activeTab, setActiveTab] = useState<'SALES' | 'CLIENTS' | 'DRIVERS' | 'INVENTORY' | 'CASH'>('SALES');
 
     // Cash Filters
-    const [cashStartDate, setCashStartDate] = useState(new Date().toISOString().split('T')[0]);
-    const [cashEndDate, setCashEndDate] = useState(new Date().toISOString().split('T')[0]);
+    const [cashStartDate, setCashStartDate] = useState(getLocalIsoDate());
+    const [cashEndDate, setCashEndDate] = useState(getLocalIsoDate());
     const [cashSessions, setCashSessions] = useState<CashSession[]>([]);
 
     // Inventory Filters
-    const [inventoryStartDate, setInventoryStartDate] = useState(new Date().toISOString().split('T')[0]);
-    const [inventoryEndDate, setInventoryEndDate] = useState(new Date().toISOString().split('T')[0]);
+    const [inventoryStartDate, setInventoryStartDate] = useState(getLocalIsoDate());
+    const [inventoryEndDate, setInventoryEndDate] = useState(getLocalIsoDate());
 
     // Customer Filters
     const [clientSearch, setClientSearch] = useState('');
@@ -50,8 +51,8 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
     const [alert, setAlert] = useState<{ title: string; message: string; type: 'SUCCESS' | 'DANGER' | 'WARNING' } | null>(null);
 
     // Driver Filters
-    const [driverStartDate, setDriverStartDate] = useState(new Date().toISOString().split('T')[0]);
-    const [driverEndDate, setDriverEndDate] = useState(new Date().toISOString().split('T')[0]);
+    const [driverStartDate, setDriverStartDate] = useState(getLocalIsoDate());
+    const [driverEndDate, setDriverEndDate] = useState(getLocalIsoDate());
     const [selectedDriverId, setSelectedDriverId] = useState<string>('TODOS');
 
     useEffect(() => {
@@ -993,8 +994,8 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
                                         {cashSessions.map(s => (
                                             <tr key={s.id} className="hover:bg-slate-50/50 transition-colors">
                                                 <td className="p-4">{new Date(s.openedAt).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}</td>
-                                                <td className="p-4">{s.closedAt ? new Date(s.closedAt).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : '-'}</td>
-                                                <td className="p-4">R$ {s.totalSales?.toFixed(2) || '0,00'}</td>
+                                                <td className="p-4">{s.closedAt ? new Date(s.closedAt).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : 'Em Aberto'}</td>
+                                                <td className="p-4">R$ {s.totalSales?.toFixed(2) || (s.status === 'OPEN' ? 'Processando...' : '0,00')}</td>
                                                 <td className="p-4">
                                                     <span className={`px-3 py-1 rounded-full text-[8px] uppercase tracking-widest font-black ${s.status === 'OPEN' ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-400'}`}>
                                                         {s.status === 'OPEN' ? 'Aberto' : 'Fechado'}

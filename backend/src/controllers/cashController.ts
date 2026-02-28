@@ -44,6 +44,7 @@ const calculateSessionTotals = async (openedAt: Date) => {
     let systemPix = 0;
     let systemCredit = 0;
     let systemDebit = 0;
+    let systemOthers = 0;
 
     orders.forEach(order => {
         const method = order.paymentMethod?.toUpperCase() || '';
@@ -59,22 +60,25 @@ const calculateSessionTotals = async (openedAt: Date) => {
             else if (parts[0].includes('PIX')) systemPix += split1;
             else if (parts[0].includes('CRÉDITO')) systemCredit += split1;
             else if (parts[0].includes('DÉBITO')) systemDebit += split1;
+            else systemOthers += split1;
 
             // Second part (split2)
             if (parts[1].includes('DINHEIRO')) systemCash += split2;
             else if (parts[1].includes('PIX')) systemPix += split2;
             else if (parts[1].includes('CRÉDITO')) systemCredit += split2;
             else if (parts[1].includes('DÉBITO')) systemDebit += split2;
+            else systemOthers += split2;
         } else {
             if (method.includes('DINHEIRO')) systemCash += total;
             else if (method.includes('PIX')) systemPix += total;
             else if (method.includes('CRÉDITO')) systemCredit += total;
             else if (method.includes('DÉBITO')) systemDebit += total;
+            else systemOthers += total;
         }
     });
 
-    const totalSales = systemCash + systemPix + systemCredit + systemDebit;
-    return { systemCash, systemPix, systemCredit, systemDebit, totalSales };
+    const totalSales = systemCash + systemPix + systemCredit + systemDebit + systemOthers;
+    return { systemCash, systemPix, systemCredit, systemDebit, systemOthers, totalSales };
 };
 
 export const getClosurePreview = async (req: Request, res: Response) => {
@@ -206,11 +210,13 @@ export const reopenCashSession = async (req: Request, res: Response) => {
 
 export const getCashSessions = async (req: Request, res: Response) => {
     const { start, end } = req.query;
+
+    // Use inclusive filtering by treating the dates as strings or being more flexible with bounds
     const sessions = await prisma.cashSession.findMany({
         where: {
             openedAt: {
-                gte: start ? new Date(`${start}T00:00:00`) : undefined,
-                lte: end ? new Date(`${end}T23:59:59.999`) : undefined
+                gte: start ? new Date(`${start}T00:00:00.000Z`) : undefined,
+                lte: end ? new Date(`${end}T23:59:59.999Z`) : undefined
             }
         },
         orderBy: { openedAt: 'desc' }
