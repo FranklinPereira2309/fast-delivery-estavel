@@ -470,9 +470,36 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       try {
         const method = isSplitModalOpen ? `${paymentMethod} + ${paymentMethod2}` : paymentMethod;
         await db.receivePayment(isReceivingFiado, method, currentUser);
+
+        // We need the order data before clearing state so we can print the NFC-e
+        let currentOrderData = null;
+        if (emitNfce) {
+          const rec = pendingReceivables.find(r => r.id === isReceivingFiado);
+          if (rec) {
+            currentOrderData = {
+              ...rec.order,
+              paymentMethod: method,
+              nfeStatus: 'EMITTED',
+              nfeNumber: `NFC-${Date.now()}`,
+              nfeUrl: `https://sefaz.gov.br/nfce/qrcode?p=${Date.now()}`
+            };
+          }
+        }
+
         showAlert("Sucesso", "Recebimento concluído e registrado no caixa.", "SUCCESS");
-        clearState();
+
+        // Preserve emission state over the clearState execution loop
+        const shouldEmit = emitNfce;
+
+        await clearState();
         await refreshAllData();
+
+        if (shouldEmit && currentOrderData) {
+          setIsNfceVisual(true);
+          setPrintingOrder(currentOrderData as any);
+          setIsNfceFeedbackOpen(true);
+          setTimeout(() => setIsNfceFeedbackOpen(false), 5000);
+        }
       } catch (err: any) {
         showAlert("Erro", err.message || "Erro ao processar recebimento.", "DANGER");
       }
@@ -514,6 +541,11 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
     if (!selectedClient && !avulsoData.name) {
       if (saleType === SaleType.OWN_DELIVERY) return showAlert('Identificar Cliente', 'Para Entregas, identifique o cliente.', 'INFO');
       if (saleType === SaleType.COUNTER) return showAlert('Identificar Cliente', 'Para vendas de Balcão, identifique o cliente.', 'INFO');
+    }
+
+    if (isReceivingFiado) {
+      setIsPaymentModalOpen(true);
+      return;
     }
 
     if (isCounterSale && !editingOrderId) {
@@ -914,7 +946,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                   { id: 'CRÉDITO', label: 'Crédito', icon: Icons.CreditCard },
                   { id: 'DÉBITO', label: 'Débito', icon: Icons.CreditCard },
                   { id: 'FIADO', label: 'Fiado', icon: Icons.User }
-                ].map(method => (
+                ].filter(m => !(m.id === 'FIADO' && isReceivingFiado)).map(method => (
                   <button
                     key={method.id}
                     onClick={() => setPaymentMethod(method.id)}
@@ -1040,21 +1072,23 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
             </div>
 
             <div className={`p-8 lg:p-10 bg-slate-50 border-t border-slate-100 shrink-0 flex flex-col gap-4`}>
-              <div className="flex items-center justify-between px-4 py-2 bg-white rounded-2xl border border-slate-100">
-                <div className="flex items-center gap-3">
-                  <Icons.View className="w-5 h-5 text-blue-600" />
-                  <div>
-                    <p className="text-[10px] font-black uppercase tracking-tight">Emitir NFC-e Fiscal?</p>
-                    <p className="text-[8px] font-bold text-slate-400 uppercase">Nota Fiscal de Consumidor Eletrônica</p>
+              {!!isReceivingFiado && (
+                <div className="flex items-center justify-between px-4 py-2 bg-white rounded-2xl border border-slate-100">
+                  <div className="flex items-center gap-3">
+                    <Icons.View className="w-5 h-5 text-blue-600" />
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-tight">Emitir NFC-e Fiscal?</p>
+                      <p className="text-[8px] font-bold text-slate-400 uppercase">Nota Fiscal de Consumidor Eletrônica</p>
+                    </div>
                   </div>
+                  <button
+                    onClick={() => setEmitNfce(!emitNfce)}
+                    className={`w-12 h-6 rounded-full transition-all relative ${emitNfce ? 'bg-emerald-600 ring-4 ring-emerald-500/20' : 'bg-slate-200'}`}
+                  >
+                    <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${emitNfce ? 'left-7' : 'left-1'}`}></div>
+                  </button>
                 </div>
-                <button
-                  onClick={() => setEmitNfce(!emitNfce)}
-                  className={`w-12 h-6 rounded-full transition-all relative ${emitNfce ? 'bg-emerald-600 ring-4 ring-emerald-500/20' : 'bg-slate-200'}`}
-                >
-                  <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${emitNfce ? 'left-7' : 'left-1'}`}></div>
-                </button>
-              </div>
+              )}
 
               <button
                 onClick={processPaymentAndFinalize}
@@ -1678,10 +1712,10 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                 handleFinalize();
               }}
               disabled={cart.length === 0 || (saleType === SaleType.TABLE && !tableNumberInput)}
-              className={`w-full text-white font-black py-4 xl:py-5 rounded-xl xl:rounded-2xl shadow-xl uppercase text-[10px] tracking-widest transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed ${((saleType === SaleType.COUNTER && !editingOrderId) || saleType === SaleType.OWN_DELIVERY) ? 'bg-orange-500 hover:bg-orange-600' : 'bg-blue-600 hover:bg-blue-700'
+              className={`w-full text-white font-black py-4 xl:py-5 rounded-xl xl:rounded-2xl shadow-xl uppercase text-[10px] tracking-widest transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed ${((saleType === SaleType.COUNTER && !editingOrderId) || (saleType === SaleType.OWN_DELIVERY && !isReceivingFiado)) ? 'bg-orange-500 hover:bg-orange-600' : 'bg-blue-600 hover:bg-blue-700'
                 }`}
             >
-              {((saleType === SaleType.COUNTER && !editingOrderId) || saleType === SaleType.OWN_DELIVERY) ? 'Enviar p/ Produção' : 'Finalizar e Receber'}
+              {((saleType === SaleType.COUNTER && !editingOrderId) || (saleType === SaleType.OWN_DELIVERY && !isReceivingFiado)) ? 'Enviar p/ Produção' : 'Finalizar e Receber'}
             </button>
 
             {editingOrderId && (
@@ -1691,7 +1725,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
             )}
 
             {/* ATALHO DIRETO PARA PAGAMENTO (Requisitado: Somente Delivery) */}
-            {(!editingOrderId && cart.length > 0 && saleType === SaleType.OWN_DELIVERY) && (
+            {(!editingOrderId && cart.length > 0 && saleType === SaleType.OWN_DELIVERY && !isReceivingFiado) && (
               <button
                 onClick={() => {
                   setIsPaymentModalOpen(true);
@@ -2306,7 +2340,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                       { id: 'CRÉDITO', label: 'Crédito', icon: Icons.CreditCard },
                       { id: 'DÉBITO', label: 'Débito', icon: Icons.CreditCard },
                       { id: 'FIADO', label: 'Fiado', icon: Icons.User }
-                    ].map(method => (
+                    ].filter(m => !(m.id === 'FIADO' && isReceivingFiado)).map(method => (
                       <button
                         key={`method1-${method.id}`}
                         onClick={() => setPaymentMethod(method.id)}
@@ -2447,7 +2481,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                       { id: 'CRÉDITO', label: 'Crédito', icon: Icons.CreditCard },
                       { id: 'DÉBITO', label: 'Débito', icon: Icons.CreditCard },
                       { id: 'FIADO', label: 'Fiado', icon: Icons.User }
-                    ].map(method => (
+                    ].filter(m => !(m.id === 'FIADO' && isReceivingFiado)).map(method => (
                       <button
                         key={`method2-${method.id}`}
                         onClick={() => setPaymentMethod2(method.id)}
@@ -2574,17 +2608,21 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
 
               {/* Modal Footer Controls */}
               <div className="p-4 lg:p-6 border-t border-slate-200 bg-white rounded-b-[3rem] shrink-0 flex items-center justify-between">
-                <div className="flex items-center gap-2 bg-slate-100 px-4 py-2 rounded-xl">
-                  <Icons.View className="w-5 h-5 text-slate-500" />
-                  <div>
-                    <p className="text-[10px] font-black uppercase tracking-tight text-slate-700">Emitir Cupom Fiscal (NFC-e)?</p>
-                  </div>
-                  <button
-                    onClick={() => setEmitNfce(!emitNfce)}
-                    className={`w-12 h-6 rounded-full transition-all relative ml-6 ${emitNfce ? 'bg-emerald-600 ring-4 ring-emerald-500/20' : 'bg-slate-300'}`}
-                  >
-                    <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${emitNfce ? 'left-7' : 'left-1'}`}></div>
-                  </button>
+                <div>
+                  {!!isReceivingFiado && (
+                    <div className="flex items-center gap-2 bg-slate-100 px-4 py-2 rounded-xl">
+                      <Icons.View className="w-5 h-5 text-slate-500" />
+                      <div>
+                        <p className="text-[10px] font-black uppercase tracking-tight text-slate-700">Emitir Cupom Fiscal (NFC-e)?</p>
+                      </div>
+                      <button
+                        onClick={() => setEmitNfce(!emitNfce)}
+                        className={`w-12 h-6 rounded-full transition-all relative ml-6 ${emitNfce ? 'bg-emerald-600 ring-4 ring-emerald-500/20' : 'bg-slate-300'}`}
+                      >
+                        <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${emitNfce ? 'left-7' : 'left-1'}`}></div>
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 <button
