@@ -29,13 +29,14 @@ class AudioAlertService {
     }
 
     public play() {
-        if (this.initialized) {
-            this.audio.currentTime = 0;
-            this.audio.play().catch(console.error);
-        } else {
-            // Fallback caso ainda não tenha sido inicializado, a maioria dos navegadores modernos bloqueará
-            this.audio.play().catch(console.error);
-        }
+        // Tenta tocar o áudio. Se o navegador bloquear (falta de interação), falha silenciosamente com log informativo.
+        this.audio.play().catch(err => {
+            if (err.name === 'NotAllowedError') {
+                console.log('🔔 Alerta sonoro pendente: clique na página para habilitar o som.');
+            } else {
+                console.error('Erro ao reproduzir áudio:', err);
+            }
+        });
     }
 }
 

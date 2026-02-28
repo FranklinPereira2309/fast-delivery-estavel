@@ -1,19 +1,16 @@
 import { useState, useEffect, useCallback } from 'react';
 import { socket } from '../services/socket';
+import { audioAlert } from '../services/audioAlert';
 
 let globalIsAlerting = false;
 const listeners = new Set<(val: boolean) => void>();
-
-// Reliable notification sound
-const ALERT_SOUND_URL = '/alerta.mp3';
-const audio = new Audio(ALERT_SOUND_URL);
 
 const setGlobalAlert = (val: boolean) => {
     globalIsAlerting = val;
     listeners.forEach(fn => fn(val));
 
     if (val) {
-        audio.play().catch(e => console.log('Audio play blocked by browser policy. User must interact first.', e));
+        audioAlert.play();
     }
 };
 
