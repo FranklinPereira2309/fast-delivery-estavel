@@ -488,7 +488,7 @@ const App: React.FC = () => {
                             <div className="flex flex-col gap-1 items-end mb-1">
                               <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest mr-1">Selecionar Pagamento:</span>
                               <div className="flex gap-1">
-                                {['DINHEIRO', 'PIX', 'CARTÃO'].map(m => (
+                                {['DINHEIRO', 'PIX', 'CARTÃO', 'FIADO'].map(m => (
                                   <button
                                     key={m}
                                     onClick={() => setSelectedPayments(prev => ({ ...prev, [order.id]: m }))}

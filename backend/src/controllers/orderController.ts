@@ -308,6 +308,29 @@ export const saveOrder = async (req: Request, res: Response) => {
             });
         });
 
+        // 4. Receivable Fiado Processing
+        if (result.status === 'DELIVERED' && result.paymentMethod === 'FIADO') {
+            if (!result.clientId || result.clientId === 'ANONYMOUS') {
+                console.warn('Cannot create Receivable for ANONYMOUS client on Order:', result.id);
+            } else {
+                const dueDate = new Date();
+                dueDate.setDate(dueDate.getDate() + 30); // Default 30 days
+
+                await prisma.receivable.upsert({
+                    where: { id: `REC-${result.id}` },
+                    update: { amount: result.total },
+                    create: {
+                        id: `REC-${result.id}`,
+                        clientId: result.clientId,
+                        orderId: result.id,
+                        amount: result.total,
+                        dueDate: dueDate,
+                        status: 'PENDING'
+                    }
+                }).catch(e => console.error('Error auto-creating FIADO receivable:', e));
+            }
+        }
+
         if (isNewItemsAdded) {
             try {
                 const tableNumIdx = order.tableNumber ? parseInt(order.tableNumber as string) : null;
@@ -503,6 +526,28 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
 
             if (finalClientId !== order.clientId) {
                 await tx.order.update({ where: { id: order.id }, data: { clientId: finalClientId } });
+            }
+
+            // 4. Receivable Fiado Processing for Status Changes (Delivery App Confirmation)
+            if (newStatus === 'DELIVERED' && (paymentMethod === 'FIADO' || oldOrder.paymentMethod === 'FIADO')) {
+                const realClientId = finalClientId || order.clientId;
+                if (realClientId && realClientId !== 'ANONYMOUS') {
+                    const dueDate = new Date();
+                    dueDate.setDate(dueDate.getDate() + 30);
+
+                    await tx.receivable.upsert({
+                        where: { id: `REC-${order.id}` },
+                        update: { amount: order.total },
+                        create: {
+                            id: `REC-${order.id}`,
+                            clientId: realClientId,
+                            orderId: order.id,
+                            amount: order.total,
+                            dueDate: dueDate,
+                            status: 'PENDING'
+                        }
+                    });
+                }
             }
 
             return order;

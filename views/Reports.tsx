@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { db, BusinessSettings } from '../services/db';
-import { Order, OrderStatus, SaleType, Client, Product, DeliveryDriver, InventoryMovement, OrderRejection, CashSession, User } from '../types';
+import { Order, OrderStatus, SaleType, Client, Product, DeliveryDriver, InventoryMovement, OrderRejection, CashSession, Receivable, User } from '../types';
 import { Icons } from '../constants';
 import CustomAlert from '../components/CustomAlert';
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
@@ -18,6 +18,7 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
     const [businessSettings, setBusinessSettings] = useState<BusinessSettings | null>(null);
     const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
     const [rejections, setRejections] = useState<OrderRejection[]>([]);
+    const [receivables, setReceivables] = useState<(Receivable & { client: Client })[]>([]);
 
     // Sales Filters
     const [salesStartDate, setSalesStartDate] = useState(getLocalIsoDate());
@@ -27,7 +28,7 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
     const [salesOrigin, setSalesOrigin] = useState<'TODOS' | 'FISICO' | 'DIGITAL'>('TODOS');
 
     // Tab State
-    const [activeTab, setActiveTab] = useState<'SALES' | 'CLIENTS' | 'DRIVERS' | 'INVENTORY' | 'CASH'>('SALES');
+    const [activeTab, setActiveTab] = useState<'SALES' | 'CLIENTS' | 'DRIVERS' | 'INVENTORY' | 'CASH' | 'RECEIVABLES'>('SALES');
 
     // Cash Filters
     const [cashStartDate, setCashStartDate] = useState(getLocalIsoDate());
@@ -42,7 +43,7 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
     const [clientSearch, setClientSearch] = useState('');
     const [selectedClient, setSelectedClient] = useState<Client | null>(null);
     const [showClientDropdown, setShowClientDropdown] = useState(false);
-    const [previewType, setPreviewType] = useState<'SALES' | 'CLIENTS' | 'CLIENT_ORDERS' | 'DRIVERS' | 'INVENTORY' | 'CASH' | null>(null);
+    const [previewType, setPreviewType] = useState<'SALES' | 'CLIENTS' | 'CLIENT_ORDERS' | 'DRIVERS' | 'INVENTORY' | 'CASH' | 'RECEIVABLES' | null>(null);
 
     // Editing Cash Reports
     const [isEditReportModalOpen, setIsEditReportModalOpen] = useState(false);
@@ -122,18 +123,20 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
     };
 
     const fetchData = async () => {
-        const [o, c, s, d, r] = await Promise.all([
+        const [o, c, s, d, r, rec] = await Promise.all([
             db.getOrders(),
             db.getClients(),
             db.getSettings(),
             db.getDrivers(),
-            db.getRejections()
+            db.getRejections(),
+            db.getReceivables()
         ]);
         setOrders(o);
         setClients(c);
         setBusinessSettings(s);
         setDrivers(d);
         setRejections(r);
+        setReceivables(rec);
 
         // Fetch cash sessions for current period
         fetchCashSessions();
@@ -617,6 +620,76 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
         }
     };
 
+    const generateReceivablesPDF = async (downloadOnly = false) => {
+        if (!businessSettings) return;
+
+        try {
+            const pdfDoc = await PDFDocument.create();
+            const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+            const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+
+            const pendingReceivables = receivables.filter(r => r.status === 'PENDING');
+            const totalPending = pendingReceivables.reduce((sum, r) => sum + r.amount, 0);
+
+            let page = pdfDoc.addPage([595.28, 841.89]);
+            const { width, height } = page.getSize();
+            let y = height - 50;
+
+            // Header
+            page.drawText('RELATÓRIO DE RECEBÍVEIS (FIADO)', { x: 50, y, size: 18, font: fontBold });
+            y -= 25;
+            page.drawText(businessSettings.name, { x: 50, y, size: 12, font: fontBold });
+            y -= 15;
+            page.drawText(`Documento de Conferência - Emitido em: ${new Date().toLocaleString('pt-BR')}`, { x: 50, y, size: 10, font });
+
+            y -= 30;
+            page.drawText(`TOTAL EM ABERTO: R$ ${totalPending.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, { x: 50, y, size: 14, font: fontBold });
+
+            y -= 40;
+            // Table Header
+            page.drawRectangle({ x: 50, y: y - 5, width: width - 100, height: 20, color: rgb(0.9, 0.9, 0.9) });
+            page.drawText('CLIENTE', { x: 55, y, size: 8, font: fontBold });
+            page.drawText('PEDIDO', { x: 200, y, size: 8, font: fontBold });
+            page.drawText('DESDE', { x: 280, y, size: 8, font: fontBold });
+            page.drawText('VENCIMENTO', { x: 380, y, size: 8, font: fontBold });
+            page.drawText('VALOR', { x: 500, y, size: 8, font: fontBold });
+            y -= 25;
+
+            for (const r of pendingReceivables) {
+                if (y < 70) {
+                    page = pdfDoc.addPage([595.28, 841.89]);
+                    y = page.getHeight() - 50;
+                }
+
+                page.drawText(r.client.name.substring(0, 30), { x: 55, y, size: 8, font });
+                page.drawText(`#${r.orderId.substring(0, 8)}`, { x: 200, y, size: 8, font });
+                page.drawText(new Date(r.createdAt).toLocaleDateString('pt-BR'), { x: 280, y, size: 8, font });
+                page.drawText(new Date(r.dueDate).toLocaleDateString('pt-BR'), { x: 380, y, size: 8, font });
+                page.drawText(`R$ ${r.amount.toFixed(2)}`, { x: 500, y, size: 8, font: fontBold });
+
+                y -= 18;
+            }
+
+            const pdfBytes = await pdfDoc.save();
+            const blob = new Blob([pdfBytes as any], { type: 'application/pdf' });
+            const url = URL.createObjectURL(blob);
+
+            if (downloadOnly) {
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `relatorio_recebiveis_${new Date().getTime()}.pdf`;
+                link.click();
+                URL.revokeObjectURL(url);
+            } else {
+                setPreviewType('RECEIVABLES');
+                setPdfPreviewUrl(url);
+            }
+        } catch (error) {
+            console.error('Erro ao gerar PDF de recebíveis:', error);
+            alert('Erro ao gerar relatório de recebíveis.');
+        }
+    };
+
     const generateCashPDF = async (downloadOnly = false) => {
         if (!businessSettings) return;
 
@@ -806,6 +879,7 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
                 <button onClick={() => setActiveTab('DRIVERS')} className={`pb-4 text-[12px] font-black uppercase tracking-widest transition-all ${activeTab === 'DRIVERS' ? 'text-blue-600 border-b-4 border-blue-600' : 'text-slate-400 hover:text-slate-600'}`}>Rotas de Entregadores</button>
                 <button onClick={() => setActiveTab('INVENTORY')} className={`pb-4 text-[12px] font-black uppercase tracking-widest transition-all ${activeTab === 'INVENTORY' ? 'text-blue-600 border-b-4 border-blue-600' : 'text-slate-400 hover:text-slate-600'}`}>Movimentação de Insumos</button>
                 <button onClick={() => setActiveTab('CASH')} className={`pb-4 text-[12px] font-black uppercase tracking-widest transition-all ${activeTab === 'CASH' ? 'text-blue-600 border-b-4 border-blue-600' : 'text-slate-400 hover:text-slate-600'}`}>Caixa</button>
+                <button onClick={() => setActiveTab('RECEIVABLES')} className={`pb-4 text-[12px] font-black uppercase tracking-widest transition-all ${activeTab === 'RECEIVABLES' ? 'text-blue-600 border-b-4 border-blue-600' : 'text-slate-400 hover:text-slate-600'}`}>Recebimentos (Fiado)</button>
             </div>
 
             <div className="flex-1">

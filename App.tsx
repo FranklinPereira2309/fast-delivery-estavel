@@ -14,6 +14,7 @@ import Settings from './views/Settings';
 import Login from './components/Login';
 import AuditLogs from './views/AuditLogs';
 import QRCodes from './views/QRCodes';
+import Receivables from './views/Receivables';
 import { db, BusinessSettings } from './services/db';
 import { User, Waiter } from './types';
 import CustomAlert from './components/CustomAlert';
@@ -130,6 +131,7 @@ const App: React.FC = () => {
       case 'crm': return <CRM currentUser={currentUser} />;
       case 'inventory': return <Inventory />;
       case 'logistics': return <Logistics />;
+      case 'receivables': return <Receivables currentUser={currentUser} />;
       case 'reports': return <Reports currentUser={currentUser} />;
       case 'qrcodes': return <QRCodes />;
       case 'settings':

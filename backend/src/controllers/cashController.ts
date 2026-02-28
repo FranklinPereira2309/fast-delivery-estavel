@@ -73,6 +73,9 @@ const calculateSessionTotals = async (openedAt: Date) => {
             else if (method.includes('PIX')) systemPix += total;
             else if (method.includes('CRÉDITO')) systemCredit += total;
             else if (method.includes('DÉBITO')) systemDebit += total;
+            else if (method.includes('FIADO')) {
+                // Do nothing, FIADO doesn't enter the daily cash sum until paid
+            }
             else systemOthers += total;
         }
     });

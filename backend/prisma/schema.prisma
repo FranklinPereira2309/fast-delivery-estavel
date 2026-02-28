@@ -80,6 +80,7 @@ model Client {
   totalOrders    Int      @default(0)
   lastOrderDate  String?
   orders         Order[]
+  receivables    Receivable[]
 }
 
 model Waiter {
@@ -167,6 +168,22 @@ model Order {
   appliedServiceFee Float? // Optional Service Fee recorded at the time of order
   digitalPin   String? // Store PIN for session recovery on reopen
   digitalToken String? // Store token for session recovery on reopen
+  receivables  Receivable[]
+}
+
+model Receivable {
+  id             String    @id @default(uuid())
+  clientId       String
+  client         Client    @relation(fields: [clientId], references: [id])
+  orderId        String
+  order          Order     @relation(fields: [orderId], references: [id])
+  amount         Float
+  dueDate        DateTime
+  paymentMethod  String?   // Method used when the receivables are finally PAID
+  status         String    @default("PENDING") // PENDING, PAID
+  observations   String?
+  createdAt      DateTime  @default(now())
+  paidAt         DateTime?
 }
 
 model OrderItem {

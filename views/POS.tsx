@@ -348,6 +348,12 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
           return showAlert("Validade Inválida", "Informe a validade do cartão (MM/AA).", "DANGER");
         }
       }
+
+      if (paymentMethod === 'FIADO') {
+        if (!selectedClient && !avulsoData.name) {
+          return showAlert("Identificação Faltando", "Apenas clientes identificados ou cadastrados no CRM podem utilizar a modalidade FIADO.", "DANGER");
+        }
+      }
     } else {
       const am1 = parseFloat(splitAmount1) || 0;
       const am2 = parseFloat(splitAmount2) || (cartTotal - am1); // Fallback para cálculo ou estado livre
@@ -408,6 +414,12 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
           return showAlert("Cartão Inválido 2", "O número do 2º cartão informado é inválido.", "DANGER");
         }
         if (!paymentData2.cardExpiry || paymentData2.cardExpiry.length < 5) return showAlert("Validade 2", "Validade do 2º cartão vazia.", "DANGER");
+      }
+
+      if (paymentMethod === 'FIADO' || paymentMethod2 === 'FIADO') {
+        if (!selectedClient && !avulsoData.name) {
+          return showAlert("Identificação Faltando", "Apenas clientes identificados ou cadastrados no CRM podem utilizar a modalidade FIADO.", "DANGER");
+        }
       }
     }
 
@@ -824,12 +836,13 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                 </button>
               </div>
 
-              <div className={`grid gap-3 bg-slate-100 p-2 rounded-[2rem] mb-4 grid-cols-2 md:grid-cols-4 mt-6`}>
+              <div className={`grid gap-3 bg-slate-100 p-2 rounded-[2rem] mb-4 grid-cols-2 md:grid-cols-5 mt-6`}>
                 {[
                   { id: 'DINHEIRO', label: 'Dinheiro', icon: Icons.Dashboard },
                   { id: 'PIX', label: 'PIX', icon: Icons.QrCode },
                   { id: 'CRÉDITO', label: 'Crédito', icon: Icons.CreditCard },
-                  { id: 'DÉBITO', label: 'Débito', icon: Icons.CreditCard }
+                  { id: 'DÉBITO', label: 'Débito', icon: Icons.CreditCard },
+                  { id: 'FIADO', label: 'Fiado', icon: Icons.User }
                 ].map(method => (
                   <button
                     key={method.id}
@@ -2190,12 +2203,13 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                   </div>
 
 
-                  <div className="grid grid-cols-4 gap-2 bg-slate-50 p-2 rounded-2xl mb-6">
+                  <div className="grid grid-cols-5 gap-2 bg-slate-50 p-2 rounded-2xl mb-6">
                     {[
                       { id: 'DINHEIRO', label: 'Dinheiro', icon: Icons.Dashboard },
                       { id: 'PIX', label: 'PIX', icon: Icons.QrCode },
                       { id: 'CRÉDITO', label: 'Crédito', icon: Icons.CreditCard },
-                      { id: 'DÉBITO', label: 'Débito', icon: Icons.CreditCard }
+                      { id: 'DÉBITO', label: 'Débito', icon: Icons.CreditCard },
+                      { id: 'FIADO', label: 'Fiado', icon: Icons.User }
                     ].map(method => (
                       <button
                         key={`method1-${method.id}`}
@@ -2330,12 +2344,13 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                   </div>
 
 
-                  <div className="grid grid-cols-4 gap-2 bg-slate-200/50 p-2 rounded-2xl mb-6">
+                  <div className="grid grid-cols-5 gap-2 bg-slate-200/50 p-2 rounded-2xl mb-6">
                     {[
                       { id: 'DINHEIRO', label: 'Dinheiro', icon: Icons.Dashboard },
                       { id: 'PIX', label: 'PIX', icon: Icons.QrCode },
                       { id: 'CRÉDITO', label: 'Crédito', icon: Icons.CreditCard },
-                      { id: 'DÉBITO', label: 'Débito', icon: Icons.CreditCard }
+                      { id: 'DÉBITO', label: 'Débito', icon: Icons.CreditCard },
+                      { id: 'FIADO', label: 'Fiado', icon: Icons.User }
                     ].map(method => (
                       <button
                         key={`method2-${method.id}`}

@@ -232,14 +232,32 @@ export interface CashSession {
   reportedPix?: number;
   reportedCredit?: number;
   reportedDebit?: number;
+  reportedOthers?: number;
 
   // Calculated by System
   systemCash?: number;
   systemPix?: number;
   systemCredit?: number;
   systemDebit?: number;
+  systemOthers?: number;
 
   totalSales?: number;
   difference?: number;
   observations?: string;
 }
+
+export type ReceivableStatus = 'PENDING' | 'PAID';
+
+export interface Receivable {
+  id: string;
+  clientId: string;
+  orderId: string;
+  amount: number;
+  dueDate: string;
+  status: ReceivableStatus;
+  paymentMethod?: string;
+  observations?: string;
+  createdAt: string;
+  paidAt?: string;
+}
+

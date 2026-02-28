@@ -87,6 +87,7 @@ const SalesMonitor: React.FC = () => {
               <option value="PIX">PIX</option>
               <option value="CRÉDITO">Crédito</option>
               <option value="DÉBITO">Débito</option>
+              <option value="FIADO">Fiado</option>
               <option value="PIX + DINHEIRO">PIX + Dinheiro</option>
               <option value="CRÉDITO + DINHEIRO">Crédito + Dinheiro</option>
               <option value="DÉBITO + DINHEIRO">Débito + Dinheiro</option>
@@ -94,7 +95,7 @@ const SalesMonitor: React.FC = () => {
               <option value="CRÉDITO + DÉBITO">Crédito + Débito</option>
               {/* Fallback caso seja um metodo composto customizado não mapeado acima e seja exatamente o original */}
               {printingOrder?.paymentMethod && ![
-                'DINHEIRO', 'PIX', 'CRÉDITO', 'DÉBITO',
+                'DINHEIRO', 'PIX', 'CRÉDITO', 'DÉBITO', 'FIADO',
                 'PIX + DINHEIRO', 'CRÉDITO + DINHEIRO', 'DÉBITO + DINHEIRO',
                 'PIX + CRÉDITO', 'CRÉDITO + DÉBITO'
               ].includes(printingOrder.paymentMethod) && (

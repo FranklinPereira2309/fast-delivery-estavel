@@ -312,7 +312,33 @@ class APIDBService {
 
   // Feedbacks
   public async getFeedbacks(): Promise<any[]> {
-    return this.request<any[]>('/public/feedback'); // Note: I should add a backend route for fetching, but for now I'll use public if allowed or add a private one.
+    return this.request<any[]>('/public/feedback');
+  }
+
+  // Receivables (Fiado)
+  public async getReceivables(): Promise<any[]> {
+    return this.request<any[]>('/receivables');
+  }
+
+  public async receivePayment(id: string, paymentMethod: string, user: User): Promise<any> {
+    return this.request(`/receivables/${id}/receive`, {
+      method: 'POST',
+      body: JSON.stringify({ paymentMethod, user })
+    });
+  }
+
+  public async deleteReceivable(id: string, user: User): Promise<any> {
+    return this.request(`/receivables/${id}`, {
+      method: 'DELETE',
+      body: JSON.stringify({ user })
+    });
+  }
+
+  public async updateReceivable(id: string, data: any): Promise<any> {
+    return this.request(`/receivables/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data)
+    });
   }
 }
 

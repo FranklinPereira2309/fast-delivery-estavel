@@ -16,6 +16,7 @@ import tableRoutes from './routes/tableRoutes';
 import publicRoutes from './routes/publicRoutes';
 import chatRoutes from './routes/chatRoutes';
 import cashRoutes from './routes/cashRoutes';
+import receivableRoutes from './routes/receivableRoutes';
 import { initSocket } from './socket';
 import { startOrderTimeoutService } from './services/orderTimeoutService';
 import { loadSettingsToCache } from './storeStatusCache';
@@ -63,6 +64,7 @@ app.use('/api/tables', tableRoutes);
 app.use('/api/public', publicRoutes); // Rotas abertas para clientes e cardápio digital
 app.use('/api/chat', chatRoutes);
 app.use('/api/cash', cashRoutes);
+app.use('/api/receivables', receivableRoutes);
 
 // Basic health check
 app.get('/health', (req, res) => {
