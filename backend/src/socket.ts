@@ -6,7 +6,12 @@ let io: Server;
 export const initSocket = (server: http.Server) => {
     io = new Server(server, {
         cors: {
-            origin: '*',
+            origin: [
+                'https://delivery-fast-frontend.onrender.com',
+                'https://cardapio-fast-delivery.onrender.com',
+                'http://localhost:5173',
+                'http://localhost:3000'
+            ],
             methods: ['GET', 'POST'],
             credentials: true
         },
