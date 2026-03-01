@@ -5,13 +5,8 @@ import { db, BusinessSettings } from '../services/db';
 import { socket } from '../services/socket';
 import { Icons, PLACEHOLDER_FOOD_IMAGE, formatImageUrl } from '../constants';
 import CustomAlert from '../components/CustomAlert';
-import { validateEmail, validateCPF, validateCNPJ, maskPhone, maskDocument, validateCreditCard, getCardBrand, maskCardNumber, maskExpiry, toTitleCase } from '../services/validationUtils';
-import { initMercadoPago, Wallet } from '@mercadopago/sdk-react';
+import { validateEmail, validateCPF, validateCNPJ, maskPhone, maskDocument, toTitleCase } from '../services/validationUtils';
 import { QRCodeCanvas } from 'qrcode.react';
-
-// Iniciando Mercado Pago com chave vinda do ambiente (.env)
-const MP_PUBLIC_KEY = import.meta.env.VITE_MERCADOPAGO_PUBLIC_KEY || 'SUA_KEY_MERCADO_PAGO';
-initMercadoPago(MP_PUBLIC_KEY, { locale: 'pt-BR' });
 
 interface POSProps {
   currentUser: User;
@@ -59,34 +54,19 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
 
   const [isClientModalOpen, setIsClientModalOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-  const [isSplitPayment, setIsSplitPayment] = useState(false);
-  const [isSplitModalOpen, setIsSplitModalOpen] = useState(false);
   const [paymentMethod2, setPaymentMethod2] = useState<string>('');
-  const [splitAmount1, setSplitAmount1] = useState<string>('');
-  const [splitAmount2, setSplitAmount2] = useState<string>('');
+  const [paymentAmount1, setPaymentAmount1] = useState<string>('');
+  const [paymentAmount2, setPaymentAmount2] = useState<string>('');
   const [emitNfce, setEmitNfce] = useState<boolean>(false);
   const [isNfceFeedbackOpen, setIsNfceFeedbackOpen] = useState(false);
   const [isNfceVisual, setIsNfceVisual] = useState(false);
   const [isServiceFeeAccepted, setIsServiceFeeAccepted] = useState(true);
   const [paymentData, setPaymentData] = useState({
-    receivedAmount: '',
-    cardHolder: '', // <-- Added Explicit Type Requirement Mapping later
-    cardName: '',
-    cardNumber: '',
-    cardExpiry: '',
-    cardCVV: '',
-    pixStatus: 'idle' as 'idle' | 'generating' | 'waiting' | 'paid'
+    receivedAmount: '', // Used for change calculation in DINHEIRO
   });
   const [paymentData2, setPaymentData2] = useState({
     receivedAmount: '',
-    cardName: '',
-    cardNumber: '',
-    cardExpiry: '',
-    cardCVV: '',
-    pixStatus: 'idle' as 'idle' | 'generating' | 'waiting' | 'paid'
   });
-  const [mpPreferenceId, setMpPreferenceId] = useState<string | null>(null);
-  const [isGeneratingMP, setIsGeneratingMP] = useState(false);
 
   const [alertConfig, setAlertConfig] = useState<{ isOpen: boolean, title: string, message: string, onConfirm: () => void, type: 'INFO' | 'DANGER' | 'SUCCESS' }>({
     isOpen: false, title: '', message: '', onConfirm: () => { }, type: 'INFO'
@@ -136,6 +116,8 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       socket.off('orderStatusChanged', handleRealtimeUpdate);
     };
   }, []);
+
+
 
   const refreshAllData = async () => {
     const [p, o, s, c, ts, cs, recs] = await Promise.all([
@@ -370,115 +352,44 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
 
   const processPaymentAndFinalize = async () => {
     const total = cartTotal;
+    const maxChangeAllowed = 10.00;
 
-    // Troco Máximo Validation Rule
-    const maxChangeAllowed = businessSettings?.maxChange ?? 191;
+    const am1 = parseFloat(paymentAmount1.toString().replace(',', '.')) || 0;
+    const am2 = parseFloat(paymentAmount2.toString().replace(',', '.')) || 0;
+    const totalPaid = am1 + am2;
 
-    if (!isSplitModalOpen) {
-      if (paymentMethod === 'DINHEIRO') {
-        const received = parseFloat(paymentData.receivedAmount);
-        if (isNaN(received) || received < total) {
-          return showAlert("Valor Insuficiente", "O valor recebido deve ser igual ou maior que o total.", "DANGER");
-        }
-        if (received - total > maxChangeAllowed) {
-          return showAlert("Troco Excedido", `O valor do troco não pode ultrapassar o teto configurado de R$ ${maxChangeAllowed.toFixed(2)}.`, "DANGER");
-        }
-      }
+    if (totalPaid < total - 0.01) {
+      return showAlert("Valor Insuficiente", "O valor total informado nos pagamentos é menor que o total da compra.", "DANGER");
+    }
 
-      if (paymentMethod === 'CRÉDITO' || paymentMethod === 'DÉBITO') {
-        if (!paymentData.cardName || paymentData.cardName.trim().length < 3) {
-          return showAlert("Nome Inválido", "O Titular do Cartão deve ser preenchido corretamente.", "DANGER");
+    // DINHEIRO change validation
+    if (paymentMethod === 'DINHEIRO') {
+      const received = parseFloat(paymentData.receivedAmount.toString().replace(',', '.')) || 0;
+      const expected = am1; // Change is always calculated based on paymentAmount1 if it's DINHEIRO
+      if (received > expected) {
+        if (received - expected > maxChangeAllowed) {
+          return showAlert("Troco Excedido", `O valor do troco não pode ultrapassar R$ ${maxChangeAllowed.toFixed(2)}.`, "DANGER");
         }
-        if (!validateCreditCard(paymentData.cardNumber)) {
-          return showAlert("Cartão Inválido", "O número do cartão informado é inválido.", "DANGER");
-        }
-        if (!paymentData.cardExpiry || paymentData.cardExpiry.length < 5) {
-          return showAlert("Validade Inválida", "Informe a validade do cartão (MM/AA).", "DANGER");
-        }
-      }
-
-      if (paymentMethod === 'FIADO') {
-        if (!selectedClient && !avulsoData.name) {
-          return showAlert("Identificação Faltando", "Apenas clientes identificados ou cadastrados no CRM podem utilizar a modalidade FIADO.", "DANGER");
-        }
-      }
-    } else {
-      const am1 = parseFloat(splitAmount1) || 0;
-      const am2 = parseFloat(splitAmount2) || (cartTotal - am1); // Fallback para cálculo ou estado livre
-
-      if (am1 <= 0 || am2 <= 0 || am1 >= total) {
-        return showAlert("Valor Inválido", "Os valores divididos devem ser maiores que zero e positivos.", "DANGER");
-      }
-
-      // Validação Absoluta de correspondência
-      const sum = am1 + am2;
-      if (Math.abs(sum - cartTotal) > 0.01) {
-        return showAlert("Soma Inválida", `A soma dos dois pagamentos (R$ ${sum.toFixed(2)}) difere do Total do Pedido (R$ ${cartTotal.toFixed(2)}). Corrija os valores antes de finalizar!`, "DANGER");
-      }
-
-      if (!paymentMethod2) {
-        return showAlert("Segundo Método", "Selecione a segunda forma de pagamento.", "DANGER");
-      }
-
-      // Check change for Cash in Method 1
-      if (paymentMethod === 'DINHEIRO') {
-        const received = parseFloat(paymentData.receivedAmount);
-        if (isNaN(received) || received < am1) {
-          return showAlert("Valor Insuficiente 1", "O valor recebido em Dinheiro (Met. 1) deve ser maior ou igual a " + am1.toFixed(2), "DANGER");
-        }
-        if (received - am1 > maxChangeAllowed) {
-          return showAlert("Troco Excedido", `O valor do troco (Met. 1) não pode ultrapassar R$ ${maxChangeAllowed.toFixed(2)}.`, "DANGER");
-        }
-      }
-
-      // Check change for Cash in Method 2
-      if (paymentMethod2 === 'DINHEIRO') {
-        const received = parseFloat(paymentData2.receivedAmount);
-        if (isNaN(received) || received < am2) {
-          return showAlert("Valor Insuficiente 2", "O valor recebido em Dinheiro (Met. 2) deve ser maior ou igual a " + am2.toFixed(2), "DANGER");
-        }
-        if (received - am2 > maxChangeAllowed) {
-          return showAlert("Troco Excedido", `O valor do troco (Met. 2) não pode ultrapassar R$ ${maxChangeAllowed.toFixed(2)}.`, "DANGER");
-        }
-      }
-
-      // Method 1 Card Validation
-      if (paymentMethod === 'CRÉDITO' || paymentMethod === 'DÉBITO') {
-        if (!paymentData.cardName || paymentData.cardName.trim().length < 3) {
-          return showAlert("Nome Inválido 1", "O Titular do 1º Cartão deve ser preenchido.", "DANGER");
-        }
-        if (!validateCreditCard(paymentData.cardNumber)) {
-          return showAlert("Cartão Inválido 1", "O número do 1º cartão informado é inválido.", "DANGER");
-        }
-        if (!paymentData.cardExpiry || paymentData.cardExpiry.length < 5) return showAlert("Validade 1", "Validade do 1º cartão vazia.", "DANGER");
-      }
-
-      // Method 2 Card Validation
-      if (paymentMethod2 === 'CRÉDITO' || paymentMethod2 === 'DÉBITO') {
-        if (!paymentData2.cardName || paymentData2.cardName.trim().length < 3) {
-          return showAlert("Nome Inválido 2", "O Titular do 2º Cartão deve ser preenchido.", "DANGER");
-        }
-        if (!validateCreditCard(paymentData2.cardNumber)) {
-          return showAlert("Cartão Inválido 2", "O número do 2º cartão informado é inválido.", "DANGER");
-        }
-        if (!paymentData2.cardExpiry || paymentData2.cardExpiry.length < 5) return showAlert("Validade 2", "Validade do 2º cartão vazia.", "DANGER");
-      }
-
-      if (paymentMethod === 'FIADO' || paymentMethod2 === 'FIADO') {
-        if (!selectedClient && !avulsoData.name) {
-          return showAlert("Identificação Faltando", "Apenas clientes identificados ou cadastrados no CRM podem utilizar a modalidade FIADO.", "DANGER");
-        }
+      } else if (received < expected) {
+        return showAlert("Valor Recebido Menor", "O valor em dinheiro recebido é menor que o valor informado no pagamento.", "DANGER");
       }
     }
 
-    if (!isSplitModalOpen && paymentMethod === 'FIADO' && isReceivingFiado) {
-      return showAlert("Ação Inválida", "Não é possível pagar um título de FIADO usando a modalidade FIADO novamente.", "DANGER");
+    if (paymentMethod === 'FIADO') {
+      if (!selectedClient && !avulsoData.name) {
+        return showAlert("Identificação Faltando", "Apenas clientes identificados ou cadastrados no CRM podem utilizar a modalidade FIADO.", "DANGER");
+      }
+    }
+
+    if (paymentMethod2 === 'FIADO') {
+      if (!selectedClient && !avulsoData.name) {
+        return showAlert("Identificação Faltando", "Apenas clientes identificados ou cadastrados no CRM podem utilizar a modalidade FIADO.", "DANGER");
+      }
     }
 
     if (isReceivingFiado) {
       try {
-        const method = isSplitModalOpen ? `${paymentMethod} + ${paymentMethod2}` : paymentMethod;
-
+        const method = am2 > 0 ? `${paymentMethod} + ${paymentMethod2}` : paymentMethod;
         let nfeData: any = undefined;
         let currentOrderData = null;
 
@@ -488,26 +399,18 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
             nfeNumber: `NFC-${Date.now()}`,
             nfeUrl: `https://sefaz.gov.br/nfce/qrcode?p=${Date.now()}`
           };
-
           const rec = pendingReceivables.find(r => r.id === isReceivingFiado);
           if (rec) {
-            currentOrderData = {
-              ...rec.order,
-              paymentMethod: method,
-              ...nfeData
-            };
+            currentOrderData = { ...rec.order, paymentMethod: method, ...nfeData };
           }
         }
 
         await db.receivePayment(isReceivingFiado, method, currentUser, nfeData);
+        showAlert("Sucesso", "Recebimento concluído.", "SUCCESS");
 
-        showAlert("Sucesso", "Recebimento concluído e registrado no caixa.", "SUCCESS");
-
-        // Preserve emission state over the clearState execution loop
         const shouldEmit = emitNfce;
-
-        setIsReceivingFiado(null); // Prevents clearState from trying to revert a deleted receivable
-        await clearState(true, true); // Skip revert of the fiado status AND keep printing order if set
+        setIsReceivingFiado(null);
+        await clearState(true, true);
         await refreshAllData();
 
         if (shouldEmit && currentOrderData) {
@@ -519,8 +422,6 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       } catch (err: any) {
         showAlert("Erro", err.message || "Erro ao processar recebimento.", "DANGER");
       }
-      setIsPaymentModalOpen(false);
-      setIsSplitModalOpen(false);
       return;
     }
 
@@ -530,9 +431,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       setIsNfceFeedbackOpen(true);
       setTimeout(() => setIsNfceFeedbackOpen(false), 5000);
     }
-
     setIsPaymentModalOpen(false);
-    setIsSplitModalOpen(false);
   };
 
   const handleFinalize = async () => {
@@ -559,82 +458,16 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       if (saleType === SaleType.COUNTER) return showAlert('Identificar Cliente', 'Para vendas de Balcão, identifique o cliente.', 'INFO');
     }
 
-    if (isReceivingFiado) {
-      setIsPaymentModalOpen(true);
-      return;
-    }
-
-    if (isCounterSale && !editingOrderId) {
-      await commitOrder();
-      return;
-    }
-
-    if (isDelivery) {
-      await commitOrder();
-      return;
-    }
+    // Set initial payment amount to cart total
+    setPaymentAmount1(cartTotal.toFixed(2));
+    setPaymentAmount2('0.00');
+    setPaymentMethod('DINHEIRO');
+    setPaymentMethod2('');
 
     setIsPaymentModalOpen(true);
   };
 
-  const handleCreateMPPreference = async () => {
-    try {
-      setIsGeneratingMP(true);
-      const items = cart.map(it => ({
-        productId: it.productId,
-        name: it.name,
-        price: it.price * (it.quantity || 1),
-        quantity: 1
-      }));
 
-      const clientName = selectedClient?.name || avulsoData.name || 'PDV-Venda';
-      const response = await fetch(`${(import.meta as any).env.VITE_API_URL || 'http://localhost:3000/api'}/payments/create-preference`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          items,
-          total: cartTotal,
-          clientName,
-          backUrl: window.location.origin
-        })
-      });
-
-      if (!response.ok) throw new Error('Erro ao gerar pagamento online.');
-      const data = await response.json();
-      setMpPreferenceId(data.id);
-    } catch (err: any) {
-      showAlert("Vix...", err.message || "Erro no Mercado Pago", "DANGER");
-    } finally {
-      setIsGeneratingMP(false);
-    }
-  };
-
-  const handleCreateMPPreferenceInSplit = async (isFirst: boolean) => {
-    try {
-      setIsGeneratingMP(true);
-      const amount = isFirst ? parseFloat(splitAmount1) : parseFloat(splitAmount2);
-
-      const clientName = selectedClient?.name || avulsoData.name || 'PDV-Split';
-      const response = await fetch(`${(import.meta as any).env.VITE_API_URL || 'http://localhost:3000/api'}/payments/create-preference`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          items: [{ productId: 'SPLIT_MP', name: 'Pagamento Parcial', price: amount, quantity: 1 }],
-          total: amount,
-          clientName,
-          backUrl: window.location.origin
-        })
-      });
-
-      if (!response.ok) throw new Error('Erro ao gerar pagamento online.');
-      const data = await response.json();
-      setMpPreferenceId(data.id);
-    } catch (err: any) {
-      showAlert("Vix...", err.message || "Erro no Mercado Pago", "DANGER");
-    } finally {
-      setIsGeneratingMP(false);
-    }
-  };
 
   const commitOrder = async () => {
     const isTableSale = saleType === SaleType.TABLE;
@@ -712,7 +545,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       status: (isCounterSale && !editingOrderId) || isDelivery ? OrderStatus.PREPARING : OrderStatus.DELIVERED,
       type: saleType,
       createdAt: existingOrderId ? orders.find(o => o.id === existingOrderId)?.createdAt || new Date().toISOString() : new Date().toISOString(),
-      paymentMethod: (isPaymentModalOpen || isSplitModalOpen) ? (isSplitModalOpen ? `${paymentMethod} + ${paymentMethod2}` : paymentMethod) : undefined,
+      paymentMethod: (parseFloat(paymentAmount2) > 0) ? `${paymentMethod} + ${paymentMethod2}` : paymentMethod,
       driverId: existingOrder?.driverId,
       deliveryFee: (saleType === SaleType.OWN_DELIVERY) ? deliveryFeeValue : undefined,
       tableNumber: isTableSale ? finalTableNum! : undefined,
@@ -721,7 +554,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       nfeStatus: emitNfce ? 'EMITTED' : undefined,
       nfeNumber: emitNfce ? `NFC-${Date.now()}` : undefined,
       nfeUrl: emitNfce ? `https://sefaz.gov.br/nfce/qrcode?p=${Date.now()}` : undefined,
-      splitAmount1: isSplitModalOpen ? parseFloat(splitAmount1.toString().replace(',', '.')) : undefined,
+      splitAmount1: (parseFloat(paymentAmount2) > 0) ? parseFloat(paymentAmount1.toString().replace(',', '.')) : undefined,
       appliedServiceFee: (saleType === SaleType.TABLE && businessSettings?.serviceFeeStatus && isServiceFeeAccepted) ? (cart.reduce((acc, item) => acc + (item.price * item.quantity), 0) * (businessSettings.serviceFeePercentage || 10) / 100) : 0
     };
 
@@ -766,29 +599,15 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
     setIsAvulso(false);
     setAvulsoData({ name: '', phone: '', address: '', cep: '', email: '', document: '' });
     setManualDeliveryFee(null);
-    setIsSplitPayment(false);
-    setIsReceivingFiado(null);
-    setPaymentMethod2('');
-    setSplitAmount1('');
+    setPaymentAmount1('');
+    setPaymentAmount2('');
     setEmitNfce(false);
     setPaymentData({
       receivedAmount: '',
-      cardHolder: '',
-      cardName: '',
-      cardNumber: '',
-      cardExpiry: '',
-      cardCVV: '',
-      pixStatus: 'idle'
     });
     setPaymentData2({
       receivedAmount: '',
-      cardName: '',
-      cardNumber: '',
-      cardExpiry: '',
-      cardCVV: '',
-      pixStatus: 'idle'
     });
-    setSplitAmount2('');
   };
 
   const handleOpenCash = async () => {
@@ -965,6 +784,26 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
     return total;
   }, [cart, saleType, deliveryFeeValue, businessSettings, isServiceFeeAccepted]);
 
+  // Effect to handle cumulative payment logic
+  useEffect(() => {
+    if (isPaymentModalOpen) {
+      const total = cartTotal;
+      const amt1 = parseFloat(paymentAmount1.toString().replace(',', '.')) || 0;
+
+      if (amt1 >= total) {
+        setPaymentAmount2('0.00');
+        if (paymentAmount1 === '') setPaymentAmount1(total.toFixed(2));
+      } else {
+        setPaymentAmount2((total - amt1).toFixed(2));
+      }
+    } else {
+      setPaymentAmount1('');
+      setPaymentAmount2('');
+      setPaymentMethod('DINHEIRO');
+      setPaymentMethod2('');
+    }
+  }, [isPaymentModalOpen, paymentAmount1, cartTotal]);
+
   const groupedPrintingItems = useMemo(() => {
     if (!printingOrder) return [];
     const grouped: Record<string, { product: Product | undefined, quantity: number, price: number }> = {};
@@ -991,222 +830,164 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       {isPaymentModalOpen && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
           <div className="bg-white w-[600px] max-w-[95vw] rounded-[3rem] shadow-2xl overflow-hidden border border-slate-100 flex flex-col max-h-[90vh]">
-            <div className="p-4 lg:p-6 border-b border-slate-50 shrink-0 relative">
+            <div className="p-6 lg:p-8 border-b border-slate-50 shrink-0 relative bg-slate-50/50">
               <button
                 onClick={() => setIsPaymentModalOpen(false)}
-                className="absolute right-4 top-4 w-10 h-10 flex items-center justify-center bg-slate-100 rounded-full text-slate-400 hover:bg-red-50 hover:text-red-500 transition-all font-black text-xl z-10"
+                className="absolute right-6 top-6 w-10 h-10 flex items-center justify-center bg-white rounded-full text-slate-400 hover:bg-red-50 hover:text-red-500 transition-all font-black text-xl z-20 shadow-sm"
               >
                 ×
               </button>
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2 px-2 mt-2 pr-12 lg:pr-16">
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                  Selecione 01 Método
-                </span>
-                <button
-                  onClick={() => {
-                    setIsPaymentModalOpen(false);
-                    setPaymentMethod('DINHEIRO');
-                    setPaymentMethod2('DINHEIRO');
-                    // Calcula a divisão e vai pra tela
-                    setSplitAmount1((cartTotal / 2).toFixed(2));
-                    setSplitAmount2((cartTotal / 2).toFixed(2));
-                    setIsSplitModalOpen(true);
-                  }}
-                  className="text-[10px] font-black uppercase tracking-widest px-4 py-2.5 rounded-full transition-all bg-indigo-50 text-indigo-600 hover:bg-indigo-100 border border-indigo-100 shadow-sm active:scale-95 flex items-center justify-center gap-2"
-                >
-                  <Icons.View className="w-3 h-3 text-indigo-500" />
-                  + Selecionar 02 Métodos
-                </button>
+
+              <div className="text-center mb-6">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Total da Compra</span>
+                <span className="text-4xl font-black text-blue-600 tracking-tighter">R$ {cartTotal.toFixed(2)}</span>
               </div>
 
-              <div className={`grid gap-2 bg-slate-100 p-2 rounded-3xl mb-2 grid-cols-2 md:grid-cols-5 mt-2`}>
-                {[
-                  { id: 'DINHEIRO', label: 'Dinheiro', icon: Icons.Dashboard },
-                  { id: 'PIX', label: 'PIX', icon: Icons.QrCode },
-                  { id: 'CRÉDITO', label: 'Crédito', icon: Icons.CreditCard },
-                  { id: 'DÉBITO', label: 'Débito', icon: Icons.CreditCard },
-                  { id: 'MERCADOPAGO', label: 'M. Pago', icon: Icons.CreditCard },
-                  { id: 'FIADO', label: 'Fiado', icon: Icons.User }
-                ].map(method => (
-                  <button
-                    key={method.id}
-                    onClick={() => {
-                      if (method.id === 'FIADO' && isReceivingFiado) return;
-                      setPaymentMethod(method.id);
-                    }}
-                    disabled={method.id === 'FIADO' && !!isReceivingFiado}
-                    className={`flex flex-col items-center gap-2 py-3 rounded-3xl transition-all ${paymentMethod === method.id ? 'bg-white text-blue-600 shadow-xl' : 'text-slate-400 hover:bg-slate-200'} ${(method.id === 'FIADO' && isReceivingFiado) ? 'opacity-30 cursor-not-allowed' : ''}`}
-                  >
-                    <method.icon className="w-5 h-5" />
-                    <span className="text-[9px] font-black uppercase tracking-widest">{method.label}</span>
-                  </button>
-                ))}
-              </div>
+              <div className="space-y-6 overflow-y-auto max-h-[60vh] pr-2 custom-scrollbar">
+                {/* FIRST PAYMENT METHOD */}
+                <div className="space-y-3 p-4 bg-white rounded-3xl border border-slate-100 shadow-sm relative">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 font-black flex items-center justify-center text-[10px]">1</span>
+                    <h3 className="text-xs font-black text-slate-800 uppercase tracking-widest">Forma de Pagamento</h3>
+                  </div>
 
-              <div className={`p-4 lg:p-6 overflow-y-auto`}>
-                <div className={`grid gap-4 grid-cols-1`}>
-                  {/* 1º Método de Pagamento */}
-                  <div>
-                    {/* Always show the total amount */}
-                    <div className="p-4 bg-blue-50/50 rounded-[2rem] border-2 border-blue-100 flex flex-col items-center justify-center mb-4 relative overflow-hidden shadow-sm">
-                      <div className="absolute -right-4 -top-4 w-24 h-24 bg-blue-400/10 rounded-full blur-xl"></div>
-                      <div className="absolute -left-4 -bottom-4 w-24 h-24 bg-blue-600/10 rounded-full blur-xl"></div>
-                      <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-1 relative z-10">Total da Compra</span>
-                      <span className="text-3xl md:text-4xl font-black text-blue-700 tracking-tighter relative z-10">R$ {cartTotal.toFixed(2)}</span>
-                    </div>
+                  <div className="grid grid-cols-3 md:grid-cols-5 gap-2">
+                    {[
+                      { id: 'DINHEIRO', label: 'Dinheiro', icon: Icons.Dashboard },
+                      { id: 'PIX', label: 'PIX', icon: Icons.QrCode },
+                      { id: 'CRÉDITO', label: 'Crédito', icon: Icons.CreditCard },
+                      { id: 'DÉBITO', label: 'Débito', icon: Icons.CreditCard },
+                      { id: 'FIADO', label: 'Fiado', icon: Icons.User }
+                    ].map(method => (
+                      <button
+                        key={`m1-${method.id}`}
+                        disabled={method.id === 'FIADO' && !!isReceivingFiado}
+                        onClick={() => setPaymentMethod(method.id)}
+                        className={`flex flex-col items-center gap-1.5 py-3 rounded-2xl transition-all ${paymentMethod === method.id ? 'bg-blue-600 text-white shadow-lg' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'} ${(method.id === 'FIADO' && isReceivingFiado) ? 'opacity-30 cursor-not-allowed' : ''}`}
+                      >
+                        <method.icon className="w-5 h-5" />
+                        <span className="text-[8px] font-black uppercase tracking-widest">{method.label}</span>
+                      </button>
+                    ))}
+                  </div>
 
-                    {paymentMethod === 'DINHEIRO' && (
-                      <div className="space-y-2 animate-in zoom-in-95 duration-200 mb-2">
+                  <div className="mt-4">
+                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Valor do Pagamento (R$)</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      className="w-full mt-1 p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl text-xl font-black outline-none focus:border-blue-500 transition-all text-blue-700"
+                      value={paymentAmount1}
+                      onChange={e => setPaymentAmount1(e.target.value)}
+                      autoFocus
+                    />
+                  </div>
 
-                        <div className="space-y-1">
-                          <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Recebido Dinheiro (R$)</label>
-                          <input
-                            type="number"
-                            className="w-full p-3 bg-slate-50 border-2 border-slate-100 rounded-2xl text-xl font-black outline-none focus:border-blue-500 transition-all"
-                            placeholder="0,00"
-                            value={paymentData.receivedAmount}
-                            onChange={e => setPaymentData({ ...paymentData, receivedAmount: e.target.value })}
-                            autoFocus={!isSplitPayment}
-                          />
-                        </div>
+                  {paymentMethod === 'DINHEIRO' && (
+                    <div className="mt-3 space-y-3 animate-in fade-in duration-300">
+                      <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
+                        <label className="text-[9px] font-black text-emerald-800 uppercase tracking-widest block mb-2">Valor Recebido em Dinheiro (R$)</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          placeholder="0,00"
+                          className="w-full p-4 bg-white border-2 border-emerald-100 rounded-2xl text-xl font-black outline-none focus:border-emerald-500 transition-all"
+                          value={paymentData.receivedAmount}
+                          onChange={e => setPaymentData({ ...paymentData, receivedAmount: e.target.value })}
+                        />
                         {(() => {
-                          const amCash = cartTotal;
-                          const received = parseFloat(paymentData.receivedAmount) || 0;
-                          if (received > amCash && amCash > 0) {
+                          const amt = parseFloat(paymentAmount1) || 0;
+                          const recv = parseFloat(paymentData.receivedAmount) || 0;
+                          const change = recv - amt;
+                          if (recv > amt && amt > 0) {
                             return (
-                              <div className="bg-green-50 p-4 rounded-2xl border border-green-100 flex items-center justify-between animate-in slide-in-from-top-2">
-                                <span className="text-xs font-black text-green-700 uppercase">Troco (1):</span>
-                                <span className="text-xl font-black text-green-600">R$ {(received - amCash).toFixed(2)}</span>
+                              <div className={`mt-3 flex justify-between items-center ${change > 10 ? 'text-red-600 bg-red-50 p-2 rounded-xl border border-red-100' : 'text-emerald-700'}`}>
+                                <div className="flex flex-col">
+                                  <span className="text-[10px] font-black uppercase tracking-widest">Troco a Devolver:</span>
+                                  {change > 10 && <span className="text-[8px] font-bold uppercase">Limite de R$ 10,00 excedido!</span>}
+                                </div>
+                                <span className="text-2xl font-black">R$ {change.toFixed(2)}</span>
                               </div>
                             );
                           }
                           return null;
                         })()}
                       </div>
-                    )}
+                    </div>
+                  )}
+                </div>
 
-                    {(paymentMethod === 'CRÉDITO' || paymentMethod === 'DÉBITO') && (
-                      <div className="space-y-3 animate-in zoom-in-95 duration-200">
-                        <div className="space-y-1">
-                          <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest ml-1">Titular Impresso no Cartão *</label>
-                          <input
-                            type="text"
-                            className="w-full p-3 bg-white border border-slate-200 rounded-xl text-xs font-black uppercase outline-none focus:border-blue-500 transition-all shadow-sm"
-                            placeholder="NOME IMPRESSO"
-                            value={paymentData.cardName}
-                            onChange={e => setPaymentData({ ...paymentData, cardName: e.target.value })}
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest ml-1">Número do Cartão *</label>
-                          <div className="relative">
-                            <input
-                              type="text"
-                              className="w-full p-3 bg-white border border-slate-200 rounded-xl text-xs font-black outline-none focus:border-blue-500 transition-all shadow-sm pr-16"
-                              placeholder="0000 0000 0000 0000"
-                              value={paymentData.cardNumber}
-                              onChange={e => setPaymentData({ ...paymentData, cardNumber: maskCardNumber(e.target.value) })}
-                            />
-                            <div className="absolute right-2 top-1/2 -translate-y-1/2 bg-slate-100 px-2 py-1 rounded-md text-[8px] font-black text-slate-600 uppercase shadow-sm">
-                              {getCardBrand(paymentData.cardNumber)}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-1">
-                            <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest ml-1">Validade *</label>
-                            <input
-                              type="text"
-                              className="w-full p-3 bg-white border border-slate-200 rounded-xl text-xs font-black outline-none focus:border-blue-500 transition-all text-center shadow-sm"
-                              placeholder="MM/AA"
-                              value={paymentData.cardExpiry}
-                              onChange={e => setPaymentData({ ...paymentData, cardExpiry: maskExpiry(e.target.value) })}
-                            />
-                          </div>
-                          <div className="space-y-1">
-                            <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest ml-1">CVV *</label>
-                            <input
-                              type="text"
-                              className="w-full p-3 bg-white border border-slate-200 rounded-xl text-xs font-black outline-none focus:border-blue-500 transition-all text-center shadow-sm"
-                              placeholder="000"
-                              maxLength={3}
-                              value={paymentData.cardCVV}
-                              onChange={e => setPaymentData({ ...paymentData, cardCVV: e.target.value.replace(/\D/g, '') })}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    )}
+                {/* SECOND PAYMENT METHOD (CUMULATIVE) */}
+                {parseFloat(paymentAmount1 || '0') < cartTotal && (
+                  <div className="space-y-4 p-4 bg-blue-50/30 rounded-3xl border border-blue-100 shadow-sm animate-in slide-in-from-top-4 duration-500">
+                    <div className="p-3 bg-red-50 border border-red-100 rounded-2xl mb-4">
+                      <p className="text-[9px] font-black text-red-600 uppercase tracking-widest text-center flex items-center justify-center gap-2">
+                        <Icons.View className="w-3 h-3" />
+                        O valor total informado nos pagamentos é menor que o total da compra
+                      </p>
+                    </div>
 
-                    {paymentMethod === 'MERCADOPAGO' && (
-                      <div className="flex flex-col items-center py-4 animate-in zoom-in-95 duration-200">
-                        {!mpPreferenceId ? (
-                          <button
-                            onClick={handleCreateMPPreference}
-                            disabled={isGeneratingMP}
-                            className="w-full py-4 bg-blue-600 text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl flex items-center justify-center gap-2 hover:bg-blue-700 disabled:opacity-50"
-                          >
-                            {isGeneratingMP ? (
-                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                            ) : 'Gerar QR / Pagamento Online'}
-                          </button>
-                        ) : (
-                          <div className="w-full">
-                            <Wallet initialization={{ preferenceId: mpPreferenceId!, redirectMode: 'blank' }} />
-                            <button
-                              onClick={() => setMpPreferenceId(null)}
-                              className="w-full mt-4 text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-slate-600"
-                            >
-                              Trocar / Reiniciar Pagamento
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    )}
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="w-6 h-6 rounded-full bg-blue-600 text-white font-black flex items-center justify-center text-[10px]">2</span>
+                      <h3 className="text-xs font-black text-slate-800 uppercase tracking-widest">Complemento do Pagamento</h3>
+                    </div>
 
-                    {paymentMethod === 'PIX' && (
-                      <div className="flex flex-col items-center py-4 animate-in zoom-in-95 duration-200">
-                        <div className="w-40 h-40 bg-slate-50 rounded-[2rem] border-4 border-blue-50 flex items-center justify-center mb-4 relative group overflow-hidden shadow-inner">
-                          <div className="text-slate-200"><Icons.QrCode className="w-20 h-20" /></div>
-                          <div className="absolute inset-0 bg-white/60 backdrop-blur-sm flex items-center justify-center flex-col gap-2 p-2 text-center">
-                            <div className="w-6 h-6 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-1"></div>
-                            <p className="text-[9px] font-black text-blue-800 uppercase leading-tight">Aguardando Pagamento...</p>
-                          </div>
-                        </div>
+                    <div className="grid grid-cols-3 md:grid-cols-4 gap-2">
+                      {[
+                        { id: 'PIX', label: 'PIX', icon: Icons.QrCode },
+                        { id: 'CRÉDITO', label: 'Crédito', icon: Icons.CreditCard },
+                        { id: 'DÉBITO', label: 'Débito', icon: Icons.CreditCard },
+                        { id: 'FIADO', label: 'Fiado', icon: Icons.User }
+                      ].map(method => (
+                        <button
+                          key={`m2-${method.id}`}
+                          onClick={() => setPaymentMethod2(method.id)}
+                          className={`flex flex-col items-center gap-1.5 py-3 rounded-2xl transition-all ${paymentMethod2 === method.id ? 'bg-blue-600 text-white shadow-lg' : 'bg-white text-slate-400 hover:bg-slate-100'}`}
+                        >
+                          <method.icon className="w-5 h-5" />
+                          <span className="text-[8px] font-black uppercase tracking-widest">{method.label}</span>
+                        </button>
+                      ))}
+                    </div>
+
+                    {paymentMethod2 && (
+                      <div className="mt-4 animate-in zoom-in-95">
+                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Valor do Complemento (R$)</label>
+                        <input
+                          type="number"
+                          className="w-full mt-1 p-4 bg-white border-2 border-blue-100 rounded-2xl text-xl font-black outline-none focus:border-blue-600 transition-all text-blue-700"
+                          value={paymentAmount2}
+                          readOnly // Automatic calculation of the remaining balance for Method 2
+                        />
+                        <p className="text-[8px] font-bold text-blue-400 mt-1 uppercase ml-1">Valor restante calculado automaticamente</p>
                       </div>
                     )}
                   </div>
-
-                  {/* 2º Pagamento Migrado para Modal Exclusivo */}
-                </div>
+                )}
               </div>
             </div>
 
-            <div className={`p-4 lg:p-6 bg-slate-50 border-t border-slate-100 shrink-0 flex flex-col gap-2`}>
-              {paymentMethod !== 'FIADO' && (
-                <div className="flex items-center justify-between px-4 py-2 bg-white rounded-2xl border border-slate-100">
-                  <div className="flex items-center gap-3">
-                    <Icons.View className="w-5 h-5 text-blue-600" />
-                    <div>
-                      <p className="text-[10px] font-black uppercase tracking-tight">Emitir NFC-e Fiscal?</p>
-                      <p className="text-[8px] font-bold text-slate-400 uppercase">Nota Fiscal de Consumidor Eletrônica</p>
-                    </div>
+            <div className={`p-6 lg:p-8 bg-white border-t border-slate-100 shrink-0 flex flex-col gap-4`}>
+              <div className="flex items-center justify-between px-6 py-3 bg-slate-50 rounded-2xl border border-slate-100">
+                <div className="flex items-center gap-3">
+                  <Icons.View className="w-5 h-5 text-blue-600" />
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-tight">Emitir NFC-e Fiscal?</p>
                   </div>
-                  <button
-                    onClick={() => setEmitNfce(!emitNfce)}
-                    className={`w-12 h-6 rounded-full transition-all relative ${emitNfce ? 'bg-emerald-600 ring-4 ring-emerald-500/20' : 'bg-slate-200'}`}
-                  >
-                    <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${emitNfce ? 'left-7' : 'left-1'}`}></div>
-                  </button>
                 </div>
-              )}
+                <button
+                  onClick={() => setEmitNfce(!emitNfce)}
+                  className={`w-12 h-6 rounded-full transition-all relative ${emitNfce ? 'bg-emerald-600 ring-4 ring-emerald-500/20' : 'bg-slate-200'}`}
+                >
+                  <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${emitNfce ? 'left-7' : 'left-1'}`}></div>
+                </button>
+              </div>
 
               <button
                 onClick={processPaymentAndFinalize}
-                className="w-full py-4 lg:py-5 bg-blue-600 hover:bg-blue-700 text-white rounded-[2rem] font-black uppercase text-lg tracking-widest shadow-2xl shadow-blue-200 transition-all flex items-center justify-center gap-3 group"
+                className="w-full py-5 bg-blue-600 hover:bg-blue-700 text-white rounded-[2rem] font-black uppercase text-lg tracking-widest shadow-2xl shadow-blue-200 transition-all flex items-center justify-center gap-3 group active:scale-95"
               >
-                <span>Finalizar Pedido</span>
-                <Icons.View className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                <span>Finalizar e Confirmar ✓</span>
               </button>
             </div>
           </div>
@@ -2430,389 +2211,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
           </div>
         )
       }
-      {/* NEW SPLIT PAYMENT MODAL */}
-      {
-        isSplitModalOpen && (
-          <div className="fixed inset-0 z-[300] flex items-center justify-center bg-slate-900/80 backdrop-blur-md animate-in zoom-in-95 duration-300 overflow-y-auto w-full h-full p-2">
-            <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-[900px] border border-slate-100 flex flex-col my-auto max-h-[95vh]">
-              {/* Header */}
-              <div className="p-4 lg:p-6 border-b border-slate-100 shrink-0 flex justify-between items-center bg-slate-50 rounded-t-[2rem]">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-[1rem] flex items-center justify-center">
-                    <Icons.View className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-black text-slate-800 uppercase tracking-tighter">Pagamento Dividido</h2>
-                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Configure os dois métodos</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-6">
-                  <div className="text-right">
-                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Valor da Fatura</p>
-                    <p className="text-2xl font-black text-blue-600 tracking-tighter">R$ {cartTotal.toFixed(2)}</p>
-                  </div>
-                  <button
-                    onClick={() => setIsSplitModalOpen(false)}
-                    className="w-10 h-10 flex items-center justify-center bg-white border-2 border-slate-100 rounded-full text-slate-400 hover:bg-red-50 hover:text-red-500 hover:border-red-100 transition-all font-black text-xl shadow-sm"
-                  >
-                    ×
-                  </button>
-                </div>
-              </div>
 
-              {/* Split Content Grid */}
-              <div className="flex-1 grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-slate-100 overflow-y-auto">
-
-                {/* --- COLUMN 1 --- */}
-                <div className="p-4 flex flex-col bg-white">
-                  <div className="flex items-center justify-between mb-3 cursor-pointer">
-                    <div className="flex items-center gap-2">
-                      <span className="w-5 h-5 rounded-full bg-slate-100 text-slate-500 font-black flex items-center justify-center text-[9px]">1</span>
-                      <h3 className="text-xs font-black text-slate-800 uppercase tracking-tighter">Primeiro Pagamento</h3>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-5 gap-2 bg-slate-50 p-2 rounded-xl mb-3">
-                    {[
-                      { id: 'DINHEIRO', label: 'Dinheiro', icon: Icons.Dashboard },
-                      { id: 'PIX', label: 'PIX', icon: Icons.QrCode },
-                      { id: 'CRÉDITO', label: 'Crédito', icon: Icons.CreditCard },
-                      { id: 'DÉBITO', label: 'Débito', icon: Icons.CreditCard },
-                      { id: 'FIADO', label: 'Fiado', icon: Icons.User }
-                    ].filter(m => !(m.id === 'FIADO' && isReceivingFiado)).map(method => (
-                      <button
-                        key={`method1-${method.id}`}
-                        onClick={() => setPaymentMethod(method.id)}
-                        className={`flex flex-col items-center justify-center gap-1 py-1.5 rounded-lg transition-all ${paymentMethod === method.id ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-200/50'}`}
-                      >
-                        <method.icon className="w-4 h-4" />
-                        <span className="text-[7px] font-black uppercase tracking-widest">{method.label}</span>
-                      </button>
-                    ))}
-                  </div>
-
-                  <div className="flex-1">
-                    <div className="mb-3 p-3 bg-indigo-50 rounded-2xl border border-indigo-100 relative overflow-hidden animate-in fade-in duration-300">
-                      <div className="absolute -right-4 -top-4 w-12 h-12 bg-blue-400/10 rounded-full blur-xl"></div>
-                      <label className="text-[9px] font-black text-indigo-800 uppercase tracking-widest ml-1 relative z-10">Valor a passar em {paymentMethod || 'Dinheiro'} (R$)</label>
-                      <input
-                        type="number"
-                        className="relative z-10 w-full mt-1 p-3 bg-white border-2 border-indigo-200 focus:border-indigo-500 rounded-xl text-xl font-black outline-none text-indigo-700 transition-all shadow-sm focus:ring-4 focus:ring-indigo-500/10"
-                        value={splitAmount1}
-                        onChange={e => {
-                          setSplitAmount1(e.target.value);
-                          const m2 = cartTotal - parseFloat(e.target.value || '0');
-                          if (m2 >= 0) setSplitAmount2(m2.toFixed(2));
-                        }}
-                        placeholder="0.00"
-                      />
-                    </div>
-                    {paymentMethod === 'DINHEIRO' && (
-                      <div className="space-y-2 animate-in zoom-in-95 duration-200">
-                        <div className="space-y-1">
-                          <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-1">Valor Entregue pelo Cliente (R$)</label>
-                          <input
-                            type="number"
-                            className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-base font-black outline-none focus:border-indigo-500 transition-all"
-                            placeholder="0,00"
-                            value={paymentData.receivedAmount}
-                            onChange={e => setPaymentData({ ...paymentData, receivedAmount: e.target.value })}
-                          />
-                        </div>
-                        {(() => {
-                          const amCash = parseFloat(splitAmount1) || 0;
-                          const received = parseFloat(paymentData.receivedAmount) || 0;
-                          if (received > amCash && amCash > 0) {
-                            return (
-                              <div className="bg-emerald-50 p-3 mt-2 rounded-xl border border-emerald-100 flex items-center justify-between animate-in slide-in-from-top-2">
-                                <span className="text-[8px] font-black text-emerald-700 uppercase tracking-widest">Troco a Devolver:</span>
-                                <span className="text-lg font-black text-emerald-600">R$ {(received - amCash).toFixed(2)}</span>
-                              </div>
-                            );
-                          }
-                          return null;
-                        })()}
-                      </div>
-                    )}
-
-                    {(paymentMethod === 'CRÉDITO' || paymentMethod === 'DÉBITO') && (
-                      <div className="space-y-2 animate-in zoom-in-95 duration-200 bg-slate-50 p-3 rounded-xl">
-                        <div className="space-y-1">
-                          <label className="text-[7px] font-black text-slate-400 uppercase tracking-widest ml-1">Titular Impresso no Cartão *</label>
-                          <input
-                            type="text"
-                            className="w-full p-2 bg-white border border-slate-200 rounded-lg text-xs font-black uppercase outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition-all shadow-sm"
-                            placeholder="EX: MARIA S SILVA"
-                            value={paymentData.cardName}
-                            onChange={e => setPaymentData({ ...paymentData, cardName: e.target.value })}
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <label className="text-[7px] font-black text-slate-400 uppercase tracking-widest ml-1">Número do Cartão *</label>
-                          <div className="relative">
-                            <input
-                              type="text"
-                              className="w-full p-2 bg-white border border-slate-200 rounded-lg text-xs font-black outline-none focus:border-blue-500 transition-all shadow-sm pr-16"
-                              placeholder="0000 0000 0000 0000"
-                              value={paymentData.cardNumber}
-                              onChange={e => setPaymentData({ ...paymentData, cardNumber: maskCardNumber(e.target.value) })}
-                            />
-                            <div className="absolute right-2 top-1/2 -translate-y-1/2 bg-slate-100 px-2 py-0.5 rounded-md text-[7px] font-black text-slate-600 uppercase shadow-sm">
-                              {getCardBrand(paymentData.cardNumber)}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-3">
-                          <div className="space-y-1">
-                            <label className="text-[7px] font-black text-slate-400 uppercase tracking-widest ml-1">Validade *</label>
-                            <input
-                              type="text"
-                              className="w-full p-2 bg-white border border-slate-200 rounded-lg text-xs font-black outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition-all text-center shadow-sm"
-                              placeholder="MM/AA"
-                              value={paymentData.cardExpiry}
-                              onChange={e => setPaymentData({ ...paymentData, cardExpiry: maskExpiry(e.target.value) })}
-                            />
-                          </div>
-                          <div className="space-y-1">
-                            <label className="text-[7px] font-black text-slate-400 uppercase tracking-widest ml-1">CVV *</label>
-                            <input
-                              type="text"
-                              className="w-full p-2 bg-white border border-slate-200 rounded-lg text-xs font-black outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition-all text-center shadow-sm"
-                              placeholder="000"
-                              maxLength={3}
-                              value={paymentData.cardCVV}
-                              onChange={e => setPaymentData({ ...paymentData, cardCVV: e.target.value.replace(/\D/g, '') })}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {paymentMethod === 'MERCADOPAGO' && (
-                      <div className="flex flex-col items-center py-2 animate-in zoom-in-95 duration-200">
-                        {!mpPreferenceId ? (
-                          <button
-                            onClick={() => handleCreateMPPreferenceInSplit(true)}
-                            disabled={isGeneratingMP}
-                            className="w-full py-3 bg-blue-600 text-white rounded-xl font-black uppercase text-[10px] tracking-widest shadow-md hover:bg-blue-700 disabled:opacity-50"
-                          >
-                            {isGeneratingMP ? '...' : 'Gerar Transação'}
-                          </button>
-                        ) : (
-                          <div className="w-full">
-                            <Wallet initialization={{ preferenceId: mpPreferenceId!, redirectMode: 'blank' }} />
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {paymentMethod === 'PIX' && (
-                      <div className="flex flex-col items-center py-2 animate-in zoom-in-95 duration-200">
-                        <div className="w-28 h-28 bg-slate-50 rounded-[1.5rem] border-[4px] border-blue-50 flex items-center justify-center mb-2 relative group overflow-hidden shadow-inner">
-                          <div className="text-slate-200"><Icons.QrCode className="w-16 h-16" /></div>
-                          <div className="absolute inset-0 bg-white/70 backdrop-blur-md flex items-center justify-center flex-col gap-1 p-2 text-center">
-                            <div className="w-5 h-5 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                            <p className="text-[7px] font-black text-blue-800 uppercase leading-tight cursor-default">Aguardando...</p>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-
-                {/* --- COLUMN 2 --- */}
-                <div className="p-4 flex flex-col bg-slate-50">
-                  <div className="flex items-center justify-between mb-3 cursor-pointer relative">
-                    <div className="flex items-center gap-2">
-                      <span className="w-5 h-5 rounded-full bg-slate-200 text-slate-600 font-black flex items-center justify-center text-[9px] shadow-inner">2</span>
-                      <h3 className="text-xs font-black text-slate-800 uppercase tracking-tighter">Segundo Pagamento</h3>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-5 gap-2 bg-slate-200/50 p-2 rounded-xl mb-3">
-                    {[
-                      { id: 'DINHEIRO', label: 'Dinheiro', icon: Icons.Dashboard },
-                      { id: 'PIX', label: 'PIX', icon: Icons.QrCode },
-                      { id: 'CRÉDITO', label: 'Crédito', icon: Icons.CreditCard },
-                      { id: 'DÉBITO', label: 'Débito', icon: Icons.CreditCard },
-                      { id: 'FIADO', label: 'Fiado', icon: Icons.User }
-                    ].filter(m => !(m.id === 'FIADO' && isReceivingFiado)).map(method => (
-                      <button
-                        key={`method2-${method.id}`}
-                        onClick={() => setPaymentMethod2(method.id)}
-                        className={`flex flex-col items-center gap-1 py-1.5 rounded-lg transition-all ${paymentMethod2 === method.id ? 'bg-white text-indigo-600 shadow-md ring-2 ring-indigo-500/20' : 'text-slate-500 hover:bg-slate-300/50'}`}
-                      >
-                        <method.icon className="w-4 h-4" />
-                        <span className="text-[7px] font-black uppercase tracking-widest">{method.label}</span>
-                      </button>
-                    ))}
-                  </div>
-
-                  <div className="flex-1">
-                    <div className="mb-3 p-3 bg-indigo-50 rounded-2xl border border-indigo-100 relative overflow-hidden animate-in fade-in duration-300">
-                      <div className="absolute -right-4 -top-4 w-12 h-12 bg-blue-400/10 rounded-full blur-xl"></div>
-                      <label className="text-[9px] font-black text-indigo-800 uppercase tracking-widest ml-1 relative z-10">Valor a passar em {paymentMethod2 || 'Dinheiro'} (R$)</label>
-                      <input
-                        type="number"
-                        className="relative z-10 w-full mt-1 p-3 bg-white border-2 border-indigo-200 focus:border-indigo-500 rounded-xl text-xl font-black outline-none text-indigo-700 transition-all shadow-sm focus:ring-4 focus:ring-indigo-500/10"
-                        value={splitAmount2}
-                        onChange={e => {
-                          setSplitAmount2(e.target.value);
-                          const m1 = cartTotal - parseFloat(e.target.value || '0');
-                          if (m1 >= 0) setSplitAmount1(m1.toFixed(2));
-                        }}
-                        placeholder="0.00"
-                      />
-                    </div>
-                    {paymentMethod2 === 'DINHEIRO' && (
-                      <div className="space-y-2 animate-in zoom-in-95 duration-200">
-                        <div className="space-y-1">
-                          <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-1">Valor Recebido (R$)</label>
-                          <input
-                            type="number"
-                            className="w-full p-3 bg-white border-2 border-slate-200 rounded-xl text-base font-black outline-none focus:border-indigo-500 transition-all shadow-sm"
-                            placeholder="0,00"
-                            value={paymentData2.receivedAmount}
-                            onChange={e => setPaymentData2({ ...paymentData2, receivedAmount: e.target.value })}
-                          />
-                        </div>
-                        {(() => {
-                          const amCash = parseFloat(splitAmount2) || 0;
-                          const received = parseFloat(paymentData2.receivedAmount) || 0;
-                          if (received > amCash && amCash > 0) {
-                            return (
-                              <div className="bg-emerald-50 p-3 mt-2 rounded-xl border border-emerald-100 flex items-center justify-between animate-in slide-in-from-top-2">
-                                <span className="text-[8px] font-black text-emerald-700 uppercase tracking-widest">Troco a Devolver:</span>
-                                <span className="text-lg font-black text-emerald-600">R$ {(received - amCash).toFixed(2)}</span>
-                              </div>
-                            );
-                          }
-                          return null;
-                        })()}
-                      </div>
-                    )}
-
-                    {(paymentMethod2 === 'CRÉDITO' || paymentMethod2 === 'DÉBITO') && (
-                      <div className="space-y-2 animate-in zoom-in-95 duration-200 bg-white p-3 rounded-xl shadow-sm border border-slate-100">
-                        <div className="space-y-1">
-                          <label className="text-[7px] font-black text-slate-500 uppercase tracking-widest ml-1">Titular Impresso no Cartão *</label>
-                          <input
-                            type="text"
-                            className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-black uppercase outline-none focus:border-indigo-500 transition-all focus:bg-white"
-                            placeholder="EX: JOSE M SANTOS"
-                            value={paymentData2.cardName}
-                            onChange={e => setPaymentData2({ ...paymentData2, cardName: e.target.value })}
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <label className="text-[7px] font-black text-slate-500 uppercase tracking-widest ml-1">Número do Cartão *</label>
-                          <div className="relative">
-                            <input
-                              type="text"
-                              className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-black uppercase outline-none focus:border-indigo-500 transition-all focus:bg-white pr-16"
-                              placeholder="0000 0000 0000 0000"
-                              value={paymentData2.cardNumber}
-                              onChange={e => setPaymentData2({ ...paymentData2, cardNumber: maskCardNumber(e.target.value) })}
-                            />
-                            <div className="absolute right-2 top-1/2 -translate-y-1/2 bg-white px-2 py-0.5 rounded-md text-[7px] font-black text-slate-600 uppercase shadow-sm border border-slate-100">
-                              {getCardBrand(paymentData2.cardNumber)}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-3">
-                          <div className="space-y-1">
-                            <label className="text-[7px] font-black text-slate-500 uppercase tracking-widest ml-1">Validade *</label>
-                            <input
-                              type="text"
-                              className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-black uppercase outline-none focus:border-indigo-500 transition-all focus:bg-white text-center"
-                              placeholder="MM/AA"
-                              value={paymentData2.cardExpiry}
-                              onChange={e => setPaymentData2({ ...paymentData2, cardExpiry: maskExpiry(e.target.value) })}
-                            />
-                          </div>
-                          <div className="space-y-1">
-                            <label className="text-[7px] font-black text-slate-500 uppercase tracking-widest ml-1">CVV *</label>
-                            <input
-                              type="text"
-                              className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-black uppercase outline-none focus:border-indigo-500 transition-all focus:bg-white text-center"
-                              placeholder="000"
-                              maxLength={3}
-                              value={paymentData2.cardCVV}
-                              onChange={e => setPaymentData2({ ...paymentData2, cardCVV: e.target.value.replace(/\D/g, '') })}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {paymentMethod2 === 'MERCADOPAGO' && (
-                      <div className="flex flex-col items-center py-2 animate-in zoom-in-95 duration-200">
-                        {!mpPreferenceId ? (
-                          <button
-                            onClick={() => handleCreateMPPreferenceInSplit(false)}
-                            disabled={isGeneratingMP}
-                            className="w-full py-3 bg-blue-600 text-white rounded-xl font-black uppercase text-[10px] tracking-widest shadow-md hover:bg-blue-700 disabled:opacity-50"
-                          >
-                            {isGeneratingMP ? '...' : 'Gerar Transação'}
-                          </button>
-                        ) : (
-                          <div className="w-full">
-                            <Wallet initialization={{ preferenceId: mpPreferenceId!, redirectMode: 'blank' }} />
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {paymentMethod2 === 'PIX' && (
-                      <div className="flex flex-col items-center py-2 animate-in zoom-in-95 duration-200">
-                        <div className="w-28 h-28 bg-white rounded-[1.5rem] border-[4px] border-slate-100 flex items-center justify-center mb-2 relative group overflow-hidden shadow-sm">
-                          <div className="text-slate-200"><Icons.QrCode className="w-16 h-16" /></div>
-                          <div className="absolute inset-0 bg-white/70 backdrop-blur-md flex items-center justify-center flex-col gap-1 p-2 text-center">
-                            <div className="w-5 h-5 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-                            <p className="text-[7px] font-black text-indigo-800 uppercase leading-tight">Aguardando...</p>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-              </div>
-
-              {/* Modal Footer Controls */}
-              <div className="p-3 lg:p-4 border-t border-slate-200 bg-white rounded-b-[2rem] shrink-0 flex items-center justify-between">
-                <div>
-                  {paymentMethod !== 'FIADO' && paymentMethod2 !== 'FIADO' && (
-                    <div className="flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded-lg">
-                      <Icons.View className="w-4 h-4 text-slate-500" />
-                      <div>
-                        <p className="text-[9px] font-black uppercase tracking-tight text-slate-700">Emitir Cupom Fiscal (NFC-e)?</p>
-                      </div>
-                      <button
-                        onClick={() => setEmitNfce(!emitNfce)}
-                        className={`w-10 h-5 rounded-full transition-all relative ml-4 ${emitNfce ? 'bg-emerald-600 ring-2 ring-emerald-500/20' : 'bg-slate-300'}`}
-                      >
-                        <div className={`absolute top-[2px] w-4 h-4 rounded-full bg-white transition-all ${emitNfce ? 'left-5' : 'left-0.5'}`}></div>
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                <button
-                  onClick={() => {
-                    processPaymentAndFinalize();
-                  }}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-2xl font-black uppercase tracking-widest text-[9px] shadow-lg shadow-indigo-200 active:scale-95 transition-all flex items-center gap-2"
-                >
-                  <span>Finalizar Pagamento Dividido</span>
-                  <Icons.View className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          </div>
-        )
-      }
 
     </div >
   );
