@@ -54,19 +54,15 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
 
   const [isClientModalOpen, setIsClientModalOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-  const [paymentMethod2, setPaymentMethod2] = useState<string>('');
-  const [paymentAmount1, setPaymentAmount1] = useState<string>('');
-  const [paymentAmount2, setPaymentAmount2] = useState<string>('');
+  const [payments, setPayments] = useState<Array<{ method: string, amount: number, receivedAmount?: number }>>([]);
+  const [currentPaymentAmount, setCurrentPaymentAmount] = useState<string>('');
+  const [paymentData, setPaymentData] = useState({
+    receivedAmount: '', // Used for change calculation in DINHEIRO (current selection)
+  });
   const [emitNfce, setEmitNfce] = useState<boolean>(false);
   const [isNfceFeedbackOpen, setIsNfceFeedbackOpen] = useState(false);
   const [isNfceVisual, setIsNfceVisual] = useState(false);
   const [isServiceFeeAccepted, setIsServiceFeeAccepted] = useState(true);
-  const [paymentData, setPaymentData] = useState({
-    receivedAmount: '', // Used for change calculation in DINHEIRO
-  });
-  const [paymentData2, setPaymentData2] = useState({
-    receivedAmount: '',
-  });
 
   const [alertConfig, setAlertConfig] = useState<{ isOpen: boolean, title: string, message: string, onConfirm: () => void, type: 'INFO' | 'DANGER' | 'SUCCESS' }>({
     isOpen: false, title: '', message: '', onConfirm: () => { }, type: 'INFO'
@@ -352,44 +348,15 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
 
   const processPaymentAndFinalize = async () => {
     const total = cartTotal;
-    const maxChangeAllowed = 10.00;
+    const totalPaid = payments.reduce((acc, p) => acc + p.amount, 0);
 
-    const am1 = parseFloat(paymentAmount1.toString().replace(',', '.')) || 0;
-    const am2 = parseFloat(paymentAmount2.toString().replace(',', '.')) || 0;
-    const totalPaid = am1 + am2;
-
-    if (totalPaid < total - 0.01) {
-      return showAlert("Valor Insuficiente", "O valor total informado nos pagamentos é menor que o total da compra.", "DANGER");
-    }
-
-    // DINHEIRO change validation
-    if (paymentMethod === 'DINHEIRO') {
-      const received = parseFloat(paymentData.receivedAmount.toString().replace(',', '.')) || 0;
-      const expected = am1; // Change is always calculated based on paymentAmount1 if it's DINHEIRO
-      if (received > expected) {
-        if (received - expected > maxChangeAllowed) {
-          return showAlert("Troco Excedido", `O valor do troco não pode ultrapassar R$ ${maxChangeAllowed.toFixed(2)}.`, "DANGER");
-        }
-      } else if (received < expected) {
-        return showAlert("Valor Recebido Menor", "O valor em dinheiro recebido é menor que o valor informado no pagamento.", "DANGER");
-      }
-    }
-
-    if (paymentMethod === 'FIADO') {
-      if (!selectedClient && !avulsoData.name) {
-        return showAlert("Identificação Faltando", "Apenas clientes identificados ou cadastrados no CRM podem utilizar a modalidade FIADO.", "DANGER");
-      }
-    }
-
-    if (paymentMethod2 === 'FIADO') {
-      if (!selectedClient && !avulsoData.name) {
-        return showAlert("Identificação Faltando", "Apenas clientes identificados ou cadastrados no CRM podem utilizar a modalidade FIADO.", "DANGER");
-      }
+    if (Math.abs(totalPaid - total) > 0.01 && totalPaid < total) {
+      return showAlert("Valor Insuficiente", "O valor total informado nos pagamentos é menor que o total da compra. Adicione mais pagamentos para prosseguir.", "DANGER");
     }
 
     if (isReceivingFiado) {
       try {
-        const method = am2 > 0 ? `${paymentMethod} + ${paymentMethod2}` : paymentMethod;
+        const method = payments.map(p => p.method).join(' + ');
         let nfeData: any = undefined;
         let currentOrderData = null;
 
@@ -458,11 +425,11 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       if (saleType === SaleType.COUNTER) return showAlert('Identificar Cliente', 'Para vendas de Balcão, identifique o cliente.', 'INFO');
     }
 
-    // Set initial payment amount to cart total
-    setPaymentAmount1(cartTotal.toFixed(2));
-    setPaymentAmount2('0.00');
+    // Set initial payment state
+    setPayments([]);
+    setCurrentPaymentAmount(cartTotal.toFixed(2));
     setPaymentMethod('DINHEIRO');
-    setPaymentMethod2('');
+    setPaymentData({ receivedAmount: '' });
 
     setIsPaymentModalOpen(true);
   };
@@ -545,7 +512,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       status: (isCounterSale && !editingOrderId) || isDelivery ? OrderStatus.PREPARING : OrderStatus.DELIVERED,
       type: saleType,
       createdAt: existingOrderId ? orders.find(o => o.id === existingOrderId)?.createdAt || new Date().toISOString() : new Date().toISOString(),
-      paymentMethod: (parseFloat(paymentAmount2) > 0) ? `${paymentMethod} + ${paymentMethod2}` : paymentMethod,
+      paymentMethod: payments.map(p => p.method).join(' + '),
       driverId: existingOrder?.driverId,
       deliveryFee: (saleType === SaleType.OWN_DELIVERY) ? deliveryFeeValue : undefined,
       tableNumber: isTableSale ? finalTableNum! : undefined,
@@ -554,7 +521,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       nfeStatus: emitNfce ? 'EMITTED' : undefined,
       nfeNumber: emitNfce ? `NFC-${Date.now()}` : undefined,
       nfeUrl: emitNfce ? `https://sefaz.gov.br/nfce/qrcode?p=${Date.now()}` : undefined,
-      splitAmount1: (parseFloat(paymentAmount2) > 0) ? parseFloat(paymentAmount1.toString().replace(',', '.')) : undefined,
+      splitAmount1: payments.length > 1 ? payments[0].amount : undefined,
       appliedServiceFee: (saleType === SaleType.TABLE && businessSettings?.serviceFeeStatus && isServiceFeeAccepted) ? (cart.reduce((acc, item) => acc + (item.price * item.quantity), 0) * (businessSettings.serviceFeePercentage || 10) / 100) : 0
     };
 
@@ -599,15 +566,11 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
     setIsAvulso(false);
     setAvulsoData({ name: '', phone: '', address: '', cep: '', email: '', document: '' });
     setManualDeliveryFee(null);
-    setPaymentAmount1('');
-    setPaymentAmount2('');
-    setEmitNfce(false);
-    setPaymentData({
-      receivedAmount: '',
-    });
-    setPaymentData2({
-      receivedAmount: '',
-    });
+    setPayments([]);
+    setCurrentPaymentAmount('');
+    setPaymentMethod('DINHEIRO');
+    setPaymentData({ receivedAmount: '' });
+    setEmitNfce(false); // This line was not removed by the instruction, but it was implicitly removed by the provided snippet. I'll keep it as it was not explicitly removed.
   };
 
   const handleOpenCash = async () => {
@@ -784,25 +747,65 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
     return total;
   }, [cart, saleType, deliveryFeeValue, businessSettings, isServiceFeeAccepted]);
 
-  // Effect to handle cumulative payment logic
+  // Effect to handle cumulative payment logic (Dynamic)
   useEffect(() => {
     if (isPaymentModalOpen) {
       const total = cartTotal;
-      const amt1 = parseFloat(paymentAmount1.toString().replace(',', '.')) || 0;
+      const alreadyPaid = payments.reduce((acc, p) => acc + p.amount, 0);
+      const remaining = Math.max(0, total - alreadyPaid);
 
-      if (amt1 >= total) {
-        setPaymentAmount2('0.00');
-        if (paymentAmount1 === '') setPaymentAmount1(total.toFixed(2));
+      if (remaining > 0) {
+        setCurrentPaymentAmount(remaining.toFixed(2));
       } else {
-        setPaymentAmount2((total - amt1).toFixed(2));
+        setCurrentPaymentAmount('0.00');
       }
     } else {
-      setPaymentAmount1('');
-      setPaymentAmount2('');
+      setPayments([]);
+      setCurrentPaymentAmount('');
       setPaymentMethod('DINHEIRO');
-      setPaymentMethod2('');
+      setPaymentData({ receivedAmount: '' });
     }
-  }, [isPaymentModalOpen, paymentAmount1, cartTotal]);
+  }, [isPaymentModalOpen, payments, cartTotal]);
+
+  const addPaymentToList = () => {
+    const amount = parseFloat(currentPaymentAmount.replace(',', '.')) || 0;
+    if (amount <= 0) return showAlert("Valor Inválido", "Informe um valor maior que zero.", "DANGER");
+
+    // Check for duplicate method
+    if (payments.find(p => p.method === paymentMethod)) {
+      return showAlert("Método Duplicado", "Este método de pagamento já foi adicionado. Remova-o para ajustar o valor ou escolha outro.", "DANGER");
+    }
+
+    // Validation for DINHEIRO
+    let received: number | undefined = undefined;
+    if (paymentMethod === 'DINHEIRO') {
+      received = parseFloat(paymentData.receivedAmount.replace(',', '.')) || 0;
+      if (received <= 0) {
+        return showAlert("Valor Recebido", "Para pagamentos em Dinheiro, é obrigatório informar o valor recebido pelo cliente.", "DANGER");
+      }
+      if (received < amount) {
+        return showAlert("Valor Insuficiente", "O valor recebido em dinheiro não pode ser menor que o valor do pagamento.", "DANGER");
+      }
+
+      const change = received - amount;
+      if (change > 10.00) {
+        return showAlert("Troco Excedido", "O valor do troco não pode ultrapassar R$ 10,00.", "DANGER");
+      }
+    }
+
+    setPayments(prev => [...prev, {
+      method: paymentMethod,
+      amount,
+      receivedAmount: received
+    }]);
+
+    // Reset current selection
+    setPaymentData({ receivedAmount: '' });
+  };
+
+  const removePayment = (method: string) => {
+    setPayments(prev => prev.filter(p => p.method !== method));
+  };
 
   const groupedPrintingItems = useMemo(() => {
     if (!printingOrder) return [];
@@ -844,11 +847,11 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
               </div>
 
               <div className="space-y-6 overflow-y-auto max-h-[60vh] pr-2 custom-scrollbar">
-                {/* FIRST PAYMENT METHOD */}
+                {/* PAYMENT METHOD SELECTION */}
                 <div className="space-y-3 p-4 bg-white rounded-3xl border border-slate-100 shadow-sm relative">
                   <div className="flex items-center gap-2 mb-2">
                     <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 font-black flex items-center justify-center text-[10px]">1</span>
-                    <h3 className="text-xs font-black text-slate-800 uppercase tracking-widest">Forma de Pagamento</h3>
+                    <h3 className="text-xs font-black text-slate-800 uppercase tracking-widest">Selecionar Pagamento</h3>
                   </div>
 
                   <div className="grid grid-cols-3 md:grid-cols-5 gap-2">
@@ -860,7 +863,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                       { id: 'FIADO', label: 'Fiado', icon: Icons.User }
                     ].map(method => (
                       <button
-                        key={`m1-${method.id}`}
+                        key={method.id}
                         disabled={method.id === 'FIADO' && !!isReceivingFiado}
                         onClick={() => setPaymentMethod(method.id)}
                         className={`flex flex-col items-center gap-1.5 py-3 rounded-2xl transition-all ${paymentMethod === method.id ? 'bg-blue-600 text-white shadow-lg' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'} ${(method.id === 'FIADO' && isReceivingFiado) ? 'opacity-30 cursor-not-allowed' : ''}`}
@@ -871,99 +874,124 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                     ))}
                   </div>
 
-                  <div className="mt-4">
-                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Valor do Pagamento (R$)</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      className="w-full mt-1 p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl text-xl font-black outline-none focus:border-blue-500 transition-all text-blue-700"
-                      value={paymentAmount1}
-                      onChange={e => setPaymentAmount1(e.target.value)}
-                      autoFocus
-                    />
-                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                    <div>
+                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Valor do Pagamento (R$)</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        className="w-full mt-1 p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl text-xl font-black outline-none focus:border-blue-500 transition-all text-blue-700"
+                        value={currentPaymentAmount}
+                        onChange={e => setCurrentPaymentAmount(e.target.value)}
+                      />
+                    </div>
 
-                  {paymentMethod === 'DINHEIRO' && (
-                    <div className="mt-3 space-y-3 animate-in fade-in duration-300">
-                      <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
-                        <label className="text-[9px] font-black text-emerald-800 uppercase tracking-widest block mb-2">Valor Recebido em Dinheiro (R$)</label>
+                    {paymentMethod === 'DINHEIRO' && (
+                      <div className="animate-in fade-in duration-300">
+                        <label className="text-[9px] font-black text-emerald-800 uppercase tracking-widest ml-1">Valor Recebido (R$)</label>
                         <input
                           type="number"
                           step="0.01"
                           placeholder="0,00"
-                          className="w-full p-4 bg-white border-2 border-emerald-100 rounded-2xl text-xl font-black outline-none focus:border-emerald-500 transition-all"
+                          className="w-full mt-1 p-4 bg-emerald-50 border-2 border-emerald-100 rounded-2xl text-xl font-black outline-none focus:border-emerald-500 transition-all text-emerald-700"
                           value={paymentData.receivedAmount}
                           onChange={e => setPaymentData({ ...paymentData, receivedAmount: e.target.value })}
                         />
-                        {(() => {
-                          const amt = parseFloat(paymentAmount1) || 0;
-                          const recv = parseFloat(paymentData.receivedAmount) || 0;
-                          const change = recv - amt;
-                          if (recv > amt && amt > 0) {
-                            return (
-                              <div className={`mt-3 flex justify-between items-center ${change > 10 ? 'text-red-600 bg-red-50 p-2 rounded-xl border border-red-100' : 'text-emerald-700'}`}>
-                                <div className="flex flex-col">
-                                  <span className="text-[10px] font-black uppercase tracking-widest">Troco a Devolver:</span>
-                                  {change > 10 && <span className="text-[8px] font-bold uppercase">Limite de R$ 10,00 excedido!</span>}
-                                </div>
-                                <span className="text-2xl font-black">R$ {change.toFixed(2)}</span>
-                              </div>
-                            );
-                          }
-                          return null;
-                        })()}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* SECOND PAYMENT METHOD (CUMULATIVE) */}
-                {parseFloat(paymentAmount1 || '0') < cartTotal && (
-                  <div className="space-y-4 p-4 bg-blue-50/30 rounded-3xl border border-blue-100 shadow-sm animate-in slide-in-from-top-4 duration-500">
-                    <div className="p-3 bg-red-50 border border-red-100 rounded-2xl mb-4">
-                      <p className="text-[9px] font-black text-red-600 uppercase tracking-widest text-center flex items-center justify-center gap-2">
-                        <Icons.View className="w-3 h-3" />
-                        O valor total informado nos pagamentos é menor que o total da compra
-                      </p>
-                    </div>
-
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="w-6 h-6 rounded-full bg-blue-600 text-white font-black flex items-center justify-center text-[10px]">2</span>
-                      <h3 className="text-xs font-black text-slate-800 uppercase tracking-widest">Complemento do Pagamento</h3>
-                    </div>
-
-                    <div className="grid grid-cols-3 md:grid-cols-4 gap-2">
-                      {[
-                        { id: 'PIX', label: 'PIX', icon: Icons.QrCode },
-                        { id: 'CRÉDITO', label: 'Crédito', icon: Icons.CreditCard },
-                        { id: 'DÉBITO', label: 'Débito', icon: Icons.CreditCard },
-                        { id: 'FIADO', label: 'Fiado', icon: Icons.User }
-                      ].map(method => (
-                        <button
-                          key={`m2-${method.id}`}
-                          onClick={() => setPaymentMethod2(method.id)}
-                          className={`flex flex-col items-center gap-1.5 py-3 rounded-2xl transition-all ${paymentMethod2 === method.id ? 'bg-blue-600 text-white shadow-lg' : 'bg-white text-slate-400 hover:bg-slate-100'}`}
-                        >
-                          <method.icon className="w-5 h-5" />
-                          <span className="text-[8px] font-black uppercase tracking-widest">{method.label}</span>
-                        </button>
-                      ))}
-                    </div>
-
-                    {paymentMethod2 && (
-                      <div className="mt-4 animate-in zoom-in-95">
-                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Valor do Complemento (R$)</label>
-                        <input
-                          type="number"
-                          className="w-full mt-1 p-4 bg-white border-2 border-blue-100 rounded-2xl text-xl font-black outline-none focus:border-blue-600 transition-all text-blue-700"
-                          value={paymentAmount2}
-                          readOnly // Automatic calculation of the remaining balance for Method 2
-                        />
-                        <p className="text-[8px] font-bold text-blue-400 mt-1 uppercase ml-1">Valor restante calculado automaticamente</p>
                       </div>
                     )}
                   </div>
+
+                  {/* Change Calculation for Cash */}
+                  {paymentMethod === 'DINHEIRO' && (
+                    <div className="mt-2 px-2">
+                      {(() => {
+                        const amt = parseFloat(currentPaymentAmount.replace(',', '.')) || 0;
+                        const recv = parseFloat(paymentData.receivedAmount.replace(',', '.')) || 0;
+                        const change = recv - amt;
+                        if (recv > amt && amt > 0) {
+                          return (
+                            <div className={`flex justify-between items-center ${change > 10 ? 'text-red-600 bg-red-50 p-2 rounded-xl border border-red-100' : 'text-emerald-700'}`}>
+                              <div className="flex flex-col">
+                                <span className="text-[9px] font-black uppercase tracking-widest">Troco Estimado:</span>
+                                {change > 10 && <span className="text-[8px] font-bold uppercase">Limite R$ 10,00!</span>}
+                              </div>
+                              <span className="text-xl font-black">R$ {change.toFixed(2)}</span>
+                            </div>
+                          );
+                        }
+                        return null;
+                      })()}
+                    </div>
+                  )}
+
+                  <button
+                    onClick={addPaymentToList}
+                    className="w-full mt-2 py-3 bg-slate-800 hover:bg-slate-900 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest transition-all shadow-md active:scale-95"
+                  >
+                    Confirmar Valor ✓
+                  </button>
+                </div>
+
+                {/* PAYMENTS SUMMARY LIST */}
+                {payments.length > 0 && (
+                  <div className="space-y-3 p-4 bg-blue-50/50 rounded-3xl border border-blue-100 shadow-sm animate-in slide-in-from-top-4 duration-500">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="w-6 h-6 rounded-full bg-blue-600 text-white font-black flex items-center justify-center text-[10px]">2</span>
+                      <h3 className="text-xs font-black text-blue-800 uppercase tracking-widest">Resumo de Pagamentos</h3>
+                    </div>
+
+                    <div className="space-y-2">
+                      {payments.map((p, idx) => (
+                        <div key={idx} className="flex items-center justify-between p-3 bg-white border border-blue-100 rounded-2xl shadow-sm">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
+                              {p.method === 'DINHEIRO' ? <Icons.Dashboard className="w-4 h-4" /> : <Icons.CreditCard className="w-4 h-4" />}
+                            </div>
+                            <div>
+                              <p className="text-[10px] font-black text-slate-800 uppercase tracking-tight">{p.method}</p>
+                              {p.receivedAmount !== undefined && (
+                                <p className="text-[8px] text-slate-400 font-bold uppercase">Recebido: R$ {p.receivedAmount.toFixed(2)}</p>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <span className="text-sm font-black text-blue-700">R$ {p.amount.toFixed(2)}</span>
+                            <button
+                              onClick={() => removePayment(p.method)}
+                              className="text-red-400 hover:text-red-600 p-2 rounded-xl hover:bg-red-50 transition-all active:scale-90"
+                              title="Remover pagamento"
+                            >
+                              <Icons.Delete className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="pt-2 border-t border-blue-200 mt-2 flex justify-between items-center px-2">
+                      <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest">Total Informado</span>
+                      <span className="text-lg font-black text-blue-600">
+                        R$ {payments.reduce((acc, p) => acc + p.amount, 0).toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
                 )}
+
+                {/* Insufficient payment alert */}
+                {(() => {
+                  const paid = payments.reduce((acc, p) => acc + p.amount, 0);
+                  if (paid < cartTotal - 0.01 && payments.length > 0) {
+                    return (
+                      <div className="p-4 bg-red-50 border-2 border-red-100 rounded-3xl animate-pulse">
+                        <p className="text-[9px] font-black text-red-600 uppercase tracking-widest text-center flex items-center justify-center gap-2">
+                          <Icons.View className="w-3 h-3" />
+                          Falta R$ {(cartTotal - paid).toFixed(2)} para completar o total
+                        </p>
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
               </div>
             </div>
 
@@ -985,7 +1013,11 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
 
               <button
                 onClick={processPaymentAndFinalize}
-                className="w-full py-5 bg-blue-600 hover:bg-blue-700 text-white rounded-[2rem] font-black uppercase text-lg tracking-widest shadow-2xl shadow-blue-200 transition-all flex items-center justify-center gap-3 group active:scale-95"
+                disabled={payments.reduce((acc, p) => acc + p.amount, 0) < cartTotal - 0.01}
+                className={`w-full py-5 rounded-[2rem] font-black uppercase text-lg tracking-widest transition-all flex items-center justify-center gap-3 group active:scale-95 shadow-2xl ${payments.reduce((acc, p) => acc + p.amount, 0) >= cartTotal - 0.01
+                  ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-200'
+                  : 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
+                  }`}
               >
                 <span>Finalizar e Confirmar ✓</span>
               </button>
