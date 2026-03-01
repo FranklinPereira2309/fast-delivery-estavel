@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { fetchConsumption, submitFeedback, createPaymentPreference } from '../api';
-import { Wallet } from '@mercadopago/sdk-react';
+import { fetchConsumption, submitFeedback } from '../api';
 
 interface FooterNavProps {
     tableNumber: string;
@@ -12,11 +11,6 @@ const FooterNav: React.FC<FooterNavProps> = ({ tableNumber, isOwner, pin }) => {
     const [activeModal, setActiveModal] = useState<'consumption' | 'feedback' | 'pin' | null>(null);
     const [consumption, setConsumption] = useState<any>(null);
     const [loadingConsumption, setLoadingConsumption] = useState(false);
-
-    // Mercado Pago State
-    const [mpPreferenceId, setMpPreferenceId] = useState<string | null>(null);
-    const [generatingPayment, setGeneratingPayment] = useState(false);
-
     // Feedback state
     const [feedbackName, setFeedbackName] = useState('');
     const [feedbackMsg, setFeedbackMsg] = useState('');
@@ -158,36 +152,9 @@ const FooterNav: React.FC<FooterNavProps> = ({ tableNumber, isOwner, pin }) => {
                                                 </div>
 
                                                 <div className="pt-4 flex flex-col gap-2">
-                                                    {!mpPreferenceId ? (
-                                                        <button
-                                                            onClick={async () => {
-                                                                setGeneratingPayment(true);
-                                                                try {
-                                                                    const pref = await createPaymentPreference({
-                                                                        items: consumption.items,
-                                                                        total: consumption.total,
-                                                                        orderType: 'TABLE',
-                                                                        clientName: `Mesa ${tableNumber} Digit.`
-                                                                    });
-                                                                    setMpPreferenceId(pref.id);
-                                                                } catch (e: any) {
-                                                                    alert(e.message || "Erro ao gerar PIX/Cartão.");
-                                                                } finally {
-                                                                    setGeneratingPayment(false);
-                                                                }
-                                                            }}
-                                                            disabled={generatingPayment || consumption.total <= 0}
-                                                            className="w-full bg-[#009EE3] text-white font-black py-4 rounded-xl shadow-lg hover:bg-[#008ACA] disabled:opacity-50 transition-all uppercase tracking-tight flex items-center justify-center gap-2"
-                                                        >
-                                                            {generatingPayment ? 'Gerando Pagamento...' : 'Pagar Agora Seguramente'}
-                                                        </button>
-                                                    ) : (
-                                                        <div className="w-full h-full fade-in zoom-in border border-slate-100 rounded-xl p-2 bg-slate-50">
-                                                            <Wallet
-                                                                initialization={{ preferenceId: mpPreferenceId, redirectMode: 'blank' }}
-                                                            />
-                                                        </div>
-                                                    )}
+                                                    <p className="text-[10px] text-center text-slate-400 font-bold uppercase tracking-widest bg-slate-50 p-4 rounded-2xl border border-dashed border-slate-200">
+                                                        O pagamento deve ser realizado diretamente no caixa ao finalizar.
+                                                    </p>
                                                 </div>
                                             </>
                                         ) : (
