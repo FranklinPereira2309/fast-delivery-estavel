@@ -791,8 +791,9 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
         // The user will then select another method for the rest.
       } else {
         const change = received - amount;
-        if (change > 10.00) {
-          return showAlert("Troco Excedido", "O valor do troco não pode ultrapassar R$ 10,00.", "DANGER");
+        const maxChange = businessSettings?.maxChange || 10.00;
+        if (change > maxChange) {
+          return showAlert("Troco Excedido", `O valor do troco não pode ultrapassar R$ ${maxChange.toFixed(2)}.`, "DANGER");
         }
       }
     }
@@ -914,12 +915,13 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                         const amt = parseFloat(currentPaymentAmount.replace(',', '.')) || 0;
                         const recv = parseFloat(paymentData.receivedAmount.replace(',', '.')) || 0;
                         const change = recv - amt;
+                        const maxChange = businessSettings?.maxChange || 10.00;
                         if (recv > amt && amt > 0) {
                           return (
-                            <div className={`flex justify-between items-center ${change > 10 ? 'text-red-600 bg-red-50 p-2 rounded-xl border border-red-100' : 'text-emerald-700'}`}>
+                            <div className={`flex justify-between items-center ${change > maxChange ? 'text-red-600 bg-red-50 p-2 rounded-xl border border-red-100' : 'text-emerald-700'}`}>
                               <div className="flex flex-col">
                                 <span className="text-[9px] font-black uppercase tracking-widest">Troco Estimado:</span>
-                                {change > 10 && <span className="text-[8px] font-bold uppercase">Limite R$ 10,00!</span>}
+                                {change > maxChange && <span className="text-[8px] font-bold uppercase">Limite R$ {maxChange.toFixed(2)}!</span>}
                               </div>
                               <span className="text-xl font-black">R$ {change.toFixed(2)}</span>
                             </div>
