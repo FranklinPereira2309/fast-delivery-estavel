@@ -941,9 +941,9 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                               <p className="text-[9px] font-black text-slate-800 uppercase tracking-tight">{p.method}</p>
                               {p.receivedAmount !== undefined && (
                                 <div className="flex items-center gap-2">
-                                  <p className="text-[7px] text-slate-400 font-bold uppercase">Recebido: R$ {p.receivedAmount.toFixed(2)}</p>
+                                  <p className="text-[9px] text-slate-400 font-medium uppercase">Recebido: R$ {p.receivedAmount.toFixed(2)}</p>
                                   {p.receivedAmount > p.amount && (
-                                    <span className="text-[7px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full font-black uppercase">Troco: R$ {(p.receivedAmount - p.amount).toFixed(2)}</span>
+                                    <span className="text-[9px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full font-medium uppercase border border-emerald-100">Troco: R$ {(p.receivedAmount - p.amount).toFixed(2)}</span>
                                   )}
                                 </div>
                               )}
