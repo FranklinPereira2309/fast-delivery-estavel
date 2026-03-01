@@ -189,31 +189,32 @@ export const saveTableSession = async (req: Request, res: Response) => {
 
         try {
             const { rejection } = req.query;
-            console.log(`[SOCKET] Emitting digitalOrderCancelled for table ${data.tableNumber}`);
-            getIO().emit('digitalOrderCancelled', {
-                tableNumber: Number(data.tableNumber),
-                message: "Procure o Garçom, seu pedido foi Rejeitado!"
-            });
-        }
+            if (rejection === 'true') {
+                console.log(`[SOCKET] Emitting digitalOrderCancelled for table ${data.tableNumber}`);
+                getIO().emit('digitalOrderCancelled', {
+                    tableNumber: Number(data.tableNumber),
+                    message: "Procure o Garçom, seu pedido foi Rejeitado!"
+                });
+            }
 
             console.log(`[SOCKET] Emitting tableStatusChanged (occupied) for table ${data.tableNumber}`);
-        getIO().emit('tableStatusChanged', {
-            tableNumber: Number(data.tableNumber),
-            status: data.status || 'occupied',
-            action: 'refresh'
-        });
-    } catch (e) {
-        console.error('Socket error emitting messages:', e);
-    }
+            getIO().emit('tableStatusChanged', {
+                tableNumber: Number(data.tableNumber),
+                status: data.status || 'occupied',
+                action: 'refresh'
+            });
+        } catch (e) {
+            console.error('Socket error emitting messages:', e);
+        }
 
-    res.json(mapSessionResponse(result));
-} catch (error: any) {
-    console.error('Error saving table session:', error);
-    res.status(500).json({
-        error: error.message,
-        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
-    });
-}
+        res.json(mapSessionResponse(result));
+    } catch (error: any) {
+        console.error('Error saving table session:', error);
+        res.status(500).json({
+            error: error.message,
+            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        });
+    }
 };
 
 export const deleteTableSession = async (req: Request, res: Response) => {
