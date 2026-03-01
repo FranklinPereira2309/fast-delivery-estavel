@@ -102,6 +102,9 @@ model Product {
   category  String
   stock     Int      @default(0)
   imageUrl  String
+  ncm       String?
+  cfop      String?
+  cest      String?
   recipe    RecipeItem[]
   orderItems OrderItem[]
 }
