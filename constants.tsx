@@ -135,7 +135,7 @@ export const Icons = {
   ),
   QrCode: (props: any) => (
     <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" {...props}>
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m0 11v1m4-12h1m-1 4h1m-4 4h1m-4 4h1m-4-12h1m-1 4h1m0 4h1m6-6h.01M6 6h.01m0 6h.01m0 6h.01m6 0h.01m6 0h.01m0-6h.01M6 16h.01" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 3h7v7H3V3zm11 0h7v7h-7V3zM3 14h7v7H3v-7zM5 5h3v3H5V5zm11 0h3v3h-3V5zm-11 11h3v3H5v-3zm7-3h2v2h-2v-2zm4 0h2v2h-2v-2zm-4 4h2v2h-2v-2zm4 4h2v2h-2v-2zm0-4h2v2h-2v-2zm-4 0h2v2h-2v-2zm8-5v2m-2-2v2m-2 2v2m2 2v2m2-2v2" />
     </svg>
   ),
   Receivables: (props: any) => (
