@@ -793,7 +793,11 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
         const change = received - amount;
         const maxChange = businessSettings?.maxChange || 10.00;
         if (change > maxChange) {
-          return showAlert("Troco Excedido", `O valor do troco não pode ultrapassar R$ ${maxChange.toFixed(2)}.`, "DANGER");
+          return showAlert(
+            "Troco Excedido",
+            `O valor do troco (R$ ${change.toFixed(2)}) ultrapassa o limite permitido de R$ ${maxChange.toFixed(2)}. Por favor, informe um valor recebido menor.`,
+            "DANGER"
+          );
         }
       }
     }
@@ -908,29 +912,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                     )}
                   </div>
 
-                  {/* Change Calculation for Cash */}
-                  {paymentMethod === 'DINHEIRO' && (
-                    <div className="mt-2 px-2">
-                      {(() => {
-                        const amt = parseFloat(currentPaymentAmount.replace(',', '.')) || 0;
-                        const recv = parseFloat(paymentData.receivedAmount.replace(',', '.')) || 0;
-                        const change = recv - amt;
-                        const maxChange = businessSettings?.maxChange || 10.00;
-                        if (recv > amt && amt > 0) {
-                          return (
-                            <div className={`flex justify-between items-center ${change > maxChange ? 'text-red-600 bg-red-50 p-2 rounded-xl border border-red-100' : 'text-emerald-700'}`}>
-                              <div className="flex flex-col">
-                                <span className="text-[9px] font-black uppercase tracking-widest">Troco Estimado:</span>
-                                {change > maxChange && <span className="text-[8px] font-bold uppercase">Limite R$ {maxChange.toFixed(2)}!</span>}
-                              </div>
-                              <span className="text-xl font-black">R$ {change.toFixed(2)}</span>
-                            </div>
-                          );
-                        }
-                        return null;
-                      })()}
-                    </div>
-                  )}
+                  {/* Troco Estimado removed as per user request */}
 
                   <button
                     onClick={addPaymentToList}
@@ -958,7 +940,12 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                             <div>
                               <p className="text-[9px] font-black text-slate-800 uppercase tracking-tight">{p.method}</p>
                               {p.receivedAmount !== undefined && (
-                                <p className="text-[7px] text-slate-400 font-bold uppercase">Recebido: R$ {p.receivedAmount.toFixed(2)}</p>
+                                <div className="flex items-center gap-2">
+                                  <p className="text-[7px] text-slate-400 font-bold uppercase">Recebido: R$ {p.receivedAmount.toFixed(2)}</p>
+                                  {p.receivedAmount > p.amount && (
+                                    <span className="text-[7px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full font-black uppercase">Troco: R$ {(p.receivedAmount - p.amount).toFixed(2)}</span>
+                                  )}
+                                </div>
                               )}
                             </div>
                           </div>
