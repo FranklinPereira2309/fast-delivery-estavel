@@ -43,7 +43,7 @@ export const verifyAdminPassword = async (req: Request, res: Response) => {
         const adminUser = await prisma.user.findFirst({
             where: {
                 password,
-                permissions: { has: 'settings' } // Assumes only Admin has access to 'settings'
+                permissions: { hasSome: ['settings', 'admin'] }
             }
         });
 

@@ -803,12 +803,17 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
   };
 
   const handleSystemPreview = async () => {
-    if (!currentUser.permissions.includes('admin')) {
+    if (!currentUser.permissions.includes('admin') && !currentUser.permissions.includes('settings')) {
       return showAlert("Acesso Negado", "Apenas administradores podem realizar o fechamento pelo sistema.", "DANGER");
     }
 
-    if (!adminPassword || adminPassword !== currentUser.password) {
-      return showAlert("Senha Incorreta", "Informe a senha do Admin Master (Padrão: admin) para prosseguir.", "DANGER");
+    if (!adminPassword) {
+      return showAlert("Senha Necessária", "Informe a senha para autorizar o preenchimento.", "DANGER");
+    }
+
+    const isValid = await db.verifyAdminPassword(adminPassword);
+    if (!isValid) {
+      return showAlert("Senha Incorreta", "A senha informada não é válida para um Administrador Master.", "DANGER");
     }
 
     try {
@@ -2041,137 +2046,138 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       {
         isClosingModalOpen && (
           <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/90 backdrop-blur-xl animate-in fade-in duration-300">
-            <div className="bg-white w-[500px] rounded-[3.5rem] shadow-2xl overflow-hidden border border-slate-100 p-8 lg:p-12 max-h-[90vh] overflow-y-auto">
-              <div className="text-center mb-8">
-                <div className="w-20 h-20 bg-orange-50 rounded-[2rem] flex items-center justify-center mx-auto mb-6 text-3xl">
-                  💰
-                </div>
-                <h2 className="text-2xl font-black text-slate-800 uppercase tracking-tighter">Fechamento de Caixa</h2>
-                <p className="text-[10px] font-bold text-slate-400 uppercase mt-2 tracking-widest">Confirme os valores para encerrar o expediente</p>
+            <div className="bg-white w-[460px] rounded-[3rem] shadow-2xl border border-slate-100 p-6 lg:p-8 max-h-[90vh] overflow-y-auto">
+              <div className="text-center mb-6">
+                <div className="w-16 h-16 bg-orange-50 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl">💰</div>
+                <h2 className="text-xl font-black text-slate-800 uppercase tracking-tighter">Fechamento de Caixa</h2>
+                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Confirme os valores para encerrar</p>
               </div>
 
-              <div className="flex gap-2 bg-slate-100 p-1.5 rounded-3xl mb-8">
+              <div className="flex gap-1.5 bg-slate-100 p-1 rounded-2xl mb-6">
                 <button
                   onClick={() => setClosingMode('MANUAL')}
-                  className={`flex-1 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${closingMode === 'MANUAL' ? 'bg-white text-orange-600 shadow-xl' : 'text-slate-400 hover:text-slate-600'}`}
+                  className={`flex-1 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${closingMode === 'MANUAL' ? 'bg-white text-orange-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
                 >
-                  Fechamento Manual
+                  MANUAL
                 </button>
                 <button
                   onClick={() => setClosingMode('SYSTEM')}
-                  className={`flex-1 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${closingMode === 'SYSTEM' ? 'bg-white text-blue-600 shadow-xl' : 'text-slate-400 hover:text-slate-600'}`}
+                  className={`flex-1 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${closingMode === 'SYSTEM' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
                 >
-                  Pelo Sistema
+                  PELO SISTEMA
                 </button>
               </div>
 
               {closingMode === 'SYSTEM' && (
-                <div className="mb-8 p-6 bg-blue-50/50 rounded-[2rem] border-2 border-dashed border-blue-200 animate-in slide-in-from-top-2">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center font-black">!</div>
-                    <p className="text-[10px] font-black text-blue-800 uppercase tracking-tight leading-tight">Autorização Admin Master Necessária para preenchimento automático.</p>
+                <div className="mb-6 p-4 bg-blue-50/50 rounded-2xl border-2 border-dashed border-blue-200 animate-in slide-in-from-top-2">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-8 h-8 bg-blue-600 text-white rounded-lg flex items-center justify-center font-black text-xs">!</div>
+                    <p className="text-[9px] font-black text-blue-800 uppercase tracking-tight leading-tight">Autorização Admin Master Necessária</p>
                   </div>
-                  <div className="space-y-4">
+                  <div className="flex gap-2">
                     <input
                       type="password"
-                      placeholder="Senha do Admin Master"
+                      placeholder="Senha do Admin"
                       value={adminPassword}
                       onChange={e => setAdminPassword(e.target.value)}
-                      className="w-full p-4 bg-white border-2 border-blue-100 rounded-2xl text-xs font-black outline-none focus:border-blue-600"
+                      className="flex-1 p-3 bg-white border border-blue-100 rounded-xl text-xs font-black outline-none focus:border-blue-600 shadow-sm"
                     />
                     <button
                       onClick={handleSystemPreview}
-                      className="w-full py-4 bg-blue-600 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-blue-700 transition-all shadow-lg active:scale-95"
+                      className="px-4 bg-blue-600 text-white rounded-xl font-black uppercase text-[9px] tracking-widest hover:bg-blue-700 transition-all shadow-md"
                     >
-                      Gerar Relatório do Sistema
+                      GERAR
                     </button>
                   </div>
                 </div>
               )}
 
-              <div className="space-y-5">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Efetivo/Dinheiro (R$)</label>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest ml-1">Dinheiro (R$)</label>
                     <input
                       type="text"
                       placeholder="0,00"
                       value={closingReport.cash}
                       onChange={(e) => setClosingReport(prev => ({ ...prev, cash: e.target.value.replace(',', '.') }))}
-                      className="w-full p-5 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-orange-500 outline-none font-black text-lg text-center"
+                      className="w-full p-4 bg-slate-50 rounded-xl border border-slate-100 focus:border-orange-500 outline-none font-black text-base text-center shadow-sm"
                     />
                   </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Total em PIX (R$)</label>
+                  <div className="space-y-1">
+                    <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest ml-1">PIX (R$)</label>
                     <input
                       type="text"
                       placeholder="0,00"
                       value={closingReport.pix}
                       onChange={(e) => setClosingReport(prev => ({ ...prev, pix: e.target.value.replace(',', '.') }))}
-                      className="w-full p-5 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-orange-500 outline-none font-black text-lg text-center"
+                      className="w-full p-4 bg-slate-50 rounded-xl border border-slate-100 focus:border-orange-500 outline-none font-black text-base text-center shadow-sm"
                     />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Cartão Crédito (R$)</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest ml-1">Crédito (R$)</label>
                     <input
                       type="text"
                       placeholder="0,00"
                       value={closingReport.credit}
                       onChange={(e) => setClosingReport(prev => ({ ...prev, credit: e.target.value.replace(',', '.') }))}
-                      className="w-full p-5 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-orange-500 outline-none font-black text-lg text-center"
+                      className="w-full p-4 bg-slate-50 rounded-xl border border-slate-100 focus:border-orange-500 outline-none font-black text-base text-center shadow-sm"
                     />
                   </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Cartão Débito (R$)</label>
+                  <div className="space-y-1">
+                    <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest ml-1">Débito (R$)</label>
                     <input
                       type="text"
                       placeholder="0,00"
                       value={closingReport.debit}
                       onChange={(e) => setClosingReport(prev => ({ ...prev, debit: e.target.value.replace(',', '.') }))}
-                      className="w-full p-5 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-orange-500 outline-none font-black text-lg text-center"
+                      className="w-full p-4 bg-slate-50 rounded-xl border border-slate-100 focus:border-orange-500 outline-none font-black text-base text-center shadow-sm"
                     />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Outros (Fiado, Permuta, etc) (R$)</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest ml-1">Outros (R$)</label>
                     <input
                       type="text"
                       placeholder="0,00"
                       value={closingReport.others}
                       onChange={(e) => setClosingReport(prev => ({ ...prev, others: e.target.value.replace(',', '.') }))}
-                      className="w-full p-5 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-orange-500 outline-none font-black text-lg text-center text-emerald-600"
+                      className="w-full p-4 bg-slate-50 rounded-xl border border-emerald-50 focus:border-emerald-500 outline-none font-black text-base text-center text-emerald-600 shadow-sm"
                     />
+                  </div>
+                  <div className="space-y-1 text-right pt-4">
+                    <p className="text-[8px] font-black text-slate-300 uppercase">Total Estimado</p>
+                    <p className="text-xl font-black text-slate-700">R$ {(Number(closingReport.cash || 0) + Number(closingReport.pix || 0) + Number(closingReport.credit || 0) + Number(closingReport.debit || 0) + Number(closingReport.others || 0)).toFixed(2)}</p>
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Notas / Observações</label>
                   <textarea
-                    placeholder="Alguma observação relevante?"
+                    placeholder="Notas / Observações"
                     value={closingReport.observations}
                     onChange={(e) => setClosingReport(prev => ({ ...prev, observations: e.target.value }))}
-                    className="w-full p-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-orange-500 outline-none font-bold text-xs"
-                    rows={2}
+                    className="w-full p-3 bg-slate-50 rounded-xl border border-slate-100 focus:border-orange-500 outline-none font-bold text-[10px]"
+                    rows={1}
                   />
                 </div>
 
-                <div className="flex gap-3 pt-6">
+                <div className="flex gap-2 pt-2">
                   <button
                     onClick={() => setIsClosingModalOpen(false)}
-                    className="flex-1 py-5 font-black uppercase text-[10px] text-slate-400 hover:text-slate-600 transition-colors"
+                    className="flex-1 py-4 font-black uppercase text-[9px] text-slate-400 hover:text-slate-600 transition-colors"
                   >
-                    Cancelar
+                    CANCELAR
                   </button>
                   <button
                     onClick={handleCloseCash}
-                    className="flex-[2] py-5 bg-orange-600 hover:bg-orange-700 text-white rounded-3xl font-black uppercase text-xs tracking-widest shadow-2xl shadow-orange-100 transition-all active:scale-95"
+                    className="flex-[2] py-4 bg-orange-600 hover:bg-orange-700 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg transition-all active:scale-95"
                   >
-                    Encerrar Caixa ✓
+                    ENCERRAR CAIXA ✓
                   </button>
                 </div>
               </div>
