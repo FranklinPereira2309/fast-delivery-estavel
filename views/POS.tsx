@@ -783,19 +783,25 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       if (received <= 0) {
         return showAlert("Valor Recebido", "Para pagamentos em Dinheiro, é obrigatório informar o valor recebido pelo cliente.", "DANGER");
       }
-      if (received < amount) {
-        return showAlert("Valor Insuficiente", "O valor recebido em dinheiro não pode ser menor que o valor do pagamento.", "DANGER");
-      }
 
-      const change = received - amount;
-      if (change > 10.00) {
-        return showAlert("Troco Excedido", "O valor do troco não pode ultrapassar R$ 10,00.", "DANGER");
+      // If received is less than the suggested amount, we record the actual received amount
+      // and the remaining balance will be recalculated for the next method.
+      if (received < amount) {
+        // No block here. We adjust segment amount to match received value.
+        // The user will then select another method for the rest.
+      } else {
+        const change = received - amount;
+        if (change > 10.00) {
+          return showAlert("Troco Excedido", "O valor do troco não pode ultrapassar R$ 10,00.", "DANGER");
+        }
       }
     }
 
+    const finalAmount = (paymentMethod === 'DINHEIRO' && received && received < amount) ? received : amount;
+
     setPayments(prev => [...prev, {
       method: paymentMethod,
-      amount,
+      amount: finalAmount,
       receivedAmount: received
     }]);
 
