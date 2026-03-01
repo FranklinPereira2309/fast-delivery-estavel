@@ -419,10 +419,15 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       }
     }
 
-    // Rule: Balcão and Delivery must have a client. Tables too if they are being finalized.
-    if (!selectedClient && !avulsoData.name) {
-      if (saleType === SaleType.OWN_DELIVERY) return showAlert('Identificar Cliente', 'Para Entregas, identifique o cliente.', 'INFO');
-      if (saleType === SaleType.COUNTER) return showAlert('Identificar Cliente', 'Para vendas de Balcão, identifique o cliente.', 'INFO');
+    // Rule: Delivery MUST have a client to send to kitchen.
+    if (saleType === SaleType.OWN_DELIVERY && !selectedClient && !avulsoData.name) {
+      setIsClientModalOpen(true);
+      return showAlert('Identificar Cliente', 'A modalidade Delivery exige um cliente selecionado para enviar o pedido p/ Cozinha. Identifique o cliente para prosseguir.', 'DANGER');
+    }
+
+    // Rule: Counter sales should ideally have a client.
+    if (saleType === SaleType.COUNTER && !selectedClient && !avulsoData.name) {
+      return showAlert('Identificar Cliente', 'Para vendas de Balcão, identifique o cliente para melhor controle.', 'INFO');
     }
 
     // Set initial payment state
@@ -1746,7 +1751,8 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                   </div>
 
                   <div className="text-center space-y-1 border-t border-dashed border-black pt-2">
-                    <p className="font-bold">{printingOrder.clientName === 'Consumidor' ? 'CONSUMIDOR NAO INFORMADO' : `CLIENTE: ${printingOrder.clientName?.toUpperCase()}`}</p>
+                    <p className="font-bold">{printingOrder.clientName === 'Consumidor' || printingOrder.clientName === 'Consumidor Padrão' ? 'CONSUMIDOR NAO INFORMADO' : `CLIENTE: ${printingOrder.clientName?.toUpperCase()}`}</p>
+                    {printingOrder.clientDocument && <p className="font-bold">CPF/CNPJ: {printingOrder.clientDocument}</p>}
                     <p>Protocolo de Autorizacao: {Math.floor(Math.random() * 100000000000000)}</p>
                     <div className="flex justify-between text-[8px]">
                       <span>Tributos Totais Incidentes (Lei Federal 12.741/2012)</span>
