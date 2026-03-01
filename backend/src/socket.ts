@@ -6,9 +6,12 @@ let io: Server;
 export const initSocket = (server: http.Server) => {
     io = new Server(server, {
         cors: {
-            origin: '*', // Permitir conexão do Desktop App e outros clientes
-            methods: ['GET', 'POST']
-        }
+            origin: '*',
+            methods: ['GET', 'POST'],
+            credentials: true
+        },
+        transports: ['polling', 'websocket'],
+        allowEIO3: true
     });
 
     io.on('connection', (socket) => {
