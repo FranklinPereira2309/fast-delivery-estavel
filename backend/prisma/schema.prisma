@@ -312,12 +312,14 @@ model CashSession {
   reportedCredit  Float?
   reportedDebit   Float?
   reportedOthers  Float?
+  reportedFiado   Float?
   
   systemCash      Float?
   systemPix       Float?
   systemCredit    Float?
   systemDebit     Float?
   systemOthers    Float?
+  systemFiado     Float?
   
   totalSales      Float?
   difference      Float?

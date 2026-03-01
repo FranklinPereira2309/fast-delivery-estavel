@@ -506,7 +506,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
         const shouldEmit = emitNfce;
 
         setIsReceivingFiado(null); // Prevents clearState from trying to revert a deleted receivable
-        await clearState(true); // Skip revert of the fiado status since it was just paid and deleted
+        await clearState(true, true); // Skip revert of the fiado status AND keep printing order if set
         await refreshAllData();
 
         if (shouldEmit && currentOrderData) {
@@ -741,11 +741,11 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       setPrintingOrder(orderData);
     }
 
-    clearState();
+    clearState(false, !orderData.status || orderData.status !== OrderStatus.PREPARING);
     await refreshAllData();
   };
 
-  const clearState = async (skipRevertFiado: boolean = false) => {
+  const clearState = async (skipRevertFiado: boolean = false, keepPrinting: boolean = false) => {
     if (isReceivingFiado && !skipRevertFiado) {
       try {
         await db.updateReceivable(isReceivingFiado, { status: 'PENDING' });
@@ -761,7 +761,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
     setTableNumberInput('');
     setCurrentOrderStatus(null);
     setEditingOrderId(null);
-    setPrintingOrder(null);
+    if (!keepPrinting) setPrintingOrder(null);
     setIsAvulso(false);
     setAvulsoData({ name: '', phone: '', address: '', cep: '', email: '', document: '' });
     setManualDeliveryFee(null);

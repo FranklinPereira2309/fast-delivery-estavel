@@ -98,7 +98,7 @@ export const getClosurePreview = async (req: Request, res: Response) => {
 };
 
 export const closeCashSession = async (req: Request, res: Response) => {
-    const { sessionId, cash, pix, credit, debit, others, observations, user } = req.body;
+    const { sessionId, cash, pix, credit, debit, others, fiado, observations, user } = req.body;
 
     const session = await prisma.cashSession.findUnique({
         where: { id: sessionId }
@@ -125,12 +125,14 @@ export const closeCashSession = async (req: Request, res: Response) => {
             reportedCredit: parseFloat(credit),
             reportedDebit: parseFloat(debit),
             reportedOthers: parseFloat(others || 0),
-            systemCash: totals.systemCash,
-            systemPix: totals.systemPix,
-            systemCredit: totals.systemCredit,
-            systemDebit: totals.systemDebit,
-            systemOthers: totals.systemOthers,
-            totalSales: totals.totalSales,
+            reportedFiado: parseFloat(fiado || 0),
+            systemCash: totals.systemCash + (session.systemCash || 0),
+            systemPix: totals.systemPix + (session.systemPix || 0),
+            systemCredit: totals.systemCredit + (session.systemCredit || 0),
+            systemDebit: totals.systemDebit + (session.systemDebit || 0),
+            systemOthers: totals.systemOthers + (session.systemOthers || 0),
+            // systemFiado is already updated by receivableController
+            totalSales: totals.totalSales + (session.systemFiado || 0),
             difference,
             observations
         }
@@ -140,7 +142,7 @@ export const closeCashSession = async (req: Request, res: Response) => {
 };
 
 export const updateCashSession = async (req: Request, res: Response) => {
-    const { id, cash, pix, credit, debit, others, observations, user } = req.body;
+    const { id, cash, pix, credit, debit, others, fiado, observations, user } = req.body;
 
     const session = await prisma.cashSession.findUnique({
         where: { id }
@@ -162,7 +164,12 @@ export const updateCashSession = async (req: Request, res: Response) => {
     };
 
     const totalReported = parseFloat(cash) + parseFloat(pix) + parseFloat(credit) + parseFloat(debit) + parseFloat(others || 0);
-    const difference = totalReported - totals.totalSales;
+    // Note: totalSales in the DB includes systemFiado? No, totals.totalSales calculated just now doesn't.
+    // We should compare totalReported against totalSales + systemFiado?
+    // Actually, usually difference is just Cash. But the system tracks all.
+    // Let's stick to the existing difference logic but ensure we account for everything.
+    const systemTotal = totals.totalSales + (session.systemFiado || 0);
+    const difference = totalReported - systemTotal;
 
     const updated = await prisma.cashSession.update({
         where: { id },
@@ -172,6 +179,7 @@ export const updateCashSession = async (req: Request, res: Response) => {
             reportedCredit: parseFloat(credit),
             reportedDebit: parseFloat(debit),
             reportedOthers: parseFloat(others || 0),
+            reportedFiado: parseFloat(fiado || 0),
             difference,
             observations,
             closedByName: `${session.closedByName} (Alt: ${user.name})`
@@ -207,6 +215,9 @@ export const reopenCashSession = async (req: Request, res: Response) => {
             systemPix: null,
             systemCredit: null,
             systemDebit: null,
+            systemOthers: null,
+            systemFiado: null,
+            reportedFiado: null,
             totalSales: null,
             difference: null
         }

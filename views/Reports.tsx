@@ -114,6 +114,7 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
                 credit: editingSession.reportedCredit || 0,
                 debit: editingSession.reportedDebit || 0,
                 others: editingSession.reportedOthers || 0,
+                fiado: editingSession.reportedFiado || 0,
                 observations: editingSession.observations || '',
                 user: currentUser
             });
@@ -203,7 +204,19 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
             const filteredCashSessions = await db.getCashSessions(salesStartDate, salesEndDate);
             const totalInitialCash = filteredCashSessions.reduce((sum, cs) => sum + cs.initialBalance, 0);
             const totalReportedCash = filteredCashSessions.reduce((sum, cs) => sum + (cs.reportedCash || 0), 0);
-            const totalDiff = filteredCashSessions.reduce((sum, cs) => sum + (cs.difference || 0), 0);
+
+            // Separação de Falta e Sobra
+            const totalSobra = filteredCashSessions.reduce((sum, cs) => {
+                const diff = cs.difference || 0;
+                return diff > 0 ? sum + diff : sum;
+            }, 0);
+            const totalFalta = filteredCashSessions.reduce((sum, cs) => {
+                const diff = cs.difference || 0;
+                return diff < 0 ? sum + Math.abs(diff) : sum;
+            }, 0);
+
+            // Recebimentos de Fiado (PAGOS no período)
+            const totalFiadoReceived = filteredCashSessions.reduce((sum, cs) => sum + (cs.systemFiado || 0), 0);
 
             let totalDinheiro = 0;
             let totalCredito = 0;
@@ -291,8 +304,17 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
             page.drawText(`Total de Dinheiro Físico Declarado (Fechamentos de Caixa): R$ ${totalReportedCash.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, { x: 50, y, size: 10, font });
             y -= 15;
             page.drawText(`Lucro Líquido Declarado em Dinheiro (Sobra após retirar o Troco): R$ ${(totalReportedCash - totalInitialCash).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, { x: 50, y, size: 10, font: fontBold, color: rgb(0, 0.4, 0) });
+            y -= 25;
+            page.drawText('DIFERENÇAS DE CAIXA', { x: 50, y, size: 12, font: fontBold });
+            y -= 20;
+            page.drawText(`Sobra de Caixa (Diferenças Positivas): R$ ${totalSobra.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, { x: 50, y, size: 10, font, color: rgb(0, 0.5, 0) });
             y -= 15;
-            page.drawText(`Falta/Sobra de Caixa (Diferenças): R$ ${totalDiff.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, { x: 50, y, size: 10, font });
+            page.drawText(`Falta de Caixa (Diferenças Negativas): R$ ${totalFalta.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, { x: 50, y, size: 10, font, color: rgb(0.8, 0, 0) });
+
+            y -= 25;
+            page.drawText('RECEBIMENTOS DE DÉBITOS (FIADO)', { x: 50, y, size: 12, font: fontBold });
+            y -= 20;
+            page.drawText(`Total Recebido de Fiado no Período: R$ ${totalFiadoReceived.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, { x: 50, y, size: 10, font: fontBold, color: rgb(0, 0, 0.5) });
 
             y -= 40;
             // Table Header
@@ -791,8 +813,8 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
                 if (s.status === 'CLOSED') {
                     y -= 5;
                     page.drawRectangle({ x: 60, y: y - 25, width: 480, height: 25, color: rgb(0.98, 0.98, 0.98) });
-                    page.drawText(`Relatado: Dinheiro: R$ ${(s.reportedCash || 0).toFixed(2)} | Pix: R$ ${(s.reportedPix || 0).toFixed(2)} | Crédito: R$ ${(s.reportedCredit || 0).toFixed(2)} | Débito: R$ ${(s.reportedDebit || 0).toFixed(2)} | Outros: R$ ${(s.reportedOthers || 0).toFixed(2)}`, { x: 70, y: y - 10, size: 5.5, font });
-                    page.drawText(`Sistema: Dinheiro: R$ ${(s.systemCash || 0).toFixed(2)} | Pix: R$ ${(s.systemPix || 0).toFixed(2)} | Crédito: R$ ${(s.systemCredit || 0).toFixed(2)} | Débito: R$ ${(s.systemDebit || 0).toFixed(2)} | Outros: R$ ${(s.systemOthers || 0).toFixed(2)}`, { x: 70, y: y - 20, size: 5.5, font });
+                    page.drawText(`Relatado: Dinheiro: R$ ${(s.reportedCash || 0).toFixed(2)} | Pix: R$ ${(s.reportedPix || 0).toFixed(2)} | Crédito: R$ ${(s.reportedCredit || 0).toFixed(2)} | Débito: R$ ${(s.reportedDebit || 0).toFixed(2)} | Fiado: R$ ${(s.reportedFiado || 0).toFixed(2)} | Outros: R$ ${(s.reportedOthers || 0).toFixed(2)}`, { x: 70, y: y - 10, size: 5.5, font });
+                    page.drawText(`Sistema: Dinheiro: R$ ${(s.systemCash || 0).toFixed(2)} | Pix: R$ ${(s.systemPix || 0).toFixed(2)} | Crédito: R$ ${(s.systemCredit || 0).toFixed(2)} | Débito: R$ ${(s.systemDebit || 0).toFixed(2)} | Fiado: R$ ${(s.systemFiado || 0).toFixed(2)} | Outros: R$ ${(s.systemOthers || 0).toFixed(2)}`, { x: 70, y: y - 20, size: 5.5, font });
                     y -= 35;
                 }
             }
@@ -1288,6 +1310,15 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
                                                     value={editingSession.reportedOthers || 0}
                                                     onChange={e => setEditingSession({ ...editingSession, reportedOthers: parseFloat(e.target.value.replace(',', '.')) || 0 })}
                                                     className="w-full p-5 bg-slate-50 border-none rounded-[1.5rem] font-bold text-lg text-emerald-600"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black text-blue-400 uppercase tracking-widest ml-1">Receb. Fiado (R$)</label>
+                                                <input
+                                                    type="text"
+                                                    value={editingSession.reportedFiado || 0}
+                                                    onChange={e => setEditingSession({ ...editingSession, reportedFiado: parseFloat(e.target.value.replace(',', '.')) || 0 })}
+                                                    className="w-full p-5 bg-blue-50 border-none rounded-[1.5rem] font-bold text-lg text-blue-700"
                                                 />
                                             </div>
                                         </div>

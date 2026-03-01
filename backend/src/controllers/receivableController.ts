@@ -129,6 +129,9 @@ export const receivePayment = async (req: Request, res: Response) => {
             else if (paymentMethod === 'DÉBITO') updateData.systemDebit = { increment: amount };
             else updateData.systemOthers = { increment: amount };
 
+            // Sempre incrementa o sistemaFiado para rastreio consolidado
+            updateData.systemFiado = { increment: amount };
+
             await prisma.cashSession.update({
                 where: { id: openSession.id },
                 data: updateData
