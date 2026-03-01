@@ -74,6 +74,9 @@ function AppContent() {
       setIsPinRequired(false);
       setIsValidating(false);
       setIsBilling(data.status === 'billing');
+
+      // Join the table room for targeted instant updates
+      joinTableRoom(Number(tableParam));
       // Only clear finished session if we are actually in an active state now
       if (data.status === 'occupied' || data.status === 'billing') {
         updateTerminalState(false);
@@ -181,10 +184,22 @@ function AppContent() {
       }
     };
 
+    const handlePaymentConfirmed = (data: any) => {
+      console.log('Socket paymentConfirmed received:', data);
+      if (data.tableNumber === Number(tableParam)) {
+        setIsBilling(false);
+        setCurrentPin(null);
+        setIsOwner(false);
+        setIsPinRequired(false);
+        updateTerminalState(true);
+      }
+    };
+
     socket.on('tableStatusChanged', handleTableStatus);
     socket.on('newOrder', handleTableStatus);
     socket.on('store_status_changed', handleStoreStatus);
     socket.on('digitalOrderCancelled', handleCancellation);
+    socket.on('paymentConfirmed', handlePaymentConfirmed);
 
     return () => {
       clearInterval(intervalId);
@@ -192,6 +207,7 @@ function AppContent() {
       socket.off('newOrder', handleTableStatus);
       socket.off('store_status_changed', handleStoreStatus);
       socket.off('digitalOrderCancelled', handleCancellation);
+      socket.off('paymentConfirmed', handlePaymentConfirmed);
     };
   }, [fetchTableData, fetchStatus, tableParam, updateTerminalState]);
 

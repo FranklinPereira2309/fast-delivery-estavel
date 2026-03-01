@@ -19,6 +19,11 @@ export const initSocket = (server: http.Server) => {
             console.log(`Socket ${socket.id} entrou no chat do motorista ${driverId}`);
         });
 
+        socket.on('join_table', (tableNumber: number) => {
+            socket.join(`table_${tableNumber}`);
+            console.log(`Socket ${socket.id} entrou na sala da mesa ${tableNumber}`);
+        });
+
         socket.on('send_message', (data: { driverId: string, content: string, senderName: string, isFromDriver: boolean }) => {
             // Re-emitir para a sala específica do motorista
             io.to(`chat_${data.driverId}`).emit('new_message', data);

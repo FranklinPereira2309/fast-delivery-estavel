@@ -32,6 +32,10 @@ export const socket = io(SOCKET_URL, {
     transports: ['websocket']
 });
 
+export const joinTableRoom = (tableNumber: number) => {
+    socket.emit('join_table', tableNumber);
+};
+
 export const MOCK_CATEGORIES = ['Lanches', 'Porções', 'Bebidas', 'Sobremesas', 'Pizzas']; // Temporário, idealmente também viria do BD.
 
 export interface OrderPayload {

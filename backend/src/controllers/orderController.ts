@@ -192,6 +192,12 @@ export const saveOrder = async (req: Request, res: Response) => {
                         action: 'refresh'
                     });
 
+                    // Notificação direta para a mesa para exibir agradecimento instantâneo
+                    getIO().to(`table_${tableNumIdx}`).emit('paymentConfirmed', {
+                        tableNumber: tableNumIdx,
+                        message: "Agradecemos a Preferência"
+                    });
+
                     // Modificação: Em vez de atualizar o registro TABLE-X infinitamente (o que destrói o histórico de vendas),
                     // quando a mesa paga a conta e vira DELIVERED, nós a RENOMEAMOS para um ID único no banco.
                     // Isso "arquiva" este pedido finalizado no Monitor de Vendas.

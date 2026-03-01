@@ -196,9 +196,9 @@ export const saveTableSession = async (req: Request, res: Response) => {
 
             const { rejection } = req.query;
             if (rejection === 'true') {
-                getIO().emit('digitalOrderCancelled', {
+                getIO().to(`table_${data.tableNumber}`).emit('digitalOrderCancelled', {
                     tableNumber: Number(data.tableNumber),
-                    message: "Pedido Cancelado, dúvidas pergunte ao Garçom"
+                    message: "Procure o Garçom, seu pedido foi Rejeitado!"
                 });
             }
         } catch (e) {
@@ -234,9 +234,9 @@ export const deleteTableSession = async (req: Request, res: Response) => {
         });
 
         if (cancellation === 'true') {
-            getIO().emit('digitalOrderCancelled', {
+            getIO().to(`table_${tableNum}`).emit('digitalOrderCancelled', {
                 tableNumber: Number(tableNum),
-                message: "Pedido Cancelado, dúvidas pergunte ao Garçom"
+                message: "Procure o Garçom, seu pedido foi Rejeitado!"
             });
         }
     } catch (e) {
