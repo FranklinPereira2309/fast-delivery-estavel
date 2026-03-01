@@ -189,30 +189,31 @@ export const saveTableSession = async (req: Request, res: Response) => {
 
         try {
             const { rejection } = req.query;
-            if (rejection === 'true') {
-                getIO().emit('digitalOrderCancelled', {
-                    tableNumber: Number(data.tableNumber),
-                    message: "Procure o Garçom, seu pedido foi Rejeitado!"
-                });
-            }
-
-            getIO().emit('tableStatusChanged', {
+            console.log(`[SOCKET] Emitting digitalOrderCancelled for table ${data.tableNumber}`);
+            getIO().emit('digitalOrderCancelled', {
                 tableNumber: Number(data.tableNumber),
-                status: data.status || 'occupied',
-                action: 'refresh'
+                message: "Procure o Garçom, seu pedido foi Rejeitado!"
             });
-        } catch (e) {
-            console.error('Socket error emitting messages:', e);
         }
 
-        res.json(mapSessionResponse(result));
-    } catch (error: any) {
-        console.error('Error saving table session:', error);
-        res.status(500).json({
-            error: error.message,
-            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+            console.log(`[SOCKET] Emitting tableStatusChanged (occupied) for table ${data.tableNumber}`);
+        getIO().emit('tableStatusChanged', {
+            tableNumber: Number(data.tableNumber),
+            status: data.status || 'occupied',
+            action: 'refresh'
         });
+    } catch (e) {
+        console.error('Socket error emitting messages:', e);
     }
+
+    res.json(mapSessionResponse(result));
+} catch (error: any) {
+    console.error('Error saving table session:', error);
+    res.status(500).json({
+        error: error.message,
+        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
+}
 };
 
 export const deleteTableSession = async (req: Request, res: Response) => {
@@ -228,12 +229,14 @@ export const deleteTableSession = async (req: Request, res: Response) => {
 
     try {
         if (cancellation === 'true') {
+            console.log(`[SOCKET] Emitting digitalOrderCancelled (rejection) for table ${tableNum}`);
             getIO().emit('digitalOrderCancelled', {
                 tableNumber: Number(tableNum),
                 message: "Procure o Garçom, seu pedido foi Rejeitado!"
             });
         }
 
+        console.log(`[SOCKET] Emitting tableStatusChanged (available) for table ${tableNum}`);
         getIO().emit('tableStatusChanged', {
             tableNumber: Number(tableNum),
             status: 'available',

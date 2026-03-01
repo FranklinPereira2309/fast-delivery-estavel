@@ -25,6 +25,7 @@ function AppContent() {
   const [isOwner, setIsOwner] = useState(false);
   const [isSessionFinished, setIsSessionFinished] = useState(false);
   const [banner, setBanner] = useState<{ message: string; type: 'info' | 'error' | 'success' } | null>(null);
+  const [blockingRejection, setBlockingRejection] = useState<{ message: string } | null>(null);
 
   // Ref para rastrear estados terminais em tempo real e evitar "stale closures"
   const terminalStateRef = useRef({
@@ -180,10 +181,9 @@ function AppContent() {
       const incomingTable = Number(data.tableNumber);
 
       if (incomingTable === targetTable) {
+        setBlockingRejection({ message: data.message || "Pedido Rejeitado, dúvidas pergunte ao Garçom" });
         setIsBilling(false);
         setIsPinRequired(false);
-        // Exibe um Banner no topo
-        setBanner({ message: data.message || "Pedido Cancelado, dúvidas pergunte ao Garçom", type: 'error' });
       }
     };
 
@@ -271,22 +271,19 @@ function AppContent() {
   const renderBanner = () => {
     if (!banner) return null;
     return (
-      <div className={`w-full z-[100] animate-slide-down shadow-lg border-b ${banner.type === 'error' ? 'bg-red-600 border-red-500 text-white' : 'bg-slate-900 border-slate-800 text-white'}`}>
-        <div className="max-w-md mx-auto p-4 flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center shrink-0">
-            {banner.type === 'error' ? (
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+      <div className={`fixed top-4 left-4 right-4 z-[9999] animate-slide-in`}>
+        <div className={`flex items-center justify-between p-4 rounded-2xl shadow-2xl backdrop-blur-md border ${banner.type === 'error' ? 'bg-red-500/90 border-red-400 text-white' : 'bg-white/90 border-slate-200 text-slate-900 shadow-slate-200/50'}`}>
+          <div className="flex items-center gap-3">
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${banner.type === 'error' ? 'bg-white/20' : 'bg-slate-100'}`}>
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                {banner.type === 'error' ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                ) : (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                )}
               </svg>
-            ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            )}
-          </div>
-          <div className="flex-1">
-            <p className="text-[9px] font-black uppercase tracking-[0.2em] opacity-80">Aviso do Sistema</p>
-            <p className="text-xs font-bold leading-tight uppercase">{banner.message}</p>
+            </div>
+            <p className="text-sm font-bold uppercase tracking-tight">{banner.message}</p>
           </div>
           <button onClick={() => setBanner(null)} className="p-2 bg-black/10 hover:bg-black/20 rounded-full transition-colors">
             <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -297,6 +294,48 @@ function AppContent() {
       </div>
     );
   };
+
+  if (blockingRejection) {
+    return (
+      <div className="min-h-screen flex flex-col bg-slate-900 text-white text-center relative overflow-hidden font-sans">
+        <div className="flex-1 flex items-center justify-center p-6">
+          <div className="max-w-md w-full space-y-10 animate-fade-in animate-zoom-in">
+            <div className="relative mx-auto w-32 h-32">
+              <div className="absolute inset-0 bg-red-500/20 rounded-full animate-ping"></div>
+              <div className="relative w-32 h-32 bg-red-600 rounded-[2.5rem] flex items-center justify-center shadow-2xl shadow-red-500/40">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-16 h-16 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+            </div>
+            <div className="space-y-4">
+              <h1 className="text-5xl font-black uppercase tracking-tighter leading-none">
+                Pedido <br /> <span className="text-red-500">Recusado</span>
+              </h1>
+              <p className="text-slate-400 text-xl leading-relaxed font-medium px-4">
+                {blockingRejection.message}
+              </p>
+            </div>
+            <div className="pt-8 px-6">
+              <button
+                onClick={() => {
+                  localStorage.removeItem(`sessionToken_${tableParam}`);
+                  updateTerminalState(false);
+                  window.location.reload();
+                }}
+                className="w-full bg-slate-100 hover:bg-white text-slate-900 font-black py-5 rounded-3xl transition-all shadow-2xl shadow-white/10 uppercase tracking-[0.2em] text-sm active:scale-95"
+              >
+                OK, Entendi
+              </button>
+              <p className="mt-8 text-xs text-slate-500 italic leading-relaxed uppercase tracking-[0.2em] font-black opacity-50">
+                Se tiver dúvidas, por favor chame um garçom.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (isSessionFinished) {
     return (
