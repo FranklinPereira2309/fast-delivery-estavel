@@ -184,7 +184,7 @@ const FooterNav: React.FC<FooterNavProps> = ({ tableNumber, isOwner, pin }) => {
                                                     ) : (
                                                         <div className="w-full h-full fade-in zoom-in border border-slate-100 rounded-xl p-2 bg-slate-50">
                                                             <Wallet
-                                                                initialization={{ preferenceId: mpPreferenceId, redirectMode: 'self' }}
+                                                                initialization={{ preferenceId: mpPreferenceId, redirectMode: 'blank' }}
                                                             />
                                                         </div>
                                                     )}

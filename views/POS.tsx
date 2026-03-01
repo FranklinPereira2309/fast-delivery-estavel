@@ -1144,7 +1144,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                           </button>
                         ) : (
                           <div className="w-full">
-                            <Wallet initialization={{ preferenceId: mpPreferenceId!, redirectMode: 'self' }} />
+                            <Wallet initialization={{ preferenceId: mpPreferenceId!, redirectMode: 'blank' }} />
                             <button
                               onClick={() => setMpPreferenceId(null)}
                               className="w-full mt-4 text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-slate-600"
@@ -2564,7 +2564,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                           </button>
                         ) : (
                           <div className="w-full">
-                            <Wallet initialization={{ preferenceId: mpPreferenceId!, redirectMode: 'self' }} />
+                            <Wallet initialization={{ preferenceId: mpPreferenceId!, redirectMode: 'blank' }} />
                           </div>
                         )}
                       </div>
@@ -2722,7 +2722,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                           </button>
                         ) : (
                           <div className="w-full">
-                            <Wallet initialization={{ preferenceId: mpPreferenceId!, redirectMode: 'self' }} />
+                            <Wallet initialization={{ preferenceId: mpPreferenceId!, redirectMode: 'blank' }} />
                           </div>
                         )}
                       </div>
