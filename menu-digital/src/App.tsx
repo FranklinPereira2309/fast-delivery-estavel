@@ -4,7 +4,7 @@ import Home from './components/Home';
 import CartModal from './components/CartModal';
 import { CartItem } from './types';
 import FooterNav from './components/FooterNav';
-import { verifyTable, socket, fetchStoreStatus, StoreStatus, validatePin } from './api';
+import { verifyTable, socket, fetchStoreStatus, StoreStatus, validatePin, joinTableRoom } from './api';
 
 function AppContent() {
   const [searchParams] = useSearchParams();
