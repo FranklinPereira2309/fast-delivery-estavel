@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Order, OrderStatus, OrderStatusLabels, SaleType, Product } from '../types';
+import { Order, OrderStatus, OrderStatusLabels, SaleType, Product, User } from '../types';
+import { QRCodeCanvas } from 'qrcode.react';
 import { db, BusinessSettings } from '../services/db';
 import { Icons } from '../constants';
 import CustomAlert from '../components/CustomAlert';
@@ -11,6 +12,7 @@ const SalesMonitor: React.FC = () => {
   const [businessSettings, setBusinessSettings] = useState<BusinessSettings | null>(null);
   const [printingOrder, setPrintingOrder] = useState<Order | null>(null);
   const [isNfceVisual, setIsNfceVisual] = useState(false);
+  const currentUser = db.getCurrentSession()?.user;
   const [editingPaymentMethod, setEditingPaymentMethod] = useState(false);
   const [newPaymentMethod, setNewPaymentMethod] = useState('');
   const [isSavingPayment, setIsSavingPayment] = useState(false);
@@ -148,18 +150,19 @@ const SalesMonitor: React.FC = () => {
   // Agrupamento para o cupom de reemissão
   const groupedPrintingItems = useMemo(() => {
     if (!printingOrder) return [];
-    const grouped: Record<string, { name: string, quantity: number, price: number }> = {};
-    printingOrder.items.forEach(item => {
-      const prod = products.find(p => p.id === item.productId);
-      if (!grouped[item.productId]) {
-        grouped[item.productId] = {
-          name: prod?.name || `Prod #${item.productId.substring(0, 4)}`,
-          quantity: 0,
-          price: item.price
-        };
-      }
-      grouped[item.productId].quantity += item.quantity;
-    });
+    const grouped: Record<string, { product: Product | undefined, quantity: number, price: number }> = {};
+    if (printingOrder && Array.isArray(printingOrder.items)) {
+      printingOrder.items.forEach(item => {
+        if (!grouped[item.productId]) {
+          grouped[item.productId] = {
+            product: products.find(p => p.id === item.productId),
+            quantity: 0,
+            price: item.price
+          };
+        }
+        grouped[item.productId].quantity += item.quantity;
+      });
+    }
     return Object.entries(grouped);
   }, [printingOrder, products]);
 
@@ -277,74 +280,80 @@ const SalesMonitor: React.FC = () => {
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
           <div className="relative w-full max-w-[80mm] bg-white p-8 border border-dashed shadow-2xl font-receipt text-[11px] text-black is-receipt animate-in zoom-in duration-200">
             {isNfceVisual ? (
-              // NFC-e (DANFE) Layout
-              <div className="space-y-4">
-                <div className="text-center border-b border-dashed pb-4">
-                  <h2 className="font-black text-xs uppercase">DANFE NFC-e</h2>
-                  <p className="text-[8px] font-bold">Documento Auxiliar da Nota Fiscal de Consumidor Eletrônica</p>
+              // NFC-e (DANFE) Layout - Redesigned
+              <div className="space-y-4 font-mono text-[10px] leading-tight text-black">
+                <div className="text-center space-y-1">
+                  <p className="font-bold">CNPJ - {businessSettings?.cnpj} - {businessSettings?.name?.toUpperCase()}</p>
+                  <p className="uppercase">{businessSettings?.address}</p>
+                  <p className="uppercase">Loja: 001 PDV: 001 VD: {printingOrder.id.substring(0, 6)} OPERADOR: {currentUser?.name?.toUpperCase() || 'SISTEMA'}</p>
+                  <p className="font-bold mt-2">DOCUMENTO AUXILIAR DA NOTA FISCAL DE CONSUMIDOR</p>
                 </div>
 
-                <div className="text-[9px] space-y-1">
-                  <div className="flex justify-between">
-                    <span>NFC-e nº: {printingOrder.nfeNumber?.split('-')[1] || '000001'}</span>
-                    <span>Série: 001</span>
-                  </div>
-                  <p>Emissão: {new Date(printingOrder.createdAt).toLocaleString('pt-BR')}</p>
-                  <p>Protocolo: {Math.floor(Math.random() * 100000000000000)}</p>
-                </div>
-
-                <div className="border-t border-b border-dashed py-2">
+                <div className="border-t border-dashed border-black mt-2 pt-2">
                   <table className="w-full text-left">
                     <thead>
-                      <tr className="text-[8px] uppercase font-black">
-                        <th>Item</th>
-                        <th className="text-right">Vl. Total</th>
+                      <tr className="uppercase font-bold">
+                        <th className="w-12">CODIGO</th>
+                        <th>DESCRICAO</th>
+                        <th className="text-right">QTDE</th>
+                        <th className="text-right">UNIT</th>
+                        <th className="text-right">TOTAL</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {groupedPrintingItems.map(([id, data]) => (
-                        <tr key={id} className="text-[9px] uppercase font-black">
-                          <td>{data.quantity}x {data.name.substring(0, 15)}</td>
-                          <td className="text-right">R$ {(data.quantity * data.price).toFixed(2)}</td>
-                        </tr>
-                      ))}
+                      {groupedPrintingItems.map(([id, data]) => {
+                        const ncmCode = data.product?.ncm || '00000000';
+                        return (
+                          <tr key={id} className="uppercase">
+                            <td>{ncmCode.substring(0, 6)}</td>
+                            <td>{data.product?.name.substring(0, 20)}</td>
+                            <td className="text-right">{data.quantity}</td>
+                            <td className="text-right">{data.price.toFixed(2)}</td>
+                            <td className="text-right">{(data.quantity * data.price).toFixed(2)}</td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
 
-                <div className="flex justify-between font-black uppercase text-[10px] mt-2 border-b border-dashed pb-1">
-                  <span>Subtotal R$</span>
-                  <span>{(printingOrder.total - (printingOrder.type === SaleType.OWN_DELIVERY ? (printingOrder.deliveryFee || 0) : 0) - (printingOrder.type === SaleType.TABLE ? (printingOrder.appliedServiceFee || 0) : 0)).toFixed(2)}</span>
-                </div>
-                {printingOrder.type === SaleType.TABLE && typeof printingOrder.appliedServiceFee === 'number' && (
-                  <div className="flex justify-between font-black uppercase text-[10px] pb-1">
-                    <span>Taxa Serviço R$</span>
-                    <span>{(printingOrder.appliedServiceFee || 0).toFixed(2)}</span>
+                <div className="space-y-1 pt-2">
+                  <div className="flex justify-between font-bold">
+                    <span>VALOR A PAGAR R$</span>
+                    <span>{printingOrder.total.toFixed(2)}</span>
                   </div>
-                )}
-                {printingOrder.type === SaleType.OWN_DELIVERY && printingOrder.deliveryFee !== undefined && printingOrder.deliveryFee > 0 && (
-                  <div className="flex justify-between font-black uppercase text-[10px] pb-1">
-                    <span>Acrés./Entrega R$</span>
-                    <span>{(printingOrder.deliveryFee).toFixed(2)}</span>
+                  <div className="flex justify-between font-bold text-[8px] border-b border-dashed border-black pb-1">
+                    <span>FORMA DE PAGAMENTO</span>
+                    <span>Valor Pago</span>
                   </div>
-                )}
-                <div className="flex justify-between font-black uppercase text-xs mt-1">
-                  <span>Valor Total R$</span>
-                  <span>{printingOrder.total.toFixed(2)}</span>
+                  {renderPaymentEditor()}
                 </div>
 
-                {renderPaymentEditor()}
-
-                <div className="text-center space-y-2 mt-4 flex flex-col items-center border-t border-dashed pt-4">
-                  <div className="w-32 h-32 bg-slate-50 border-2 border-slate-100 flex items-center justify-center">
-                    <Icons.QrCode className="w-20 h-20 opacity-20" />
-                  </div>
-                  <p className="text-[8px] font-bold uppercase tracking-tighter">Consulta via QR Code ou Chave de Acesso</p>
-                  <p className="text-[7px] break-all font-mono opacity-60">35240212345678000190650010000000011000000012</p>
+                <div className="text-center space-y-1 border-t border-dashed border-black pt-2">
+                  <p className="font-bold">NFCe: {printingOrder.nfeNumber?.split('-')[1] || '000001'} Ser: 001 Emi: {new Date(printingOrder.createdAt).toLocaleDateString('pt-BR')} {new Date(printingOrder.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</p>
+                  <p>Consulte pela chave de acesso em</p>
+                  <p className="text-[8px] underline">www.nfce.sefaz.ba.gov.br/portal/consultaNFCe.jsp</p>
+                  <p className="text-[9px] font-bold break-all">35240212345678000190650010000000011000000012</p>
                 </div>
 
-                <div className="text-center text-[7px] italic border-t border-dashed pt-2">
-                  <p>PRODUTOS E SERVIÇOS TRIBUTADOS PELO ICMS NO DESTINO</p>
+                <div className="text-center space-y-1 border-t border-dashed border-black pt-2">
+                  <p className="font-bold">{printingOrder.clientName === 'Consumidor' ? 'CONSUMIDOR NAO INFORMADO' : `CLIENTE: ${printingOrder.clientName?.toUpperCase()}`}</p>
+                  <p>Protocolo de Autorizacao: {Math.floor(Math.random() * 100000000000000)}</p>
+                  <div className="flex justify-between text-[8px]">
+                    <span>Tributos Totais Incidentes (Lei Federal 12.741/2012)</span>
+                    <span className="font-bold">{(printingOrder.total * 0.1345).toFixed(2)}</span>
+                  </div>
+                </div>
+
+                <div className="flex justify-center py-4">
+                  <div className="bg-white p-2">
+                    <QRCodeCanvas
+                      value={printingOrder.nfeUrl || `https://www.nfce.sefaz.ba.gov.br/portal/consultaNFCe.jsp?p=${printingOrder.id}`}
+                      size={120}
+                      level={"M"}
+                      includeMargin={false}
+                    />
+                  </div>
                 </div>
               </div>
             ) : (
