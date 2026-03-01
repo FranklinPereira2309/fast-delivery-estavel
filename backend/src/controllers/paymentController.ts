@@ -4,7 +4,7 @@ import prisma from '../prisma';
 
 export const createPreference = async (req: Request, res: Response) => {
     try {
-        const { items, total, orderType, clientName } = req.body;
+        const { items, total, orderType, clientName, backUrl } = req.body;
 
         const mpAccessToken = process.env.MERCADOPAGO_ACCESS_TOKEN;
         if (!mpAccessToken) {
@@ -39,22 +39,23 @@ export const createPreference = async (req: Request, res: Response) => {
         // Webhook URL configuration from Environment
         const serverUrl = process.env.VITE_API_URL?.replace('/api', '') || 'https://deleivery-fast-backend.onrender.com';
 
-        // Back URLs based on Digital Menu domain
+        // Back URLs based on Digital Menu domain or provided backUrl
         const menuUrl = process.env.VITE_MENU_URL || 'https://cardapio-fast-delivery.onrender.com';
+        const returnUrl = backUrl || menuUrl;
 
         const prefBody = {
             items: mpItems,
             notification_url: `${serverUrl}/api/payments/webhook`,
-            external_reference: `${Date.now()}-${clientName}`, // Will be updated on Order save
+            external_reference: `${Date.now()}-${clientName}`,
             payment_methods: {
                 excluded_payment_methods: [],
                 excluded_payment_types: [{ id: "ticket" }], // Blocks Boleto (Slow)
                 installments: 3
             },
             back_urls: {
-                success: `${menuUrl}?status=approved`,
-                failure: `${menuUrl}?status=failure`,
-                pending: `${menuUrl}?status=pending`
+                success: `${returnUrl}?status=approved`,
+                failure: `${returnUrl}?status=failure`,
+                pending: `${returnUrl}?status=pending`
             },
             auto_return: "approved"
         };
@@ -72,7 +73,6 @@ export const receiveWebhook = async (req: Request, res: Response) => {
     try {
         const { type, data, action } = req.body;
 
-        // Mercado pago sometimes sends action=payment.created, etc
         if (type === 'payment' || action?.includes('payment')) {
             const paymentId = data?.id;
             if (!paymentId) {
@@ -89,30 +89,26 @@ export const receiveWebhook = async (req: Request, res: Response) => {
 
             const { status, additional_info, external_reference, order } = paymentInfo;
 
-            // In a perfect world, we identify the Order precisely by mpPreferenceId
-            // Or via external_reference (which we set to be the actual internal Order ID or temp ticket)
             const targetOrder = await prisma.order.findFirst({
                 where: {
                     OR: [
-                        { id: external_reference }, // If we manage to pass the actual ID early
-                        { mpPreferenceId: paymentId } // Or searching by preference map
+                        { id: external_reference },
+                        { mpPreferenceId: paymentId?.toString() }
                     ]
                 }
             });
 
             if (targetOrder && targetOrder.paymentStatus !== 'APPROVED') {
                 if (status === 'approved') {
-                    // Mudar status e disparar pro frontend
                     await prisma.order.update({
                         where: { id: targetOrder.id },
                         data: {
                             paymentStatus: 'APPROVED',
                             mpPaymentId: paymentId?.toString(),
-                            status: 'PREPARING' // Transfere do AGUARDANDO PAGAMENTO na loja
+                            status: 'PREPARING'
                         }
                     });
 
-                    // Avisar os sockets logados (Painel e Cozinha)
                     import('../socket').then(({ getIO }) => {
                         getIO().emit('ordersUpdated');
                         getIO().emit('newOrderAlert', { id: targetOrder.id, message: `Pagamento Online Aprovado: ${targetOrder.id}` });

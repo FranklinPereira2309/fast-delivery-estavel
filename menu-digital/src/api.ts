@@ -122,7 +122,11 @@ export const fetchConsumption = async (tableNumber: string) => {
 
 export const createPaymentPreference = async (payload: any) => {
     try {
-        const response = await axios.post(`${BASE_URL}/payments/create-preference`, payload);
+        // Envia o origin atual para que o MP saiba para onde voltar (Mesmo domínio do cardápio)
+        const response = await axios.post(`${BASE_URL}/payments/create-preference`, {
+            ...payload,
+            backUrl: window.location.origin
+        });
         return response.data;
     } catch (error: any) {
         console.error('Error creating MP preference', error);

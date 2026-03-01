@@ -593,7 +593,8 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
         body: JSON.stringify({
           items,
           total: cartTotal,
-          clientName
+          clientName,
+          backUrl: window.location.origin
         })
       });
 
@@ -619,7 +620,8 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
         body: JSON.stringify({
           items: [{ productId: 'SPLIT_MP', name: 'Pagamento Parcial', price: amount, quantity: 1 }],
           total: amount,
-          clientName
+          clientName,
+          backUrl: window.location.origin
         })
       });
 
