@@ -39,6 +39,9 @@ export const createPreference = async (req: Request, res: Response) => {
         // Webhook URL configuration from Environment
         const serverUrl = process.env.VITE_API_URL?.replace('/api', '') || 'https://deleivery-fast-backend.onrender.com';
 
+        // Back URLs based on Digital Menu domain
+        const menuUrl = process.env.VITE_MENU_URL || 'https://cardapio-fast-delivery.onrender.com';
+
         const prefBody = {
             items: mpItems,
             notification_url: `${serverUrl}/api/payments/webhook`,
@@ -49,9 +52,9 @@ export const createPreference = async (req: Request, res: Response) => {
                 installments: 3
             },
             back_urls: {
-                success: 'https://cardapio-fast-delivery.onrender.com?status=approved',
-                failure: 'https://cardapio-fast-delivery.onrender.com?status=failure',
-                pending: 'https://cardapio-fast-delivery.onrender.com?status=pending'
+                success: `${menuUrl}?status=approved`,
+                failure: `${menuUrl}?status=failure`,
+                pending: `${menuUrl}?status=pending`
             },
             auto_return: "approved"
         };

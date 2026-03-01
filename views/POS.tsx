@@ -8,9 +8,8 @@ import CustomAlert from '../components/CustomAlert';
 import { validateEmail, validateCPF, validateCNPJ, maskPhone, maskDocument, validateCreditCard, getCardBrand, maskCardNumber, maskExpiry, toTitleCase } from '../services/validationUtils';
 import { initMercadoPago, Wallet } from '@mercadopago/sdk-react';
 
-// Substitua pela sua chave pública REAL ou vinda do backend
-// Para testes, o usuário informou que já tem as chaves.
-const MP_PUBLIC_KEY = 'TEST-f0761e67-7393-4700-84c4-72ed7026df21'; // Exemplo de teste
+// Iniciando Mercado Pago com chave vinda do ambiente (.env)
+const MP_PUBLIC_KEY = import.meta.env.VITE_MERCADOPAGO_PUBLIC_KEY || 'SUA_KEY_MERCADO_PAGO';
 initMercadoPago(MP_PUBLIC_KEY, { locale: 'pt-BR' });
 
 interface POSProps {
