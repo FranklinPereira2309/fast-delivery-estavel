@@ -186,7 +186,7 @@ function AppContent() {
 
     const handlePaymentConfirmed = (data: any) => {
       console.log('Socket paymentConfirmed received:', data);
-      if (data.tableNumber === Number(tableParam)) {
+      if (Number(data.tableNumber) === Number(tableParam)) {
         setIsBilling(false);
         setCurrentPin(null);
         setIsOwner(false);
@@ -195,6 +195,14 @@ function AppContent() {
       }
     };
 
+    const handleConnect = () => {
+      console.log('Socket connected/reconnected');
+      if (tableParam) {
+        joinTableRoom(Number(tableParam));
+      }
+    };
+
+    socket.on('connect', handleConnect);
     socket.on('tableStatusChanged', handleTableStatus);
     socket.on('newOrder', handleTableStatus);
     socket.on('store_status_changed', handleStoreStatus);
@@ -203,6 +211,7 @@ function AppContent() {
 
     return () => {
       clearInterval(intervalId);
+      socket.off('connect', handleConnect);
       socket.off('tableStatusChanged', handleTableStatus);
       socket.off('newOrder', handleTableStatus);
       socket.off('store_status_changed', handleStoreStatus);

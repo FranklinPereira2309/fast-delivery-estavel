@@ -19,9 +19,12 @@ export const initSocket = (server: http.Server) => {
             console.log(`Socket ${socket.id} entrou no chat do motorista ${driverId}`);
         });
 
-        socket.on('join_table', (tableNumber: number) => {
-            socket.join(`table_${tableNumber}`);
-            console.log(`Socket ${socket.id} entrou na sala da mesa ${tableNumber}`);
+        socket.on('join_table', (tableNumber: any) => {
+            const num = Number(tableNumber);
+            if (!isNaN(num)) {
+                socket.join(`table_${num}`);
+                console.log(`Socket ${socket.id} entrou na sala da mesa ${num}`);
+            }
         });
 
         socket.on('send_message', (data: { driverId: string, content: string, senderName: string, isFromDriver: boolean }) => {

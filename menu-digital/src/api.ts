@@ -29,7 +29,7 @@ axios.interceptors.request.use((config) => {
 export const socket = io(SOCKET_URL, {
     autoConnect: true,
     reconnection: true,
-    transports: ['websocket']
+    transports: ['polling', 'websocket']
 });
 
 export const joinTableRoom = (tableNumber: number) => {

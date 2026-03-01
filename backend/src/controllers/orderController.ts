@@ -193,8 +193,8 @@ export const saveOrder = async (req: Request, res: Response) => {
                     });
 
                     // Notificação direta para a mesa para exibir agradecimento instantâneo
-                    getIO().to(`table_${tableNumIdx}`).emit('paymentConfirmed', {
-                        tableNumber: tableNumIdx,
+                    getIO().to(`table_${Number(tableNumIdx)}`).emit('paymentConfirmed', {
+                        tableNumber: Number(tableNumIdx),
                         message: "Agradecemos a Preferência"
                     });
 
