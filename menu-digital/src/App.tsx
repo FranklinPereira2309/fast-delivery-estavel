@@ -176,7 +176,10 @@ function AppContent() {
 
     const handleCancellation = (data: any) => {
       console.log('Socket digitalOrderCancelled received:', data);
-      if (data.tableNumber === Number(tableParam)) {
+      const targetTable = Number(tableParam);
+      const incomingTable = Number(data.tableNumber);
+
+      if (incomingTable === targetTable) {
         setIsBilling(false);
         setIsPinRequired(false);
         // Exibe um Banner no topo

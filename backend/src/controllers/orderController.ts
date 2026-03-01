@@ -433,7 +433,7 @@ export const deleteOrder = async (req: Request, res: Response) => {
             // Se for pedido vindo do menu digital, avisar o cliente
             if (orderDeleted && orderDeleted.isOriginDigitalMenu && orderDeleted.tableNumber) {
                 getIO().emit('digitalOrderCancelled', {
-                    tableNumber: orderDeleted.tableNumber,
+                    tableNumber: Number(orderDeleted.tableNumber),
                     message: reason || "Pedido Cancelado, dúvidas pergunte ao Garçom"
                 });
             }
