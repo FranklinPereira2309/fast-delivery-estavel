@@ -303,10 +303,11 @@ const SalesMonitor: React.FC = () => {
                     <tbody>
                       {groupedPrintingItems.map(([id, data]) => {
                         const ncmCode = data.product?.ncm || '00000000';
+                        const prodName = data.product?.name || `PROD #${id.substring(0, 5)}`;
                         return (
                           <tr key={id} className="uppercase">
                             <td>{ncmCode.substring(0, 6)}</td>
-                            <td>{data.product?.name.substring(0, 20)}</td>
+                            <td>{prodName.substring(0, 20)}</td>
                             <td className="text-right">{data.quantity}</td>
                             <td className="text-right">{data.price.toFixed(2)}</td>
                             <td className="text-right">{(data.quantity * data.price).toFixed(2)}</td>
@@ -377,12 +378,15 @@ const SalesMonitor: React.FC = () => {
                   {renderPaymentEditor()}
                 </div>
                 <div className="border-t border-dashed my-3 py-3">
-                  {groupedPrintingItems.map(([id, data]) => (
-                    <div key={id} className="flex justify-between font-black uppercase py-0.5">
-                      <span>{data.quantity}x {data.name.substring(0, 18)}</span>
-                      <span>R$ {(data.quantity * data.price).toFixed(2)}</span>
-                    </div>
-                  ))}
+                  {groupedPrintingItems.map(([id, data]) => {
+                    const prodName = data.product?.name || `PROD #${id.substring(0, 5)}`;
+                    return (
+                      <div key={id} className="flex justify-between font-black uppercase py-0.5" >
+                        <span>{data.quantity}x {prodName.substring(0, 18)}</span>
+                        <span>R$ {(data.quantity * data.price).toFixed(2)}</span>
+                      </div>
+                    );
+                  })}
                 </div>
                 <div className="flex justify-between items-end border-t border-dashed pt-4 mb-1">
                   <span className="font-black text-[9px] uppercase tracking-widest">SUBTOTAL:</span>
