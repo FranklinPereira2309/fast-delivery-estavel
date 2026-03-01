@@ -419,15 +419,11 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       }
     }
 
-    // Rule: Delivery MUST have a client to send to kitchen.
-    if (saleType === SaleType.OWN_DELIVERY && !selectedClient && !avulsoData.name) {
+    // Rule: Delivery and Counter MUST have a client to send to kitchen or finalize.
+    if ((isDelivery || isCounterSale) && !selectedClient && !avulsoData.name) {
       setIsClientModalOpen(true);
-      return showAlert('Identificar Cliente', 'A modalidade Delivery exige um cliente selecionado para enviar o pedido p/ Cozinha. Identifique o cliente para prosseguir.', 'DANGER');
-    }
-
-    // Rule: Counter sales should ideally have a client.
-    if (saleType === SaleType.COUNTER && !selectedClient && !avulsoData.name) {
-      return showAlert('Identificar Cliente', 'Para vendas de Balcão, identifique o cliente para melhor controle.', 'INFO');
+      const modeLabel = isDelivery ? 'Delivery' : 'Balcão';
+      return showAlert('Identificar Cliente', `A modalidade ${modeLabel} exige um cliente selecionado para prosseguir. Identifique o cliente.`, 'DANGER');
     }
 
     // Set initial payment state
@@ -450,32 +446,35 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
     let freshTableSession = isTableSale ? ((await db.getTableSessions()).find(t => t.tableNumber === finalTableNum)) : null;
     let tableSessionToClose = isTableSale ? (freshTableSession || pendingTables.find(t => t.tableNumber === finalTableNum)) : null;
 
-    let finalClientId = isTableSale ? (tableSessionToClose?.clientId || 'ANONYMOUS') : (isAvulso ? undefined : selectedClient?.id);
+    let finalClientId = isTableSale ? (tableSessionToClose?.clientId || 'ANONYMOUS') : (selectedClient?.id || 'ANONYMOUS');
     let finalClientName = isTableSale
       ? (tableSessionToClose?.clientName || `Mesa ${finalTableNum}`)
       : (isAvulso ? avulsoData.name : (selectedClient?.name || 'Consumidor Padrão'));
 
-    if (!isTableSale && isAvulso && avulsoData.name && avulsoData.phone) {
+    if (!isTableSale && (isAvulso || selectedClient) && (avulsoData.name || selectedClient?.name)) {
       try {
-        const formattedPhone = avulsoData.phone.replace(/\D/g, '');
-        const existingClient = clients.find(c => c.phone.replace(/\D/g, '') === formattedPhone);
+        const phoneToSearch = isAvulso ? avulsoData.phone : selectedClient?.phone;
+        if (phoneToSearch) {
+          const formattedPhone = phoneToSearch.replace(/\D/g, '');
+          const existingClient = clients.find(c => c.phone.replace(/\D/g, '') === formattedPhone);
 
-        if (existingClient) {
-          finalClientId = existingClient.id;
-          finalClientName = existingClient.name;
-        } else {
-          const newClient: Client = {
-            id: `CLIENT-${Date.now()}`,
-            name: avulsoData.name,
-            phone: avulsoData.phone,
-            addresses: avulsoData.address ? [avulsoData.address] : [],
-            totalOrders: 0,
-            email: avulsoData.email || undefined,
-            document: avulsoData.document || undefined
-          };
-          await db.saveClient(newClient);
-          finalClientId = newClient.id;
-          setClients(prev => [...prev, newClient]);
+          if (existingClient) {
+            finalClientId = existingClient.id;
+            finalClientName = existingClient.name;
+          } else if (isAvulso && avulsoData.name && avulsoData.phone) {
+            const newClient: Client = {
+              id: `CLIENT-${Date.now()}`,
+              name: avulsoData.name,
+              phone: avulsoData.phone,
+              addresses: avulsoData.address ? [avulsoData.address] : [],
+              totalOrders: 0,
+              email: avulsoData.email || undefined,
+              document: avulsoData.document || undefined
+            };
+            await db.saveClient(newClient);
+            finalClientId = newClient.id;
+            setClients(prev => [...prev, newClient]);
+          }
         }
       } catch (err) {
         console.error('Error auto-registering client', err);
@@ -1751,7 +1750,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                   </div>
 
                   <div className="text-center space-y-1 border-t border-dashed border-black pt-2">
-                    <p className="font-bold">{printingOrder.clientName === 'Consumidor' || printingOrder.clientName === 'Consumidor Padrão' ? 'CONSUMIDOR NAO INFORMADO' : `CLIENTE: ${printingOrder.clientName?.toUpperCase()}`}</p>
+                    <p className="font-bold">{!printingOrder.clientName || printingOrder.clientName === 'Consumidor' || printingOrder.clientName === 'Consumidor Padrão' ? 'CONSUMIDOR NAO INFORMADO' : `CLIENTE: ${printingOrder.clientName?.toUpperCase()}`}</p>
                     {printingOrder.clientDocument && <p className="font-bold">CPF/CNPJ: {printingOrder.clientDocument}</p>}
                     <p>Protocolo de Autorizacao: {Math.floor(Math.random() * 100000000000000)}</p>
                     <div className="flex justify-between text-[8px]">
@@ -1778,17 +1777,17 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                     <h2 className="font-black text-sm uppercase tracking-tighter">{businessSettings.name}</h2>
                     <p className="text-[9px] font-bold mt-1 uppercase">Comprovante de Pagamento</p>
                   </div>
-                  <div className="space-y-1 mb-4">
-                    <p>DATA: {new Date(printingOrder.createdAt).toLocaleString('pt-BR')}</p>
-                    <p>CLIENTE: {printingOrder.clientName}</p>
+                  <div className="space-y-1 mb-4 text-[10px] bg-slate-50 p-2 rounded-lg border border-slate-100">
+                    <p className="text-[8px] font-black text-slate-400 uppercase mb-1">Dados do Cliente</p>
+                    <p className="font-bold">CLIENTE: {printingOrder.clientName?.toUpperCase() || 'NAO INFORMADO'}</p>
                     {printingOrder.clientDocument && <p>CPF/CNPJ: {printingOrder.clientDocument}</p>}
-                    {printingOrder.clientEmail && <p>E-MAIL: {printingOrder.clientEmail}</p>}
+                    {printingOrder.clientEmail && <p>E-MAIL: {printingOrder.clientEmail.toLowerCase()}</p>}
                     {printingOrder.clientPhone && <p>FONE: {printingOrder.clientPhone}</p>}
                     {printingOrder.clientAddress && (
-                      <p className="font-bold border-t border-dashed mt-2 pt-1 uppercase leading-tight">ENTREGA: {printingOrder.clientAddress}</p>
+                      <p className="font-bold border-t border-dashed border-slate-200 mt-2 pt-1 uppercase leading-tight text-blue-600">ENTREGA: {printingOrder.clientAddress}</p>
                     )}
                     {printingOrder.tableNumber && <p className="font-black">MESA: {printingOrder.tableNumber}</p>}
-                    <p>MÉTODO: {printingOrder.paymentMethod || 'PENDENTE'}</p>
+                    <p className="text-slate-500">MÉTODO: {printingOrder.paymentMethod || 'PENDENTE'}</p>
                   </div>
                   <div className="border-t border-dashed my-3 py-3">
                     {groupedPrintingItems.map(([id, data]) => (
