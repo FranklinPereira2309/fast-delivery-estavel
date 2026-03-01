@@ -188,12 +188,6 @@ export const saveTableSession = async (req: Request, res: Response) => {
         }
 
         try {
-            getIO().emit('tableStatusChanged', {
-                tableNumber: Number(data.tableNumber),
-                status: data.status || 'occupied',
-                action: 'refresh'
-            });
-
             const { rejection } = req.query;
             if (rejection === 'true') {
                 getIO().emit('digitalOrderCancelled', {
@@ -201,6 +195,12 @@ export const saveTableSession = async (req: Request, res: Response) => {
                     message: "Procure o Garçom, seu pedido foi Rejeitado!"
                 });
             }
+
+            getIO().emit('tableStatusChanged', {
+                tableNumber: Number(data.tableNumber),
+                status: data.status || 'occupied',
+                action: 'refresh'
+            });
         } catch (e) {
             console.error('Socket error emitting messages:', e);
         }
@@ -227,18 +227,18 @@ export const deleteTableSession = async (req: Request, res: Response) => {
     await prisma.tableSession.deleteMany({ where: { tableNumber: tableNum } });
 
     try {
-        getIO().emit('tableStatusChanged', {
-            tableNumber: Number(tableNum),
-            status: 'available',
-            action: 'refresh'
-        });
-
         if (cancellation === 'true') {
             getIO().emit('digitalOrderCancelled', {
                 tableNumber: Number(tableNum),
                 message: "Procure o Garçom, seu pedido foi Rejeitado!"
             });
         }
+
+        getIO().emit('tableStatusChanged', {
+            tableNumber: Number(tableNum),
+            status: 'available',
+            action: 'refresh'
+        });
     } catch (e) {
         console.error('Socket error emitting tableStatusChanged:', e);
     }
