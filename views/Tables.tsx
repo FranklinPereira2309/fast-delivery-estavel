@@ -409,11 +409,11 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
   const confirmBilling = async () => {
     if (!printingPreBill) return;
 
-    const clientName = isUnregisteredClient ? manualClientName : (selectedClient?.name || 'Consumidor');
+    const clientName = isUnregisteredClient ? toTitleCase(manualClientName) : (selectedClient?.name || 'Consumidor');
     const clientPhone = isUnregisteredClient ? manualClientPhone : selectedClient?.phone;
     const clientEmail = isUnregisteredClient ? manualClientEmail : selectedClient?.email;
     const clientDocument = isUnregisteredClient ? manualClientDocument : selectedClient?.document;
-    const clientAddress = isUnregisteredClient ? manualClientAddress : selectedClient?.addresses[0];
+    const clientAddress = isUnregisteredClient ? toTitleCase(manualClientAddress) : selectedClient?.addresses[0];
 
     let finalClientId = isUnregisteredClient ? undefined : selectedClient?.id;
 
@@ -429,11 +429,11 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
           // Let's create a real client using db
           const newClient: Client = {
             id: `CLIENT-${Date.now()}`,
-            name: manualClientName,
+            name: toTitleCase(manualClientName),
             phone: manualClientPhone,
             email: manualClientEmail || undefined,
             document: manualClientDocument || undefined,
-            addresses: manualClientAddress ? [manualClientAddress] : [],
+            addresses: manualClientAddress ? [toTitleCase(manualClientAddress)] : [],
             totalOrders: 0
           };
           await db.saveClient(newClient);
@@ -710,10 +710,10 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
                                 placeholder="Nome do Cliente"
                                 value={manualClientName}
                                 onChange={e => {
-                                  setManualClientName(toTitleCase(e.target.value));
+                                  setManualClientName(e.target.value);
                                   if (errors.manualClientName) setErrors(prev => ({ ...prev, manualClientName: false }));
                                 }}
-                                className={`w-full p-4 bg-white border-2 rounded-2xl text-[11px] font-black uppercase outline-none focus:ring-4 focus:ring-blue-50 transition-all ${errors.manualClientName ? 'border-red-500 animate-shake' : 'border-slate-200'}`}
+                                className={`w-full p-4 bg-white border-2 rounded-2xl text-[11px] font-black outline-none focus:ring-4 focus:ring-blue-50 transition-all ${errors.manualClientName ? 'border-red-500 animate-shake' : 'border-slate-200'}`}
                               />
                             </div>
                             <div className="w-1/3 space-y-1">
@@ -726,7 +726,7 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
                                   setManualClientPhone(maskPhone(e.target.value));
                                   if (errors.manualClientPhone) setErrors(prev => ({ ...prev, manualClientPhone: false }));
                                 }}
-                                className={`w-full p-4 bg-white border-2 rounded-2xl text-[11px] font-black uppercase outline-none focus:ring-4 focus:ring-blue-50 transition-all ${errors.manualClientPhone ? 'border-red-500 animate-shake' : 'border-slate-200'}`}
+                                className={`w-full p-4 bg-white border-2 rounded-2xl text-[11px] font-black outline-none focus:ring-4 focus:ring-blue-50 transition-all ${errors.manualClientPhone ? 'border-red-500 animate-shake' : 'border-slate-200'}`}
                               />
                             </div>
                           </div>
@@ -741,7 +741,7 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
                                   setManualClientEmail(e.target.value);
                                   if (errors.manualClientEmail) setErrors(prev => ({ ...prev, manualClientEmail: false }));
                                 }}
-                                className={`w-full p-4 bg-white border-2 rounded-2xl text-[11px] font-black uppercase outline-none focus:ring-4 focus:ring-blue-50 transition-all ${errors.manualClientEmail ? 'border-red-500 animate-shake' : 'border-slate-200'}`}
+                                className={`w-full p-4 bg-white border-2 rounded-2xl text-[11px] font-black outline-none focus:ring-4 focus:ring-blue-50 transition-all ${errors.manualClientEmail ? 'border-red-500 animate-shake' : 'border-slate-200'}`}
                               />
                             </div>
                             <div className="flex-1 space-y-1">
@@ -754,7 +754,7 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
                                   setManualClientDocument(maskDocument(e.target.value));
                                   if (errors.manualClientDocument) setErrors(prev => ({ ...prev, manualClientDocument: false }));
                                 }}
-                                className={`w-full p-4 bg-white border-2 rounded-2xl text-[11px] font-black uppercase outline-none focus:ring-4 focus:ring-blue-50 transition-all ${errors.manualClientDocument ? 'border-red-500 animate-shake' : 'border-slate-200'}`}
+                                className={`w-full p-4 bg-white border-2 rounded-2xl text-[11px] font-black outline-none focus:ring-4 focus:ring-blue-50 transition-all ${errors.manualClientDocument ? 'border-red-500 animate-shake' : 'border-slate-200'}`}
                               />
                             </div>
                           </div>
@@ -784,7 +784,7 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
                                     }
                                   }
                                 }}
-                                className={`w-full p-4 bg-white border border-slate-200 rounded-2xl text-[11px] font-black uppercase outline-none focus:ring-4 focus:ring-blue-50 transition-all ${isLoadingCep ? 'opacity-50' : ''}`}
+                                className={`w-full p-4 bg-white border border-slate-200 rounded-2xl text-[11px] font-black outline-none focus:ring-4 focus:ring-blue-50 transition-all ${isLoadingCep ? 'opacity-50' : ''}`}
                               />
                               {isLoadingCep && (
                                 <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -792,7 +792,7 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
                                 </div>
                               )}
                             </div>
-                            <textarea className="flex-1 w-full p-4 bg-white border border-slate-200 rounded-2xl text-[11px] font-black uppercase outline-none focus:ring-4 focus:ring-blue-50 transition-all h-20 resize-none" placeholder="Endereço (Opcional)" value={manualClientAddress} onChange={(e) => setManualClientAddress(e.target.value)} />
+                            <textarea className="flex-1 w-full p-4 bg-white border border-slate-200 rounded-2xl text-[11px] font-black outline-none focus:ring-4 focus:ring-blue-50 transition-all h-20 resize-none" placeholder="Endereço (Opcional)" value={manualClientAddress} onChange={(e) => setManualClientAddress(e.target.value)} />
                           </div>
                         </div>
                       ) : (

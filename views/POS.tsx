@@ -462,7 +462,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
     let finalClientId = isTableSale ? (tableSessionToClose?.clientId || 'ANONYMOUS') : (selectedClient?.id || 'ANONYMOUS');
     let finalClientName = isTableSale
       ? (tableSessionToClose?.clientName || `Mesa ${finalTableNum}`)
-      : (isAvulso ? avulsoData.name : (selectedClient?.name || 'Consumidor Padrão'));
+      : (isAvulso ? toTitleCase(avulsoData.name) : (selectedClient?.name || 'Consumidor Padrão'));
 
     if (!isTableSale && (isAvulso || selectedClient) && (avulsoData.name || selectedClient?.name)) {
       try {
@@ -477,9 +477,9 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
           } else if (isAvulso && avulsoData.name && avulsoData.phone) {
             const newClient: Client = {
               id: `CLIENT-${Date.now()}`,
-              name: avulsoData.name,
+              name: toTitleCase(avulsoData.name),
               phone: avulsoData.phone,
-              addresses: avulsoData.address ? [avulsoData.address] : [],
+              addresses: avulsoData.address ? [toTitleCase(avulsoData.address)] : [],
               totalOrders: 0,
               email: avulsoData.email || undefined,
               document: avulsoData.document || undefined
@@ -498,7 +498,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
 
     const finalAddress = isTableSale
       ? (pendingTables.find(t => t.tableNumber === finalTableNum)?.clientAddress || undefined)
-      : (isAvulso ? avulsoData.address : (selectedClient?.addresses[0] || undefined));
+      : (isAvulso ? toTitleCase(avulsoData.address) : (selectedClient?.addresses[0] || undefined));
 
     const finalPhone = isTableSale
       ? (pendingTables.find(t => t.tableNumber === finalTableNum)?.clientPhone || undefined)
@@ -1088,7 +1088,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                   <div className="relative">
                     <input
                       type="text"
-                      className="w-full p-5 bg-slate-50 border-2 border-slate-100 rounded-2xl text-xs font-black uppercase tracking-widest outline-none focus:border-blue-500 transition-all"
+                      className="w-full p-5 bg-slate-50 border-2 border-slate-100 rounded-2xl text-xs font-black outline-none focus:border-blue-500 transition-all"
                       placeholder="Buscar por Nome ou Telefone..."
                       value={clientSearch}
                       onChange={(e) => { setClientSearch(e.target.value); setShowClientList(true); }}
@@ -1140,7 +1140,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                         placeholder="Nome do Cliente"
                         value={avulsoData.name}
                         onChange={(e) => {
-                          setAvulsoData({ ...avulsoData, name: toTitleCase(e.target.value) });
+                          setAvulsoData({ ...avulsoData, name: e.target.value });
                           if (errors.avulsoName) setErrors(prev => ({ ...prev, avulsoName: false }));
                         }}
                       />
