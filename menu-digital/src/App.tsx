@@ -453,46 +453,46 @@ function AppContent() {
 
   if (isSessionFinished) {
     return (
-      <div className="min-h-screen flex flex-col bg-[#0f172a] text-white text-center relative overflow-hidden font-sans">
+      <div className="h-[100dvh] flex flex-col bg-[#0f172a] text-white text-center relative overflow-hidden font-sans">
         {/* Background Decorative Elements */}
         <div className="absolute top-[-10%] left-[-10%] w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse delay-700"></div>
 
         {renderBanner()}
 
-        <div className="flex-1 flex items-center justify-center p-6 relative z-10">
-          <div className="max-w-md w-full space-y-12 animate-fade-in animate-zoom-in">
+        <div className="flex-1 flex items-center justify-center p-4 relative z-10 overflow-y-auto">
+          <div className="max-w-md w-full space-y-6 animate-fade-in animate-zoom-in py-4">
 
             {/* Success Icon Header */}
-            <div className="relative mx-auto w-40 h-40">
+            <div className="relative mx-auto w-28 h-28">
               <div className="absolute inset-0 bg-emerald-500/20 rounded-full animate-ping"></div>
-              <div className="absolute inset-4 bg-emerald-500/30 rounded-full animate-pulse"></div>
-              <div className="relative w-40 h-40 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-[3rem] flex items-center justify-center shadow-[0_20px_50px_rgba(16,185,129,0.3)] rotate-3 hover:rotate-0 transition-transform duration-500">
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-20 h-20 text-white drop-shadow-lg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="absolute inset-3 bg-emerald-500/30 rounded-full animate-pulse"></div>
+              <div className="relative w-28 h-28 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-[2rem] flex items-center justify-center shadow-[0_15px_40px_rgba(16,185,129,0.3)] rotate-3">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-14 h-14 text-white drop-shadow-lg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
             </div>
 
             {/* Main Message */}
-            <div className="space-y-6">
-              <h1 className="text-6xl font-black uppercase tracking-tighter leading-[0.9] text-transparent bg-clip-text bg-gradient-to-b from-white via-white to-slate-500">
+            <div className="space-y-3">
+              <h1 className="text-5xl font-black uppercase tracking-tighter leading-[0.9] text-transparent bg-clip-text bg-gradient-to-b from-white via-white to-slate-500">
                 Muito <br />
                 <span className="text-emerald-400">Obrigado!</span>
               </h1>
 
-              <div className="h-1 w-20 bg-emerald-500/50 mx-auto rounded-full"></div>
+              <div className="h-1 w-16 bg-emerald-500/40 mx-auto rounded-full"></div>
 
-              <p className="text-slate-300 text-xl leading-relaxed font-medium px-4">
+              <p className="text-slate-300 text-lg leading-tight font-medium px-2">
                 Sua conta foi finalizada com sucesso. <br />
                 <span className="text-emerald-300/80 italic font-bold">Agradecemos a preferência!</span>
               </p>
             </div>
 
             {/* Action & Footer */}
-            <div className="pt-10 space-y-8">
-              <div className="bg-white/5 backdrop-blur-md border border-white/10 p-6 rounded-[2rem] shadow-xl">
-                <p className="text-sm text-slate-400 font-bold uppercase tracking-widest leading-relaxed">
+            <div className="pt-2 space-y-4">
+              <div className="bg-white/5 backdrop-blur-md border border-white/10 p-4 rounded-[1.5rem] shadow-xl">
+                <p className="text-xs text-slate-400 font-bold uppercase tracking-widest leading-relaxed">
                   Volte sempre para saborear <br />
                   o que temos de melhor! 🌟
                 </p>
@@ -506,13 +506,13 @@ function AppContent() {
                   setBlockingRejection(null);
                   fetchTableData();
                 }}
-                className="group relative w-full overflow-hidden bg-white text-slate-900 font-black py-6 rounded-[2rem] transition-all hover:scale-105 active:scale-95 shadow-[0_15px_30px_rgba(255,255,255,0.1)]"
+                className="group relative w-full overflow-hidden bg-white text-slate-900 font-black py-5 rounded-[1.5rem] transition-all hover:scale-105 active:scale-95 shadow-[0_15px_30px_rgba(255,255,255,0.1)]"
               >
                 <span className="relative z-10 uppercase tracking-[0.2em] text-sm">Voltar ao Início</span>
                 <div className="absolute inset-0 bg-gradient-to-r from-emerald-100 to-white opacity-0 group-hover:opacity-100 transition-opacity"></div>
               </button>
 
-              <p className="text-[10px] text-slate-500 uppercase tracking-[0.3em] font-black opacity-40">
+              <p className="text-[9px] text-slate-500 uppercase tracking-[0.3em] font-black opacity-40">
                 Sistema Fast Delivery &copy; 2026
               </p>
             </div>
