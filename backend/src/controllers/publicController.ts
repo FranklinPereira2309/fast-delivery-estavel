@@ -125,7 +125,8 @@ export const verifyTable = async (req: Request, res: Response) => {
                 pin: null,
                 sessionToken: session.sessionToken,
                 isOwner: true,
-                rejectionMessage: null
+                rejectionMessage: null,
+                isNewSession: !isReturningOwner // Se não era o dono voltando, é uma nova sessão
             });
         }
 

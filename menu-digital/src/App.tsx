@@ -103,14 +103,22 @@ function AppContent() {
 
       // Join the table room for targeted instant updates
       joinTableRoom(Number(tableParam));
+
+      // 1. IF NEW SESSION: Clear ANY finished state and reset locally
+      if ((data as any).isNewSession) {
+        console.log('New session detected - clearing any stale finished state');
+        updateTerminalState(false);
+      } else {
+        // 2. BACKUP FALLBACK: Only if we are THE EXISTING OWNER and table is now free
+        if (data.status === 'available' && token && Number(data.tableNumber) === Number(tableParam)) {
+          console.log('Finalização detectada via backup (mesa livre com token de dono)');
+          updateTerminalState(true);
+        }
+      }
+
       // Only clear finished session if we are actually in an active state now
       if (data.status === 'occupied' || data.status === 'billing') {
         updateTerminalState(false);
-      } else if (data.status === 'available' && token && Number(data.tableNumber) === Number(tableParam)) {
-        // BACKUP: Se a mesa estiver livre mas o usuário ainda tem um token, 
-        // significa que a conta foi paga e o socket de finalização falhou ou foi perdido.
-        console.log('Finalização detectada via backup (mesa livre com token)');
-        updateTerminalState(true);
       }
 
       // Check for persistent rejection (Server-side flag)
