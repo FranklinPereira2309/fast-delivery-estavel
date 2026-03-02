@@ -25,6 +25,7 @@ const UserManagement: React.FC = () => {
     { id: 'crm', label: 'Clientes (CRM)' },
     { id: 'inventory', label: 'Estoque / Cardápio' },
     { id: 'logistics', label: 'Logística' },
+    { id: 'waiter', label: 'App Garçom' },
     { id: 'settings', label: 'Configurações' }
   ];
 

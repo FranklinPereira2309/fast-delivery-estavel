@@ -107,6 +107,7 @@ const UserManagementInternal: React.FC = () => {
         { id: 'crm', label: 'Clientes (CRM)' },
         { id: 'inventory', label: 'Estoque / Cardápio' },
         { id: 'logistics', label: 'Logística' },
+        { id: 'waiter', label: 'App Garçom' },
         { id: 'driver', label: 'Entregador' },
         { id: 'receivables', label: 'Recebimentos (Fiado)' },
         { id: 'qrcodes', label: 'QR Codes das Mesas' },
