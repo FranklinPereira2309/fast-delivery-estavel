@@ -97,7 +97,22 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
       db.getClients()
     ]);
     setSettings(s);
-    setSessions(sess);
+    // Enriquecer sessões com flag isSoftRejected para filtrar no PDV
+    const enrichedSessions = sess.map(s => {
+      let isSoftRejected = false;
+      if (s.pendingReviewItems) {
+        try {
+          const parsed = JSON.parse(s.pendingReviewItems);
+          if (parsed && typeof parsed === 'object' && !Array.isArray(parsed) && parsed.rejection) {
+            isSoftRejected = true;
+          }
+        } catch (e) {
+          if (s.pendingReviewItems.startsWith('REJECTED:')) isSoftRejected = true;
+        }
+      }
+      return { ...s, isSoftRejected };
+    });
+    setSessions(enrichedSessions);
     setProducts(prods);
     setWaiters(wa);
     setClients(cl);
@@ -118,7 +133,12 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
     return sess.status;
   };
 
-  const getSessForTable = (num: number) => sessions.find(s => s.tableNumber === num);
+  const getSessForTable = (num: number) => {
+    const s = sessions.find(s => s.tableNumber === num);
+    // Para o PDV, se a sessão for apenas uma persistência de erro (Soft-Reject), tratamos como inexistente visualmente no painel de lançamento
+    if (s?.isSoftRejected && s.items.length === 0) return undefined;
+    return s;
+  };
 
   const confirmLaunchProduct = async () => {
     if (!selectedProductForLaunch) return;
@@ -571,7 +591,7 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
                         </div>
                       </div>
                     )}
-                    {getSessForTable(selectedTable)?.hasPendingDigital && (
+                    {getSessForTable(selectedTable)?.hasPendingDigital && !getSessForTable(selectedTable)?.isSoftRejected && (
                       <div className="bg-fuchsia-50 border-2 border-fuchsia-200 rounded-3xl p-6 shadow-sm overflow-hidden mb-8">
                         <div className="flex items-center gap-4 mb-4">
                           <div className="bg-fuchsia-600 text-white p-3 rounded-2xl shadow-lg"><Icons.Dashboard /></div>
