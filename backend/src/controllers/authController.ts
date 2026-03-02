@@ -1,21 +1,28 @@
 import { Request, Response } from 'express';
 import prisma from '../prisma';
+import bcrypt from 'bcryptjs';
 
 export const login = async (req: Request, res: Response) => {
     const { email, password } = req.body;
     const normalizedEmail = email?.toLowerCase();
 
     try {
-        const user = await prisma.user.findFirst({
+        const user = await prisma.user.findUnique({
             where: {
-                email: normalizedEmail,
-                password // Note: In a real app, use hashing like bcrypt
+                email: normalizedEmail
             }
         });
 
         if (user) {
             if (!user.active) {
                 return res.status(403).json({ message: 'Esta conta está inativada. Entre em contato com o administrador.' });
+            }
+
+            // Verify hashed password
+            const isMatch = await bcrypt.compare(password, user.password);
+
+            if (!isMatch) {
+                return res.status(401).json({ message: 'Credenciais inválidas' });
             }
 
             // Create a log entry
@@ -41,18 +48,22 @@ export const verifyAdminPassword = async (req: Request, res: Response) => {
     const { password } = req.body;
 
     try {
-        const adminUser = await prisma.user.findFirst({
+        // Find all admin/settings users
+        const adminUsers = await prisma.user.findMany({
             where: {
-                password,
-                permissions: { hasSome: ['settings', 'admin'] }
+                permissions: { hasSome: ['settings', 'admin'] },
+                active: true
             }
         });
 
-        if (adminUser) {
-            res.json({ valid: true });
-        } else {
-            res.status(401).json({ valid: false, message: 'Senha incorreta ou usuário sem privilégios de Administrador.' });
+        // Check each one (usually there's only one or few)
+        for (const user of adminUsers) {
+            if (await bcrypt.compare(password, user.password)) {
+                return res.json({ valid: true });
+            }
         }
+
+        res.status(401).json({ valid: false, message: 'Senha incorreta ou usuário sem privilégios de Administrador.' });
     } catch (error) {
         res.status(500).json({ error: 'Erro ao verificar permissão.' });
     }
@@ -114,10 +125,12 @@ export const resetPassword = async (req: Request, res: Response) => {
             }
         });
         if (user) {
+            const hashedPassword = await bcrypt.hash(newPassword, 10);
+
             await prisma.user.update({
                 where: { id: user.id },
                 data: {
-                    password: newPassword,
+                    password: hashedPassword,
                     mustChangePassword: false
                 }
             });
