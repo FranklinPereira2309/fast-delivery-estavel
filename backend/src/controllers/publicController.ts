@@ -79,8 +79,27 @@ export const verifyTable = async (req: Request, res: Response) => {
 
         // 4. Se a mesa estiver disponível (ou não houver sessão), criamos uma nova com PIN
         if (!session || session.status === 'available') {
-            const pinToSet = session?.pin || Math.floor(1000 + Math.random() * 9000).toString();
-            const tokenToSet = session?.sessionToken || crypto.randomBytes(32).toString('hex');
+            const now = new Date();
+            const STALE_THRESHOLD_MS = 10 * 60 * 1000; // 10 minutos de inatividade em mesa 'available'
+
+            // Se a sessão já existe e tem um token, mas o chamador NÃO é o dono
+            if (session && session.sessionToken && token !== session.sessionToken) {
+                const sessionAge = now.getTime() - new Date(session.startTime).getTime();
+
+                // Se a mesa foi escaneada recentemente (menos de 10 min), bloqueamos o 2º aparelho com PIN
+                if (sessionAge < STALE_THRESHOLD_MS) {
+                    return res.status(401).json({
+                        message: 'Mesa em Atendimento - Informe o Pin',
+                        pin_required: true
+                    });
+                }
+                // Se for velha e sem pedidos, deixamos o novo scan "reiniciar" a mesa (Gera novo token abaixo)
+            }
+
+            const isReturningOwner = session?.sessionToken === token && !!token;
+            const pinToSet = isReturningOwner ? (session?.pin || '') : Math.floor(1000 + Math.random() * 9000).toString();
+            const tokenToSet = isReturningOwner ? (session?.sessionToken || '') : crypto.randomBytes(32).toString('hex');
+            const startTimeToSet = isReturningOwner ? (session?.startTime || now) : now;
 
             session = await prisma.tableSession.upsert({
                 where: { tableNumber },
@@ -88,18 +107,20 @@ export const verifyTable = async (req: Request, res: Response) => {
                     tableNumber,
                     status: 'available',
                     pin: pinToSet,
-                    sessionToken: tokenToSet
+                    sessionToken: tokenToSet,
+                    startTime: startTimeToSet
                 },
                 update: {
                     pin: pinToSet,
                     sessionToken: tokenToSet,
+                    startTime: startTimeToSet
                 }
             });
 
             return res.json({
                 tableNumber,
                 status: 'available',
-                pin: null, // MESA LIVRE NÃO MOSTRA PIN NO CELULAR
+                pin: null, // Mesmo para o dono, mesa livre não mostra PIN (UX)
                 sessionToken: session.sessionToken,
                 isOwner: true,
                 rejectionMessage: null
