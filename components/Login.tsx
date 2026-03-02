@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { db } from '../services/db';
 import { User } from '../types';
+import CustomAlert from './CustomAlert';
 
 interface LoginProps {
   onLoginSuccess: (user: User) => void;
@@ -16,6 +17,18 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
   const [error, setError] = useState('');
   const [view, setView] = useState<'LOGIN' | 'FORGOT' | 'RESET' | 'FIRST_LOGIN' | 'CODE_DISPLAY'>('LOGIN');
   const [tempUser, setTempUser] = useState<User | null>(null);
+
+  const [alertConfig, setAlertConfig] = useState<{ isOpen: boolean, title: string, message: string, onConfirm: () => void, type: 'INFO' | 'DANGER' | 'SUCCESS' }>({
+    isOpen: false, title: '', message: '', onConfirm: () => { }, type: 'INFO'
+  });
+
+  const showAlert = (title: string, message: string, type: 'INFO' | 'DANGER' | 'SUCCESS' = 'INFO', onConfirm?: () => void) => {
+    setAlertConfig({
+      isOpen: true, title, message,
+      onConfirm: onConfirm || (() => setAlertConfig(prev => ({ ...prev, isOpen: false }))),
+      type
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,9 +65,11 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
     setError('');
     try {
       await db.resetPassword({ email, recoveryCode, newPassword });
-      alert('Senha alterada com sucesso! Faça login agora.');
-      setView('LOGIN');
-      setPassword('');
+      showAlert('Sucesso', 'Senha alterada com sucesso! Faça login agora.', 'SUCCESS', () => {
+        setAlertConfig(prev => ({ ...prev, isOpen: false }));
+        setView('LOGIN');
+        setPassword('');
+      });
     } catch (err: any) {
       setError(err.message || 'Erro ao redefinir senha.');
     }
@@ -324,6 +339,14 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
           </div>
         </div>
       </div>
+
+      <CustomAlert
+        isOpen={alertConfig.isOpen}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        onConfirm={alertConfig.onConfirm}
+        type={alertConfig.type}
+      />
     </div>
   );
 };
