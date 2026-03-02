@@ -557,6 +557,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
     } else {
       setIsNfceVisual(emitNfce);
       setPrintingOrder(orderData);
+      showAlert("Sucesso", "Venda finalizada com sucesso.", "SUCCESS");
     }
 
     clearState(false, !orderData.status || orderData.status !== OrderStatus.PREPARING);
