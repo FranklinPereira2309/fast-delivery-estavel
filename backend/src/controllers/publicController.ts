@@ -42,7 +42,26 @@ export const verifyTable = async (req: Request, res: Response) => {
             where: { tableNumber }
         });
 
-        // 3. EXTRAÇÃO DE REJEIÇÃO (Prioridade Máxima para o Soft-Reject)
+        const now = new Date();
+        const STALE_THRESHOLD_MS = 10 * 60 * 1000; // 10 minutos de inatividade
+        const isOwner = session?.sessionToken === token && !!token;
+
+        // 3. SEGURANÇA: Validação de Trava de Acesso
+        if (session?.sessionToken && !isOwner) {
+            // Se a mesa estiver ocupada OU escaneada recentemente (bloqueia o 2º dispositivo)
+            const isActive = session.status !== 'available';
+            const sessionAge = now.getTime() - new Date(session.startTime).getTime();
+            const isLocked = sessionAge < STALE_THRESHOLD_MS;
+
+            if (isActive || isLocked) {
+                return res.status(401).json({
+                    message: 'Mesa em Atendimento - Informe o Pin',
+                    pin_required: true
+                });
+            }
+        }
+
+        // 4. EXTRAÇÃO DE REJEIÇÃO (Só chega aqui se for dono ou mesa resetada/stale)
         let rejectionMessage = null;
         if (session?.pendingReviewItems) {
             try {
@@ -57,49 +76,25 @@ export const verifyTable = async (req: Request, res: Response) => {
             }
         }
 
-        // Se houver rejeição, retornamos ela imediatamente, bloqueando o fluxo normal
         if (rejectionMessage) {
-            // SEGURANÇA: Se a mesa estiver ocupada e o token for inválido, o invasor NÃO deve ver a rejeição nem o PIN
-            if (session?.status !== 'available' && session?.sessionToken && token !== session.sessionToken) {
-                return res.status(401).json({
-                    message: 'Mesa em Atendimento - Informe o Pin',
-                    pin_required: true
-                });
-            }
-
             return res.json({
                 tableNumber,
                 status: session?.status || 'available',
                 clientName: session?.clientName || null,
-                pin: session?.sessionToken === token ? session?.pin : null, // Só entrega o PIN se for o dono
-                isOwner: session?.sessionToken === token,
+                pin: isOwner ? session?.pin : null,
+                isOwner: isOwner,
                 rejectionMessage: rejectionMessage
             });
         }
 
-        // 4. Se a mesa estiver disponível (ou não houver sessão), criamos uma nova com PIN
+        // 5. Se a mesa estiver disponível ou expirada, permitimos tomar posse
         if (!session || session.status === 'available') {
-            const now = new Date();
-            const STALE_THRESHOLD_MS = 10 * 60 * 1000; // 10 minutos de inatividade em mesa 'available'
-
-            // Se a sessão já existe e tem um token, mas o chamador NÃO é o dono
-            if (session && session.sessionToken && token !== session.sessionToken) {
-                const sessionAge = now.getTime() - new Date(session.startTime).getTime();
-
-                // Se a mesa foi escaneada recentemente (menos de 10 min), bloqueamos o 2º aparelho com PIN
-                if (sessionAge < STALE_THRESHOLD_MS) {
-                    return res.status(401).json({
-                        message: 'Mesa em Atendimento - Informe o Pin',
-                        pin_required: true
-                    });
-                }
-                // Se for velha e sem pedidos, deixamos o novo scan "reiniciar" a mesa (Gera novo token abaixo)
-            }
-
-            const isReturningOwner = session?.sessionToken === token && !!token;
+            const isReturningOwner = isOwner && !!token;
             const pinToSet = isReturningOwner ? (session?.pin || '') : Math.floor(1000 + Math.random() * 9000).toString();
             const tokenToSet = isReturningOwner ? (session?.sessionToken || '') : crypto.randomBytes(32).toString('hex');
-            const startTimeToSet = isReturningOwner ? (session?.startTime || now) : now;
+
+            // Sempre atualizamos o startTime para "renovar" a posse no primeiro scan ou scan de retorno
+            const startTimeToSet = now;
 
             session = await prisma.tableSession.upsert({
                 where: { tableNumber },
@@ -120,14 +115,14 @@ export const verifyTable = async (req: Request, res: Response) => {
             return res.json({
                 tableNumber,
                 status: 'available',
-                pin: null, // Mesmo para o dono, mesa livre não mostra PIN (UX)
+                pin: null,
                 sessionToken: session.sessionToken,
                 isOwner: true,
                 rejectionMessage: null
             });
         }
 
-        // 5. Se estiver ocupada ou fechando conta, verificamos o token
+        // 6. Se estiver em checkout
         if (session.status === 'billing') {
             return res.status(403).json({
                 message: 'Mesa bloqueada: fechamento de conta em andamento.',
@@ -137,13 +132,7 @@ export const verifyTable = async (req: Request, res: Response) => {
             });
         }
 
-        if (session.sessionToken && token !== session.sessionToken) {
-            return res.status(401).json({
-                message: 'Mesa em Atendimento - Informe o Pin',
-                pin_required: true
-            });
-        }
-
+        // 7. Resposta padrão para o dono em mesa ocupada
         res.json({
             tableNumber,
             status: session.status,
