@@ -23,7 +23,8 @@ export const getTableSessions = async (req: Request, res: Response) => {
 
 export const saveTableSession = async (req: Request, res: Response) => {
     const data = req.body;
-    const { items, ...sessionData } = data;
+    // Sanitizar dados: remover campos virtuais do frontend (ex: isSoftRejected) antes de passar para o Prisma
+    const { items, isSoftRejected, ...sessionData } = data;
     console.log('SaveTableSession Request:', { table: data.tableNumber, itemsCount: items?.length });
 
     try {
