@@ -77,7 +77,7 @@ function AppContent() {
       }
 
       setIsValidating(true);
-      const token = localStorage.getItem(`sessionToken_${tableParam}`);
+
       const data = await verifyTable(tableParam);
 
       // Se a mesa for encontrada, limpamos erros anteriores
@@ -104,16 +104,10 @@ function AppContent() {
       // Join the table room for targeted instant updates
       joinTableRoom(Number(tableParam));
 
-      // 1. IF NEW SESSION: Clear ANY finished state and reset locally
-      if ((data as any).isNewSession) {
-        console.log('New session detected - clearing any stale finished state');
+      // Clear finished state if we detect a fresh table
+      if ((data as any).isNewSession || data.status === 'available') {
+        console.log('Table available or new session - clearing finished state');
         updateTerminalState(false);
-      } else {
-        // 2. BACKUP FALLBACK: Only if we are THE EXISTING OWNER and table is now free
-        if (data.status === 'available' && token && Number(data.tableNumber) === Number(tableParam)) {
-          console.log('Finalização detectada via backup (mesa livre com token de dono)');
-          updateTerminalState(true);
-        }
       }
 
       // Only clear finished session if we are actually in an active state now
@@ -157,10 +151,9 @@ function AppContent() {
         updateSessionContext(false, false);
       } else {
         // Se a mesa estiver livre agora mas o usuário tinha um token, significa que a sessão acabou
-        const token = localStorage.getItem(`sessionToken_${tableParam}`);
-        if (token && (err.message?.includes('não autorizada') || err.status === 401)) {
+        const currentToken = localStorage.getItem(`sessionToken_${tableParam}`);
+        if (currentToken && (err.message?.includes('não autorizada') || err.status === 401)) {
           localStorage.removeItem(`sessionToken_${tableParam}`);
-          updateTerminalState(true);
           updateSessionContext(false, false);
         } else {
           // Só exibe erro de mesa se não estivermos exibindo uma tela final
