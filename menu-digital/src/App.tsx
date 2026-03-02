@@ -27,16 +27,25 @@ function AppContent() {
   const [banner, setBanner] = useState<{ message: string; type: 'info' | 'error' | 'success' } | null>(null);
   const [blockingRejection, setBlockingRejection] = useState<{ message: string } | null>(null);
 
-  // Ref para rastrear estados terminais em tempo real e evitar "stale closures"
-  const terminalStateRef = useRef({
-    finished: false
+  // Ref para rastrear estados terminais e propriedade em tempo real (evita "stale closures")
+  const sessionContextRef = useRef({
+    finished: false,
+    isOwner: false,
+    isPinRequired: false,
+    hasToken: !!localStorage.getItem(`sessionToken_${tableParam}`)
   });
 
   // Função centralizada para atualizar estados terminais imediatamente
   const updateTerminalState = useCallback((finished: boolean) => {
-    terminalStateRef.current = { finished };
+    sessionContextRef.current.finished = finished;
     setIsSessionFinished(finished);
   }, []);
+
+  const updateSessionContext = useCallback((isOwner: boolean, isPinRequired: boolean) => {
+    sessionContextRef.current.isOwner = isOwner;
+    sessionContextRef.current.isPinRequired = isPinRequired;
+    sessionContextRef.current.hasToken = !!localStorage.getItem(`sessionToken_${tableParam}`);
+  }, [tableParam]);
 
   // Status da Loja
   const [storeStatus, setStoreStatus] = useState<StoreStatus>({ status: 'online', is_manually_closed: false, next_status_change: null });
@@ -82,6 +91,7 @@ function AppContent() {
       setIsOwner(!!data.isOwner);
       setTableError(null);
       setIsPinRequired(false);
+      updateSessionContext(!!data.isOwner, false);
       setIsValidating(false);
       setIsBilling(data.status === 'billing');
 
@@ -96,31 +106,36 @@ function AppContent() {
         setIsBilling(true);
         setTableError(null);
         setIsPinRequired(false);
+        updateSessionContext(false, false);
       } else if (err.pin_required) {
         setIsPinRequired(true);
         setTableError(null);
         setIsBilling(false);
+        updateSessionContext(false, true);
       } else if (err.message?.includes('Mesa não encontrada') || err.message?.includes('inexistente')) {
         setTableError(err.message);
         setIsBilling(false);
+        updateSessionContext(false, false);
       } else {
         // Se a mesa estiver livre agora mas o usuário tinha um token, significa que a sessão acabou
         const token = localStorage.getItem(`sessionToken_${tableParam}`);
         if (token && (err.message?.includes('não autorizada') || err.status === 401)) {
           localStorage.removeItem(`sessionToken_${tableParam}`);
           updateTerminalState(true);
+          updateSessionContext(false, false);
         } else {
           // Só exibe erro de mesa se não estivermos exibindo uma tela final
-          if (!terminalStateRef.current.finished) {
+          if (!sessionContextRef.current.finished) {
             setTableError(err.message || 'Erro ao validar a mesa.');
           }
+          updateSessionContext(false, false);
         }
         setIsBilling(false);
         setIsPinRequired(false);
       }
       setIsValidating(false);
     }
-  }, [tableParam, updateTerminalState]);
+  }, [tableParam, updateTerminalState, updateSessionContext]);
 
   const handlePinSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -130,6 +145,7 @@ function AppContent() {
       const { sessionToken } = await validatePin(tableParam, pinInput);
       localStorage.setItem(`sessionToken_${tableParam}`, sessionToken);
       setIsPinRequired(false);
+      updateSessionContext(true, false);
       fetchTableData();
     } catch (err: any) {
       setPinError(err.message || 'PIN incorreto');
@@ -143,7 +159,7 @@ function AppContent() {
 
     const intervalId = setInterval(() => {
       // Usamos a ref para garantir que o setInterval leia o valor MAIS RECENTE sem precisar recriar o hook
-      if (!terminalStateRef.current.finished) {
+      if (!sessionContextRef.current.finished) {
         fetchTableData();
       }
       fetchStatus();
@@ -156,6 +172,11 @@ function AppContent() {
       if (Number(data.tableNumber) === targetTable) {
         // 0. Handle Atomic Rejection Flag
         if (data.rejectionMessage) {
+          // Só processa a mensagem de rejeição se for o dono da sessão (tem token válido)
+          if (!sessionContextRef.current.isOwner) {
+            console.log('Ignoring rejection for non-owner device');
+            return;
+          }
           console.log('Atomic Rejection detected in status update:', data.rejectionMessage);
           setBlockingRejection({ message: data.rejectionMessage });
           setIsBilling(false);
@@ -165,6 +186,9 @@ function AppContent() {
 
         // 1. Handle Immediate Billing Transition
         if (data.status === 'billing') {
+          // Só processa se for o dono da mesa
+          if (!sessionContextRef.current.isOwner) return;
+
           setIsBilling(true);
           setTableError(null);
           setIsPinRequired(false);
@@ -200,6 +224,11 @@ function AppContent() {
       const incomingTable = Number(data.tableNumber);
 
       if (incomingTable === targetTable) {
+        // Só processa o cancelamento se for o dono da mesa
+        if (!sessionContextRef.current.isOwner) {
+          console.log('Ignoring cancellation for non-owner device');
+          return;
+        }
         setBlockingRejection({ message: data.message || "Pedido Rejeitado, dúvidas pergunte ao Garçom" });
         setIsBilling(false);
         setIsPinRequired(false);
