@@ -232,8 +232,15 @@ function AppContent() {
           setCurrentPin(null);
           setIsOwner(false);
           setIsPinRequired(false);
-          // Triggers "Thank You" screen
-          updateTerminalState(true);
+
+          // CRITICAL: Only trigger "Thank You" if this device was part of the session
+          const hasToken = !!localStorage.getItem(`sessionToken_${tableParam}`);
+          if (hasToken) {
+            updateTerminalState(true);
+          } else {
+            updateTerminalState(false);
+            fetchTableData();
+          }
           return;
         }
 
@@ -273,7 +280,15 @@ function AppContent() {
         setCurrentPin(null);
         setIsOwner(false);
         setIsPinRequired(false);
-        updateTerminalState(true);
+
+        // CRITICAL: Only trigger "Thank You" if this device was part of the session
+        const hasToken = !!localStorage.getItem(`sessionToken_${tableParam}`);
+        if (hasToken) {
+          updateTerminalState(true);
+        } else {
+          updateTerminalState(false);
+          fetchTableData();
+        }
       }
     };
 
@@ -487,7 +502,9 @@ function AppContent() {
                 onClick={() => {
                   localStorage.removeItem(`sessionToken_${tableParam}`);
                   updateTerminalState(false);
-                  window.location.reload();
+                  setTableError(null);
+                  setBlockingRejection(null);
+                  fetchTableData();
                 }}
                 className="group relative w-full overflow-hidden bg-white text-slate-900 font-black py-6 rounded-[2rem] transition-all hover:scale-105 active:scale-95 shadow-[0_15px_30px_rgba(255,255,255,0.1)]"
               >
