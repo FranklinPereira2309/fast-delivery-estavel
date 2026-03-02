@@ -565,7 +565,21 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings, onReset }) =
                             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Credenciais para emissão de NFC-e (Nota Fiscal de Consumidor Eletrônica)</p>
                         </div>
                         <form onSubmit={handleSaveSettings} className="space-y-8">
-                            <div className="grid grid-cols-2 gap-8">
+                            <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100 flex items-center justify-between mb-8">
+                                <div>
+                                    <h4 className="text-[12px] font-black text-slate-800 uppercase tracking-widest">Habilitar Opção de NFC-e no PDV</h4>
+                                    <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase">Quando desativado, o sistema emitirá apenas o cupom simples padrão.</p>
+                                </div>
+                                <button
+                                    type="button"
+                                    className={`w-14 h-8 rounded-full transition-all relative ${settings.enableNfcEmission ? 'bg-emerald-500' : 'bg-slate-200'}`}
+                                    onClick={() => setSettings({ ...settings, enableNfcEmission: !settings.enableNfcEmission })}
+                                >
+                                    <div className={`absolute top-1 w-6 h-6 rounded-full bg-white transition-all ${settings.enableNfcEmission ? 'left-7' : 'left-1'}`}></div>
+                                </button>
+                            </div>
+
+                            <div className={`grid grid-cols-2 gap-8 ${!settings.enableNfcEmission ? 'opacity-40 pointer-events-none' : ''}`}>
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Inscrição Estadual (IE)</label>
                                     <input type="text" className="w-full p-4 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-blue-50 transition-all font-bold text-sm" value={settings.ie || ''} onChange={e => setSettings({ ...settings, ie: e.target.value })} placeholder="Isento ou Número da IE" />

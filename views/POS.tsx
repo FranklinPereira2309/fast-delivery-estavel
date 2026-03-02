@@ -366,7 +366,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
         let nfeData: any = undefined;
         let currentOrderData = null;
 
-        if (emitNfce) {
+        if (emitNfce && businessSettings?.enableNfcEmission) {
           nfeData = {
             nfeStatus: 'EMITTED',
             nfeNumber: `NFC-${Date.now()}`,
@@ -444,6 +444,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
     setCurrentPaymentAmount(cartTotal.toFixed(2));
     setPaymentMethod('DINHEIRO');
     setPaymentData({ receivedAmount: '' });
+    setEmitNfce(false);
 
     setIsPaymentModalOpen(true);
   };
@@ -535,9 +536,9 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       tableNumber: isTableSale ? finalTableNum! : undefined,
       waiterId: isTableSale ? orders.find(o => o.id === existingTableOrderId)?.waiterId : undefined,
       isOriginDigitalMenu: isTableSale ? (tableSessionToClose?.isOriginDigitalMenu || false) : false,
-      nfeStatus: emitNfce ? 'EMITTED' : undefined,
-      nfeNumber: emitNfce ? `NFC-${Date.now()}` : undefined,
-      nfeUrl: emitNfce ? `https://sefaz.gov.br/nfce/qrcode?p=${Date.now()}` : undefined,
+      nfeStatus: (emitNfce && businessSettings?.enableNfcEmission) ? 'EMITTED' : undefined,
+      nfeNumber: (emitNfce && businessSettings?.enableNfcEmission) ? `NFC-${Date.now()}` : undefined,
+      nfeUrl: (emitNfce && businessSettings?.enableNfcEmission) ? `https://sefaz.gov.br/nfce/qrcode?p=${Date.now()}` : undefined,
       splitAmount1: payments.length > 1 ? payments[0].amount : undefined,
       appliedServiceFee: (saleType === SaleType.TABLE && businessSettings?.serviceFeeStatus && isServiceFeeAccepted) ? (cart.reduce((acc, item) => acc + (item.price * item.quantity), 0) * (businessSettings.serviceFeePercentage || 10) / 100) : 0
     };
@@ -1010,20 +1011,22 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
             </div>
 
             <div className={`p-4 bg-white border-t border-slate-100 shrink-0 flex flex-col gap-3`}>
-              <div className="flex items-center justify-between px-5 py-2.5 bg-slate-50 rounded-2xl border border-slate-100">
-                <div className="flex items-center gap-2">
-                  <Icons.View className="w-4 h-4 text-blue-600" />
-                  <div>
-                    <p className="text-[9px] font-black uppercase tracking-tight">Emitir NFC-e Fiscal?</p>
+              {businessSettings?.enableNfcEmission && (
+                <div className="flex items-center justify-between px-5 py-2.5 bg-slate-50 rounded-2xl border border-slate-100">
+                  <div className="flex items-center gap-2">
+                    <Icons.View className="w-4 h-4 text-blue-600" />
+                    <div>
+                      <p className="text-[9px] font-black uppercase tracking-tight">Emitir NFC-e Fiscal?</p>
+                    </div>
                   </div>
+                  <button
+                    onClick={() => setEmitNfce(!emitNfce)}
+                    className={`w-10 h-5 rounded-full transition-all relative ${emitNfce ? 'bg-emerald-600 ring-4 ring-emerald-500/20' : 'bg-slate-200'}`}
+                  >
+                    <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all ${emitNfce ? 'left-5.5' : 'left-0.5'}`}></div>
+                  </button>
                 </div>
-                <button
-                  onClick={() => setEmitNfce(!emitNfce)}
-                  className={`w-10 h-5 rounded-full transition-all relative ${emitNfce ? 'bg-emerald-600 ring-4 ring-emerald-500/20' : 'bg-slate-200'}`}
-                >
-                  <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all ${emitNfce ? 'left-5.5' : 'left-0.5'}`}></div>
-                </button>
-              </div>
+              )}
 
               <button
                 onClick={processPaymentAndFinalize}

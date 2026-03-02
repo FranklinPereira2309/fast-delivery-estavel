@@ -80,6 +80,7 @@ export interface BusinessSettings {
   cscId?: string;
   cscToken?: string;
   isNfeProduction?: boolean;
+  enableNfcEmission?: boolean;
 }
 
 export interface Waiter {

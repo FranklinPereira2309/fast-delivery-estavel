@@ -274,6 +274,12 @@ model BusinessSettings {
   maxChange       Float  @default(191)
   serviceFeeStatus Boolean @default(true)
   serviceFeePercentage Float @default(10)
+  // NFC-e Fields
+  ie              String?
+  cscId           String?
+  cscToken        String?
+  isNfeProduction Boolean @default(false)
+  enableNfcEmission Boolean @default(false)
 }
 
 model ChatMessage {

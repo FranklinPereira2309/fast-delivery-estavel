@@ -16,6 +16,12 @@ export interface BusinessSettings {
   isManuallyClosed: boolean;
   operatingHours: string;
   maxChange?: number;
+  // NFC-e Fields
+  ie?: string;
+  cscId?: string;
+  cscToken?: string;
+  isNfeProduction?: boolean;
+  enableNfcEmission: boolean;
 }
 
 
@@ -29,7 +35,8 @@ const DEFAULT_SETTINGS: BusinessSettings = {
   geofenceRadius: 30,
   isManuallyClosed: false,
   operatingHours: '[]',
-  maxChange: 191
+  maxChange: 191,
+  enableNfcEmission: false
 };
 
 class APIDBService {
