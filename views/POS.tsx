@@ -87,6 +87,12 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
     others: '',
     observations: ''
   });
+  const [systemPreview, setSystemPreview] = useState<{
+    cash: number;
+    pix: number;
+    credit: number;
+    debit: number;
+  } | null>(null);
 
   const showAlert = (title: string, message: string, type: 'INFO' | 'DANGER' | 'SUCCESS' = 'INFO') => {
     setAlertConfig({ isOpen: true, title, message, onConfirm: () => setAlertConfig(prev => ({ ...prev, isOpen: false })), type });
@@ -581,7 +587,8 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
     setCurrentPaymentAmount('');
     setPaymentMethod('DINHEIRO');
     setPaymentData({ receivedAmount: '' });
-    setEmitNfce(false); // This line was not removed by the instruction, but it was implicitly removed by the provided snippet. I'll keep it as it was not explicitly removed.
+    setEmitNfce(false);
+    setSystemPreview(null);
   };
 
   const handleOpenCash = async () => {
@@ -612,14 +619,13 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
 
     try {
       const preview = await db.getClosurePreview();
-      setClosingReport({
-        cash: preview.systemCash.toString(),
-        pix: preview.systemPix.toString(),
-        credit: preview.systemCredit.toString(),
-        debit: preview.systemDebit.toString(),
-        observations: closingReport.observations
+      setSystemPreview({
+        cash: preview.systemCash,
+        pix: preview.systemPix,
+        credit: preview.systemCredit,
+        debit: preview.systemDebit
       });
-      showAlert("Relatório Gerado", "Os campos foram preenchidos com os valores calculados pelo sistema.", "INFO");
+      showAlert("Relatório Gerado", "Os valores calculados pelo sistema estão disponíveis para conferência.", "INFO");
     } catch (e: any) {
       showAlert("Erro", e.message || "Erro ao carregar prévia do sistema.", "DANGER");
     }
@@ -629,8 +635,9 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
     if (!activeCashSession) return;
 
     if (closingMode === 'SYSTEM') {
-      if (!currentUser.permissions.includes('admin') || adminPassword !== currentUser.password) {
-        return showAlert("Autorização Negada", "O fechamento pelo sistema exige senha de Admin Master.", "DANGER");
+      const isValidAdmin = await db.verifyAdminPassword(adminPassword);
+      if (!isValidAdmin) {
+        return showAlert("Autorização Negada", "O fechamento pelo sistema exige uma senha válida de Admin Master.", "DANGER");
       }
     }
 
@@ -1397,7 +1404,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
             ) : (
               <div className="flex flex-col gap-2">
                 <button
-                  onClick={() => setIsOpeningModalOpen(true)}
+                  onClick={() => { setIsOpeningModalOpen(true); setAdminPassword(''); setSystemPreview(null); }}
                   className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2 group"
                 >
                   <Icons.Dashboard className="w-3 h-3 group-hover:rotate-12 transition-transform" />
@@ -1897,141 +1904,179 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       {/* MODAL DE FECHAMENTO DE CAIXA */}
       {
         isClosingModalOpen && (
-          <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/90 backdrop-blur-xl animate-in fade-in duration-300">
-            <div className="bg-white w-[460px] rounded-[3rem] shadow-2xl border border-slate-100 p-6 lg:p-8 max-h-[90vh] overflow-y-auto">
-              <div className="text-center mb-6">
-                <div className="w-16 h-16 bg-orange-50 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl">💰</div>
-                <h2 className="text-xl font-black text-slate-800 uppercase tracking-tighter">Fechamento de Caixa</h2>
-                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Confirme os valores para encerrar</p>
+          <div className="fixed inset-0 z-[300] flex items-center justify-center bg-slate-900/95 backdrop-blur-xl animate-in fade-in duration-300">
+            <div className="bg-white w-[500px] max-w-[95vw] rounded-[3rem] shadow-2xl border border-slate-100 flex flex-col max-h-[95vh] relative overflow-hidden">
+              <div className="p-8 border-b border-slate-50 shrink-0 relative bg-slate-50/50">
+                <button
+                  onClick={() => { setIsClosingModalOpen(false); setAdminPassword(''); setSystemPreview(null); }}
+                  className="absolute right-6 top-6 w-10 h-10 flex items-center justify-center bg-white rounded-full text-slate-400 hover:bg-red-50 hover:text-red-500 transition-all font-black text-xl z-20 shadow-sm"
+                >
+                  ×
+                </button>
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-orange-100 rounded-[1.5rem] flex items-center justify-center mx-auto mb-4 text-2xl shadow-inner">💰</div>
+                  <h2 className="text-2xl font-black text-slate-800 uppercase tracking-tighter">Fechamento de Caixa</h2>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Confira os valores para encerrar o expediente</p>
+                </div>
               </div>
 
-              <div className="flex gap-1.5 bg-slate-100 p-1 rounded-2xl mb-6">
-                <button
-                  onClick={() => setClosingMode('MANUAL')}
-                  className={`flex-1 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${closingMode === 'MANUAL' ? 'bg-white text-orange-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
-                >
-                  MANUAL
-                </button>
-                <button
-                  onClick={() => setClosingMode('SYSTEM')}
-                  className={`flex-1 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${closingMode === 'SYSTEM' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
-                >
-                  PELO SISTEMA
-                </button>
+              <div className="flex-1 overflow-y-auto p-8 space-y-6 custom-scrollbar">
+                <div className="flex gap-2 bg-slate-100/80 p-1.5 rounded-2xl">
+                  <button
+                    onClick={() => { setClosingMode('MANUAL'); setSystemPreview(null); }}
+                    className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${closingMode === 'MANUAL' ? 'bg-white text-orange-600 shadow-md' : 'text-slate-400 hover:text-slate-600'}`}
+                  >
+                    Lançamento Manual
+                  </button>
+                  <button
+                    onClick={() => setClosingMode('SYSTEM')}
+                    className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${closingMode === 'SYSTEM' ? 'bg-white text-blue-600 shadow-md' : 'text-slate-400 hover:text-slate-600'}`}
+                  >
+                    Pelo Sistema
+                  </button>
+                </div>
+
+                {closingMode === 'SYSTEM' && (
+                  <div className="p-5 bg-blue-50/50 rounded-3xl border-2 border-dashed border-blue-200 animate-in slide-in-from-top-4 duration-500">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center font-black text-lg shadow-lg shadow-blue-200">!</div>
+                      <div>
+                        <p className="text-[10px] font-black text-blue-800 uppercase tracking-tight">Autorização Necessária</p>
+                        <p className="text-[8px] font-bold text-blue-400 uppercase">Apenas Admin Master pode autorizar</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <input
+                        type="password"
+                        placeholder="Senha do Administrador"
+                        value={adminPassword}
+                        onChange={e => setAdminPassword(e.target.value)}
+                        className="flex-1 p-4 bg-white border-2 border-blue-100 rounded-2xl text-xs font-black outline-none focus:border-blue-600 shadow-sm transition-all"
+                      />
+                      <button
+                        onClick={handleSystemPreview}
+                        className="px-6 bg-blue-600 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-blue-700 transition-all shadow-xl active:scale-95"
+                      >
+                        GERAR
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {systemPreview && (
+                  <div className="grid grid-cols-2 gap-4 bg-emerald-50/50 p-5 rounded-3xl border border-emerald-100 animate-in zoom-in-95 duration-300">
+                    <div className="col-span-2 mb-2">
+                      <p className="text-[9px] font-black text-emerald-600 uppercase tracking-widest text-center">Valores Calculados pelo Sistema</p>
+                    </div>
+                    {[
+                      { label: 'Dinheiro', val: systemPreview.cash },
+                      { label: 'PIX', val: systemPreview.pix },
+                      { label: 'Crédito', val: systemPreview.credit },
+                      { label: 'Débito', val: systemPreview.debit }
+                    ].map(item => (
+                      <div key={item.label} className="bg-white p-3 rounded-2xl border border-emerald-100 shadow-sm">
+                        <p className="text-[8px] font-black text-slate-400 uppercase mb-1">{item.label}</p>
+                        <p className="text-sm font-black text-emerald-700">R$ {item.val.toFixed(2)}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Dinheiro (R$)</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        placeholder="0,00"
+                        value={closingReport.cash}
+                        onChange={(e) => setClosingReport(prev => ({ ...prev, cash: e.target.value }))}
+                        className="w-full p-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-orange-500 outline-none font-black text-lg text-center shadow-sm transition-all"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">PIX (R$)</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        placeholder="0,00"
+                        value={closingReport.pix}
+                        onChange={(e) => setClosingReport(prev => ({ ...prev, pix: e.target.value }))}
+                        className="w-full p-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-orange-500 outline-none font-black text-lg text-center shadow-sm transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Crédito (R$)</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        placeholder="0,00"
+                        value={closingReport.credit}
+                        onChange={(e) => setClosingReport(prev => ({ ...prev, credit: e.target.value }))}
+                        className="w-full p-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-orange-500 outline-none font-black text-lg text-center shadow-sm transition-all"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Débito (R$)</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        placeholder="0,00"
+                        value={closingReport.debit}
+                        onChange={(e) => setClosingReport(prev => ({ ...prev, debit: e.target.value }))}
+                        className="w-full p-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-orange-500 outline-none font-black text-lg text-center shadow-sm transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-[9px] font-black text-emerald-700 uppercase tracking-widest ml-1">Outros (R$)</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        placeholder="0,00"
+                        value={closingReport.others}
+                        onChange={(e) => setClosingReport(prev => ({ ...prev, others: e.target.value }))}
+                        className="w-full p-4 bg-emerald-50 rounded-2xl border-2 border-emerald-100 focus:border-emerald-500 outline-none font-black text-lg text-center text-emerald-600 shadow-sm transition-all"
+                      />
+                    </div>
+                    <div className="space-y-1 text-right pt-4 flex flex-col justify-end">
+                      <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest">Total Informado</p>
+                      <p className="text-2xl font-black text-slate-700 tracking-tighter">R$ {(Number(closingReport.cash || 0) + Number(closingReport.pix || 0) + Number(closingReport.credit || 0) + Number(closingReport.debit || 0) + Number(closingReport.others || 0)).toFixed(2)}</p>
+                    </div>
+                  </div>
+
+                  <div className="pt-2">
+                    <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1 mb-1 block">Notas / Observações</label>
+                    <textarea
+                      placeholder="Alguma observação relevante sobre o fechamento..."
+                      value={closingReport.observations}
+                      onChange={(e) => setClosingReport(prev => ({ ...prev, observations: e.target.value }))}
+                      className="w-full p-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-orange-500 outline-none font-bold text-xs custom-scrollbar"
+                      rows={2}
+                    />
+                  </div>
+                </div>
               </div>
 
-              {closingMode === 'SYSTEM' && (
-                <div className="mb-6 p-4 bg-blue-50/50 rounded-2xl border-2 border-dashed border-blue-200 animate-in slide-in-from-top-2">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-8 h-8 bg-blue-600 text-white rounded-lg flex items-center justify-center font-black text-xs">!</div>
-                    <p className="text-[9px] font-black text-blue-800 uppercase tracking-tight leading-tight">Autorização Admin Master Necessária</p>
-                  </div>
-                  <div className="flex gap-2">
-                    <input
-                      type="password"
-                      placeholder="Senha do Admin"
-                      value={adminPassword}
-                      onChange={e => setAdminPassword(e.target.value)}
-                      className="flex-1 p-3 bg-white border border-blue-100 rounded-xl text-xs font-black outline-none focus:border-blue-600 shadow-sm"
-                    />
-                    <button
-                      onClick={handleSystemPreview}
-                      className="px-4 bg-blue-600 text-white rounded-xl font-black uppercase text-[9px] tracking-widest hover:bg-blue-700 transition-all shadow-md"
-                    >
-                      GERAR
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest ml-1">Dinheiro (R$)</label>
-                    <input
-                      type="text"
-                      placeholder="0,00"
-                      value={closingReport.cash}
-                      onChange={(e) => setClosingReport(prev => ({ ...prev, cash: e.target.value.replace(',', '.') }))}
-                      className="w-full p-4 bg-slate-50 rounded-xl border border-slate-100 focus:border-orange-500 outline-none font-black text-base text-center shadow-sm"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest ml-1">PIX (R$)</label>
-                    <input
-                      type="text"
-                      placeholder="0,00"
-                      value={closingReport.pix}
-                      onChange={(e) => setClosingReport(prev => ({ ...prev, pix: e.target.value.replace(',', '.') }))}
-                      className="w-full p-4 bg-slate-50 rounded-xl border border-slate-100 focus:border-orange-500 outline-none font-black text-base text-center shadow-sm"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest ml-1">Crédito (R$)</label>
-                    <input
-                      type="text"
-                      placeholder="0,00"
-                      value={closingReport.credit}
-                      onChange={(e) => setClosingReport(prev => ({ ...prev, credit: e.target.value.replace(',', '.') }))}
-                      className="w-full p-4 bg-slate-50 rounded-xl border border-slate-100 focus:border-orange-500 outline-none font-black text-base text-center shadow-sm"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest ml-1">Débito (R$)</label>
-                    <input
-                      type="text"
-                      placeholder="0,00"
-                      value={closingReport.debit}
-                      onChange={(e) => setClosingReport(prev => ({ ...prev, debit: e.target.value.replace(',', '.') }))}
-                      className="w-full p-4 bg-slate-50 rounded-xl border border-slate-100 focus:border-orange-500 outline-none font-black text-base text-center shadow-sm"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest ml-1">Outros (R$)</label>
-                    <input
-                      type="text"
-                      placeholder="0,00"
-                      value={closingReport.others}
-                      onChange={(e) => setClosingReport(prev => ({ ...prev, others: e.target.value.replace(',', '.') }))}
-                      className="w-full p-4 bg-slate-50 rounded-xl border border-emerald-50 focus:border-emerald-500 outline-none font-black text-base text-center text-emerald-600 shadow-sm"
-                    />
-                  </div>
-                  <div className="space-y-1 text-right pt-4">
-                    <p className="text-[8px] font-black text-slate-300 uppercase">Total Estimado</p>
-                    <p className="text-xl font-black text-slate-700">R$ {(Number(closingReport.cash || 0) + Number(closingReport.pix || 0) + Number(closingReport.credit || 0) + Number(closingReport.debit || 0) + Number(closingReport.others || 0)).toFixed(2)}</p>
-                  </div>
-                </div>
-
-                <div>
-                  <textarea
-                    placeholder="Notas / Observações"
-                    value={closingReport.observations}
-                    onChange={(e) => setClosingReport(prev => ({ ...prev, observations: e.target.value }))}
-                    className="w-full p-3 bg-slate-50 rounded-xl border border-slate-100 focus:border-orange-500 outline-none font-bold text-[10px]"
-                    rows={1}
-                  />
-                </div>
-
-                <div className="flex gap-2 pt-2">
-                  <button
-                    onClick={() => setIsClosingModalOpen(false)}
-                    className="flex-1 py-4 font-black uppercase text-[9px] text-slate-400 hover:text-slate-600 transition-colors"
-                  >
-                    CANCELAR
-                  </button>
-                  <button
-                    onClick={handleCloseCash}
-                    className="flex-[2] py-4 bg-orange-600 hover:bg-orange-700 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg transition-all active:scale-95"
-                  >
-                    ENCERRAR CAIXA ✓
-                  </button>
-                </div>
+              <div className="p-8 bg-slate-50 border-t border-slate-100 shrink-0 flex gap-4">
+                <button
+                  onClick={() => { setIsClosingModalOpen(false); setAdminPassword(''); setSystemPreview(null); }}
+                  className="flex-1 py-5 font-black uppercase text-[10px] tracking-widest text-slate-400 hover:text-slate-600 transition-all active:scale-95"
+                >
+                  CANCELAR
+                </button>
+                <button
+                  onClick={handleCloseCash}
+                  className="flex-[2] py-5 bg-orange-600 hover:bg-orange-700 text-white rounded-[1.5rem] font-black uppercase text-xs tracking-widest shadow-xl shadow-orange-100 transition-all active:scale-95 flex items-center justify-center gap-3"
+                >
+                  ENCERRAR CAIXA ✓
+                </button>
               </div>
             </div>
           </div>
