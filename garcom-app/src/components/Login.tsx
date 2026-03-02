@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { db } from '../api';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Lock, Mail, Key } from 'lucide-react';
 import type { User } from '../types';
 
 interface LoginProps {
@@ -15,55 +15,75 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
-    const [view, setView] = useState<'LOGIN' | 'FORGOT' | 'RESET' | 'CODE_DISPLAY'>('LOGIN');
+    const [view, setView] = useState<'LOGIN' | 'FORGOT' | 'RESET'>('LOGIN');
+    const [loading, setLoading] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
+        setLoading(true);
         try {
-            const user = await db.login(email, password);
+            // Validate in lowercase
+            const user = await db.login(email.toLowerCase().trim(), password);
             onLoginSuccess(user);
         } catch (err: any) {
             setError(err.message || 'E-mail ou senha incorretos.');
+        } finally {
+            setLoading(false);
         }
     };
 
     const handleForgot = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
-        const isValid = await db.verifyRecoveryCode(email, recoveryCode);
-        if (isValid) setView('RESET');
-        else setError('E-mail ou Código de Recuperação inválidos.');
+        setLoading(true);
+        try {
+            const isValid = await db.verifyRecoveryCode(email.toLowerCase().trim(), recoveryCode.toLowerCase().trim());
+            if (isValid) setView('RESET');
+            else setError('E-mail ou Código de Recuperação inválidos.');
+        } catch (err: any) {
+            setError('Erro ao validar código.');
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleReset = async (e: React.FormEvent) => {
         e.preventDefault();
+        setError('');
         if (newPassword !== confirmPassword) return setError('As senhas não coincidem.');
+        setLoading(true);
         try {
-            await db.resetPassword({ email, recoveryCode, newPassword });
+            await db.resetPassword({
+                email: email.toLowerCase().trim(),
+                recoveryCode: recoveryCode.toLowerCase().trim(),
+                newPassword
+            });
             alert('Senha alterada com sucesso!');
             setView('LOGIN');
         } catch (err: any) {
             setError(err.message || 'Erro ao redefinir senha.');
+        } finally {
+            setLoading(false);
         }
     };
 
     return (
-        <div className="min-h-screen w-full flex items-center justify-center bg-slate-900 p-6">
-            <div className="w-full max-w-sm">
-                <div className="glass p-8 rounded-[2rem] shadow-2xl">
+        <div className="min-h-screen w-full flex items-center justify-center bg-slate-50 p-6 font-sans">
+            <div className="w-full max-w-md animate-fade-in">
+                <div className="bg-white p-10 rounded-[3rem] shadow-xl shadow-slate-200/50 border border-slate-100">
                     <div className="flex flex-col items-center mb-10 text-center">
-                        <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center shadow-xl shadow-blue-500/20 mb-4 transform -rotate-6">
-                            <span className="text-white text-3xl font-black italic">W</span>
+                        <div className="w-20 h-20 bg-blue-600 rounded-[2rem] flex items-center justify-center shadow-2xl shadow-blue-500/30 mb-6 transform -rotate-6 transition-transform hover:rotate-0 duration-500">
+                            <span className="text-white text-4xl font-black italic tracking-tighter">DF</span>
                         </div>
-                        <h1 className="text-2xl font-black text-white tracking-tight uppercase">App Garçom</h1>
-                        <p className="text-slate-400 text-[10px] font-bold mt-2 tracking-widest uppercase">
-                            {view === 'LOGIN' ? 'Delivery Fast Service' : 'Recuperação de Acesso'}
+                        <h1 className="text-3xl font-black text-slate-900 tracking-tighter uppercase leading-none">App Garçom</h1>
+                        <p className="text-slate-400 text-[10px] font-black mt-3 tracking-[0.2em] uppercase">
+                            {view === 'LOGIN' ? 'Painel Administrativo' : 'Recuperação de Acesso'}
                         </p>
                     </div>
 
                     {error && (
-                        <div className="p-4 mb-6 bg-red-500/20 border border-red-500/50 text-red-200 text-xs font-bold rounded-xl text-center animate-in slide-in-from-top-2">
+                        <div className="p-4 mb-8 bg-red-50 border border-red-100 text-red-600 text-xs font-black rounded-2xl text-center animate-pulse-subtle uppercase tracking-tight">
                             {error}
                         </div>
                     )}
@@ -71,43 +91,55 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                     {view === 'LOGIN' && (
                         <form onSubmit={handleSubmit} className="space-y-6">
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase ml-1 tracking-widest">E-mail</label>
-                                <input
-                                    type="email"
-                                    required
-                                    placeholder="Seu e-mail corporativo"
-                                    className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl focus:ring-2 focus:ring-blue-500 transition-all text-white font-medium outline-none text-sm"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                />
+                                <label className="text-[10px] font-black text-slate-400 uppercase ml-4 tracking-widest">E-mail Corporativo</label>
+                                <div className="relative group">
+                                    <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-blue-500 transition-colors">
+                                        <Mail size={18} />
+                                    </div>
+                                    <input
+                                        type="email"
+                                        required
+                                        placeholder="seu@email.com"
+                                        className="w-full pl-14 pr-6 py-5 bg-slate-50 border-none rounded-[2rem] focus:ring-2 focus:ring-blue-500/20 transition-all text-slate-700 font-bold outline-none text-sm placeholder-slate-300"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value.toLowerCase())}
+                                    />
+                                </div>
                             </div>
 
                             <div className="space-y-2">
-                                <div className="flex justify-between items-center ml-1">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Senha</label>
-                                    <button type="button" onClick={() => setView('FORGOT')} className="text-[9px] text-blue-400 font-black hover:text-blue-300">ESQUECEU?</button>
+                                <div className="flex justify-between items-center px-4">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Sua Senha</label>
+                                    <button type="button" onClick={() => setView('FORGOT')} className="text-[10px] text-blue-600 font-black hover:text-blue-700 uppercase tracking-widest">Esqueceu?</button>
                                 </div>
                                 <div className="relative group">
+                                    <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-blue-500 transition-colors">
+                                        <Lock size={18} />
+                                    </div>
                                     <input
                                         type={showPassword ? "text" : "password"}
                                         required
                                         placeholder="••••••••"
-                                        className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl focus:ring-2 focus:ring-blue-500 transition-all text-white font-medium outline-none text-sm pr-12"
+                                        className="w-full pl-14 pr-14 py-5 bg-slate-50 border-none rounded-[2rem] focus:ring-2 focus:ring-blue-500/20 transition-all text-slate-700 font-bold outline-none text-sm placeholder-slate-300"
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
                                     />
                                     <button
                                         type="button"
                                         onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-blue-400 transition-colors"
+                                        className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600 transition-colors"
                                     >
-                                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                        {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                                     </button>
                                 </div>
                             </div>
 
-                            <button type="submit" className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-2xl shadow-lg shadow-blue-900/40 transition-all active:scale-[0.98] uppercase text-xs tracking-widest">
-                                Acessar Painel
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="w-full py-5 bg-slate-900 hover:bg-black text-white font-black rounded-[2rem] shadow-xl shadow-slate-900/20 transition-all active:scale-[0.98] disabled:opacity-50 uppercase text-[11px] tracking-[0.2em]"
+                            >
+                                {loading ? 'Autenticando...' : 'Entrar no Sistema'}
                             </button>
                         </form>
                     )}
@@ -115,32 +147,46 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                     {view === 'FORGOT' && (
                         <form onSubmit={handleForgot} className="space-y-6">
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase ml-1">E-mail</label>
-                                <input type="email" required className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl text-white outline-none text-sm" value={email} onChange={(e) => setEmail(e.target.value)} />
+                                <label className="text-[10px] font-black text-slate-400 uppercase ml-4 tracking-widest">Confirme seu E-mail</label>
+                                <div className="relative">
+                                    <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300">
+                                        <Mail size={18} />
+                                    </div>
+                                    <input type="email" required className="w-full pl-14 pr-6 py-5 bg-slate-50 border-none rounded-[2rem] text-slate-700 font-bold outline-none text-sm" value={email} onChange={(e) => setEmail(e.target.value.toLowerCase())} />
+                                </div>
                             </div>
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase ml-1">Código de Recuperação</label>
-                                <input type="text" required maxLength={6} className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl text-white text-center font-black tracking-widest outline-none uppercase" value={recoveryCode} onChange={(e) => setRecoveryCode(e.target.value.toUpperCase())} />
+                                <label className="text-[10px] font-black text-slate-400 uppercase ml-4 tracking-widest">Código pessoal (6 dígitos)</label>
+                                <div className="relative">
+                                    <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300">
+                                        <Key size={18} />
+                                    </div>
+                                    <input type="text" required maxLength={6} className="w-full pl-14 pr-6 py-5 bg-slate-50 border-none rounded-[2rem] text-slate-700 font-black tracking-[0.5em] outline-none uppercase text-center" value={recoveryCode} onChange={(e) => setRecoveryCode(e.target.value.toLowerCase())} />
+                                </div>
                             </div>
-                            <button type="submit" className="w-full py-4 bg-blue-600 text-white font-black rounded-2xl uppercase text-xs tracking-widest">Validar</button>
-                            <button type="button" onClick={() => setView('LOGIN')} className="w-full text-slate-400 text-[10px] font-black uppercase">Voltar</button>
+                            <button type="submit" disabled={loading} className="w-full py-5 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-[2rem] shadow-xl shadow-blue-500/30 uppercase text-[11px] tracking-widest">Validar Acesso</button>
+                            <button type="button" onClick={() => setView('LOGIN')} className="w-full text-slate-400 text-[10px] font-black uppercase tracking-widest hover:text-slate-600 transition-colors">Voltar ao Início</button>
                         </form>
                     )}
 
                     {view === 'RESET' && (
                         <form onSubmit={handleReset} className="space-y-6">
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase ml-1">Nova Senha</label>
-                                <input type="password" required className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl text-white outline-none text-sm" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
+                                <label className="text-[10px] font-black text-slate-400 uppercase ml-4">Crie uma Nova Senha</label>
+                                <input type="password" required className="w-full p-5 bg-slate-50 border-none rounded-[2rem] text-slate-700 font-bold outline-none text-sm" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
                             </div>
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase ml-1">Confirmar Senha</label>
-                                <input type="password" required className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl text-white outline-none text-sm" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
+                                <label className="text-[10px] font-black text-slate-400 uppercase ml-4">Confirme a Nova Senha</label>
+                                <input type="password" required className="w-full p-5 bg-slate-50 border-none rounded-[2rem] text-slate-700 font-bold outline-none text-sm" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
                             </div>
-                            <button type="submit" className="w-full py-4 bg-emerald-600 text-white font-black rounded-2xl uppercase text-xs tracking-widest">Salvar Nova Senha</button>
+                            <button type="submit" disabled={loading} className="w-full py-5 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-[2rem] shadow-xl shadow-emerald-500/30 uppercase text-[11px] tracking-widest">Salvar Alterações</button>
                         </form>
                     )}
                 </div>
+
+                <p className="text-center mt-10 text-slate-400 text-[9px] font-black uppercase tracking-[0.3em]">
+                    Copyright © 2026 • DF Service System
+                </p>
             </div>
         </div>
     );
