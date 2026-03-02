@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { TableSession, Product } from '../types';
 import { db } from '../api';
-import { X, Search, ShoppingCart, CheckCircle2, AlertCircle, Trash2, Plus, Minus, ArrowRight } from 'lucide-react';
+import { X, Search, ShoppingCart, CheckCircle2, AlertCircle, Trash2, Plus, Minus, ArrowRight, LayoutGrid, RefreshCw } from 'lucide-react';
 
 interface TableDetailsProps {
     table: TableSession;
@@ -232,29 +232,56 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, onClose, onRefresh }
                             </div>
 
                             <div className="space-y-3">
-                                {filteredProducts.map(product => (
-                                    <div key={product.id} className="premium-card p-4 flex justify-between items-center active:scale-[0.98] transition-all cursor-pointer" onClick={() => addToCart(product)}>
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 bg-slate-50 rounded-xl overflow-hidden shadow-inner flex items-center justify-center">
-                                                {product.imageUrl ? (
-                                                    <img src={product.imageUrl} className="w-full h-full object-cover" />
+                                {filteredProducts.map(product => {
+                                    const cartItem = cart.find(p => p.productId === product.id);
+                                    const quantity = cartItem?.quantity || 0;
+
+                                    return (
+                                        <div key={product.id} className="premium-card p-4 flex justify-between items-center transition-all">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-12 h-12 bg-slate-50 rounded-xl overflow-hidden shadow-inner flex items-center justify-center">
+                                                    {product.imageUrl ? (
+                                                        <img src={product.imageUrl} className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        <LayoutGrid className="text-slate-200" size={20} />
+                                                    )}
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-black text-slate-800 uppercase leading-none mb-1">{product.name}</p>
+                                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{product.category}</p>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-4">
+                                                <p className="text-sm font-black text-blue-600 tracking-tighter mr-2">R$ {product.price.toFixed(2)}</p>
+
+                                                {quantity > 0 ? (
+                                                    <div className="flex items-center bg-slate-50 rounded-xl p-1 gap-2 shadow-inner border border-slate-100">
+                                                        <button
+                                                            onClick={() => updateCartQuantity(product.id, -1)}
+                                                            className="w-8 h-8 rounded-lg bg-white shadow-sm flex items-center justify-center font-black text-slate-400 active:scale-90 transition-transform"
+                                                        >
+                                                            <Minus size={14} />
+                                                        </button>
+                                                        <span className="w-6 text-center font-black text-sm text-slate-700">{quantity}</span>
+                                                        <button
+                                                            onClick={() => updateCartQuantity(product.id, 1)}
+                                                            className="w-8 h-8 rounded-lg bg-blue-600 shadow-sm shadow-blue-500/30 flex items-center justify-center font-black text-white active:scale-90 transition-transform"
+                                                        >
+                                                            <Plus size={14} />
+                                                        </button>
+                                                    </div>
                                                 ) : (
-                                                    <LayoutGrid className="text-slate-200" size={20} />
+                                                    <button
+                                                        onClick={() => addToCart(product)}
+                                                        className="px-4 py-2 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg active:scale-95 transition-all"
+                                                    >
+                                                        Adicionar
+                                                    </button>
                                                 )}
                                             </div>
-                                            <div>
-                                                <p className="text-sm font-black text-slate-800 uppercase leading-none mb-1">{product.name}</p>
-                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{product.category}</p>
-                                            </div>
                                         </div>
-                                        <div className="flex items-center gap-4">
-                                            <p className="text-sm font-black text-blue-600 tracking-tighter">R$ {product.price.toFixed(2)}</p>
-                                            <div className="w-8 h-8 bg-blue-50 rounded-full flex items-center justify-center text-blue-600">
-                                                <Plus size={16} />
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         </div>
                     )}
