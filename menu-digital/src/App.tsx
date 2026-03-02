@@ -32,19 +32,30 @@ function AppContent() {
     finished: false,
     isOwner: false,
     isPinRequired: false,
-    hasToken: !!localStorage.getItem(`sessionToken_${tableParam}`)
+    hasToken: !!localStorage.getItem(`sessionToken_${tableParam}`),
+    pin: null as string | null,
+    token: localStorage.getItem(`sessionToken_${tableParam}`),
+    lastFinishedAt: 0 // Timestamp de quando a sessão foi marcada como finalizada
   });
 
   // Função centralizada para atualizar estados terminais imediatamente
   const updateTerminalState = useCallback((finished: boolean) => {
     sessionContextRef.current.finished = finished;
+    if (finished) {
+      sessionContextRef.current.lastFinishedAt = Date.now();
+    } else {
+      sessionContextRef.current.lastFinishedAt = 0;
+    }
     setIsSessionFinished(finished);
   }, []);
 
-  const updateSessionContext = useCallback((isOwner: boolean, isPinRequired: boolean) => {
+  const updateSessionContext = useCallback((isOwner: boolean, isPinRequired: boolean, pin?: string | null) => {
+    const token = localStorage.getItem(`sessionToken_${tableParam}`);
     sessionContextRef.current.isOwner = isOwner;
     sessionContextRef.current.isPinRequired = isPinRequired;
-    sessionContextRef.current.hasToken = !!localStorage.getItem(`sessionToken_${tableParam}`);
+    sessionContextRef.current.hasToken = !!token;
+    sessionContextRef.current.token = token;
+    if (pin !== undefined) sessionContextRef.current.pin = pin;
   }, [tableParam]);
 
   // Status da Loja
@@ -71,7 +82,10 @@ function AppContent() {
 
     try {
       // 0. Safety Guard: If we are already in Thank You screen, don't bother fetching
-      if (sessionContextRef.current.finished) {
+      // Novidade: Mantemos o estado "finished" por pelo menos 60 segundos após a finalização
+      // para evitar que o polling limpe a tela antes do usuário ler.
+      const timeSinceFinished = Date.now() - sessionContextRef.current.lastFinishedAt;
+      if (sessionContextRef.current.finished || timeSinceFinished < 60000) {
         setIsValidating(false);
         return;
       }
@@ -92,7 +106,7 @@ function AppContent() {
       const isOwnerNow = !!data.isOwner;
       setIsOwner(isOwnerNow);
       setIsPinRequired(false);
-      updateSessionContext(isOwnerNow, false);
+      updateSessionContext(isOwnerNow, false, data.pin || null);
 
       if (data.status === 'billing') {
         setIsBilling(true);
@@ -105,8 +119,11 @@ function AppContent() {
 
       // Clear finished state if we detect a fresh table
       if ((data as any).isNewSession || data.status === 'available') {
-        console.log('Table available or new session - clearing finished state');
-        updateTerminalState(false);
+        const timeSinceFinished = Date.now() - sessionContextRef.current.lastFinishedAt;
+        if (timeSinceFinished > 60000) {
+          console.log('Table available or new session - clearing finished state');
+          updateTerminalState(false);
+        }
       }
 
       // Only clear finished session if we are actually in an active state now
@@ -143,23 +160,23 @@ function AppContent() {
         setIsPinRequired(true);
         setTableError(null);
         setIsBilling(false);
-        updateSessionContext(false, true);
+        updateSessionContext(false, true, null);
       } else if (err.message?.includes('Mesa não encontrada') || err.message?.includes('inexistente')) {
         setTableError(err.message);
         setIsBilling(false);
-        updateSessionContext(false, false);
+        updateSessionContext(false, false, null);
       } else {
         // Se a mesa estiver livre agora mas o usuário tinha um token, significa que a sessão acabou
         const currentToken = localStorage.getItem(`sessionToken_${tableParam}`);
         if (currentToken && (err.message?.includes('não autorizada') || err.status === 401)) {
           localStorage.removeItem(`sessionToken_${tableParam}`);
-          updateSessionContext(false, false);
+          updateSessionContext(false, false, null);
         } else {
           // Só exibe erro de mesa se não estivermos exibindo uma tela final
           if (!sessionContextRef.current.finished) {
             setTableError(err.message || 'Erro ao validar a mesa.');
           }
-          updateSessionContext(false, false);
+          updateSessionContext(false, false, null);
         }
         setIsBilling(false);
         setIsPinRequired(false);
@@ -176,7 +193,7 @@ function AppContent() {
       const { sessionToken } = await validatePin(tableParam, pinInput);
       localStorage.setItem(`sessionToken_${tableParam}`, sessionToken);
       setIsPinRequired(false);
-      updateSessionContext(true, false);
+      updateSessionContext(true, false, pinInput); // Record PIN on successful entry
       fetchTableData();
     } catch (err: any) {
       setPinError(err.message || 'PIN incorreto');
@@ -190,7 +207,8 @@ function AppContent() {
 
     const intervalId = setInterval(() => {
       // Usamos a ref para garantir que o setInterval leia o valor MAIS RECENTE sem precisar recriar o hook
-      if (!sessionContextRef.current.finished) {
+      const timeSinceFinished = Date.now() - sessionContextRef.current.lastFinishedAt;
+      if (!sessionContextRef.current.finished && timeSinceFinished > 60000) {
         fetchTableData(true);
       }
       fetchStatus();
@@ -294,9 +312,9 @@ function AppContent() {
         setIsPinRequired(false);
 
         // CRITICAL: Only trigger "Thank You" if this device was part of the CURRENT PAID session
-        const localToken = localStorage.getItem(`sessionToken_${tableParam}`);
+        const localToken = sessionContextRef.current.token;
         const isSessionMatch = localToken && data.sessionToken && localToken === data.sessionToken;
-        const isPinMatch = currentPin && data.pin && currentPin === data.pin;
+        const isPinMatch = sessionContextRef.current.pin && data.pin && sessionContextRef.current.pin === data.pin;
 
         if (isSessionMatch || isPinMatch) {
           updateTerminalState(true);
