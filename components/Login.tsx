@@ -159,7 +159,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                   <label className="text-xs font-bold text-slate-400 uppercase">Senha</label>
                   <button
                     type="button"
-                    onClick={() => { setView('FORGOT'); setError(''); }}
+                    onClick={() => { setView('FORGOT'); setError(''); setEmail(''); setRecoveryCode(''); }}
                     className="text-[10px] text-blue-400 font-bold hover:text-blue-300 transition-colors"
                   >
                     ESQUECEU A SENHA?
