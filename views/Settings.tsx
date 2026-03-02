@@ -394,6 +394,12 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings, onReset }) =
         setIsSavedAlertOpen(true);
     };
 
+    const handleBackup = () => {
+        const apiUrl = (import.meta as any).env.VITE_API_URL || '';
+        const baseUrl = apiUrl.replace('/api', '');
+        window.open(`${baseUrl}/api/backup/generate`, '_blank');
+    };
+
     const menuItems = [
         { id: 'EMPRESA', label: 'Empresa', icon: Icons.Dashboard },
         { id: 'HORARIOS', label: 'Horários', icon: Icons.Clock },
@@ -618,6 +624,25 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings, onReset }) =
 
                 {activeSubTab === 'AVANCADO' && (
                     <div className="max-w-4xl space-y-8">
+                        <div className="bg-white p-10 rounded-[3rem] shadow-sm border border-slate-100">
+                            <h3 className="text-2xl font-black mb-2 text-blue-600 uppercase tracking-tighter">Manutenção e Backup</h3>
+                            <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mb-10">Gerencie a segurança dos seus dados</p>
+
+                            <div className="p-8 bg-blue-50 rounded-3xl border border-blue-100 flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm font-black text-blue-900 uppercase tracking-tight">Cópia de Segurança (Backup):</p>
+                                    <p className="text-[10px] text-blue-700/60 font-bold mt-1 uppercase">Baixe um arquivo contendo todos os dados do sistema (pedidos, clientes, produtos).</p>
+                                </div>
+                                <button
+                                    onClick={handleBackup}
+                                    className="bg-blue-600 text-white px-8 py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-blue-700 transition-all shadow-xl shadow-blue-200 flex items-center gap-3"
+                                >
+                                    <Icons.Download className="w-4 h-4" />
+                                    Baixar Backup (.sql)
+                                </button>
+                            </div>
+                        </div>
+
                         <div className="bg-white p-10 rounded-[3rem] shadow-sm border border-slate-100">
                             <h3 className="text-2xl font-black mb-2 text-red-600 uppercase tracking-tighter">Zona de Risco Crítico</h3>
                             <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mb-10">Estas ações são irreversíveis e apagam dados permanentemente</p>

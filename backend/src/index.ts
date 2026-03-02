@@ -19,6 +19,7 @@ import cashRoutes from './routes/cashRoutes';
 import receivableRoutes from './routes/receivableRoutes';
 import maintenanceRoutes from './routes/maintenanceRoutes';
 import paymentRoutes from './routes/paymentRoutes';
+import backupRoutes from './routes/backupRoutes';
 import { initSocket } from './socket';
 import { startOrderTimeoutService } from './services/orderTimeoutService';
 import { loadSettingsToCache } from './storeStatusCache';
@@ -69,6 +70,7 @@ app.use('/api/cash', cashRoutes);
 app.use('/api/receivables', receivableRoutes);
 app.use('/api/maintenance', maintenanceRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/backup', backupRoutes);
 
 // Basic health check
 app.get('/health', (req, res) => {
