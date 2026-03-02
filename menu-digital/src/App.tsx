@@ -70,7 +70,47 @@ function AppContent() {
     }
 
     try {
+      // 0. Safety Guard: If we are already in Thank You screen, don't bother fetching
+      if (sessionContextRef.current.finished) {
+        setIsValidating(false);
+        return;
+      }
+
+      setIsValidating(true);
       const data = await verifyTable(tableParam);
+
+      // Se a mesa for encontrada, limpamos erros anteriores
+      setTableError(null);
+      setIsValidating(false);
+
+      // Update session storage if needed
+      if (data.sessionToken) {
+        localStorage.setItem(`sessionToken_${tableParam}`, data.sessionToken);
+      }
+
+      // Check for ownership
+      const isOwnerNow = !!data.isOwner;
+      setIsOwner(isOwnerNow);
+      setIsPinRequired(false);
+      updateSessionContext(isOwnerNow, false);
+
+      if (data.status === 'billing') {
+        setIsBilling(true);
+      } else {
+        setIsBilling(false);
+      }
+
+      // Join the table room for targeted instant updates
+      joinTableRoom(Number(tableParam));
+      // Only clear finished session if we are actually in an active state now
+      if (data.status === 'occupied' || data.status === 'billing') {
+        updateTerminalState(false);
+      } else if (data.status === 'available' && token) {
+        // BACKUP: Se a mesa estiver livre mas o usuário ainda tem um token, 
+        // significa que a conta foi paga e o socket de finalização falhou ou foi perdido.
+        console.log('Finalização detectada via backup (mesa livre com token)');
+        updateTerminalState(true);
+      }
 
       // Check for persistent rejection (Server-side flag)
       if ((data as any).rejectionMessage) {
@@ -81,27 +121,17 @@ function AppContent() {
         return;
       }
 
-      // Se retornou token ou pin, salva (primeiro acesso)
-      if (data.sessionToken) {
-        localStorage.setItem(`sessionToken_${tableParam}`, data.sessionToken);
-      }
       setCurrentPin(data.pin || null);
       setTableNumber(tableParam);
       setClientName(data.clientName);
-      setIsOwner(!!data.isOwner);
-      setTableError(null);
-      setIsPinRequired(false);
-      updateSessionContext(!!data.isOwner, false);
-      setIsValidating(false);
-      setIsBilling(data.status === 'billing');
 
-      // Join the table room for targeted instant updates
-      joinTableRoom(Number(tableParam));
-      // Only clear finished session if we are actually in an active state now
-      if (data.status === 'occupied' || data.status === 'billing') {
-        updateTerminalState(false);
-      }
     } catch (err: any) {
+      // 0. Safety Guard: Even in error, if we are finished, stay finished
+      if (sessionContextRef.current.finished) {
+        setIsValidating(false);
+        return;
+      }
+
       if (err.status === 'billing') {
         setIsBilling(true);
         setTableError(null);
@@ -252,6 +282,11 @@ function AppContent() {
         joinTableRoom(Number(tableParam));
       }
     };
+
+    // Join room immediately on mount/re-register
+    if (tableParam) {
+      joinTableRoom(Number(tableParam));
+    }
 
     socket.on('connect', handleConnect);
     socket.on('tableStatusChanged', handleTableStatus);
