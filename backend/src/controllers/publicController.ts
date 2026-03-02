@@ -324,7 +324,17 @@ export const createOrder = async (req: Request, res: Response) => {
                 if (!product) throw new Error(`Product ${item.productId} not found`);
             }
 
-            const existingPending = session?.pendingReviewItems ? JSON.parse(session.pendingReviewItems) : [];
+            let existingPending: any[] = [];
+            if (session?.pendingReviewItems) {
+                try {
+                    const parsed = JSON.parse(session.pendingReviewItems);
+                    if (Array.isArray(parsed)) {
+                        existingPending = parsed;
+                    }
+                } catch (e) {
+                    existingPending = [];
+                }
+            }
 
             // Append new items, carrying over any observations and tracking who ordered
             const newItems = items.map((it: any) => ({
