@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { TableSession, Product, OrderItem } from '../types';
+import type { TableSession, Product } from '../types';
 import { db } from '../api';
 
 interface TableDetailsProps {
@@ -82,7 +82,7 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, onClose, onRefresh }
                     items: newItems,
                     status: 'occupied',
                     hasPendingDigital: false,
-                    pendingReviewItems: null
+                    pendingReviewItems: undefined
                 });
                 onRefresh();
                 setActiveTab('CONSUMPTION');
@@ -105,7 +105,7 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, onClose, onRefresh }
                 items: table.items, // Keep original items
                 status: table.items.length > 0 ? 'occupied' : 'available',
                 hasPendingDigital: false,
-                pendingReviewItems: null
+                pendingReviewItems: undefined
             });
             onRefresh();
             onClose();

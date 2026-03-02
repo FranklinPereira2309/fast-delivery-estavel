@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { db } from '../api';
-import { User } from '../types';
+import type { User } from '../types';
 
 interface LoginProps {
     onLoginSuccess: (user: User) => void;
@@ -12,10 +12,8 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
     const [recoveryCode, setRecoveryCode] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
-    const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const [view, setView] = useState<'LOGIN' | 'FORGOT' | 'RESET' | 'CODE_DISPLAY'>('LOGIN');
-    const [tempUser, setTempUser] = useState<User | null>(null);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

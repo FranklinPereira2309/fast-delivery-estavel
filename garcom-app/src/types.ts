@@ -1,21 +1,6 @@
 
-export enum OrderStatus {
-    PENDING = 'PENDING',
-    PREPARING = 'PREPARING',
-    PARTIALLY_READY = 'PARTIALLY_READY',
-    READY = 'READY',
-    OUT_FOR_DELIVERY = 'OUT_FOR_DELIVERY',
-    DELIVERED = 'DELIVERED',
-    CANCELLED = 'CANCELLED',
-    REOPENED = 'REOPENED'
-}
-
-export enum SaleType {
-    COUNTER = 'COUNTER',
-    TABLE = 'TABLE',
-    OWN_DELIVERY = 'OWN_DELIVERY',
-    THIRD_PARTY = 'THIRD_PARTY'
-}
+export type OrderStatus = 'PENDING' | 'PREPARING' | 'PARTIALLY_READY' | 'READY' | 'OUT_FOR_DELIVERY' | 'DELIVERED' | 'CANCELLED' | 'REOPENED';
+export type SaleType = 'COUNTER' | 'TABLE' | 'OWN_DELIVERY' | 'THIRD_PARTY';
 
 export interface User {
     id: string;
