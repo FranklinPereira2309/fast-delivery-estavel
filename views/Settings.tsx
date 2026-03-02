@@ -39,14 +39,29 @@ const WaiterManagement: React.FC = () => {
         }
     };
 
-    const deleteWaiter = async (id: string, name: string) => {
+    const handleToggleStatus = async (waiter: Waiter) => {
+        const action = waiter.active ? 'inativar' : 'ativar';
         setAlertConfig({
             isOpen: true,
-            title: 'EXCLUIR GARÇOM',
-            message: `Tem certeza que deseja remover ${name.toUpperCase()} da equipe? O acesso ao App também será inativado.`,
+            title: `${action.toUpperCase()} GARÇOM`,
+            message: `Tem certeza que deseja ${action} o acesso de ${waiter.name}?`,
+            type: waiter.active ? 'DANGER' : 'INFO',
+            onConfirm: async () => {
+                await db.toggleWaiterStatus(waiter.id, !waiter.active);
+                refresh();
+                setAlertConfig(prev => ({ ...prev, isOpen: false }));
+            }
+        });
+    };
+
+    const handleResetWaiter = async (waiter: Waiter) => {
+        setAlertConfig({
+            isOpen: true,
+            title: 'RESET DE SEGURANÇA',
+            message: `A senha de ${waiter.name} será resetada para '123' e um novo código de recuperação será gerado. Prosseguir?`,
             type: 'DANGER',
             onConfirm: async () => {
-                await db.deleteWaiter(id);
+                await db.resetWaiter(waiter.id);
                 refresh();
                 setAlertConfig(prev => ({ ...prev, isOpen: false }));
             }
@@ -88,13 +103,17 @@ const WaiterManagement: React.FC = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {waiters.map(w => (
-                    <div key={w.id} className="bg-white p-6 rounded-[2.5rem] border border-slate-100 flex flex-col group hover:shadow-xl transition-all relative overflow-hidden">
+                    <div key={w.id} className={`bg-white p-6 rounded-[2.5rem] border border-slate-100 flex flex-col group hover:shadow-xl transition-all relative overflow-hidden ${!w.active ? 'opacity-50 grayscale' : ''}`}>
                         <div className="flex items-center gap-4 mb-4">
-                            <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center font-black uppercase text-sm shadow-inner">
+                            <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center font-black uppercase text-sm shadow-inner relative">
                                 {w.name.substring(0, 2)}
+                                {!w.active && <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-white"></div>}
                             </div>
                             <div className="flex-1 min-w-0">
-                                <p className="font-black text-slate-800 uppercase text-xs tracking-tight truncate">{w.name}</p>
+                                <div className="flex items-center gap-2">
+                                    <p className="font-black text-slate-800 uppercase text-xs tracking-tight truncate">{w.name}</p>
+                                    {!w.active && <span className="text-[7px] bg-red-100 text-red-600 font-black px-1.5 py-0.5 rounded-full uppercase tracking-widest shrink-0">Inativo</span>}
+                                </div>
                                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">{w.email || 'Sem e-mail'}</p>
                             </div>
                         </div>
@@ -106,17 +125,29 @@ const WaiterManagement: React.FC = () => {
                             </div>
                             <div className="flex gap-2">
                                 <button
+                                    onClick={() => handleResetWaiter(w)}
+                                    title="Resetar Segurança"
+                                    className="p-3 bg-amber-50 text-amber-600 rounded-xl hover:bg-amber-600 hover:text-white transition-all outline-none"
+                                >
+                                    <Icons.Clock size={16} />
+                                </button>
+                                <button
                                     onClick={() => {
                                         setEditingWaiter(w);
                                         setFormData({ name: w.name, phone: w.phone, email: w.email || '' });
                                         setIsModalOpen(true);
                                     }}
-                                    className="p-3 bg-slate-50 text-slate-400 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-all"
+                                    title="Editar Dados"
+                                    className="p-3 bg-slate-50 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition-all outline-none"
                                 >
                                     <Icons.Edit size={16} />
                                 </button>
-                                <button onClick={() => deleteWaiter(w.id, w.name)} className="p-3 bg-slate-50 text-slate-400 hover:bg-red-50 hover:text-red-500 rounded-xl transition-all">
-                                    <Icons.Delete size={16} />
+                                <button
+                                    onClick={() => handleToggleStatus(w)}
+                                    title={w.active ? 'Inativar Garçom' : 'Ativar Garçom'}
+                                    className={`p-3 rounded-xl transition-all outline-none ${w.active ? 'bg-red-50 text-red-600 hover:bg-red-600 hover:text-white' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white'}`}
+                                >
+                                    {w.active ? <Icons.Delete size={16} /> : <Icons.User size={16} />}
                                 </button>
                             </div>
                         </div>

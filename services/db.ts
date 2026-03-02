@@ -67,6 +67,14 @@ class APIDBService {
     await this.request(`/waiters/${id}`, { method: 'DELETE' });
     await this.logAction(this.getCurrentSession()?.user || null, 'SYSTEM_DELETE', `Garçom removido: ${id}`);
   }
+  public async toggleWaiterStatus(id: string, active: boolean) {
+    await this.request('/waiters/toggle-status', { method: 'POST', body: JSON.stringify({ id, active }) });
+    await this.logAction(this.getCurrentSession()?.user || null, 'SYSTEM_UPDATE', `Status do garçom ${id} alterado para ${active ? 'Ativo' : 'Inativo'}.`);
+  }
+  public async resetWaiter(id: string) {
+    await this.request('/waiters/reset', { method: 'POST', body: JSON.stringify({ id }) });
+    await this.logAction(this.getCurrentSession()?.user || null, 'SYSTEM_UPDATE', `Segurança do garçom ${id} resetada.`);
+  }
 
   // Table Management
   public async getTableSessions(): Promise<TableSession[]> { return this.request<TableSession[]>('/tables'); }

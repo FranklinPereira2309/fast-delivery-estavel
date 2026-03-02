@@ -88,6 +88,7 @@ export interface Waiter {
   name: string;
   phone: string;
   email?: string;
+  active: boolean;
 }
 
 export interface Client {

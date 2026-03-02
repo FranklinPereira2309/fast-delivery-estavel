@@ -92,6 +92,7 @@ model Waiter {
   name         String
   phone        String
   email        String?        @unique
+  active       Boolean        @default(true)
   orders       Order[]
   tableSessions TableSession[]
 }
