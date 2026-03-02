@@ -92,6 +92,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
     pix: number;
     credit: number;
     debit: number;
+    others: number;
   } | null>(null);
 
   const showAlert = (title: string, message: string, type: 'INFO' | 'DANGER' | 'SUCCESS' = 'INFO') => {
@@ -625,9 +626,21 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
         cash: preview.systemCash,
         pix: preview.systemPix,
         credit: preview.systemCredit,
-        debit: preview.systemDebit
+        debit: preview.systemDebit,
+        others: preview.systemOthers
       });
-      showAlert("Relatório Gerado", "Os valores calculados pelo sistema estão disponíveis para conferência.", "INFO");
+
+      // Auto-preencher os campos do relatório de fechamento
+      setClosingReport({
+        cash: preview.systemCash.toFixed(2),
+        pix: preview.systemPix.toFixed(2),
+        credit: preview.systemCredit.toFixed(2),
+        debit: preview.systemDebit.toFixed(2),
+        others: preview.systemOthers.toFixed(2),
+        observations: closingReport.observations // Manter observações se já houver
+      });
+
+      showAlert("Relatório Gerado", "Os valores calculados pelo sistema foram importados para conferência.", "SUCCESS");
     } catch (e: any) {
       showAlert("Erro", e.message || "Erro ao carregar prévia do sistema.", "DANGER");
     }
@@ -1933,7 +1946,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                     Lançamento Manual
                   </button>
                   <button
-                    onClick={() => setClosingMode('SYSTEM')}
+                    onClick={() => { setClosingMode('SYSTEM'); setSystemPreview(null); setAdminPassword(''); }}
                     className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${closingMode === 'SYSTEM' ? 'bg-white text-blue-600 shadow-md' : 'text-slate-400 hover:text-slate-600'}`}
                   >
                     Pelo Sistema
@@ -1976,7 +1989,8 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                       { label: 'Dinheiro', val: systemPreview.cash },
                       { label: 'PIX', val: systemPreview.pix },
                       { label: 'Crédito', val: systemPreview.credit },
-                      { label: 'Débito', val: systemPreview.debit }
+                      { label: 'Débito', val: systemPreview.debit },
+                      { label: 'Outros', val: systemPreview.others }
                     ].map(item => (
                       <div key={item.label} className="bg-white p-3 rounded-2xl border border-emerald-100 shadow-sm">
                         <p className="text-[8px] font-black text-slate-400 uppercase mb-1">{item.label}</p>
@@ -1986,86 +2000,89 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                   </div>
                 )}
 
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Dinheiro (R$)</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        placeholder="0,00"
-                        value={closingReport.cash}
-                        onChange={(e) => setClosingReport(prev => ({ ...prev, cash: e.target.value }))}
-                        className="w-full p-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-orange-500 outline-none font-black text-lg text-center shadow-sm transition-all"
-                      />
+                {/* Só mostrar os inputs e resultados se estiver no modo MANUAL ou se o PREVIEW já foi gerado no modo SYSTEM */}
+                {(closingMode === 'MANUAL' || systemPreview) && (
+                  <div className="space-y-4 animate-in fade-in duration-500">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Dinheiro (R$)</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          placeholder="0,00"
+                          value={closingReport.cash}
+                          onChange={(e) => setClosingReport(prev => ({ ...prev, cash: e.target.value }))}
+                          className="w-full p-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-orange-500 outline-none font-black text-lg text-center shadow-sm transition-all"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">PIX (R$)</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          placeholder="0,00"
+                          value={closingReport.pix}
+                          onChange={(e) => setClosingReport(prev => ({ ...prev, pix: e.target.value }))}
+                          className="w-full p-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-orange-500 outline-none font-black text-lg text-center shadow-sm transition-all"
+                        />
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">PIX (R$)</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        placeholder="0,00"
-                        value={closingReport.pix}
-                        onChange={(e) => setClosingReport(prev => ({ ...prev, pix: e.target.value }))}
-                        className="w-full p-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-orange-500 outline-none font-black text-lg text-center shadow-sm transition-all"
-                      />
-                    </div>
-                  </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Crédito (R$)</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        placeholder="0,00"
-                        value={closingReport.credit}
-                        onChange={(e) => setClosingReport(prev => ({ ...prev, credit: e.target.value }))}
-                        className="w-full p-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-orange-500 outline-none font-black text-lg text-center shadow-sm transition-all"
-                      />
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Crédito (R$)</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          placeholder="0,00"
+                          value={closingReport.credit}
+                          onChange={(e) => setClosingReport(prev => ({ ...prev, credit: e.target.value }))}
+                          className="w-full p-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-orange-500 outline-none font-black text-lg text-center shadow-sm transition-all"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Débito (R$)</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          placeholder="0,00"
+                          value={closingReport.debit}
+                          onChange={(e) => setClosingReport(prev => ({ ...prev, debit: e.target.value }))}
+                          className="w-full p-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-orange-500 outline-none font-black text-lg text-center shadow-sm transition-all"
+                        />
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Débito (R$)</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        placeholder="0,00"
-                        value={closingReport.debit}
-                        onChange={(e) => setClosingReport(prev => ({ ...prev, debit: e.target.value }))}
-                        className="w-full p-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-orange-500 outline-none font-black text-lg text-center shadow-sm transition-all"
-                      />
-                    </div>
-                  </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-[9px] font-black text-emerald-700 uppercase tracking-widest ml-1">Outros (R$)</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        placeholder="0,00"
-                        value={closingReport.others}
-                        onChange={(e) => setClosingReport(prev => ({ ...prev, others: e.target.value }))}
-                        className="w-full p-4 bg-emerald-50 rounded-2xl border-2 border-emerald-100 focus:border-emerald-500 outline-none font-black text-lg text-center text-emerald-600 shadow-sm transition-all"
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-[9px] font-black text-emerald-700 uppercase tracking-widest ml-1">Outros (R$)</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          placeholder="0,00"
+                          value={closingReport.others}
+                          onChange={(e) => setClosingReport(prev => ({ ...prev, others: e.target.value }))}
+                          className="w-full p-4 bg-emerald-50 rounded-2xl border-2 border-emerald-100 focus:border-emerald-500 outline-none font-black text-lg text-center text-emerald-600 shadow-sm transition-all"
+                        />
+                      </div>
+                      <div className="space-y-1 text-right pt-4 flex flex-col justify-end">
+                        <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest">Total Informado</p>
+                        <p className="text-2xl font-black text-slate-700 tracking-tighter">R$ {(Number(closingReport.cash || 0) + Number(closingReport.pix || 0) + Number(closingReport.credit || 0) + Number(closingReport.debit || 0) + Number(closingReport.others || 0)).toFixed(2)}</p>
+                      </div>
+                    </div>
+
+                    <div className="pt-2">
+                      <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1 mb-1 block">Notas / Observações</label>
+                      <textarea
+                        placeholder="Alguma observação relevante sobre o fechamento..."
+                        value={closingReport.observations}
+                        onChange={(e) => setClosingReport(prev => ({ ...prev, observations: e.target.value }))}
+                        className="w-full p-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-orange-500 outline-none font-bold text-xs custom-scrollbar"
+                        rows={2}
                       />
                     </div>
-                    <div className="space-y-1 text-right pt-4 flex flex-col justify-end">
-                      <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest">Total Informado</p>
-                      <p className="text-2xl font-black text-slate-700 tracking-tighter">R$ {(Number(closingReport.cash || 0) + Number(closingReport.pix || 0) + Number(closingReport.credit || 0) + Number(closingReport.debit || 0) + Number(closingReport.others || 0)).toFixed(2)}</p>
-                    </div>
                   </div>
-
-                  <div className="pt-2">
-                    <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1 mb-1 block">Notas / Observações</label>
-                    <textarea
-                      placeholder="Alguma observação relevante sobre o fechamento..."
-                      value={closingReport.observations}
-                      onChange={(e) => setClosingReport(prev => ({ ...prev, observations: e.target.value }))}
-                      className="w-full p-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-orange-500 outline-none font-bold text-xs custom-scrollbar"
-                      rows={2}
-                    />
-                  </div>
-                </div>
+                )}
               </div>
 
               <div className="p-8 bg-slate-50 border-t border-slate-100 shrink-0 flex gap-4">
