@@ -624,8 +624,17 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
 
         try {
             getIO().emit('orderStatusChanged', { action: 'statusUpdate', id, status });
+
+            // Notificar o cardápio digital se o pedido for de mesa e estiver pronto/parcialmente pronto
+            if (result.type === 'TABLE' && result.tableNumber && (status === 'READY' || status === 'PARTIALLY_READY')) {
+                getIO().to(`table_${result.tableNumber}`).emit('orderStatusUpdated', {
+                    tableNumber: result.tableNumber,
+                    status: status,
+                    message: "Pedido Pronto na Cozinha, só mais um instante e você será servido!"
+                });
+            }
         } catch (e) {
-            console.error('Socket error emitting orderStatusChanged:', e);
+            console.error('Socket error emitting orderStatusChanged/orderStatusUpdated:', e);
         }
 
         res.json(mapOrderResponse(result));

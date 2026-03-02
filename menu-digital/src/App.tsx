@@ -4,6 +4,7 @@ import Home from './components/Home';
 import CartModal from './components/CartModal';
 import { CartItem } from './types';
 import FooterNav from './components/FooterNav';
+import OrderReadyNotification from './components/OrderReadyNotification';
 import { verifyTable, socket, fetchStoreStatus, StoreStatus, validatePin, joinTableRoom, acknowledgeRejection } from './api';
 
 function AppContent() {
@@ -26,6 +27,7 @@ function AppContent() {
   const [isSessionFinished, setIsSessionFinished] = useState(false);
   const [banner, setBanner] = useState<{ message: string; type: 'info' | 'error' | 'success' } | null>(null);
   const [blockingRejection, setBlockingRejection] = useState<{ message: string } | null>(null);
+  const [orderReadyNotify, setOrderReadyNotify] = useState<{ message: string } | null>(null);
 
   // Ref para rastrear estados terminais e propriedade em tempo real (evita "stale closures")
   const sessionContextRef = useRef({
@@ -368,12 +370,20 @@ function AppContent() {
       joinTableRoom(Number(tableParam));
     }
 
+    const handleOrderReady = (data: any) => {
+      console.log('Socket orderStatusUpdated received:', data);
+      if (Number(data.tableNumber) === Number(tableParam)) {
+        setOrderReadyNotify({ message: data.message });
+      }
+    };
+
     socket.on('connect', handleConnect);
     socket.on('tableStatusChanged', handleTableStatus);
     socket.on('newOrder', handleTableStatus);
     socket.on('store_status_changed', handleStoreStatus);
     socket.on('digitalOrderCancelled', handleCancellation);
     socket.on('paymentConfirmed', handlePaymentConfirmed);
+    socket.on('orderStatusUpdated', handleOrderReady);
 
     return () => {
       clearInterval(intervalId);
@@ -383,6 +393,7 @@ function AppContent() {
       socket.off('store_status_changed', handleStoreStatus);
       socket.off('digitalOrderCancelled', handleCancellation);
       socket.off('paymentConfirmed', handlePaymentConfirmed);
+      socket.off('orderStatusUpdated', handleOrderReady);
     };
   }, [fetchTableData, fetchStatus, tableParam, updateTerminalState]);
 
@@ -706,6 +717,13 @@ function AppContent() {
 
   return (
     <div className="min-h-screen max-w-md mx-auto relative shadow-2xl bg-slate-50 overflow-hidden">
+      {orderReadyNotify && (
+        <OrderReadyNotification
+          message={orderReadyNotify.message}
+          onClose={() => setOrderReadyNotify(null)}
+          duration={15}
+        />
+      )}
       {renderBanner()}
       {/* Header Fixo */}
       <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-100 p-4 pt-6 flex justify-between items-center">
