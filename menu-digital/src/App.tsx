@@ -757,7 +757,7 @@ function AppContent() {
         updateQuantity={updateQuantity}
         clearCart={clearCart}
         initialClientName={clientName || undefined}
-        onOrderSuccess={fetchTableData}
+        onOrderSuccess={() => fetchTableData(true)}
         storeStatus={storeStatus}
       />
 

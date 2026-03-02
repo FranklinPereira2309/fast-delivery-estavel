@@ -34,7 +34,7 @@ const CartModal: React.FC<CartModalProps> = ({ isOpen, onClose, cart, tableNumbe
                 return;
             }
             try {
-                await submitOrder({
+                const response = await submitOrder({
                     tableNumber: parseInt(tableNumber),
                     items: cart.map(i => ({ productId: i.id, quantity: i.quantity })),
                     observations,
@@ -42,6 +42,12 @@ const CartModal: React.FC<CartModalProps> = ({ isOpen, onClose, cart, tableNumbe
                     clientLat: lat,
                     clientLng: lng
                 });
+
+                // Update specific session token from backend response immediately
+                if (response.session?.sessionToken) {
+                    localStorage.setItem(`sessionToken_${tableNumber}`, response.session.sessionToken);
+                }
+
                 setSuccess(true);
                 if (onOrderSuccess) {
                     onOrderSuccess();
@@ -51,7 +57,7 @@ const CartModal: React.FC<CartModalProps> = ({ isOpen, onClose, cart, tableNumbe
                     clearCart();
                     onClose();
                     setIsSubmitting(false);
-                }, 3000);
+                }, 1500); // Faster feedback
             } catch (e: any) {
                 console.error(e);
                 if (e.pin_required || e.message?.toLowerCase().includes('pin') || e.message?.toLowerCase().includes('sessão inválida')) {
