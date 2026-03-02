@@ -62,7 +62,7 @@ function AppContent() {
   }, []);
 
   // Extracted logic to allow re-fetching the table data manually
-  const fetchTableData = useCallback(async () => {
+  const fetchTableData = useCallback(async (silent: boolean = false) => {
     if (!tableParam) {
       setTableError('Mesa não informada');
       setIsValidating(false);
@@ -76,13 +76,12 @@ function AppContent() {
         return;
       }
 
-      setIsValidating(true);
-
+      if (!silent) setIsValidating(true);
       const data = await verifyTable(tableParam);
 
       // Se a mesa for encontrada, limpamos erros anteriores
       setTableError(null);
-      setIsValidating(false);
+      if (!silent) setIsValidating(false);
 
       // Update session storage if needed
       if (data.sessionToken) {
@@ -192,7 +191,7 @@ function AppContent() {
     const intervalId = setInterval(() => {
       // Usamos a ref para garantir que o setInterval leia o valor MAIS RECENTE sem precisar recriar o hook
       if (!sessionContextRef.current.finished) {
-        fetchTableData();
+        fetchTableData(true);
       }
       fetchStatus();
     }, 5000);
@@ -258,7 +257,7 @@ function AppContent() {
         setIsBilling(false);
         updateTerminalState(false);
         setTableError(null);
-        fetchTableData();
+        fetchTableData(true);
       }
     };
 
@@ -302,7 +301,7 @@ function AppContent() {
             updateTerminalState(true);
           } else {
             updateTerminalState(false);
-            fetchTableData();
+            fetchTableData(true);
           }
         }
       }
