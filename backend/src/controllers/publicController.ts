@@ -42,24 +42,47 @@ export const verifyTable = async (req: Request, res: Response) => {
             where: { tableNumber }
         });
 
-        // 3. Se a mesa estiver disponível (ou não houver sessão), criamos uma nova com PIN
+        // 3. EXTRAÇÃO DE REJEIÇÃO (Prioridade Máxima para o Soft-Reject)
+        let rejectionMessage = null;
+        if (session?.pendingReviewItems) {
+            try {
+                const parsed = JSON.parse(session.pendingReviewItems);
+                if (parsed && typeof parsed === 'object' && !Array.isArray(parsed) && parsed.rejection) {
+                    rejectionMessage = parsed.rejection;
+                }
+            } catch (e) {
+                if (session.pendingReviewItems.startsWith('REJECTED:')) {
+                    rejectionMessage = session.pendingReviewItems.replace('REJECTED:', '');
+                }
+            }
+        }
+
+        // Se houver rejeição, retornamos ela imediatamente, bloqueando o fluxo normal
+        if (rejectionMessage) {
+            return res.json({
+                tableNumber,
+                status: session?.status || 'available',
+                clientName: session?.clientName || null,
+                pin: session?.pin,
+                isOwner: session?.sessionToken === token,
+                rejectionMessage: rejectionMessage
+            });
+        }
+
+        // 4. Se a mesa estiver disponível (ou não houver sessão), criamos uma nova com PIN
         if (!session || session.status === 'available') {
-            // Só gera NOVO pin e token se realmente não existir uma sessão ou se ela estiver explícita vazia, 
-            // mas CUIDADO: o frontend chama isso a cada 5 segundos. Se a mesa está 'available', 
-            // não devemos ficar reescrevendo o PIN e token no banco caso o frontend já tenha um!
-            const pinToSet = session?.pin || Math.floor(1000 + Math.random() * 9000).toString(); // PIN de 4 dígitos
+            const pinToSet = session?.pin || Math.floor(1000 + Math.random() * 9000).toString();
             const tokenToSet = session?.sessionToken || crypto.randomBytes(32).toString('hex');
 
             session = await prisma.tableSession.upsert({
                 where: { tableNumber },
                 create: {
                     tableNumber,
-                    status: 'available', // Começa como livre no banco, mas com PIN gerado
+                    status: 'available',
                     pin: pinToSet,
                     sessionToken: tokenToSet
                 },
                 update: {
-                    // Mantem o PIN e token já criados para a mesa 'available', não regenera a toda chamada
                     pin: pinToSet,
                     sessionToken: tokenToSet,
                 }
@@ -68,13 +91,14 @@ export const verifyTable = async (req: Request, res: Response) => {
             return res.json({
                 tableNumber,
                 status: 'available',
-                pin: null, // O PIN só aparece após o primeiro pedido (status occupied)
+                pin: null,
                 sessionToken: session.sessionToken,
-                isOwner: true
+                isOwner: true,
+                rejectionMessage: null
             });
         }
 
-        // 4. Se estiver ocupada ou fechando conta, verificamos o token
+        // 5. Se estiver ocupada ou fechando conta, verificamos o token
         if (session.status === 'billing') {
             return res.status(403).json({
                 message: 'Mesa bloqueada: fechamento de conta em andamento.',
@@ -84,7 +108,6 @@ export const verifyTable = async (req: Request, res: Response) => {
             });
         }
 
-        // 5. Se estiver ocupada, verificamos se o token enviado é válido
         if (session.sessionToken && token !== session.sessionToken) {
             return res.status(401).json({
                 message: 'Mesa em Atendimento - Informe o Pin',
@@ -92,29 +115,13 @@ export const verifyTable = async (req: Request, res: Response) => {
             });
         }
 
-        let rejectionMessage = null;
-        if (session.pendingReviewItems) {
-            try {
-                // Tenta parsear como JSON (novo formato)
-                const parsed = JSON.parse(session.pendingReviewItems);
-                if (parsed && typeof parsed === 'object' && !Array.isArray(parsed) && parsed.rejection) {
-                    rejectionMessage = parsed.rejection;
-                }
-            } catch (e) {
-                // Fallback para o formato antigo de string com prefixo se falhar o parse
-                if (session.pendingReviewItems.startsWith('REJECTED:')) {
-                    rejectionMessage = session.pendingReviewItems.replace('REJECTED:', '');
-                }
-            }
-        }
-
         res.json({
             tableNumber,
             status: session.status,
             clientName: session.clientName || null,
-            pin: session.pin, // Para quem já tem o token, o PIN fica disponível
+            pin: session.pin,
             isOwner: session.sessionToken === token,
-            rejectionMessage: rejectionMessage
+            rejectionMessage: null
         });
 
     } catch (error) {
