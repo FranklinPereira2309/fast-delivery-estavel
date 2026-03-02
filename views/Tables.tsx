@@ -128,7 +128,7 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
 
   const getTableStatus = (num: number) => {
     const sess = sessions.find(s => s.tableNumber === num);
-    if (!sess) return 'available';
+    if (!sess || (sess.isSoftRejected && sess.items.length === 0)) return 'available';
     if (sess.hasPendingDigital) return 'pending_digital';
     return sess.status;
   };
