@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { db } from '../api';
+import { Eye, EyeOff } from 'lucide-react';
 import type { User } from '../types';
 
 interface LoginProps {
@@ -86,14 +87,23 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Senha</label>
                                     <button type="button" onClick={() => setView('FORGOT')} className="text-[9px] text-blue-400 font-black hover:text-blue-300">ESQUECEU?</button>
                                 </div>
-                                <input
-                                    type={showPassword ? "text" : "password"}
-                                    required
-                                    placeholder="••••••••"
-                                    className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl focus:ring-2 focus:ring-blue-500 transition-all text-white font-medium outline-none text-sm"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                />
+                                <div className="relative group">
+                                    <input
+                                        type={showPassword ? "text" : "password"}
+                                        required
+                                        placeholder="••••••••"
+                                        className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl focus:ring-2 focus:ring-blue-500 transition-all text-white font-medium outline-none text-sm pr-12"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-blue-400 transition-colors"
+                                    >
+                                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                    </button>
+                                </div>
                             </div>
 
                             <button type="submit" className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-2xl shadow-lg shadow-blue-900/40 transition-all active:scale-[0.98] uppercase text-xs tracking-widest">
