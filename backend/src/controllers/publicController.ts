@@ -467,7 +467,8 @@ export const acknowledgeRejection = async (req: Request, res: Response) => {
         getIO().emit('tableStatusChanged', {
             tableNumber: tableNumber,
             status: session.status === 'available' ? 'available' : session.status,
-            action: 'refresh'
+            action: 'refresh',
+            sessionToken: session.sessionToken
         });
 
         res.json({

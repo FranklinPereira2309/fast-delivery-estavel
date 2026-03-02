@@ -214,7 +214,8 @@ export const saveTableSession = async (req: Request, res: Response) => {
                 tableNumber: Number(data.tableNumber),
                 status: data.status || 'occupied',
                 action: 'refresh',
-                rejectionMessage: rejectionMessage
+                rejectionMessage: rejectionMessage,
+                sessionToken: result.sessionToken
             });
         } catch (e) {
             console.error('Socket error emitting messages:', e);
@@ -267,7 +268,8 @@ export const deleteTableSession = async (req: Request, res: Response) => {
             tableNumber: Number(tableNum),
             status: 'available',
             action: 'refresh',
-            rejectionMessage: rejectionMessage
+            rejectionMessage: rejectionMessage,
+            sessionToken: session?.sessionToken || null
         });
     } catch (e) {
         console.error('Socket error emitting tableStatusChanged:', e);

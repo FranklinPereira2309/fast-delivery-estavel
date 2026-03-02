@@ -181,6 +181,10 @@ export const saveOrder = async (req: Request, res: Response) => {
 
                 // Reset do PIN/Sessão se for Mesa
                 if (order.type === 'TABLE' && tableNumIdx !== null && !isNaN(tableNumIdx)) {
+                    // Fetch token BEFORE deleting to include in broadcast (prevents stale reloads)
+                    const sessionToClear = await tx.tableSession.findUnique({ where: { tableNumber: tableNumIdx } });
+                    const sessionToken = sessionToClear?.sessionToken || null;
+
                     await tx.tableSession.deleteMany({
                         where: { tableNumber: tableNumIdx }
                     }).catch((e: any) => console.log('Sessão de mesa já removida ou inexistente:', e));
@@ -189,13 +193,15 @@ export const saveOrder = async (req: Request, res: Response) => {
                     getIO().emit('tableStatusChanged', {
                         tableNumber: tableNumIdx,
                         status: 'available',
-                        action: 'refresh'
+                        action: 'refresh',
+                        sessionToken: sessionToken
                     });
 
                     // Notificação direta para a mesa para exibir agradecimento instantâneo
                     getIO().to(`table_${Number(tableNumIdx)}`).emit('paymentConfirmed', {
                         tableNumber: Number(tableNumIdx),
-                        message: "Agradecemos a Preferência"
+                        message: "Agradecemos a Preferência",
+                        sessionToken: sessionToken
                     });
 
                     // Modificação: Em vez de atualizar o registro TABLE-X infinitamente (o que destrói o histórico de vendas),
@@ -486,6 +492,9 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
 
                 // Reset do PIN/Sessão se for Mesa
                 if (oldOrder.type === 'TABLE' && oldOrder.tableNumber) {
+                    const sessionToClear = await tx.tableSession.findUnique({ where: { tableNumber: oldOrder.tableNumber } });
+                    const sessionToken = sessionToClear?.sessionToken || null;
+
                     await tx.tableSession.deleteMany({
                         where: { tableNumber: oldOrder.tableNumber }
                     }).catch((e: any) => console.log('Sessão de mesa já removida ou inexistente:', e));
@@ -494,7 +503,8 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
                     getIO().emit('tableStatusChanged', {
                         tableNumber: oldOrder.tableNumber,
                         status: 'available',
-                        action: 'refresh'
+                        action: 'refresh',
+                        sessionToken: sessionToken
                     });
                 }
             } else if (newStatus !== 'DELIVERED' && oldStatus === 'DELIVERED') {

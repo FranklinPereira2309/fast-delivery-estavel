@@ -241,13 +241,22 @@ function AppContent() {
           setIsOwner(false);
           setIsPinRequired(false);
 
-          // CRITICAL: Only trigger "Thank You" if this device was part of the session
-          const hasToken = !!localStorage.getItem(`sessionToken_${tableParam}`);
-          if (hasToken) {
+          // CRITICAL: Only trigger "Thank You" if this device was part of the CURRENT PAID session
+          const localToken = localStorage.getItem(`sessionToken_${tableParam}`);
+          const isSessionMatch = localToken && data.sessionToken && localToken === data.sessionToken;
+
+          if (isSessionMatch) {
             updateTerminalState(true);
           } else {
-            updateTerminalState(false);
-            fetchTableData();
+            // Se a mesa ficou livre mas o token não bate, apenas limpa o estado local
+            if (localToken && data.sessionToken === null) {
+              // Caso especial: sessão foi limpa mas sem token específico (ex: limpeza manual pelo Admin)
+              // Nesse caso, se o usuário tinha um token, assumimos que a sessão dele acabou
+              updateTerminalState(true);
+            } else {
+              updateTerminalState(false);
+              fetchTableData();
+            }
           }
           return;
         }
@@ -289,13 +298,19 @@ function AppContent() {
         setIsOwner(false);
         setIsPinRequired(false);
 
-        // CRITICAL: Only trigger "Thank You" if this device was part of the session
-        const hasToken = !!localStorage.getItem(`sessionToken_${tableParam}`);
-        if (hasToken) {
+        // CRITICAL: Only trigger "Thank You" if this device was part of the CURRENT PAID session
+        const localToken = localStorage.getItem(`sessionToken_${tableParam}`);
+        const isSessionMatch = localToken && data.sessionToken && localToken === data.sessionToken;
+
+        if (isSessionMatch) {
           updateTerminalState(true);
         } else {
-          updateTerminalState(false);
-          fetchTableData();
+          if (localToken && data.sessionToken === null) {
+            updateTerminalState(true);
+          } else {
+            updateTerminalState(false);
+            fetchTableData();
+          }
         }
       }
     };
