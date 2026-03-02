@@ -12,6 +12,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
     const [recoveryCode, setRecoveryCode] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const [view, setView] = useState<'LOGIN' | 'FORGOT' | 'RESET' | 'CODE_DISPLAY'>('LOGIN');
 
