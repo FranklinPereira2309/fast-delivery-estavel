@@ -37,9 +37,10 @@ export const verifyTable = async (req: Request, res: Response) => {
             return res.status(404).json({ message: 'Mesa não encontrada' });
         }
 
-        // 2. Busca a sessão atual da mesa
+        // 2. Busca a sessão atual da mesa com itens para checar consumo
         let session = await prisma.tableSession.findUnique({
-            where: { tableNumber }
+            where: { tableNumber },
+            include: { items: true }
         });
 
         const now = new Date();
@@ -50,10 +51,15 @@ export const verifyTable = async (req: Request, res: Response) => {
         if (session?.sessionToken && !isOwner) {
             // Se a mesa estiver ocupada OU escaneada recentemente (bloqueia o 2º dispositivo)
             const isActive = session.status !== 'available';
+
+            // NOVIDADE: Só bloqueamos se houver consumo real (itens ou digital pendente)
+            // Se a mesa estiver vazia, permitimos que o próximo cliente tome posse imediatamente
+            const hasConsumption = (session.items?.length || 0) > 0 || session.hasPendingDigital;
+
             const sessionAge = now.getTime() - new Date(session.startTime).getTime();
             const isLocked = sessionAge < STALE_THRESHOLD_MS;
 
-            if (isActive || isLocked) {
+            if (isActive || (hasConsumption && isLocked)) {
                 return res.status(401).json({
                     message: 'Mesa em Atendimento - Informe o Pin',
                     pin_required: true
@@ -98,6 +104,7 @@ export const verifyTable = async (req: Request, res: Response) => {
 
             session = await prisma.tableSession.upsert({
                 where: { tableNumber },
+                include: { items: true },
                 create: {
                     tableNumber,
                     status: 'available',
@@ -123,7 +130,7 @@ export const verifyTable = async (req: Request, res: Response) => {
         }
 
         // 6. Se estiver em checkout
-        if (session.status === 'billing') {
+        if (session && session.status === 'billing') {
             return res.status(403).json({
                 message: 'Mesa bloqueada: fechamento de conta em andamento.',
                 status: 'billing',

@@ -402,54 +402,66 @@ function AppContent() {
 
   if (isSessionFinished) {
     return (
-      <div className="min-h-screen flex flex-col bg-slate-900 text-white text-center relative overflow-hidden font-sans">
+      <div className="min-h-screen flex flex-col bg-[#0f172a] text-white text-center relative overflow-hidden font-sans">
+        {/* Background Decorative Elements */}
+        <div className="absolute top-[-10%] left-[-10%] w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse delay-700"></div>
+
         {renderBanner()}
-        <div className="flex-1 flex items-center justify-center p-6">
-          <div className="max-w-md w-full space-y-8 animate-fade-in animate-zoom-in">
-            <div className="relative mx-auto w-24 h-24">
-              <div className={`absolute inset-0 ${banner?.type === 'error' ? 'bg-red-500/20' : 'bg-emerald-500/20'} rounded-full animate-ping`}></div>
-              <div className={`relative w-24 h-24 ${banner?.type === 'error' ? 'bg-red-600' : 'bg-emerald-600'} rounded-3xl flex items-center justify-center shadow-2xl ${banner?.type === 'error' ? 'shadow-red-500/40' : 'shadow-emerald-500/40'}`}>
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  {banner?.type === 'error' ? (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                  ) : (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                  )}
+
+        <div className="flex-1 flex items-center justify-center p-6 relative z-10">
+          <div className="max-w-md w-full space-y-12 animate-fade-in animate-zoom-in">
+
+            {/* Success Icon Header */}
+            <div className="relative mx-auto w-40 h-40">
+              <div className="absolute inset-0 bg-emerald-500/20 rounded-full animate-ping"></div>
+              <div className="absolute inset-4 bg-emerald-500/30 rounded-full animate-pulse"></div>
+              <div className="relative w-40 h-40 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-[3rem] flex items-center justify-center shadow-[0_20px_50px_rgba(16,185,129,0.3)] rotate-3 hover:rotate-0 transition-transform duration-500">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-20 h-20 text-white drop-shadow-lg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
             </div>
-            <div className="space-y-4">
-              <h1 className="text-4xl font-black uppercase tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-white to-slate-400">
-                {banner?.type === 'error' ? 'Atenção' : 'Muito Obrigado!'}
+
+            {/* Main Message */}
+            <div className="space-y-6">
+              <h1 className="text-6xl font-black uppercase tracking-tighter leading-[0.9] text-transparent bg-clip-text bg-gradient-to-b from-white via-white to-slate-500">
+                Muito <br />
+                <span className="text-emerald-400">Obrigado!</span>
               </h1>
-              <p className="text-slate-400 text-lg leading-relaxed font-medium">
-                {banner?.type === 'error' ? (
-                  <>
-                    <span className="text-red-400 font-bold block mb-2">{banner.message}</span>
-                    Sua sessão foi encerrada pelo sistema.
-                  </>
-                ) : (
-                  <>
-                    Agradecemos por usar nossos serviços. <br />
-                    <span className="text-emerald-400">Sua sessão foi encerrada com sucesso.</span>
-                  </>
-                )}
+
+              <div className="h-1 w-20 bg-emerald-500/50 mx-auto rounded-full"></div>
+
+              <p className="text-slate-300 text-xl leading-relaxed font-medium px-4">
+                Sua conta foi finalizada com sucesso. <br />
+                <span className="text-emerald-300/80 italic font-bold">Agradecemos a preferência!</span>
               </p>
             </div>
-            <div className="pt-8 space-y-4">
-              <p className="text-xs text-slate-500 italic leading-relaxed uppercase tracking-[0.2em] font-black opacity-50 whitespace-pre-line">
-                {banner?.type === 'error' ? 'Dúvidas pergunte ao Garçom' : 'Agradecemos a preferência! \n Volte sempre para saborear o que temos de melhor.'}
-              </p>
+
+            {/* Action & Footer */}
+            <div className="pt-10 space-y-8">
+              <div className="bg-white/5 backdrop-blur-md border border-white/10 p-6 rounded-[2rem] shadow-xl">
+                <p className="text-sm text-slate-400 font-bold uppercase tracking-widest leading-relaxed">
+                  Volte sempre para saborear <br />
+                  o que temos de melhor! 🌟
+                </p>
+              </div>
+
               <button
                 onClick={() => {
                   localStorage.removeItem(`sessionToken_${tableParam}`);
                   updateTerminalState(false);
                   window.location.reload();
                 }}
-                className="px-8 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-full text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 border border-slate-700"
+                className="group relative w-full overflow-hidden bg-white text-slate-900 font-black py-6 rounded-[2rem] transition-all hover:scale-105 active:scale-95 shadow-[0_15px_30px_rgba(255,255,255,0.1)]"
               >
-                Nova Sessão
+                <span className="relative z-10 uppercase tracking-[0.2em] text-sm">Voltar ao Início</span>
+                <div className="absolute inset-0 bg-gradient-to-r from-emerald-100 to-white opacity-0 group-hover:opacity-100 transition-opacity"></div>
               </button>
+
+              <p className="text-[10px] text-slate-500 uppercase tracking-[0.3em] font-black opacity-40">
+                Sistema Fast Delivery &copy; 2026
+              </p>
             </div>
           </div>
         </div>
