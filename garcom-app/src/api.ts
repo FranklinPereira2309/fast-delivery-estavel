@@ -21,6 +21,30 @@ api.interceptors.request.use(config => {
     return config;
 });
 
+api.interceptors.response.use(
+    response => response,
+    error => {
+        let message = 'Erro de conexão com o servidor';
+
+        if (error.response) {
+            const status = error.response.status;
+            switch (status) {
+                case 400: message = 'Dados inválidos ou incompletos'; break;
+                case 401: message = 'Acesso não Autorizado'; break;
+                case 403: message = 'Você não tem permissão para esta ação'; break;
+                case 404: message = 'Recurso solicitado não encontrado'; break;
+                case 429: message = 'Muitas tentativas. Tente novamente mais tarde'; break;
+                case 500: message = 'Erro interno no servidor. Tente novamente'; break;
+                default: message = `Erro inesperado: Status ${status}`;
+            }
+        } else if (error.message.includes('Network Error')) {
+            message = 'Sem conexão com a internet';
+        }
+
+        return Promise.reject(new Error(message));
+    }
+);
+
 export const socket = io(API_BASE.replace('/api', ''), {
     transports: ['websocket']
 });

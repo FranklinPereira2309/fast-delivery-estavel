@@ -50,8 +50,26 @@ class APIDBService {
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Erro na requisição');
+      let message = '';
+      try {
+        const error = await response.json();
+        message = error.message;
+      } catch (e) {
+        // Fallback to status translations
+      }
+
+      if (!message) {
+        switch (response.status) {
+          case 400: message = 'Dados inválidos ou incompletos'; break;
+          case 401: message = 'Acesso não Autorizado'; break;
+          case 403: message = 'Você não tem permissão para esta ação'; break;
+          case 404: message = 'Recurso não encontrado'; break;
+          case 500: message = 'Erro interno no servidor'; break;
+          default: message = `Erro inesperado: Status ${response.status}`;
+        }
+      }
+
+      throw new Error(message);
     }
 
     return response.json();
