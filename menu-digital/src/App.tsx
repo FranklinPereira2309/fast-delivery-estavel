@@ -246,10 +246,7 @@ function AppContent() {
 
         // 2. Handle Payment Completion (Table becomes available)
         if (data.status === 'available' && Number(data.tableNumber) === targetTable) {
-          setIsBilling(false);
-          setCurrentPin(null);
-          setIsOwner(false);
-          setIsPinRequired(false);
+          const timeSinceFinished = Date.now() - sessionContextRef.current.lastFinishedAt;
 
           // CRITICAL: Only trigger "Thank You" if this device was part of the CURRENT PAID session
           const localToken = sessionContextRef.current.token;
@@ -259,8 +256,23 @@ function AppContent() {
           const isPinMatch = sessionContextRef.current.pin && data.pin && sessionContextRef.current.pin === data.pin;
 
           if (isSessionMatch || isPinMatch) {
+            setIsBilling(false);
+            setCurrentPin(null);
+            setIsOwner(false);
+            setIsPinRequired(false);
             updateTerminalState(true);
           } else {
+            // Se não é nossa sessão, mas estamos protegidos pelo timer de 1 min, não resetamos nada
+            if (timeSinceFinished < 60000) {
+              console.log('Ignoring available status while in 1min protection window');
+              return;
+            }
+
+            setIsBilling(false);
+            setCurrentPin(null);
+            setIsOwner(false);
+            setIsPinRequired(false);
+
             // Se a mesa ficou livre mas o token/pin não bate, apenas limpa o estado local
             if (localToken && data.sessionToken === null) {
               // Caso especial: sessão foi limpa mas sem token específico (ex: limpeza manual pelo Admin)
@@ -275,6 +287,12 @@ function AppContent() {
         }
 
         // 3. Status is occupied or pending-digital
+        const timeSinceFinished = Date.now() - sessionContextRef.current.lastFinishedAt;
+        if (timeSinceFinished < 60000) {
+          console.log('Ignoring status change while in 1min protection window');
+          return;
+        }
+
         setIsBilling(false);
         updateTerminalState(false);
         setTableError(null);
@@ -306,10 +324,7 @@ function AppContent() {
     const handlePaymentConfirmed = (data: any) => {
       console.log('Socket paymentConfirmed received:', data);
       if (Number(data.tableNumber) === Number(tableParam)) {
-        setIsBilling(false);
-        setCurrentPin(null);
-        setIsOwner(false);
-        setIsPinRequired(false);
+        const timeSinceFinished = Date.now() - sessionContextRef.current.lastFinishedAt;
 
         // CRITICAL: Only trigger "Thank You" if this device was part of the CURRENT PAID session
         const localToken = sessionContextRef.current.token;
@@ -317,8 +332,20 @@ function AppContent() {
         const isPinMatch = sessionContextRef.current.pin && data.pin && sessionContextRef.current.pin === data.pin;
 
         if (isSessionMatch || isPinMatch) {
+          setIsBilling(false);
+          setCurrentPin(null);
+          setIsOwner(false);
+          setIsPinRequired(false);
           updateTerminalState(true);
         } else {
+          // Se não é nossa sessão mas estamos protegidos, ignoramos
+          if (timeSinceFinished < 60000) return;
+
+          setIsBilling(false);
+          setCurrentPin(null);
+          setIsOwner(false);
+          setIsPinRequired(false);
+
           if (localToken && data.sessionToken === null) {
             updateTerminalState(true);
           } else {
