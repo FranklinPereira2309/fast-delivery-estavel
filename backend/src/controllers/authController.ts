@@ -3,11 +3,12 @@ import prisma from '../prisma';
 
 export const login = async (req: Request, res: Response) => {
     const { email, password } = req.body;
+    const normalizedEmail = email?.toLowerCase();
 
     try {
         const user = await prisma.user.findFirst({
             where: {
-                email,
+                email: normalizedEmail,
                 password // Note: In a real app, use hashing like bcrypt
             }
         });
@@ -80,9 +81,15 @@ export const logout = async (req: Request, res: Response) => {
 
 export const verifyRecoveryCode = async (req: Request, res: Response) => {
     const { email, recoveryCode } = req.body;
+    const normalizedEmail = email?.toLowerCase();
+    const normalizedCode = recoveryCode?.toUpperCase();
+
     try {
         const user = await prisma.user.findFirst({
-            where: { email, recoveryCode }
+            where: {
+                email: normalizedEmail,
+                recoveryCode: normalizedCode
+            }
         });
         if (user) {
             res.json({ valid: true });
@@ -96,9 +103,15 @@ export const verifyRecoveryCode = async (req: Request, res: Response) => {
 
 export const resetPassword = async (req: Request, res: Response) => {
     const { email, recoveryCode, newPassword } = req.body;
+    const normalizedEmail = email?.toLowerCase();
+    const normalizedCode = recoveryCode?.toUpperCase();
+
     try {
         const user = await prisma.user.findFirst({
-            where: { email, recoveryCode }
+            where: {
+                email: normalizedEmail,
+                recoveryCode: normalizedCode
+            }
         });
         if (user) {
             await prisma.user.update({

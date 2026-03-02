@@ -49,7 +49,9 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
   const handleForgot = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    const isValid = await db.verifyRecoveryCode(email, recoveryCode);
+    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedCode = recoveryCode.trim().toUpperCase();
+    const isValid = await db.verifyRecoveryCode(normalizedEmail, normalizedCode);
     if (isValid) {
       setView('RESET');
     } else {
@@ -63,8 +65,14 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
       return setError('As senhas não coincidem.');
     }
     setError('');
+    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedCode = recoveryCode.trim().toUpperCase();
     try {
-      await db.resetPassword({ email, recoveryCode, newPassword });
+      await db.resetPassword({
+        email: normalizedEmail,
+        recoveryCode: normalizedCode,
+        newPassword
+      });
       showAlert('Sucesso', 'Senha alterada com sucesso! Faça login agora.', 'SUCCESS', () => {
         setAlertConfig(prev => ({ ...prev, isOpen: false }));
         setView('LOGIN');
@@ -212,7 +220,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                   placeholder="A1B2C3"
                   className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl focus:ring-2 focus:ring-blue-500 transition-all text-white text-center font-black tracking-widest outline-none uppercase"
                   value={recoveryCode}
-                  onChange={(e) => setRecoveryCode(e.target.value)}
+                  onChange={(e) => setRecoveryCode(e.target.value.toUpperCase().trim())}
                 />
               </div>
               <button

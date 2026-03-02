@@ -24,6 +24,9 @@ export const saveUser = async (req: Request, res: Response) => {
     const isNewUser = !data.id;
 
     const userData = { ...data };
+    if (userData.email) {
+        userData.email = userData.email.toLowerCase();
+    }
 
     if (isNewUser) {
         userData.recoveryCode = generateRecoveryCode();
