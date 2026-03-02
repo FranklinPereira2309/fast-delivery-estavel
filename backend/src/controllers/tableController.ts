@@ -269,7 +269,8 @@ export const deleteTableSession = async (req: Request, res: Response) => {
             status: 'available',
             action: 'refresh',
             rejectionMessage: rejectionMessage,
-            sessionToken: session?.sessionToken || null
+            sessionToken: session?.sessionToken || null,
+            pin: session?.pin || null
         });
     } catch (e) {
         console.error('Socket error emitting tableStatusChanged:', e);

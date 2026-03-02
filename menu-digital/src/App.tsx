@@ -237,10 +237,13 @@ function AppContent() {
           const localToken = localStorage.getItem(`sessionToken_${tableParam}`);
           const isSessionMatch = localToken && data.sessionToken && localToken === data.sessionToken;
 
-          if (isSessionMatch) {
+          // PIN matching fallback: If we share the same PIN that was just finalized
+          const isPinMatch = currentPin && data.pin && currentPin === data.pin;
+
+          if (isSessionMatch || isPinMatch) {
             updateTerminalState(true);
           } else {
-            // Se a mesa ficou livre mas o token não bate, apenas limpa o estado local
+            // Se a mesa ficou livre mas o token/pin não bate, apenas limpa o estado local
             if (localToken && data.sessionToken === null) {
               // Caso especial: sessão foi limpa mas sem token específico (ex: limpeza manual pelo Admin)
               // Nesse caso, se o usuário tinha um token, assumimos que a sessão dele acabou
@@ -293,8 +296,9 @@ function AppContent() {
         // CRITICAL: Only trigger "Thank You" if this device was part of the CURRENT PAID session
         const localToken = localStorage.getItem(`sessionToken_${tableParam}`);
         const isSessionMatch = localToken && data.sessionToken && localToken === data.sessionToken;
+        const isPinMatch = currentPin && data.pin && currentPin === data.pin;
 
-        if (isSessionMatch) {
+        if (isSessionMatch || isPinMatch) {
           updateTerminalState(true);
         } else {
           if (localToken && data.sessionToken === null) {

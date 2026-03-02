@@ -194,14 +194,16 @@ export const saveOrder = async (req: Request, res: Response) => {
                         tableNumber: tableNumIdx,
                         status: 'available',
                         action: 'refresh',
-                        sessionToken: sessionToken
+                        sessionToken: sessionToken,
+                        pin: sessionToClear?.pin || null
                     });
 
                     // Notificação direta para a mesa para exibir agradecimento instantâneo
                     getIO().to(`table_${Number(tableNumIdx)}`).emit('paymentConfirmed', {
                         tableNumber: Number(tableNumIdx),
                         message: "Agradecemos a Preferência",
-                        sessionToken: sessionToken
+                        sessionToken: sessionToken,
+                        pin: sessionToClear?.pin || null
                     });
 
                     // Modificação: Em vez de atualizar o registro TABLE-X infinitamente (o que destrói o histórico de vendas),
@@ -361,7 +363,7 @@ export const saveOrder = async (req: Request, res: Response) => {
                         dueDate: dueDate,
                         status: 'PENDING'
                     }
-                }).catch(e => console.error('Error auto-creating FIADO receivable:', e));
+                }).catch((e: any) => console.error('Error auto-creating FIADO receivable:', e));
             }
         }
 
@@ -504,7 +506,16 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
                         tableNumber: oldOrder.tableNumber,
                         status: 'available',
                         action: 'refresh',
-                        sessionToken: sessionToken
+                        sessionToken: sessionToken,
+                        pin: sessionToClear?.pin || null
+                    });
+
+                    // Notificação direta para a mesa para exibir agradecimento instantâneo
+                    getIO().to(`table_${Number(oldOrder.tableNumber)}`).emit('paymentConfirmed', {
+                        tableNumber: Number(oldOrder.tableNumber),
+                        message: "Agradecemos a Preferência",
+                        sessionToken: sessionToken,
+                        pin: sessionToClear?.pin || null
                     });
                 }
             } else if (newStatus !== 'DELIVERED' && oldStatus === 'DELIVERED') {
