@@ -221,6 +221,27 @@ export const saveTableSession = async (req: Request, res: Response) => {
             console.error('Socket error emitting messages:', e);
         }
 
+        try {
+            // Notificar o cardápio digital se o status calculado (baseado nos itens) for pronto/parcialmente pronto
+            // Reaproveitamos a lógica de cálculo de status baseada nos itens da sessão
+            const sessionItems = result.items || [];
+            if (sessionItems.length > 0) {
+                const allReady = sessionItems.every((it: any) => it.isReady === true);
+                const anyReady = sessionItems.some((it: any) => it.isReady === true);
+                const calculatedStatus = allReady ? 'READY' : (anyReady ? 'PARTIALLY_READY' : 'PREPARING');
+
+                if (calculatedStatus === 'READY' || calculatedStatus === 'PARTIALLY_READY') {
+                    getIO().to(`table_${result.tableNumber}`).emit('orderStatusUpdated', {
+                        tableNumber: result.tableNumber,
+                        status: calculatedStatus,
+                        message: "Pedido Pronto na Cozinha, só mais um instante e você será servido!"
+                    });
+                }
+            }
+        } catch (e) {
+            console.error('Socket error emitting orderStatusUpdated from saveTableSession:', e);
+        }
+
         res.json(mapSessionResponse(result));
     } catch (error: any) {
         console.error('Error saving table session:', error);
