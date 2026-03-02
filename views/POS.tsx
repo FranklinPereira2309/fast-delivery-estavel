@@ -2087,15 +2087,15 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       {
         isReviewModalOpen && reviewSession && (
           <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/95 backdrop-blur-2xl animate-in fade-in duration-300 p-4">
-            <div className="bg-white w-full max-w-[800px] rounded-[2rem] lg:rounded-[3.5rem] shadow-2xl overflow-hidden border border-slate-100 flex flex-col max-h-[90vh] print-container relative">
-              <div className="p-6 lg:p-10 border-b border-slate-50 shrink-0 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div className="flex items-center gap-4 lg:gap-6">
-                  <div className="w-16 h-16 lg:w-20 lg:h-20 bg-blue-50 text-blue-600 rounded-2xl lg:rounded-[2rem] flex items-center justify-center text-3xl lg:text-4xl shrink-0">
+            <div className="bg-white w-full max-w-[700px] rounded-[3rem] shadow-2xl overflow-hidden border border-slate-100 flex flex-col max-h-[95vh] print-container relative">
+              <div className="p-6 lg:p-8 border-b border-slate-50 shrink-0 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div className="flex items-center gap-4 lg:gap-5">
+                  <div className="w-14 h-14 lg:w-16 lg:h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-2xl lg:text-3xl shrink-0">
                     📄
                   </div>
                   <div>
-                    <h2 className="text-2xl lg:text-3xl font-black text-slate-800 uppercase tracking-tighter leading-tight">Relatório do Caixa</h2>
-                    <p className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1 lg:mt-2 flex items-center gap-2">
+                    <h2 className="text-xl lg:text-2xl font-black text-slate-800 uppercase tracking-tighter leading-tight">Relatório do Caixa</h2>
+                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1 flex items-center gap-2">
                       ID: {reviewSession.id.substring(0, 8)} • Usuário: {reviewSession.closedByName}
                     </p>
                   </div>
@@ -2107,58 +2107,58 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                     setAdminPassword('');
                     setClosingReport({ cash: '', pix: '', credit: '', debit: '', others: '', observations: '' });
                   }}
-                  className="w-12 h-12 lg:w-14 lg:h-14 flex items-center justify-center bg-slate-100 rounded-full text-slate-400 hover:bg-red-50 hover:text-red-500 transition-all font-black text-2xl absolute top-4 right-4 sm:static no-print"
+                  className="w-10 h-10 flex items-center justify-center bg-slate-100 rounded-full text-slate-400 hover:bg-red-50 hover:text-red-500 transition-all font-black text-xl absolute top-4 right-4 sm:static no-print"
                 >
                   ×
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-6 lg:p-10">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 mb-8 lg:mb-10">
-                  <div className="bg-slate-50/50 p-6 lg:p-8 rounded-[2rem] lg:rounded-[2.5rem] border border-slate-100">
-                    <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6">Valores por Categoria</h3>
-                    <div className="space-y-4">
-                      <div className="flex justify-between items-center bg-white p-4 rounded-2xl border border-slate-100">
-                        <span className="text-[10px] font-black text-slate-600 uppercase">Dinheiro</span>
-                        <span className="font-black text-slate-800">R$ {reviewSession.reportedCash.toFixed(2)}</span>
+              <div className="flex-1 p-6 lg:p-8 space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+                  <div className="bg-slate-50/50 p-6 rounded-[2rem] border border-slate-100 h-full">
+                    <h3 className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-4">Valores por Categoria</h3>
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center bg-white p-3 rounded-xl border border-slate-100">
+                        <span className="text-[9px] font-black text-slate-500 uppercase">Dinheiro</span>
+                        <span className="font-black text-slate-800 text-sm">R$ {reviewSession.reportedCash.toFixed(2)}</span>
                       </div>
-                      <div className="flex justify-between items-center bg-white p-4 rounded-2xl border border-slate-100">
-                        <span className="text-[10px] font-black text-slate-600 uppercase">PIX</span>
-                        <span className="font-black text-slate-800">R$ {reviewSession.reportedPix.toFixed(2)}</span>
+                      <div className="flex justify-between items-center bg-white p-3 rounded-xl border border-slate-100">
+                        <span className="text-[9px] font-black text-slate-500 uppercase">PIX</span>
+                        <span className="font-black text-slate-800 text-sm">R$ {reviewSession.reportedPix.toFixed(2)}</span>
                       </div>
-                      <div className="flex justify-between items-center bg-white p-4 rounded-2xl border border-slate-100">
-                        <span className="text-[10px] font-black text-slate-600 uppercase">Crédito</span>
-                        <span className="font-black text-slate-800">R$ {reviewSession.reportedCredit.toFixed(2)}</span>
+                      <div className="flex justify-between items-center bg-white p-3 rounded-xl border border-slate-100">
+                        <span className="text-[9px] font-black text-slate-500 uppercase">Crédito</span>
+                        <span className="font-black text-slate-800 text-sm">R$ {reviewSession.reportedCredit.toFixed(2)}</span>
                       </div>
-                      <div className="flex justify-between items-center bg-white p-4 rounded-2xl border border-slate-100">
-                        <span className="text-[10px] font-black text-slate-600 uppercase">Débito</span>
-                        <span className="font-black text-slate-800">R$ {(reviewSession.reportedDebit || 0).toFixed(2)}</span>
+                      <div className="flex justify-between items-center bg-white p-3 rounded-xl border border-slate-100">
+                        <span className="text-[9px] font-black text-slate-500 uppercase">Débito</span>
+                        <span className="font-black text-slate-800 text-sm">R$ {(reviewSession.reportedDebit || 0).toFixed(2)}</span>
                       </div>
-                      <div className="flex justify-between items-center bg-emerald-50 p-4 rounded-2xl border border-emerald-100">
-                        <span className="text-[10px] font-black text-emerald-600 uppercase">Outros</span>
-                        <span className="font-black text-emerald-800">R$ {(reviewSession.reportedOthers || 0).toFixed(2)}</span>
+                      <div className="flex justify-between items-center bg-emerald-50 p-3 rounded-xl border border-emerald-100">
+                        <span className="text-[9px] font-black text-emerald-600 uppercase">Outros</span>
+                        <span className="font-black text-emerald-800 text-sm">R$ {(reviewSession.reportedOthers || 0).toFixed(2)}</span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex flex-col gap-4">
-                    <div className="bg-blue-600 p-6 lg:p-8 rounded-[2rem] lg:rounded-[2.5rem] text-white shadow-xl lg:shadow-2xl shadow-blue-200">
-                      <h3 className="text-[9px] lg:text-[10px] font-black opacity-60 uppercase tracking-widest mb-1 lg:mb-2">Total Informado</h3>
-                      <p className="text-3xl lg:text-4xl font-black">R$ {((reviewSession.reportedCash || 0) + (reviewSession.reportedPix || 0) + (reviewSession.reportedCredit || 0) + (reviewSession.reportedDebit || 0) + (reviewSession.reportedOthers || 0)).toFixed(2)}</p>
+                  <div className="flex flex-col gap-4 h-full justify-center">
+                    <div className="bg-blue-600 p-6 rounded-[2rem] text-white shadow-xl shadow-blue-100 text-center">
+                      <h3 className="text-[9px] font-black opacity-60 uppercase tracking-widest mb-1">Total Informado</h3>
+                      <p className="text-3xl font-black">R$ {((reviewSession.reportedCash || 0) + (reviewSession.reportedPix || 0) + (reviewSession.reportedCredit || 0) + (reviewSession.reportedDebit || 0) + (reviewSession.reportedOthers || 0)).toFixed(2)}</p>
                     </div>
 
-                    <div className={`p-6 lg:p-8 rounded-[2rem] lg:rounded-[2.5rem] border-2 ${reviewSession.difference === 0 ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : (reviewSession.difference > 0 ? 'bg-blue-50 border-blue-100 text-blue-700' : 'bg-red-50 border-red-100 text-red-700')}`}>
-                      <h3 className="text-[9px] lg:text-[10px] font-black opacity-60 uppercase tracking-widest mb-1 lg:mb-2">Diferença (vs Sistema)</h3>
-                      <p className="text-3xl lg:text-4xl font-black italic">R$ {reviewSession.difference.toFixed(2)}</p>
-                      <p className="text-[8px] lg:text-[9px] font-black uppercase mt-2 opacity-80">
-                        {reviewSession.difference === 0 ? '✓ Valores em Conformidade' : (reviewSession.difference > 0 ? '↑ Sobra de Caixa Identificada' : '↓ Falta de Caixa Identificada')}
+                    <div className={`p-6 rounded-[2rem] border-2 text-center ${reviewSession.difference === 0 ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : (reviewSession.difference > 0 ? 'bg-blue-50 border-blue-100 text-blue-700' : 'bg-red-50 border-red-100 text-red-700')}`}>
+                      <h3 className="text-[9px] font-black opacity-60 uppercase tracking-widest mb-1">Diferença (vs Sistema)</h3>
+                      <p className="text-3xl font-black italic">R$ {reviewSession.difference.toFixed(2)}</p>
+                      <p className="text-[8px] font-black uppercase mt-1 opacity-80">
+                        {reviewSession.difference === 0 ? '✓ Conformidade' : (reviewSession.difference > 0 ? '↑ Sobra Detectada' : '↓ Falta Detectada')}
                       </p>
                     </div>
                   </div>
                 </div>
 
                 {/* Buttons Area */}
-                <div className="bg-slate-900 rounded-[2rem] lg:rounded-[3rem] p-6 lg:p-10 flex flex-col sm:flex-row gap-4 no-print">
+                <div className="bg-slate-950 rounded-[2.5rem] p-6 lg:p-8 flex flex-col sm:flex-row gap-4 no-print mt-auto">
                   <button
                     onClick={() => {
                       setClosingReport({
@@ -2171,7 +2171,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                       });
                       setIsAdjustModalOpen(true);
                     }}
-                    className="flex-1 py-5 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl transition-all active:scale-95 flex items-center justify-center gap-2"
+                    className="flex-1 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl transition-all active:scale-95 flex items-center justify-center gap-2"
                   >
                     <Icons.Dashboard /> Ajustes e Correções
                   </button>
@@ -2179,7 +2179,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                     onClick={() => {
                       window.print();
                     }}
-                    className="flex-[2] py-5 bg-white/10 hover:bg-white/20 text-white rounded-2xl font-black uppercase text-xs tracking-widest transition-all"
+                    className="flex-1 py-4 bg-white/10 hover:bg-white/20 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest transition-all"
                   >
                     Imprimir Relatório 🖨️
                   </button>
