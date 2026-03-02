@@ -54,8 +54,8 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
       {/* Header */}
       <header className="p-6 bg-white border-b border-slate-100 flex justify-between items-center sticky top-0 z-20 shadow-sm">
         <div className="flex items-center gap-4">
-          <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
-            <span className="text-white text-lg font-black italic tracking-tighter">DF</span>
+          <div className="w-10 h-10 overflow-hidden rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
+            <img src="/favicon.png" alt="Logo" className="w-full h-full object-cover" />
           </div>
           <div>
             <h1 className="text-sm font-black text-slate-900 uppercase tracking-tighter">App Garçom</h1>

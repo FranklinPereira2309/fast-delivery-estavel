@@ -73,8 +73,8 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
             <div className="w-full max-w-md animate-fade-in">
                 <div className="bg-white p-10 rounded-[3rem] shadow-xl shadow-slate-200/50 border border-slate-100">
                     <div className="flex flex-col items-center mb-10 text-center">
-                        <div className="w-20 h-20 bg-blue-600 rounded-[2rem] flex items-center justify-center shadow-2xl shadow-blue-500/30 mb-6 transform -rotate-6 transition-transform hover:rotate-0 duration-500">
-                            <span className="text-white text-4xl font-black italic tracking-tighter">DF</span>
+                        <div className="w-20 h-20 overflow-hidden rounded-[2.5rem] flex items-center justify-center shadow-2xl shadow-blue-500/30 mb-6 transform -rotate-6 transition-transform hover:rotate-0 duration-500">
+                            <img src="/favicon.png" alt="Logo" className="w-full h-full object-cover" />
                         </div>
                         <h1 className="text-3xl font-black text-slate-900 tracking-tighter uppercase leading-none">App Garçom</h1>
                         <p className="text-slate-400 text-[10px] font-black mt-3 tracking-[0.2em] uppercase">
