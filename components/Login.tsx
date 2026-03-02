@@ -155,7 +155,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                 <input
                   type="email"
                   required
-                  placeholder="admin@fast.com"
+                  placeholder="usuario@fast.com"
                   className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl focus:ring-2 focus:ring-blue-500 transition-all text-white font-medium outline-none"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -205,7 +205,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                 <input
                   type="email"
                   required
-                  placeholder="admin@fast.com"
+                  placeholder="usuario@fast.com"
                   className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl focus:ring-2 focus:ring-blue-500 transition-all text-white font-medium outline-none"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
