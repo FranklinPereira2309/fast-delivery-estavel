@@ -252,11 +252,11 @@ function AppContent() {
           setIsPinRequired(false);
 
           // CRITICAL: Only trigger "Thank You" if this device was part of the CURRENT PAID session
-          const localToken = localStorage.getItem(`sessionToken_${tableParam}`);
+          const localToken = sessionContextRef.current.token;
           const isSessionMatch = localToken && data.sessionToken && localToken === data.sessionToken;
 
           // PIN matching fallback: If we share the same PIN that was just finalized
-          const isPinMatch = currentPin && data.pin && currentPin === data.pin;
+          const isPinMatch = sessionContextRef.current.pin && data.pin && sessionContextRef.current.pin === data.pin;
 
           if (isSessionMatch || isPinMatch) {
             updateTerminalState(true);
