@@ -59,11 +59,19 @@ export const verifyTable = async (req: Request, res: Response) => {
 
         // Se houver rejeição, retornamos ela imediatamente, bloqueando o fluxo normal
         if (rejectionMessage) {
+            // SEGURANÇA: Se a mesa estiver ocupada e o token for inválido, o invasor NÃO deve ver a rejeição nem o PIN
+            if (session?.status !== 'available' && session?.sessionToken && token !== session.sessionToken) {
+                return res.status(401).json({
+                    message: 'Mesa em Atendimento - Informe o Pin',
+                    pin_required: true
+                });
+            }
+
             return res.json({
                 tableNumber,
                 status: session?.status || 'available',
                 clientName: session?.clientName || null,
-                pin: session?.pin,
+                pin: session?.sessionToken === token ? session?.pin : null, // Só entrega o PIN se for o dono
                 isOwner: session?.sessionToken === token,
                 rejectionMessage: rejectionMessage
             });
@@ -91,7 +99,7 @@ export const verifyTable = async (req: Request, res: Response) => {
             return res.json({
                 tableNumber,
                 status: 'available',
-                pin: null,
+                pin: null, // MESA LIVRE NÃO MOSTRA PIN NO CELULAR
                 sessionToken: session.sessionToken,
                 isOwner: true,
                 rejectionMessage: null
@@ -119,7 +127,7 @@ export const verifyTable = async (req: Request, res: Response) => {
             tableNumber,
             status: session.status,
             clientName: session.clientName || null,
-            pin: session.pin,
+            pin: session.sessionToken === token ? session.pin : null, // Segurança: só entrega PIN pro dono
             isOwner: session.sessionToken === token,
             rejectionMessage: null
         });
