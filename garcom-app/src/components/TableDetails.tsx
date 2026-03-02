@@ -453,5 +453,3 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, onClose, onRefresh }
 };
 
 export default TableDetails;
-
-export default TableDetails;

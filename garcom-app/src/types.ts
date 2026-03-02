@@ -39,6 +39,7 @@ export interface TableSession {
     items: OrderItem[];
     clientName?: string;
     waiterId?: string;
+    clientId?: string;
     startTime: string;
     hasPendingDigital?: boolean;
     pendingReviewItems?: string;
