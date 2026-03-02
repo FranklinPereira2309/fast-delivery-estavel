@@ -92,12 +92,17 @@ export const verifyTable = async (req: Request, res: Response) => {
             });
         }
 
+        const rejectionMessage = session.pendingReviewItems?.startsWith('REJECTED:')
+            ? session.pendingReviewItems.replace('REJECTED:', '')
+            : null;
+
         res.json({
             tableNumber,
             status: session.status,
             clientName: session.clientName || null,
             pin: session.pin, // Para quem já tem o token, o PIN fica disponível
-            isOwner: session.sessionToken === token
+            isOwner: session.sessionToken === token,
+            rejectionMessage: rejectionMessage
         });
 
     } catch (error) {
@@ -368,5 +373,52 @@ export const createOrder = async (req: Request, res: Response) => {
     } catch (error: any) {
         console.error('Error creating digital menu order:', error);
         res.status(500).json({ message: error.message || 'Error creating order' });
+    }
+};
+
+export const acknowledgeRejection = async (req: Request, res: Response) => {
+    const id = req.params.id as string;
+    const tableNumber = parseInt(id as string);
+    const token = req.headers.authorization?.replace('Bearer ', '');
+
+    if (isNaN(tableNumber)) {
+        return res.status(400).json({ message: 'Invalid table number' });
+    }
+
+    try {
+        const session = await prisma.tableSession.findUnique({ where: { tableNumber } });
+
+        if (!session || (session.sessionToken && token !== session.sessionToken)) {
+            return res.status(401).json({ message: 'Sessão inválida ou não autorizada.' });
+        }
+
+        // Se a mesa estiver em status 'available', nós a deletamos de vez agora que o usuário viu
+        if (session.status === 'available') {
+            await prisma.tableSession.delete({ where: { tableNumber } });
+            console.log(`[REJECTION] Table ${tableNumber} fully cleared after acknowledgement.`);
+        } else {
+            // Se ainda houver consumo (occupied), apenas limpamos a flag de rejeição
+            await prisma.tableSession.update({
+                where: { tableNumber },
+                data: {
+                    hasPendingDigital: false,
+                    pendingReviewItems: null
+                }
+            });
+            console.log(`[REJECTION] Table ${tableNumber} rejection flag cleared (session remains occupied).`);
+        }
+
+        // Notifica as outras telas (embora o PDV já saiba)
+        getIO().emit('tableStatusChanged', {
+            tableNumber: tableNumber,
+            status: session.status === 'available' ? 'available' : session.status,
+            action: 'refresh'
+        });
+
+        res.json({ message: 'Reconhecimento registrado com sucesso.' });
+
+    } catch (error) {
+        console.error('Error acknowledging rejection:', error);
+        res.status(500).json({ message: 'Erro ao registrar reconhecimento.' });
     }
 };

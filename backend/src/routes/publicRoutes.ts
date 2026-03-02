@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getProducts, verifyTable, createOrder, getStoreStatusEndpoint, validatePin, submitFeedback, getTableConsumption, getFeedbacks } from '../controllers/publicController';
+import { getProducts, verifyTable, createOrder, getStoreStatusEndpoint, validatePin, submitFeedback, getTableConsumption, getFeedbacks, acknowledgeRejection } from '../controllers/publicController';
 
 const router = Router();
 
@@ -11,5 +11,6 @@ router.post('/tables/validate-pin', validatePin);
 router.post('/feedback', submitFeedback);
 router.get('/store-status', getStoreStatusEndpoint);
 router.post('/orders', createOrder);
+router.post('/tables/:id/acknowledge-rejection', acknowledgeRejection);
 
 export default router;

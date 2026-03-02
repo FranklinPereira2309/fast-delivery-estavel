@@ -430,9 +430,19 @@ export const deleteOrder = async (req: Request, res: Response) => {
         try {
             getIO().emit('orderStatusChanged', { action: 'delete', id });
 
-            // Se for pedido vindo do menu digital, avisar o cliente de forma Atômica
+            // Se for pedido vindo do menu digital, avisar o cliente de forma Atômica e PERSISTENTE
             if (orderDeleted && orderDeleted.isOriginDigitalMenu && orderDeleted.tableNumber) {
                 const rejectionMessage = reason || "Pedido Cancelado, dúvidas pergunte ao Garçom";
+
+                console.log(`[SOCKET] Persisting Rejection from Order Deletion for table ${orderDeleted.tableNumber}`);
+                // Persiste no banco para garantir que o cliente veja mesmo após reload
+                await prisma.tableSession.update({
+                    where: { tableNumber: Number(orderDeleted.tableNumber) },
+                    data: {
+                        hasPendingDigital: true,
+                        pendingReviewItems: `REJECTED:${rejectionMessage}`
+                    }
+                });
 
                 // Emissão Dupla: Evento específico + Evento de Status com a mensagem
                 getIO().emit('digitalOrderCancelled', {

@@ -4,7 +4,7 @@ import Home from './components/Home';
 import CartModal from './components/CartModal';
 import { CartItem } from './types';
 import FooterNav from './components/FooterNav';
-import { verifyTable, socket, fetchStoreStatus, StoreStatus, validatePin, joinTableRoom } from './api';
+import { verifyTable, socket, fetchStoreStatus, StoreStatus, validatePin, joinTableRoom, acknowledgeRejection } from './api';
 
 function AppContent() {
   const [searchParams] = useSearchParams();
@@ -62,6 +62,15 @@ function AppContent() {
 
     try {
       const data = await verifyTable(tableParam);
+
+      // Check for persistent rejection (Server-side flag)
+      if ((data as any).rejectionMessage) {
+        setBlockingRejection({ message: (data as any).rejectionMessage });
+        setIsBilling(false);
+        setIsPinRequired(false);
+        setIsValidating(false);
+        return;
+      }
 
       // Se retornou token ou pin, salva (primeiro acesso)
       if (data.sessionToken) {
@@ -328,7 +337,12 @@ function AppContent() {
             </div>
             <div className="pt-8 px-6">
               <button
-                onClick={() => {
+                onClick={async () => {
+                  try {
+                    if (tableParam) await acknowledgeRejection(tableParam);
+                  } catch (e) {
+                    console.error('Ack error:', e);
+                  }
                   localStorage.removeItem(`sessionToken_${tableParam}`);
                   updateTerminalState(false);
                   window.location.reload();

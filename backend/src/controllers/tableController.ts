@@ -192,14 +192,23 @@ export const saveTableSession = async (req: Request, res: Response) => {
             const rejectionMessage = rejection === 'true' ? "Procure o Garçom, seu pedido foi Rejeitado!" : undefined;
 
             if (rejectionMessage) {
-                console.log(`[SOCKET] Emitting digitalOrderCancelled for table ${data.tableNumber}`);
+                console.log(`[SOCKET] Persisting Rejection for table ${data.tableNumber}`);
+                // Em vez de apenas emitir, gravamos no banco (campo oculto)
+                await prisma.tableSession.update({
+                    where: { tableNumber: Number(data.tableNumber) },
+                    data: {
+                        hasPendingDigital: true,
+                        pendingReviewItems: `REJECTED:${rejectionMessage}`
+                    }
+                });
+
                 getIO().emit('digitalOrderCancelled', {
                     tableNumber: Number(data.tableNumber),
                     message: rejectionMessage
                 });
             }
 
-            console.log(`[SOCKET] Emitting tableStatusChanged (${data.status || 'occupied'}) for table ${data.tableNumber} ${rejectionMessage ? 'WITH REJECTION' : ''}`);
+            console.log(`[SOCKET] Emitting tableStatusChanged (${data.status || 'occupied'}) for table ${data.tableNumber}`);
             getIO().emit('tableStatusChanged', {
                 tableNumber: Number(data.tableNumber),
                 status: data.status || 'occupied',
@@ -228,21 +237,31 @@ export const deleteTableSession = async (req: Request, res: Response) => {
     // Buscar sessão antes de deletar para saber se era digital
     const session = await prisma.tableSession.findUnique({ where: { tableNumber: tableNum } });
 
-    // Use deleteMany para não dar erro se já foi deletado (ex: pelo status DELIVERED no saveOrder)
-    await prisma.tableSession.deleteMany({ where: { tableNumber: tableNum } });
-
     try {
         const rejectionMessage = cancellation === 'true' ? "Procure o Garçom, seu pedido foi Rejeitado!" : undefined;
 
         if (rejectionMessage) {
-            console.log(`[SOCKET] Emitting digitalOrderCancelled (rejection) for table ${tableNum}`);
+            console.log(`[SOCKET] Soft-Deleting and Persisting Rejection for table ${tableNum}`);
+            // Em vez de deletar, transformamos em uma "sessão de rejeição"
+            await prisma.tableSession.update({
+                where: { tableNumber: tableNum },
+                data: {
+                    status: 'available', // Mesa fica disponível no PDV
+                    hasPendingDigital: true,
+                    pendingReviewItems: `REJECTED:${rejectionMessage}`
+                }
+            });
+
             getIO().emit('digitalOrderCancelled', {
                 tableNumber: Number(tableNum),
                 message: rejectionMessage
             });
+        } else {
+            // Deleção real (pagamento ou limpeza manual sem rejeição)
+            await prisma.tableSession.deleteMany({ where: { tableNumber: tableNum } });
         }
 
-        console.log(`[SOCKET] Emitting tableStatusChanged (available) for table ${tableNum} ${rejectionMessage ? 'WITH REJECTION' : ''}`);
+        console.log(`[SOCKET] Emitting tableStatusChanged (available) for table ${tableNum}`);
         getIO().emit('tableStatusChanged', {
             tableNumber: Number(tableNum),
             status: 'available',

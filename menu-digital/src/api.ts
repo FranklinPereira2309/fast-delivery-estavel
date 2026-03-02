@@ -124,3 +124,12 @@ export const fetchConsumption = async (tableNumber: string) => {
     }
 };
 
+export const acknowledgeRejection = async (tableNumber: string) => {
+    try {
+        const response = await axios.post(`${API_URL}/tables/${tableNumber}/acknowledge-rejection`);
+        return response.data;
+    } catch (error: any) {
+        console.error('Error acknowledging rejection', error);
+        throw error.response?.data || { message: 'Erro ao confirmar rejeição.' };
+    }
+};
