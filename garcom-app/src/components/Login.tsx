@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { db } from '../api';
-import { Eye, EyeOff, Lock, Mail, Key, CheckCircle2 } from 'lucide-react';
+import { Eye, EyeOff, Lock, Mail, Key } from 'lucide-react';
 import type { User } from '../types';
 
 interface LoginProps {
