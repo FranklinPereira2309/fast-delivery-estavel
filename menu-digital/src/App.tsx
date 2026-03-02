@@ -106,7 +106,7 @@ function AppContent() {
       // Only clear finished session if we are actually in an active state now
       if (data.status === 'occupied' || data.status === 'billing') {
         updateTerminalState(false);
-      } else if (data.status === 'available' && token) {
+      } else if (data.status === 'available' && token && Number(data.tableNumber) === Number(tableParam)) {
         // BACKUP: Se a mesa estiver livre mas o usuário ainda tem um token, 
         // significa que a conta foi paga e o socket de finalização falhou ou foi perdido.
         console.log('Finalização detectada via backup (mesa livre com token)');
@@ -227,7 +227,7 @@ function AppContent() {
         }
 
         // 2. Handle Payment Completion (Table becomes available)
-        if (data.status === 'available') {
+        if (data.status === 'available' && Number(data.tableNumber) === targetTable) {
           setIsBilling(false);
           setCurrentPin(null);
           setIsOwner(false);
