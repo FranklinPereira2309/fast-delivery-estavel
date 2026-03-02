@@ -320,8 +320,8 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, onClose, onRefresh }
                                     const quantity = cartItem?.quantity || 0;
 
                                     return (
-                                        <div key={product.id} className="premium-card p-4 flex justify-between items-center transition-all">
-                                            <div className="flex items-center gap-3">
+                                        <div key={product.id} className="premium-card p-3 sm:p-4 flex justify-between items-center gap-2 transition-all">
+                                            <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
                                                 <div className="w-10 h-10 bg-slate-50 rounded-xl overflow-hidden shadow-inner flex items-center justify-center shrink-0">
                                                     {product.imageUrl ? (
                                                         <img src={product.imageUrl} className="w-full h-full object-cover" />
@@ -329,16 +329,16 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, onClose, onRefresh }
                                                         <LayoutGrid className="text-slate-200" size={16} />
                                                     )}
                                                 </div>
-                                                <div className="min-w-0">
-                                                    <p className="text-xs font-black text-slate-800 uppercase leading-none mb-1 truncate">{product.name}</p>
+                                                <div className="min-w-0 flex-1">
+                                                    <p className="text-[11px] sm:text-xs font-black text-slate-800 uppercase leading-none mb-1 truncate">{product.name}</p>
                                                     <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest truncate">{product.category}</p>
                                                 </div>
                                             </div>
-                                            <div className="flex items-center gap-3">
-                                                <p className="text-[11px] font-black text-blue-600 tracking-tighter shrink-0">R$ {product.price.toFixed(2)}</p>
+                                            <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+                                                <p className="text-[10px] sm:text-[11px] font-black text-blue-600 tracking-tighter shrink-0">R$ {product.price.toFixed(2)}</p>
 
                                                 {quantity > 0 ? (
-                                                    <div className="flex items-center bg-slate-50 rounded-lg p-0.5 gap-1 border border-slate-100">
+                                                    <div className="flex items-center bg-slate-50 rounded-lg p-0.5 gap-1 border border-slate-100 shrink-0">
                                                         <button
                                                             onClick={() => updateCartQuantity(product.id, -1)}
                                                             className="w-7 h-7 rounded-md bg-white shadow-sm flex items-center justify-center font-black text-slate-400 active:scale-90 transition-transform"
@@ -356,7 +356,7 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, onClose, onRefresh }
                                                 ) : (
                                                     <button
                                                         onClick={() => addToCart(product)}
-                                                        className="w-9 h-9 bg-slate-900 text-white rounded-lg flex items-center justify-center shadow-lg active:scale-95 transition-all shrink-0"
+                                                        className="w-8 h-8 sm:w-9 sm:h-9 bg-slate-900 text-white rounded-lg flex items-center justify-center shadow-lg active:scale-95 transition-all shrink-0"
                                                     >
                                                         <Plus size={16} />
                                                     </button>
