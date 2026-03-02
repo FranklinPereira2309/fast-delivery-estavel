@@ -77,6 +77,7 @@ function AppContent() {
       }
 
       setIsValidating(true);
+      const token = localStorage.getItem(`sessionToken_${tableParam}`);
       const data = await verifyTable(tableParam);
 
       // Se a mesa for encontrada, limpamos erros anteriores
