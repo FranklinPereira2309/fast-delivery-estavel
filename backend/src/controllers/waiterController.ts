@@ -21,7 +21,16 @@ export const saveWaiter = async (req: Request, res: Response) => {
     // 2. Sync with User (if email provided)
     if (email) {
         const existingUser = await prisma.user.findUnique({ where: { email } });
-        const hashedPassword = await bcrypt.hash('123456', 10); // Default password for new waiters
+        const hashedPassword = await bcrypt.hash('123', 10); // Default password for new waiters: 123
+
+        const generateRecoveryCode = () => {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let code = '';
+            for (let i = 0; i < 6; i++) {
+                code += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return code;
+        };
 
         if (existingUser) {
             // Update existing user permissions to include waiter if not present
@@ -44,7 +53,9 @@ export const saveWaiter = async (req: Request, res: Response) => {
                     phone,
                     password: hashedPassword,
                     permissions: ['waiter', 'dashboard'], // Essential permissions
-                    active: true
+                    active: true,
+                    mustChangePassword: true,
+                    recoveryCode: generateRecoveryCode()
                 }
             });
         }

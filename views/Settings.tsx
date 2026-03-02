@@ -177,7 +177,7 @@ const WaiterManagement: React.FC = () => {
                                     className="w-full p-5 bg-slate-50 border-none rounded-[1.5rem] outline-none font-bold text-sm shadow-inner focus:ring-4 focus:ring-blue-100 transition-all"
                                     placeholder="exemplo@gmail.com"
                                 />
-                                <p className="text-[9px] text-slate-400 font-medium ml-2 mt-2">A senha padrão para novos usuários é: <span className="font-black text-blue-600">123456</span></p>
+                                <p className="text-[9px] text-slate-400 font-medium ml-2 mt-2">A senha padrão para novos usuários é: <span className="font-black text-blue-600">123</span></p>
                             </div>
 
                             <div className="pt-6 border-t border-slate-50 flex gap-4">
