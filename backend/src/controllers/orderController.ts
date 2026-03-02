@@ -430,11 +430,21 @@ export const deleteOrder = async (req: Request, res: Response) => {
         try {
             getIO().emit('orderStatusChanged', { action: 'delete', id });
 
-            // Se for pedido vindo do menu digital, avisar o cliente
+            // Se for pedido vindo do menu digital, avisar o cliente de forma Atômica
             if (orderDeleted && orderDeleted.isOriginDigitalMenu && orderDeleted.tableNumber) {
+                const rejectionMessage = reason || "Pedido Cancelado, dúvidas pergunte ao Garçom";
+
+                // Emissão Dupla: Evento específico + Evento de Status com a mensagem
                 getIO().emit('digitalOrderCancelled', {
                     tableNumber: Number(orderDeleted.tableNumber),
-                    message: reason || "Pedido Cancelado, dúvidas pergunte ao Garçom"
+                    message: rejectionMessage
+                });
+
+                getIO().emit('tableStatusChanged', {
+                    tableNumber: Number(orderDeleted.tableNumber),
+                    status: 'occupied', // Mantém ocupada para exibir a mensagem
+                    action: 'refresh',
+                    rejectionMessage: rejectionMessage
                 });
             }
         } catch (e) {

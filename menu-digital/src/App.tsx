@@ -143,7 +143,17 @@ function AppContent() {
     const handleTableStatus = (data: any) => {
       console.log('Socket tableStatusChanged received:', data);
       const targetTable = Number(tableParam);
-      if (data.tableNumber === targetTable) {
+
+      if (Number(data.tableNumber) === targetTable) {
+        // 0. Handle Atomic Rejection Flag
+        if (data.rejectionMessage) {
+          console.log('Atomic Rejection detected in status update:', data.rejectionMessage);
+          setBlockingRejection({ message: data.rejectionMessage });
+          setIsBilling(false);
+          setIsPinRequired(false);
+          return;
+        }
+
         // 1. Handle Immediate Billing Transition
         if (data.status === 'billing') {
           setIsBilling(true);

@@ -189,19 +189,22 @@ export const saveTableSession = async (req: Request, res: Response) => {
 
         try {
             const { rejection } = req.query;
-            if (rejection === 'true') {
+            const rejectionMessage = rejection === 'true' ? "Procure o Garçom, seu pedido foi Rejeitado!" : undefined;
+
+            if (rejectionMessage) {
                 console.log(`[SOCKET] Emitting digitalOrderCancelled for table ${data.tableNumber}`);
                 getIO().emit('digitalOrderCancelled', {
                     tableNumber: Number(data.tableNumber),
-                    message: "Procure o Garçom, seu pedido foi Rejeitado!"
+                    message: rejectionMessage
                 });
             }
 
-            console.log(`[SOCKET] Emitting tableStatusChanged (occupied) for table ${data.tableNumber}`);
+            console.log(`[SOCKET] Emitting tableStatusChanged (${data.status || 'occupied'}) for table ${data.tableNumber} ${rejectionMessage ? 'WITH REJECTION' : ''}`);
             getIO().emit('tableStatusChanged', {
                 tableNumber: Number(data.tableNumber),
                 status: data.status || 'occupied',
-                action: 'refresh'
+                action: 'refresh',
+                rejectionMessage: rejectionMessage
             });
         } catch (e) {
             console.error('Socket error emitting messages:', e);
@@ -229,19 +232,22 @@ export const deleteTableSession = async (req: Request, res: Response) => {
     await prisma.tableSession.deleteMany({ where: { tableNumber: tableNum } });
 
     try {
-        if (cancellation === 'true') {
+        const rejectionMessage = cancellation === 'true' ? "Procure o Garçom, seu pedido foi Rejeitado!" : undefined;
+
+        if (rejectionMessage) {
             console.log(`[SOCKET] Emitting digitalOrderCancelled (rejection) for table ${tableNum}`);
             getIO().emit('digitalOrderCancelled', {
                 tableNumber: Number(tableNum),
-                message: "Procure o Garçom, seu pedido foi Rejeitado!"
+                message: rejectionMessage
             });
         }
 
-        console.log(`[SOCKET] Emitting tableStatusChanged (available) for table ${tableNum}`);
+        console.log(`[SOCKET] Emitting tableStatusChanged (available) for table ${tableNum} ${rejectionMessage ? 'WITH REJECTION' : ''}`);
         getIO().emit('tableStatusChanged', {
             tableNumber: Number(tableNum),
             status: 'available',
-            action: 'refresh'
+            action: 'refresh',
+            rejectionMessage: rejectionMessage
         });
     } catch (e) {
         console.error('Socket error emitting tableStatusChanged:', e);
