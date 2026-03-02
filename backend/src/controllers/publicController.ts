@@ -444,7 +444,10 @@ export const acknowledgeRejection = async (req: Request, res: Response) => {
             action: 'refresh'
         });
 
-        res.json({ message: 'Reconhecimento registrado com sucesso.' });
+        res.json({
+            message: 'Reconhecimento registrado com sucesso.',
+            status: session.status === 'available' ? 'available' : session.status
+        });
 
     } catch (error) {
         console.error('Error acknowledging rejection:', error);

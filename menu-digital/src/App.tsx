@@ -339,10 +339,20 @@ function AppContent() {
               <button
                 onClick={async () => {
                   try {
-                    if (tableParam) await acknowledgeRejection(tableParam);
+                    if (tableParam) {
+                      const data = await acknowledgeRejection(tableParam);
+                      // Se a mesa ainda estiver ocupada/em checkout, NÃO resetamos a sessão
+                      // Assim o cliente não é expulso e não precisa de PIN
+                      if (data.status === 'occupied' || data.status === 'billing') {
+                        setBlockingRejection(null);
+                        fetchTableData();
+                        return;
+                      }
+                    }
                   } catch (e) {
                     console.error('Ack error:', e);
                   }
+                  // Se era uma mesa "available" (apenas digital rejeitado), resetamos
                   localStorage.removeItem(`sessionToken_${tableParam}`);
                   updateTerminalState(false);
                   window.location.reload();
