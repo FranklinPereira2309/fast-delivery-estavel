@@ -91,6 +91,7 @@ model Waiter {
   id           String         @id @default(uuid())
   name         String
   phone        String
+  email        String?        @unique
   orders       Order[]
   tableSessions TableSession[]
 }

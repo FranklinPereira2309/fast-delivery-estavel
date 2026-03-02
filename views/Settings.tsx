@@ -9,7 +9,11 @@ import AuditLogs from './AuditLogs';
 // Sub-componente para Gestão de Garçons
 const WaiterManagement: React.FC = () => {
     const [waiters, setWaiters] = useState<Waiter[]>([]);
-    const [formData, setFormData] = useState({ name: '', phone: '' });
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editingWaiter, setEditingWaiter] = useState<Waiter | null>(null);
+    const [formData, setFormData] = useState({ name: '', phone: '', email: '' });
+    const [loading, setLoading] = useState(false);
+
     const [alertConfig, setAlertConfig] = useState<{ isOpen: boolean, title: string, message: string, type: 'SUCCESS' | 'ERROR' | 'DANGER', onConfirm?: () => void }>({
         isOpen: false, title: '', message: '', type: 'SUCCESS'
     });
@@ -17,19 +21,29 @@ const WaiterManagement: React.FC = () => {
     const refresh = async () => setWaiters(await db.getWaiters());
     useEffect(() => { refresh(); }, []);
 
-    const handleAdd = async (e: React.FormEvent) => {
+    const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!formData.name) return;
-        await db.saveWaiter({ id: `wa-${Date.now()}`, ...formData });
-        setFormData({ name: '', phone: '' });
-        refresh();
+        setLoading(true);
+        try {
+            await db.saveWaiter({
+                id: editingWaiter?.id || `wa-${Date.now()}`,
+                ...formData
+            });
+            setIsModalOpen(false);
+            refresh();
+            setFormData({ name: '', phone: '', email: '' });
+        } catch (error) {
+            alert('Erro ao salvar garçom');
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const deleteWaiter = async (id: string) => {
+    const deleteWaiter = async (id: string, name: string) => {
         setAlertConfig({
             isOpen: true,
             title: 'EXCLUIR GARÇOM',
-            message: 'Tem certeza que deseja remover este garçom da equipe?',
+            message: `Tem certeza que deseja remover ${name.toUpperCase()} da equipe? O acesso ao App também será inativado.`,
             type: 'DANGER',
             onConfirm: async () => {
                 await db.deleteWaiter(id);
@@ -37,6 +51,14 @@ const WaiterManagement: React.FC = () => {
                 setAlertConfig(prev => ({ ...prev, isOpen: false }));
             }
         });
+    };
+
+    const applyPhoneMask = (value: string) => {
+        const v = value.replace(/\D/g, '').slice(0, 11);
+        if (v.length <= 2) return v;
+        if (v.length <= 3) return `(${v.slice(0, 2)}) ${v.slice(2)}`;
+        if (v.length <= 7) return `(${v.slice(0, 2)}) ${v.slice(2, 3)} ${v.slice(3)}`;
+        return `(${v.slice(0, 2)}) ${v.slice(2, 3)} ${v.slice(3, 7)}-${v.slice(7)}`;
     };
 
     return (
@@ -49,33 +71,135 @@ const WaiterManagement: React.FC = () => {
                 onConfirm={alertConfig.onConfirm || (() => setAlertConfig(prev => ({ ...prev, isOpen: false })))}
                 onCancel={() => setAlertConfig(prev => ({ ...prev, isOpen: false }))}
             />
-            <div className="flex justify-between items-center">
+
+            <div className="flex justify-between items-center bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
                 <div>
-                    <h3 className="text-xl font-black text-slate-800 uppercase tracking-tighter">Cadastro de Garçons</h3>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Gerencie a equipe de atendimento do salão</p>
+                    <h3 className="text-xl font-black text-slate-800 uppercase tracking-tighter">Equipe de Garçons</h3>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Colaboradores com acesso ao App Garçom</p>
                 </div>
+                <button
+                    onClick={() => { setEditingWaiter(null); setFormData({ name: '', phone: '', email: '' }); setIsModalOpen(true); }}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-blue-100 transition-all flex items-center gap-2"
+                >
+                    <Icons.User size={16} />
+                    Novo Garçom
+                </button>
             </div>
-            <form onSubmit={handleAdd} className="flex gap-4 p-6 bg-slate-50 rounded-[2rem] border border-slate-100">
-                <input type="text" placeholder="Nome Completo" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="flex-1 p-4 bg-white border-none rounded-2xl shadow-sm font-bold text-sm" />
-                <input type="text" placeholder="Telefone" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} className="w-48 p-4 bg-white border-none rounded-2xl shadow-sm font-bold text-sm" />
-                <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-blue-100 transition-all">Cadastrar</button>
-            </form>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {waiters.map(w => (
-                    <div key={w.id} className="bg-white p-5 rounded-[2rem] border border-slate-100 flex justify-between items-center group hover:shadow-xl transition-all">
-                        <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-400 font-black uppercase text-xs">{w.name.substring(0, 2)}</div>
-                            <div>
-                                <p className="font-black text-slate-800 uppercase text-xs tracking-tight">{w.name}</p>
-                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{w.phone}</p>
+                    <div key={w.id} className="bg-white p-6 rounded-[2.5rem] border border-slate-100 flex flex-col group hover:shadow-xl transition-all relative overflow-hidden">
+                        <div className="flex items-center gap-4 mb-4">
+                            <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center font-black uppercase text-sm shadow-inner">
+                                {w.name.substring(0, 2)}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="font-black text-slate-800 uppercase text-xs tracking-tight truncate">{w.name}</p>
+                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">{w.email || 'Sem e-mail'}</p>
                             </div>
                         </div>
-                        <button onClick={() => deleteWaiter(w.id)} className="p-2 text-slate-200 hover:text-red-500 transition-all">
-                            <Icons.Delete />
-                        </button>
+
+                        <div className="flex items-center justify-between pt-4 border-t border-slate-50">
+                            <div className="flex flex-col">
+                                <span className="text-[8px] font-black text-slate-300 uppercase tracking-widest">Whatsapp</span>
+                                <span className="text-[10px] font-bold text-slate-600 tracking-tight">{w.phone}</span>
+                            </div>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => {
+                                        setEditingWaiter(w);
+                                        setFormData({ name: w.name, phone: w.phone, email: w.email || '' });
+                                        setIsModalOpen(true);
+                                    }}
+                                    className="p-3 bg-slate-50 text-slate-400 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-all"
+                                >
+                                    <Icons.Edit size={16} />
+                                </button>
+                                <button onClick={() => deleteWaiter(w.id, w.name)} className="p-3 bg-slate-50 text-slate-400 hover:bg-red-50 hover:text-red-500 rounded-xl transition-all">
+                                    <Icons.Delete size={16} />
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 ))}
             </div>
+
+            {isModalOpen && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white rounded-[3rem] shadow-2xl w-full max-w-xl border border-white/20 overflow-hidden animate-in zoom-in duration-300">
+                        <div className="p-10 pb-0 flex justify-between items-start">
+                            <div>
+                                <h4 className="text-2xl font-black text-slate-800 uppercase tracking-tighter mb-1">
+                                    {editingWaiter ? 'Editar Garçom' : 'Cadastrar Garçom'}
+                                </h4>
+                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Preencha os dados para acesso ao sistema</p>
+                            </div>
+                            <button onClick={() => setIsModalOpen(false)} className="p-3 bg-slate-50 text-slate-400 rounded-2xl hover:text-red-500 transition-all">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleSave} className="p-10 space-y-8">
+                            <div className="grid grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Nome Completo</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={formData.name}
+                                        onChange={e => setFormData({ ...formData, name: e.target.value })}
+                                        className="w-full p-5 bg-slate-50 border-none rounded-[1.5rem] outline-none font-bold text-sm shadow-inner focus:ring-4 focus:ring-blue-100 transition-all"
+                                        placeholder="Ex: Miguel Falabela"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Celular / Whats</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={formData.phone}
+                                        onChange={e => setFormData({ ...formData, phone: applyPhoneMask(e.target.value) })}
+                                        className="w-full p-5 bg-slate-50 border-none rounded-[1.5rem] outline-none font-bold text-sm shadow-inner focus:ring-4 focus:ring-blue-100 transition-all"
+                                        placeholder="(00) 0 0000-0000"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-blue-600 uppercase tracking-widest ml-2 flex items-center gap-2">
+                                    E-mail <span className="text-[8px] bg-blue-100 px-2 py-0.5 rounded-full">(Obrigatório para login no app)</span>
+                                </label>
+                                <input
+                                    type="email"
+                                    required
+                                    value={formData.email}
+                                    onChange={e => setFormData({ ...formData, email: e.target.value.toLowerCase() })}
+                                    className="w-full p-5 bg-slate-50 border-none rounded-[1.5rem] outline-none font-bold text-sm shadow-inner focus:ring-4 focus:ring-blue-100 transition-all"
+                                    placeholder="exemplo@gmail.com"
+                                />
+                                <p className="text-[9px] text-slate-400 font-medium ml-2 mt-2">A senha padrão para novos usuários é: <span className="font-black text-blue-600">123456</span></p>
+                            </div>
+
+                            <div className="pt-6 border-t border-slate-50 flex gap-4">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsModalOpen(false)}
+                                    className="flex-1 py-5 font-black uppercase text-[11px] tracking-widest text-slate-400 hover:bg-slate-50 rounded-[1.5rem] transition-all"
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={loading}
+                                    className="flex-1 py-5 bg-blue-600 text-white rounded-[1.5rem] font-black uppercase text-[11px] tracking-widest shadow-2xl shadow-blue-500/30 hover:bg-blue-700 active:scale-95 transition-all"
+                                >
+                                    {loading ? 'Salvando...' : 'Confirmar Registro'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
