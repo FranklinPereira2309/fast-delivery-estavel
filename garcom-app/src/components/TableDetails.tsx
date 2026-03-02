@@ -51,6 +51,50 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, onClose, onRefresh }
         }).filter(p => p.quantity > 0));
     };
 
+    const [showTransfer, setShowTransfer] = useState(false);
+    const [transferTarget, setTransferTarget] = useState<number | ''>('');
+
+    const handleTransfer = async () => {
+        if (!transferTarget) return;
+        setLoading(true);
+        try {
+            await db.transferTable(table.tableNumber, Number(transferTarget));
+            alert('Mesa transferida com sucesso!');
+            onRefresh();
+            onClose();
+        } catch (e: any) {
+            alert(e.message || 'Erro ao transferir mesa');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleCheckout = async () => {
+        if (!confirm('Deseja solicitar o fechamento desta mesa?')) return;
+
+        setLoading(true);
+        try {
+            // Fix: Se a mesa não tem cliente, garante o ANONYMOUS
+            if (!table.clientId && !table.clientName) {
+                await db.saveTableSession({
+                    tableNumber: table.tableNumber,
+                    items: table.items,
+                    status: 'occupied',
+                    clientId: 'ANONYMOUS',
+                    clientName: `Mesa ${table.tableNumber}`
+                });
+            }
+
+            await db.requestCheckout(table.tableNumber);
+            onRefresh();
+            onClose();
+        } catch (e) {
+            alert('Erro ao solicitar fechamento');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const handleSave = async () => {
         if (cart.length === 0) return;
         setLoading(true);
@@ -59,7 +103,10 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, onClose, onRefresh }
             await db.saveTableSession({
                 tableNumber: table.tableNumber,
                 items: newItems,
-                status: 'occupied'
+                status: 'occupied',
+                // Garante que mesas novas tenham ao menos o cliente anônimo
+                clientId: table.clientId || 'ANONYMOUS',
+                clientName: table.clientName || `Mesa ${table.tableNumber}`
             });
             setCart([]);
             onRefresh();
@@ -68,17 +115,6 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, onClose, onRefresh }
             alert('Erro ao lançar itens');
         } finally {
             setLoading(false);
-        }
-    };
-
-    const handleCheckout = async () => {
-        if (!confirm('Deseja solicitar o fechamento desta mesa?')) return;
-        try {
-            await db.requestCheckout(table.tableNumber);
-            onRefresh();
-            onClose();
-        } catch (e) {
-            alert('Erro ao solicitar fechamento');
         }
     };
 
@@ -94,7 +130,9 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, onClose, onRefresh }
                     items: newItems,
                     status: 'occupied',
                     hasPendingDigital: false,
-                    pendingReviewItems: undefined
+                    pendingReviewItems: undefined,
+                    clientId: table.clientId || 'ANONYMOUS',
+                    clientName: table.clientName || `Mesa ${table.tableNumber}`
                 });
                 onRefresh();
                 setActiveTab('CONSUMPTION');
@@ -145,7 +183,7 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, onClose, onRefresh }
 
     return (
         <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex flex-col animate-in fade-in duration-300">
-            <div className="mt-auto bg-white w-full rounded-t-[3rem] max-h-[92vh] flex flex-col shadow-2xl animate-in slide-in-from-bottom duration-500 overflow-hidden">
+            <div className="mt-auto bg-white w-full rounded-t-[3rem] max-h-[92vh] flex flex-col shadow-2xl animate-in slide-in-from-bottom duration-500 overflow-hidden relative">
                 {/* Header */}
                 <header className="p-8 pb-4 flex justify-between items-start">
                     <div>
@@ -155,10 +193,49 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, onClose, onRefresh }
                         </div>
                         <h2 className="text-2xl font-black text-slate-900 tracking-tighter uppercase leading-none">Gerenciar Mesa</h2>
                     </div>
-                    <button onClick={onClose} className="p-3 bg-slate-100 rounded-2xl text-slate-400 active:scale-90 transition-all">
-                        <X size={24} />
-                    </button>
+                    <div className="flex gap-2">
+                        {table.status === 'occupied' && !showTransfer && (
+                            <button
+                                onClick={() => setShowTransfer(true)}
+                                className="p-3 bg-slate-100 text-blue-600 rounded-2xl active:scale-95 transition-all text-[10px] font-black uppercase tracking-widest flex items-center gap-2"
+                            >
+                                <RefreshCw size={18} />
+                                Transferir
+                            </button>
+                        )}
+                        <button onClick={onClose} className="p-3 bg-slate-100 rounded-2xl text-slate-400 active:scale-90 transition-all">
+                            <X size={24} />
+                        </button>
+                    </div>
                 </header>
+
+                {/* Transfer UI Overlay */}
+                {showTransfer && (
+                    <div className="px-8 mb-6 animate-in slide-in-from-top duration-300">
+                        <div className="p-6 bg-blue-50 border border-blue-100 rounded-[2rem] flex flex-col gap-4">
+                            <div className="flex justify-between items-center">
+                                <h4 className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Transferir para Mesa:</h4>
+                                <button onClick={() => setShowTransfer(false)} className="text-blue-400 font-bold text-[10px] uppercase">Cancelar</button>
+                            </div>
+                            <div className="flex gap-3">
+                                <input
+                                    type="number"
+                                    placeholder="Nº Mesa"
+                                    className="flex-1 bg-white border-none rounded-xl px-4 py-3 text-sm font-black outline-none focus:ring-2 focus:ring-blue-500/20"
+                                    value={transferTarget}
+                                    onChange={(e) => setTransferTarget(e.target.value === '' ? '' : Number(e.target.value))}
+                                />
+                                <button
+                                    onClick={handleTransfer}
+                                    disabled={!transferTarget || loading}
+                                    className="px-6 py-3 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-500/30 disabled:opacity-50"
+                                >
+                                    Confirmar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Tabs */}
                 <div className="px-8 flex gap-2 mb-6 overflow-x-auto hide-scrollbar">
@@ -238,44 +315,44 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, onClose, onRefresh }
 
                                     return (
                                         <div key={product.id} className="premium-card p-4 flex justify-between items-center transition-all">
-                                            <div className="flex items-center gap-4">
-                                                <div className="w-12 h-12 bg-slate-50 rounded-xl overflow-hidden shadow-inner flex items-center justify-center">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 bg-slate-50 rounded-xl overflow-hidden shadow-inner flex items-center justify-center shrink-0">
                                                     {product.imageUrl ? (
                                                         <img src={product.imageUrl} className="w-full h-full object-cover" />
                                                     ) : (
-                                                        <LayoutGrid className="text-slate-200" size={20} />
+                                                        <LayoutGrid className="text-slate-200" size={16} />
                                                     )}
                                                 </div>
-                                                <div>
-                                                    <p className="text-sm font-black text-slate-800 uppercase leading-none mb-1">{product.name}</p>
-                                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{product.category}</p>
+                                                <div className="min-w-0">
+                                                    <p className="text-xs font-black text-slate-800 uppercase leading-none mb-1 truncate">{product.name}</p>
+                                                    <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest truncate">{product.category}</p>
                                                 </div>
                                             </div>
-                                            <div className="flex items-center gap-4">
-                                                <p className="text-sm font-black text-blue-600 tracking-tighter mr-2">R$ {product.price.toFixed(2)}</p>
+                                            <div className="flex items-center gap-3">
+                                                <p className="text-[11px] font-black text-blue-600 tracking-tighter shrink-0">R$ {product.price.toFixed(2)}</p>
 
                                                 {quantity > 0 ? (
-                                                    <div className="flex items-center bg-slate-50 rounded-xl p-1 gap-2 shadow-inner border border-slate-100">
+                                                    <div className="flex items-center bg-slate-50 rounded-lg p-0.5 gap-1 border border-slate-100">
                                                         <button
                                                             onClick={() => updateCartQuantity(product.id, -1)}
-                                                            className="w-8 h-8 rounded-lg bg-white shadow-sm flex items-center justify-center font-black text-slate-400 active:scale-90 transition-transform"
+                                                            className="w-7 h-7 rounded-md bg-white shadow-sm flex items-center justify-center font-black text-slate-400 active:scale-90 transition-transform"
                                                         >
-                                                            <Minus size={14} />
+                                                            <Minus size={12} />
                                                         </button>
-                                                        <span className="w-6 text-center font-black text-sm text-slate-700">{quantity}</span>
+                                                        <span className="w-4 text-center font-black text-[10px] text-slate-700">{quantity}</span>
                                                         <button
                                                             onClick={() => updateCartQuantity(product.id, 1)}
-                                                            className="w-8 h-8 rounded-lg bg-blue-600 shadow-sm shadow-blue-500/30 flex items-center justify-center font-black text-white active:scale-90 transition-transform"
+                                                            className="w-7 h-7 rounded-md bg-blue-600 shadow-sm flex items-center justify-center font-black text-white active:scale-90 transition-transform"
                                                         >
-                                                            <Plus size={14} />
+                                                            <Plus size={12} />
                                                         </button>
                                                     </div>
                                                 ) : (
                                                     <button
                                                         onClick={() => addToCart(product)}
-                                                        className="px-4 py-2 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg active:scale-95 transition-all"
+                                                        className="w-9 h-9 bg-slate-900 text-white rounded-lg flex items-center justify-center shadow-lg active:scale-95 transition-all shrink-0"
                                                     >
-                                                        Adicionar
+                                                        <Plus size={16} />
                                                     </button>
                                                 )}
                                             </div>
@@ -362,10 +439,10 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, onClose, onRefresh }
                             </div>
                             <button
                                 onClick={handleCheckout}
-                                disabled={table.status === 'billing'}
+                                disabled={table.status === 'billing' || loading}
                                 className={`px-8 py-5 rounded-[2rem] font-black uppercase text-[11px] tracking-widest transition-all active:scale-95 shadow-xl ${table.status === 'billing' ? 'bg-slate-50 text-slate-300 cursor-not-allowed border border-slate-100' : 'bg-blue-600 text-white shadow-blue-500/20 hover:bg-blue-700'}`}
                             >
-                                {table.status === 'billing' ? 'Conta Solicitada' : 'Solicitar Conta'}
+                                {loading ? '...' : (table.status === 'billing' ? 'Conta Solicitada' : 'Solicitar Conta')}
                             </button>
                         </div>
                     )}
@@ -374,5 +451,7 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, onClose, onRefresh }
         </div>
     );
 };
+
+export default TableDetails;
 
 export default TableDetails;

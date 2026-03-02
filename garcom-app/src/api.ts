@@ -98,5 +98,9 @@ export const db = {
 
     requestCheckout: async (tableNumber: number) => {
         return api.post(`/tables/${tableNumber}/checkout`);
+    },
+
+    transferTable: async (from: number, to: number) => {
+        return api.post('/tables/transfer', { from, to });
     }
 };

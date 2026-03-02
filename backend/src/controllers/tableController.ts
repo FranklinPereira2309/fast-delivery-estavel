@@ -299,3 +299,71 @@ export const deleteTableSession = async (req: Request, res: Response) => {
 
     res.json({ message: 'Sessão de mesa finalizada' });
 };
+export const transferTableSession = async (req: Request, res: Response) => {
+    const { from, to } = req.body;
+    const fromTable = parseInt(from.toString());
+    const toTable = parseInt(to.toString());
+
+    try {
+        await prisma.$transaction(async (tx) => {
+            const sourceSession = await tx.tableSession.findUnique({
+                where: { tableNumber: fromTable },
+                include: { items: true }
+            });
+
+            if (!sourceSession) {
+                throw new Error('Mesa de origem não encontrada ou vazia');
+            }
+
+            const targetSession = await tx.tableSession.findUnique({
+                where: { tableNumber: toTable }
+            });
+
+            if (targetSession && targetSession.status !== 'available') {
+                throw new Error('Mesa de destino já está ocupada');
+            }
+
+            const fromOrderId = `TABLE-${fromTable}`;
+            const toOrderId = `TABLE-${toTable}`;
+
+            // 1. Update the Order ID and TableNumber in the Order table
+            await tx.order.update({
+                where: { id: fromOrderId },
+                data: {
+                    id: toOrderId,
+                    tableNumber: toTable
+                }
+            });
+
+            // 2. Update TableSession
+            await tx.tableSession.update({
+                where: { tableNumber: fromTable },
+                data: {
+                    tableNumber: toTable
+                }
+            });
+
+            // 3. Update OrderItem references
+            await tx.orderItem.updateMany({
+                where: { tableSessionId: fromTable },
+                data: {
+                    tableSessionId: toTable,
+                    orderId: toOrderId
+                }
+            });
+        });
+
+        // Notify via sockets
+        try {
+            getIO().emit('tableStatusChanged', { tableNumber: fromTable, status: 'available', action: 'refresh' });
+            getIO().emit('tableStatusChanged', { tableNumber: toTable, status: 'occupied', action: 'refresh' });
+        } catch (e) {
+            console.error('Socket error during transfer:', e);
+        }
+
+        res.json({ message: `Mesa ${fromTable} transferida para ${toTable} com sucesso` });
+    } catch (error: any) {
+        console.error('Error transferring table:', error);
+        res.status(500).json({ error: error.message });
+    }
+};

@@ -86,8 +86,12 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
           <span className="text-[10px] font-black uppercase text-slate-600">{tables.filter(t => t.status === 'occupied').length} Ocupadas</span>
         </div>
         <div className="shrink-0 px-4 py-2 bg-white rounded-xl border border-slate-100 shadow-sm flex items-center gap-2">
+          <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+          <span className="text-[10px] font-black uppercase text-slate-600">{tables.filter(t => t.status === 'billing').length} Conta</span>
+        </div>
+        <div className="shrink-0 px-4 py-2 bg-white rounded-xl border border-slate-100 shadow-sm flex items-center gap-2">
           <div className="w-2 h-2 rounded-full bg-amber-500"></div>
-          <span className="text-[10px] font-black uppercase text-slate-600">{tables.filter(t => t.status === 'pending-digital').length} Pendentes</span>
+          <span className="text-[10px] font-black uppercase text-slate-600">{tables.filter(t => t.hasPendingDigital).length} Digital</span>
         </div>
       </div>
 
@@ -100,7 +104,7 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-4">
-            {tables.map(table => (
+            {[...tables].sort((a, b) => a.tableNumber - b.tableNumber).map(table => (
               <button
                 key={table.tableNumber}
                 onClick={() => setSelectedTable(table)}
