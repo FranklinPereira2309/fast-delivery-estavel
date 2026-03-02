@@ -182,8 +182,14 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, onClose, onRefresh }
     );
 
     return (
-        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex flex-col animate-in fade-in duration-300">
-            <div className="mt-auto bg-white w-full rounded-t-[3rem] max-h-[92vh] flex flex-col shadow-2xl animate-in slide-in-from-bottom duration-500 overflow-hidden relative">
+        <div
+            className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex flex-col animate-in fade-in duration-300"
+            onClick={onClose}
+        >
+            <div
+                className="mt-auto bg-white w-full rounded-t-[3rem] max-h-[92vh] flex flex-col shadow-2xl animate-in slide-in-from-bottom duration-500 overflow-hidden relative"
+                onClick={(e) => e.stopPropagation()}
+            >
                 {/* Header */}
                 <header className="p-8 pb-4 flex justify-between items-start">
                     <div>

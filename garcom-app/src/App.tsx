@@ -7,16 +7,35 @@ import { LogOut, LayoutGrid, RefreshCw, PlusCircle } from 'lucide-react';
 
 const Dashboard: React.FC<{ user: User }> = ({ user }) => {
   const [tables, setTables] = useState<TableSession[]>([]);
+  const [tableCount, setTableCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [selectedTable, setSelectedTable] = useState<TableSession | null>(null);
 
   const fetchData = async () => {
     try {
-      const data = await db.getTables();
-      setTables(data);
+      // First fetch settings if not already fetched
+      if (tableCount === 0) {
+        const settings = await db.getSettings();
+        setTableCount(settings.tableCount);
+      }
+
+      const activeSessions = await db.getTables();
+      setTables(activeSessions);
+
+      // Refresh selected table data if open
       if (selectedTable) {
-        const updated = data.find(t => t.tableNumber === selectedTable.tableNumber);
-        if (updated) setSelectedTable(updated);
+        const updated = activeSessions.find(t => t.tableNumber === selectedTable.tableNumber);
+        if (updated) {
+          setSelectedTable(updated);
+        } else {
+          // If not in active sessions anymore, it's available
+          setSelectedTable({
+            tableNumber: selectedTable.tableNumber,
+            status: 'available',
+            items: [],
+            startTime: new Date().toISOString() // Placeholder
+          } as any);
+        }
       }
     } catch (e) {
       console.error(e);
@@ -37,7 +56,7 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
       socket.off('newOrder');
       socket.off('orderStatusUpdated');
     };
-  }, [selectedTable]);
+  }, []); // FIX: Removed selectedTable dependency to avoid infinite loop
 
   const getStatusStyle = (status: TableSession['status']) => {
     switch (status) {
@@ -48,6 +67,19 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
       default: return 'bg-slate-50 text-slate-400 border-slate-100';
     }
   };
+
+  // Generate full grid based on tableCount
+  const fullTableGrid = Array.from({ length: tableCount }, (_, i) => {
+    const tableNum = i + 1;
+    const session = tables.find(t => t.tableNumber === tableNum);
+    return session || {
+      tableNumber: tableNum,
+      status: 'available' as const,
+      items: [],
+      startTime: '',
+      hasPendingDigital: false
+    };
+  });
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col">
@@ -79,35 +111,35 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
       <div className="px-6 pt-6 flex gap-2 overflow-x-auto hide-scrollbar">
         <div className="shrink-0 px-4 py-2 bg-white rounded-xl border border-slate-100 shadow-sm flex items-center gap-2">
           <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
-          <span className="text-[10px] font-black uppercase text-slate-600">{tables.filter(t => t.status === 'available').length} Livres</span>
+          <span className="text-[10px] font-black uppercase text-slate-600">{fullTableGrid.filter(t => t.status === 'available').length} Livres</span>
         </div>
         <div className="shrink-0 px-4 py-2 bg-white rounded-xl border border-slate-100 shadow-sm flex items-center gap-2">
           <div className="w-2 h-2 rounded-full bg-red-500"></div>
-          <span className="text-[10px] font-black uppercase text-slate-600">{tables.filter(t => t.status === 'occupied').length} Ocupadas</span>
+          <span className="text-[10px] font-black uppercase text-slate-600">{fullTableGrid.filter(t => t.status === 'occupied').length} Ocupadas</span>
         </div>
         <div className="shrink-0 px-4 py-2 bg-white rounded-xl border border-slate-100 shadow-sm flex items-center gap-2">
           <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-          <span className="text-[10px] font-black uppercase text-slate-600">{tables.filter(t => t.status === 'billing').length} Conta</span>
+          <span className="text-[10px] font-black uppercase text-slate-600">{fullTableGrid.filter(t => t.status === 'billing').length} Conta</span>
         </div>
         <div className="shrink-0 px-4 py-2 bg-white rounded-xl border border-slate-100 shadow-sm flex items-center gap-2">
           <div className="w-2 h-2 rounded-full bg-amber-500"></div>
-          <span className="text-[10px] font-black uppercase text-slate-600">{tables.filter(t => t.hasPendingDigital).length} Digital</span>
+          <span className="text-[10px] font-black uppercase text-slate-600">{fullTableGrid.filter(t => t.hasPendingDigital).length} Digital</span>
         </div>
       </div>
 
       {/* Table Grid */}
       <main className="flex-1 p-6">
-        {loading ? (
+        {loading && tableCount === 0 ? (
           <div className="h-64 flex flex-col items-center justify-center text-slate-300 font-black uppercase text-[10px] tracking-widest italic animate-pulse">
             <LayoutGrid size={48} className="mb-4 opacity-20" />
             Sincronizando...
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-4">
-            {[...tables].sort((a, b) => a.tableNumber - b.tableNumber).map(table => (
+            {fullTableGrid.map(table => (
               <button
                 key={table.tableNumber}
-                onClick={() => setSelectedTable(table)}
+                onClick={() => setSelectedTable(table as any)}
                 className={`aspect-[4/3] flex flex-col items-center justify-center rounded-[2.5rem] border-2 transition-all active:scale-95 shadow-sm relative group bg-white ${getStatusStyle(table.status)}`}
               >
                 <span className="text-4xl font-black italic tracking-tighter mb-1">{table.tableNumber}</span>
@@ -125,7 +157,7 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
 
                 {(table.status === 'occupied' || table.status === 'billing') && (
                   <div className="absolute bottom-4 px-3 py-1 bg-slate-900/5 rounded-full">
-                    <p className="text-[8px] font-black text-slate-500 uppercase">Mesa {table.tableNumber}</p>
+                    <p className="text-[8px] font-black text-slate-500 uppercase">Em Uso</p>
                   </div>
                 )}
               </button>
