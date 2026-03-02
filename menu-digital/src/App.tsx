@@ -247,7 +247,7 @@ function AppContent() {
               updateTerminalState(true);
             } else {
               updateTerminalState(false);
-              fetchTableData();
+              fetchTableData(true);
             }
           }
           return;
