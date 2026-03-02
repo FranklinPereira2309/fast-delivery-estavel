@@ -92,9 +92,21 @@ export const verifyTable = async (req: Request, res: Response) => {
             });
         }
 
-        const rejectionMessage = session.pendingReviewItems?.startsWith('REJECTED:')
-            ? session.pendingReviewItems.replace('REJECTED:', '')
-            : null;
+        let rejectionMessage = null;
+        if (session.pendingReviewItems) {
+            try {
+                // Tenta parsear como JSON (novo formato)
+                const parsed = JSON.parse(session.pendingReviewItems);
+                if (parsed && typeof parsed === 'object' && !Array.isArray(parsed) && parsed.rejection) {
+                    rejectionMessage = parsed.rejection;
+                }
+            } catch (e) {
+                // Fallback para o formato antigo de string com prefixo se falhar o parse
+                if (session.pendingReviewItems.startsWith('REJECTED:')) {
+                    rejectionMessage = session.pendingReviewItems.replace('REJECTED:', '');
+                }
+            }
+        }
 
         res.json({
             tableNumber,

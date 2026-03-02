@@ -440,7 +440,7 @@ export const deleteOrder = async (req: Request, res: Response) => {
                     where: { tableNumber: Number(orderDeleted.tableNumber) },
                     data: {
                         hasPendingDigital: true,
-                        pendingReviewItems: `REJECTED:${rejectionMessage}`
+                        pendingReviewItems: JSON.stringify({ rejection: rejectionMessage })
                     }
                 });
 

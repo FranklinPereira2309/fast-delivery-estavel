@@ -243,7 +243,14 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
     }
 
     try {
-      const pendingItems = JSON.parse(sess.pendingReviewItems || '[]');
+      const pendingValue = sess.pendingReviewItems || '[]';
+      let pendingItems = [];
+      try {
+        const parsed = JSON.parse(pendingValue);
+        pendingItems = Array.isArray(parsed) ? parsed : [];
+      } catch (e) {
+        pendingItems = [];
+      }
 
       // Stock Validation
       const validation = await db.validateStockForOrder(pendingItems);
@@ -574,15 +581,23 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
                           </div>
                         </div>
                         <div className="bg-white rounded-2xl p-4 space-y-2 mb-4">
-                          {JSON.parse(getSessForTable(selectedTable)?.pendingReviewItems || '[]').map((it: any, i: number) => {
-                            const prod = products.find(p => p.id === it.productId);
-                            return (
-                              <div key={i} className="flex flex-col bg-slate-50 p-3 rounded-xl border border-slate-100">
-                                <p className="font-black text-slate-800 text-sm">{it.quantity}x <span className="uppercase">{prod?.name || 'Item Desconhecido'}</span></p>
-                                {it.observations && <span className="text-[10px] text-orange-500 font-bold bg-orange-50 px-2 py-1 rounded-lg mt-1 w-fit">Obs: {it.observations}</span>}
-                              </div>
-                            );
-                          })}
+                          {(() => {
+                            try {
+                              const parsed = JSON.parse(getSessForTable(selectedTable)?.pendingReviewItems || '[]');
+                              if (!Array.isArray(parsed)) return null;
+                              return parsed.map((it: any, i: number) => {
+                                const prod = products.find(p => p.id === it.productId);
+                                return (
+                                  <div key={i} className="flex flex-col bg-slate-50 p-3 rounded-xl border border-slate-100">
+                                    <p className="font-black text-slate-800 text-sm">{it.quantity}x <span className="uppercase">{prod?.name || 'Item Desconhecido'}</span></p>
+                                    {it.observations && <span className="text-[10px] text-orange-500 font-bold bg-orange-50 px-2 py-1 rounded-lg mt-1 w-fit">Obs: {it.observations}</span>}
+                                  </div>
+                                );
+                              });
+                            } catch (e) {
+                              return null;
+                            }
+                          })()}
                         </div>
                         <div className="flex flex-col gap-3 relative z-10 mt-2">
                           <button onClick={() => approveDigitalOrders(selectedTable!)} className="w-full bg-fuchsia-600 hover:bg-fuchsia-700 text-white font-black py-4 rounded-xl transition-all shadow-lg text-sm uppercase flex items-center justify-center gap-2">Aprovar e Lançar Ordem ✓</button>

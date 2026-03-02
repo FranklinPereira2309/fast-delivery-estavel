@@ -198,7 +198,7 @@ export const saveTableSession = async (req: Request, res: Response) => {
                     where: { tableNumber: Number(data.tableNumber) },
                     data: {
                         hasPendingDigital: true,
-                        pendingReviewItems: `REJECTED:${rejectionMessage}`
+                        pendingReviewItems: JSON.stringify({ rejection: rejectionMessage })
                     }
                 });
 
@@ -248,7 +248,7 @@ export const deleteTableSession = async (req: Request, res: Response) => {
                 data: {
                     status: 'available', // Mesa fica disponível no PDV
                     hasPendingDigital: true,
-                    pendingReviewItems: `REJECTED:${rejectionMessage}`
+                    pendingReviewItems: JSON.stringify({ rejection: rejectionMessage })
                 }
             });
 
