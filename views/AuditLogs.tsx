@@ -2,11 +2,12 @@
 import React, { useState, useEffect } from 'react';
 import { AuditLog } from '../types';
 import { db } from '../services/db';
+import { getLocalIsoDate } from '../services/dateUtils';
 
 const AuditLogs: React.FC = () => {
   const [logs, setLogs] = useState<AuditLog[]>([]);
-  const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
-  const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
+  const [startDate, setStartDate] = useState(getLocalIsoDate());
+  const [endDate, setEndDate] = useState(getLocalIsoDate());
   const [isLoading, setIsLoading] = useState(false);
 
   // Allow filter refetch
