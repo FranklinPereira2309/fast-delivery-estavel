@@ -337,16 +337,17 @@ export const transferTableSession = async (req: Request, res: Response) => {
                 await tx.order.delete({ where: { id: toOrderId } });
             }
 
-            // 1. Update the Order ID and TableNumber in the Order table
-            // In Prisma/Postgres, we can't update PKs easily. We'll update the properties but keep the ID if possible, 
-            // or better yet, just move the items and session.
-            // Actually, we can update the Order record's ID if we do it carefully, 
-            // but simpler is to delete sessions and create new ones.
-
             // A mesa de ORIGEM será deletada e recriada no DESTINO para evitar erro de PK.
-            const { tableNumber, ...sessionData } = sourceSession;
+            // Sanitizar dados: remover 'items' e 'tableNumber' do objeto spread
+            const { tableNumber: _tn, items: _items, ...sessionData } = sourceSession;
 
-            // Criar nova sessão no destino
+            // 1. Limpar destino completamente para evitar conflitos
+            // Se já houver um pedido no destino (mesmo que fantasma), removemos
+            await tx.orderItem.deleteMany({ where: { orderId: toOrderId } });
+            await tx.order.deleteMany({ where: { id: toOrderId } });
+            await tx.tableSession.deleteMany({ where: { tableNumber: toTable } });
+
+            // 2. Criar nova sessão no destino com os itens novos
             await tx.tableSession.create({
                 data: {
                     ...sessionData,
@@ -365,16 +366,10 @@ export const transferTableSession = async (req: Request, res: Response) => {
                 }
             });
 
-            // Deletar sessão antiga (cascade delete deve cuidar dos itens se configurado, ou deletamos manual)
-            await tx.orderItem.deleteMany({ where: { tableSessionId: fromTable } });
-            await tx.tableSession.delete({ where: { tableNumber: fromTable } });
-
-            // Mover o Pedido (Order)
+            // 3. Mover o Pedido (Order)
             const order = await tx.order.findUnique({ where: { id: fromOrderId } });
             if (order) {
-                // Deletar o pedido antigo e criar o novo no destino
-                // Fazemos isso para garantir que o ID acompanhe o padrão TABLE-X
-                const { id: oldOrderId, ...orderData } = order;
+                const { id: _oldId, ...orderData } = order;
                 await tx.order.create({
                     data: {
                         ...orderData,
@@ -382,8 +377,12 @@ export const transferTableSession = async (req: Request, res: Response) => {
                         tableNumber: toTable
                     }
                 });
-                await tx.order.delete({ where: { id: fromOrderId } });
             }
+
+            // 4. Deletar mesa de origem (cascade cuidará dos items órfãos se houver, mas garantimos)
+            await tx.orderItem.deleteMany({ where: { tableSessionId: fromTable } });
+            await tx.order.deleteMany({ where: { id: fromOrderId } });
+            await tx.tableSession.delete({ where: { tableNumber: fromTable } });
         });
 
         // Notify via sockets
