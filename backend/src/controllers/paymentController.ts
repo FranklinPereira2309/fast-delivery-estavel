@@ -37,7 +37,7 @@ export const createPreference = async (req: Request, res: Response) => {
         }
 
         // Webhook URL configuration from Environment
-        const serverUrl = process.env.VITE_API_URL?.replace('/api', '') || 'https://delivery-fast-backend.onrender.com';
+        const serverUrl = process.env.VITE_API_URL?.replace('/api', '') || 'https://deleivery-fast-backend.onrender.com';
 
         // Back URLs based on Digital Menu domain or provided backUrl
         const menuUrl = process.env.VITE_MENU_URL || 'https://cardapio-fast-delivery.onrender.com';
