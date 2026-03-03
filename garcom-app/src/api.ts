@@ -107,5 +107,10 @@ export const db = {
 
     transferTable: async (from: number, to: number, waiterId: string) => {
         return api.post('/tables/transfer', { from, to, waiterId });
+    },
+
+    createOrder: async (order: any) => {
+        const user = db.getCurrentUser();
+        return api.post('/orders', { user, order });
     }
 };

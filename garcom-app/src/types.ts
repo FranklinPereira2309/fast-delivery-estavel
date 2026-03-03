@@ -51,3 +51,18 @@ export interface BusinessSettings {
     serviceFeeStatus?: boolean;
     serviceFeePercentage?: number;
 }
+
+export interface Order {
+    id?: string;
+    clientId: string;
+    clientName: string;
+    clientPhone?: string;
+    clientAddress?: string;
+    items: OrderItem[];
+    total: number;
+    status: OrderStatus;
+    type: SaleType;
+    waiterId?: string;
+    deliveryFee?: number;
+    paymentMethod?: string;
+}

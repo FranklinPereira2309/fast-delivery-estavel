@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import Login from './components/Login';
 import TableDetails from './components/TableDetails';
+import DirectOrderModal from './components/DirectOrderModal';
 import type { User, TableSession } from './types';
 import { db, socket } from './api';
-import { LogOut, LayoutGrid, RefreshCw, PlusCircle } from 'lucide-react';
+import { LogOut, LayoutGrid, RefreshCw, PlusCircle, MessageSquare } from 'lucide-react';
 import Modal from './components/Modal';
 
 const Dashboard: React.FC<{ user: User }> = ({ user }) => {
@@ -11,9 +12,11 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
   const [tableCount, setTableCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [selectedTable, setSelectedTable] = useState<TableSession | null>(null);
+  const [showDirectOrder, setShowDirectOrder] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const fetchData = async () => {
+    setLoading(true);
     try {
       // First fetch settings if not already fetched
       if (tableCount === 0) {
@@ -98,7 +101,7 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
         </div>
         <div className="flex gap-2">
           <button onClick={fetchData} className="p-3 bg-slate-50 border border-slate-100 rounded-2xl text-slate-400 hover:text-blue-600 transition-colors active:scale-90">
-            <RefreshCw size={18} />
+            <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
           </button>
           <button
             onClick={() => setShowLogoutModal(true)}
@@ -170,12 +173,15 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
 
       {/* Quick Action */}
       <footer className="p-6 pt-0 bg-slate-50/80 backdrop-blur-md sticky bottom-0 flex gap-4">
-        <button className="flex-1 py-5 bg-slate-900 border-b-4 border-slate-950 text-white rounded-[2rem] font-black uppercase text-[11px] tracking-[0.2em] shadow-2xl active:translate-y-1 active:border-b-0 transition-all flex items-center justify-center gap-3">
+        <button
+          onClick={() => setShowDirectOrder(true)}
+          className="flex-1 py-5 bg-slate-900 border-b-4 border-slate-950 text-white rounded-[2rem] font-black uppercase text-[11px] tracking-[0.2em] shadow-2xl active:translate-y-1 active:border-b-0 transition-all flex items-center justify-center gap-3"
+        >
           <PlusCircle size={20} />
           Lançamento Direto
         </button>
         <button className="flex-1 py-5 bg-slate-100 border-b-4 border-slate-200 text-slate-600 rounded-[2rem] font-black uppercase text-[11px] tracking-[0.2em] shadow-lg active:translate-y-1 active:border-b-0 transition-all flex items-center justify-center gap-3">
-          <RefreshCw size={20} />
+          <MessageSquare size={20} />
           Mensagens do Dia
         </button>
       </footer>
@@ -185,6 +191,14 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
           table={selectedTable}
           user={user}
           onClose={() => setSelectedTable(null)}
+          onRefresh={fetchData}
+        />
+      )}
+
+      {showDirectOrder && (
+        <DirectOrderModal
+          user={user}
+          onClose={() => setShowDirectOrder(false)}
           onRefresh={fetchData}
         />
       )}
