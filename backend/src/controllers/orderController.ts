@@ -150,8 +150,13 @@ export const saveOrder = async (req: Request, res: Response) => {
     let resolvedWaiterId = order.waiterId;
     if (user && user.email) {
         try {
-            const trueWaiter = await prisma.waiter.findUnique({
-                where: { email: user.email.toLowerCase() }
+            const trueWaiter = await prisma.waiter.findFirst({
+                where: {
+                    email: {
+                        equals: user.email.toLowerCase(),
+                        mode: 'insensitive'
+                    }
+                }
             });
             if (trueWaiter) {
                 resolvedWaiterId = trueWaiter.id;
@@ -245,7 +250,20 @@ export const saveOrder = async (req: Request, res: Response) => {
 
             // 2. Client Synchronization and Order Counting
             const clientId = order.clientId && order.clientId !== "" ? order.clientId : 'ANONYMOUS';
-            const waiterId = resolvedWaiterId;
+
+            // Recover waiterId if missing (e.g. POS finalizing a waiter's table)
+            let waiterId = resolvedWaiterId;
+            if (!waiterId) {
+                if (existingOrder?.waiterId) {
+                    waiterId = existingOrder.waiterId;
+                } else if (tableNumIdx !== null) {
+                    const tableSess = await tx.tableSession.findUnique({ where: { tableNumber: tableNumIdx } });
+                    if (tableSess?.waiterId) {
+                        waiterId = tableSess.waiterId;
+                    }
+                }
+            }
+
             const driverId = order.driverId && order.driverId !== "" ? order.driverId : null;
 
             if (clientId === 'ANONYMOUS') {
@@ -561,6 +579,11 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
                 driverId: resolvedDriverId,
                 paymentMethod: paymentMethod !== undefined ? paymentMethod : undefined
             };
+
+            // Preserve waiterId if it's not already in updateData and exists in oldOrder
+            if (!updateData.waiterId && oldOrder?.waiterId) {
+                updateData.waiterId = oldOrder.waiterId;
+            }
 
             if (resolvedDriverId && resolvedDriverId !== oldOrder.driverId) {
                 updateData.assignedAt = new Date();

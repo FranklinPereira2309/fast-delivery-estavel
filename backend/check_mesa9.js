@@ -14,7 +14,7 @@ async function main() {
 
     console.log('--- ORDERS (Table 9) ---');
     orders.forEach(o => {
-        console.log(`ID: ${o.id}, Status: ${o.status}, CreatedAt: ${o.createdAt.toISOString()}, UpdatedAt: ${o.updatedAt.toISOString()}, Client: ${o.clientName}`);
+        console.log(`ID: ${o.id}, Status: ${o.status}, CreatedAt: ${o.createdAt.toISOString()}, UpdatedAt: ${o.updatedAt.toISOString()}, Client: ${o.clientName}, WaiterID: ${o.waiterId}, ServiceFee: ${o.appliedServiceFee}`);
     });
 
     console.log('\n--- SESSIONS (Table 9) ---');
