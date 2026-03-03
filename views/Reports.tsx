@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { db, BusinessSettings } from '../services/db';
-import { Order, OrderStatus, SaleType, Client, Product, DeliveryDriver, InventoryMovement, OrderRejection, CashSession, Receivable, User } from '../types';
+import { Order, OrderStatus, SaleType, Client, Product, DeliveryDriver, InventoryMovement, OrderRejection, CashSession, Receivable, User, Waiter } from '../types';
 import { Icons } from '../constants';
 import CustomAlert from '../components/CustomAlert';
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
@@ -19,6 +19,7 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
     const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
     const [rejections, setRejections] = useState<OrderRejection[]>([]);
     const [receivables, setReceivables] = useState<(Receivable & { client: Client })[]>([]);
+    const [waiters, setWaiters] = useState<Waiter[]>([]);
 
     // Sales Filters
     const [salesStartDate, setSalesStartDate] = useState(getLocalIsoDate());
@@ -28,7 +29,7 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
     const [salesOrigin, setSalesOrigin] = useState<'TODOS' | 'FISICO' | 'DIGITAL'>('TODOS');
 
     // Tab State
-    const [activeTab, setActiveTab] = useState<'SALES' | 'CLIENTS' | 'DRIVERS' | 'INVENTORY' | 'CASH' | 'RECEIVABLES'>('SALES');
+    const [activeTab, setActiveTab] = useState<'SALES' | 'CLIENTS' | 'DRIVERS' | 'INVENTORY' | 'CASH' | 'RECEIVABLES' | 'WAITERS'>('SALES');
 
     // Cash Filters
     const [cashStartDate, setCashStartDate] = useState(getLocalIsoDate());
@@ -43,7 +44,11 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
     const [clientSearch, setClientSearch] = useState('');
     const [selectedClient, setSelectedClient] = useState<Client | null>(null);
     const [showClientDropdown, setShowClientDropdown] = useState(false);
-    const [previewType, setPreviewType] = useState<'SALES' | 'CLIENTS' | 'CLIENT_ORDERS' | 'DRIVERS' | 'INVENTORY' | 'CASH' | 'RECEIVABLES' | null>(null);
+    const [previewType, setPreviewType] = useState<'SALES' | 'CLIENTS' | 'CLIENT_ORDERS' | 'DRIVERS' | 'INVENTORY' | 'CASH' | 'RECEIVABLES' | 'WAITERS' | null>(null);
+
+    // Waiter Filters
+    const [waiterStartDate, setWaiterStartDate] = useState(getLocalIsoDate());
+    const [waiterEndDate, setWaiterEndDate] = useState(getLocalIsoDate());
 
     // Editing Cash Reports
     const [isEditReportModalOpen, setIsEditReportModalOpen] = useState(false);
@@ -129,13 +134,14 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
     };
 
     const fetchData = async () => {
-        const [o, c, s, d, r, rec] = await Promise.all([
+        const [o, c, s, d, r, rec, w] = await Promise.all([
             db.getOrders(),
             db.getClients(),
             db.getSettings(),
             db.getDrivers(),
             db.getRejections(),
-            db.getReceivables()
+            db.getReceivables(),
+            db.getWaiters()
         ]);
         setOrders(o);
         setClients(c);
@@ -143,6 +149,7 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
         setDrivers(d);
         setRejections(r);
         setReceivables(rec);
+        setWaiters(w);
 
         // Fetch cash sessions for current period
         fetchCashSessions();
@@ -912,6 +919,108 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
         }
     };
 
+    const generateWaitersPDF = async (downloadOnly = false) => {
+        if (!businessSettings) return;
+
+        try {
+            const pdfDoc = await PDFDocument.create();
+            const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+            const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+
+            // Filtrar pedidos entregues no período que possuem garçom
+            const filteredOrders = orders.filter(o => {
+                const orderDate = getLocalIsoDate(new Date(o.createdAt));
+                return orderDate >= waiterStartDate &&
+                    orderDate <= waiterEndDate &&
+                    o.status === OrderStatus.DELIVERED &&
+                    o.waiterId;
+            });
+
+            // Agrupar por garçom
+            const waiterStats: Record<string, { name: string, totalSales: number, totalCommission: number, count: number }> = {};
+
+            filteredOrders.forEach(o => {
+                const waiter = waiters.find(w => w.id === o.waiterId);
+                const waiterName = waiter ? waiter.name : `Garçom ID: ${o.waiterId}`;
+                const commission = o.appliedServiceFee || 0;
+
+                if (!waiterStats[o.waiterId!]) {
+                    waiterStats[o.waiterId!] = { name: waiterName, totalSales: 0, totalCommission: 0, count: 0 };
+                }
+
+                waiterStats[o.waiterId!].totalSales += o.total;
+                waiterStats[o.waiterId!].totalCommission += commission;
+                waiterStats[o.waiterId!].count += 1;
+            });
+
+            const statsList = Object.values(waiterStats).sort((a, b) => b.totalSales - a.totalSales);
+
+            let page = pdfDoc.addPage([595.28, 841.89]);
+            const { width, height } = page.getSize();
+            let y = height - 50;
+
+            // Header
+            page.drawText('RELATÓRIO DE COMISSÕES POR GARÇOM', { x: 50, y, size: 18, font: fontBold });
+            y -= 25;
+            page.drawText(businessSettings.name, { x: 50, y, size: 12, font: fontBold });
+            y -= 15;
+            page.drawText(`Período: ${new Date(waiterStartDate + 'T00:00:00').toLocaleDateString('pt-BR')} a ${new Date(waiterEndDate + 'T00:00:00').toLocaleDateString('pt-BR')}`, { x: 50, y, size: 10, font });
+
+            y -= 40;
+            // Table Header
+            page.drawRectangle({ x: 50, y: y - 5, width: width - 100, height: 20, color: rgb(0.95, 0.95, 0.95) });
+            page.drawText('GARÇOM', { x: 55, y, size: 9, font: fontBold });
+            page.drawText('PEDIDOS', { x: 250, y, size: 9, font: fontBold });
+            page.drawText('TOTAL VENDAS', { x: 320, y, size: 9, font: fontBold });
+            page.drawText('COMISSÃO', { x: 450, y, size: 9, font: fontBold });
+            y -= 25;
+
+            let grandTotalSales = 0;
+            let grandTotalCommission = 0;
+
+            for (const s of statsList) {
+                if (y < 70) {
+                    page = pdfDoc.addPage([595.28, 841.89]);
+                    y = page.getHeight() - 50;
+                }
+
+                page.drawText(s.name.substring(0, 35), { x: 55, y, size: 8, font });
+                page.drawText(s.count.toString(), { x: 250, y, size: 8, font });
+                page.drawText(`R$ ${s.totalSales.toFixed(2)}`, { x: 320, y, size: 8, font });
+                page.drawText(`R$ ${s.totalCommission.toFixed(2)}`, { x: 450, y, size: 8, font: fontBold });
+
+                grandTotalSales += s.totalSales;
+                grandTotalCommission += s.totalCommission;
+                y -= 20;
+            }
+
+            y -= 10;
+            page.drawRectangle({ x: 50, y: y - 5, width: width - 100, height: 2, color: rgb(0, 0, 0) });
+            y -= 20;
+            page.drawText('TOTAIS GERAIS', { x: 55, y, size: 10, font: fontBold });
+            page.drawText(`R$ ${grandTotalSales.toFixed(2)}`, { x: 320, y, size: 10, font: fontBold });
+            page.drawText(`R$ ${grandTotalCommission.toFixed(2)}`, { x: 450, y, size: 10, font: fontBold, color: rgb(0, 0.5, 0) });
+
+            const pdfBytes = await pdfDoc.save();
+            const blob = new Blob([pdfBytes as any], { type: 'application/pdf' });
+            const url = URL.createObjectURL(blob);
+
+            if (downloadOnly) {
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `comissoes_garcom_${waiterStartDate}_${waiterEndDate}.pdf`;
+                link.click();
+                URL.revokeObjectURL(url);
+            } else {
+                setPreviewType('WAITERS');
+                setPdfPreviewUrl(url);
+            }
+        } catch (error) {
+            console.error('Erro ao gerar PDF de comissões:', error);
+            alert('Erro ao gerar relatório de comissões.');
+        }
+    };
+
     return (
         <div className="flex flex-col h-full gap-8 animate-in fade-in duration-500 overflow-y-auto pb-8">
             {alert && (
@@ -933,6 +1042,7 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
                 <button onClick={() => setActiveTab('INVENTORY')} className={`pb-4 text-[12px] font-black uppercase tracking-widest transition-all ${activeTab === 'INVENTORY' ? 'text-blue-600 border-b-4 border-blue-600' : 'text-slate-400 hover:text-slate-600'}`}>Movimentação de Insumos</button>
                 <button onClick={() => setActiveTab('CASH')} className={`pb-4 text-[12px] font-black uppercase tracking-widest transition-all ${activeTab === 'CASH' ? 'text-blue-600 border-b-4 border-blue-600' : 'text-slate-400 hover:text-slate-600'}`}>Caixa</button>
                 <button onClick={() => setActiveTab('RECEIVABLES')} className={`pb-4 text-[12px] font-black uppercase tracking-widest transition-all ${activeTab === 'RECEIVABLES' ? 'text-blue-600 border-b-4 border-blue-600' : 'text-slate-400 hover:text-slate-600'}`}>Recebimentos (Fiado)</button>
+                <button onClick={() => setActiveTab('WAITERS')} className={`pb-4 text-[12px] font-black uppercase tracking-widest transition-all ${activeTab === 'WAITERS' ? 'text-blue-600 border-b-4 border-blue-600' : 'text-slate-400 hover:text-slate-600'}`}>Comissões</button>
             </div>
 
             <div className="flex-1">
@@ -1468,6 +1578,39 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
                     </div>
                 )}
 
+                {/* CARD RELATÓRIO DE COMISSÕES POR GARÇOM */}
+                {activeTab === 'WAITERS' && (
+                    <div className="bg-white p-10 rounded-[3rem] shadow-sm border border-slate-100 flex flex-col h-max max-w-4xl animate-in fade-in zoom-in-95">
+                        <div className="mb-8">
+                            <h3 className="text-2xl font-black text-slate-800 uppercase tracking-tighter flex items-center gap-3">
+                                <span className="p-3 bg-blue-50 text-blue-600 rounded-2xl"><Icons.User /></span>
+                                Comissões por Garçom
+                            </h3>
+                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-2 ml-14">Resumo de desempenho e taxas de serviço por período</p>
+                        </div>
+
+                        <div className="space-y-6">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Início</label>
+                                    <input type="date" value={waiterStartDate} onChange={e => setWaiterStartDate(e.target.value)} className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-sm" />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Fim</label>
+                                    <input type="date" value={waiterEndDate} onChange={e => setWaiterEndDate(e.target.value)} className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-sm" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <button
+                            onClick={() => generateWaitersPDF(false)}
+                            className="mt-8 w-full py-6 bg-slate-900 hover:bg-black text-white rounded-[2rem] font-black uppercase text-xs tracking-widest shadow-xl transition-all flex items-center justify-center gap-3"
+                        >
+                            <Icons.Print />
+                            Visualizar Relatório de Comissões
+                        </button>
+                    </div>
+                )}
 
             </div>
 
@@ -1490,6 +1633,7 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
                                         else if (previewType === 'INVENTORY') generateInventoryPDF(true);
                                         else if (previewType === 'CASH') generateCashPDF(true);
                                         else if (previewType === 'RECEIVABLES') generateReceivablesPDF(true);
+                                        else if (previewType === 'WAITERS') generateWaitersPDF(true);
                                     }}
                                     className="bg-slate-900 text-white px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all flex items-center gap-2"
                                 >
