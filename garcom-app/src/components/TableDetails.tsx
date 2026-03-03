@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import type { TableSession, Product } from '../types';
+import type { TableSession, Product, User } from '../types';
 import { db } from '../api';
 import { X, Search, ShoppingCart, CheckCircle2, AlertCircle, Trash2, Plus, Minus, ArrowRight, LayoutGrid, RefreshCw } from 'lucide-react';
+import Modal from './Modal';
 
 interface TableDetailsProps {
     table: TableSession;
+    user: User;
     onClose: () => void;
     onRefresh: () => void;
 }
 
-const TableDetails: React.FC<TableDetailsProps> = ({ table, onClose, onRefresh }) => {
+const TableDetails: React.FC<TableDetailsProps> = ({ table, user, onClose, onRefresh }) => {
     const [activeTab, setActiveTab] = useState<'CONSUMPTION' | 'LAUNCH' | 'REVIEW'>(
         table.hasPendingDigital ? 'REVIEW' : 'CONSUMPTION'
     );
@@ -17,6 +19,24 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, onClose, onRefresh }
     const [searchTerm, setSearchTerm] = useState('');
     const [cart, setCart] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
+
+    // Modal state
+    const [modal, setModal] = useState<{
+        isOpen: boolean;
+        type: 'alert' | 'confirm' | 'success' | 'error';
+        title: string;
+        message: string;
+        onConfirm?: () => void;
+    }>({
+        isOpen: false,
+        type: 'alert',
+        title: '',
+        message: ''
+    });
+
+    const showAlert = (title: string, message: string, type: typeof modal.type = 'alert', onConfirm?: () => void) => {
+        setModal({ isOpen: true, title, message, type, onConfirm });
+    };
 
     useEffect(() => {
         if (activeTab === 'LAUNCH') {
@@ -56,43 +76,50 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, onClose, onRefresh }
 
     const handleTransfer = async () => {
         if (!transferTarget) return;
+
+        // Regra de negócio: somente o garçom responsável
+        if (table.waiterId && table.waiterId !== user.id && !user.permissions.includes('admin')) {
+            showAlert('Acesso Negado', 'Somente o garçom responsável por esta mesa pode transferi-lá.', 'error');
+            return;
+        }
+
         setLoading(true);
         try {
-            await db.transferTable(table.tableNumber, Number(transferTarget));
-            alert('Mesa transferida com sucesso!');
-            onRefresh();
-            onClose();
+            await db.transferTable(table.tableNumber, Number(transferTarget), user.id);
+            showAlert('Sucesso', 'Mesa transferida com sucesso!', 'success', () => {
+                onRefresh();
+                onClose();
+            });
         } catch (e: any) {
-            alert(e.message || 'Erro ao transferir mesa');
+            showAlert('Erro', e.message || 'Erro ao transferir mesa', 'error');
         } finally {
             setLoading(false);
         }
     };
 
     const handleCheckout = async () => {
-        if (!confirm('Deseja solicitar o fechamento desta mesa?')) return;
+        showAlert('Confirmar Fechamento', 'Deseja solicitar o fechamento desta mesa?', 'confirm', async () => {
+            setLoading(true);
+            try {
+                if (!table.clientId && !table.clientName) {
+                    await db.saveTableSession({
+                        tableNumber: table.tableNumber,
+                        items: table.items,
+                        status: 'occupied',
+                        clientId: 'ANONYMOUS',
+                        clientName: `Mesa ${table.tableNumber}`
+                    });
+                }
 
-        setLoading(true);
-        try {
-            // Fix: Se a mesa não tem cliente, garante o ANONYMOUS
-            if (!table.clientId && !table.clientName) {
-                await db.saveTableSession({
-                    tableNumber: table.tableNumber,
-                    items: table.items,
-                    status: 'occupied',
-                    clientId: 'ANONYMOUS',
-                    clientName: `Mesa ${table.tableNumber}`
-                });
+                await db.requestCheckout(table.tableNumber);
+                onRefresh();
+                onClose();
+            } catch (e) {
+                showAlert('Erro', 'Erro ao solicitar fechamento', 'error');
+            } finally {
+                setLoading(false);
             }
-
-            await db.requestCheckout(table.tableNumber);
-            onRefresh();
-            onClose();
-        } catch (e) {
-            alert('Erro ao solicitar fechamento');
-        } finally {
-            setLoading(false);
-        }
+        });
     };
 
     const handleSave = async () => {
@@ -104,15 +131,15 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, onClose, onRefresh }
                 tableNumber: table.tableNumber,
                 items: newItems,
                 status: 'occupied',
-                // Garante que mesas novas tenham ao menos o cliente anônimo
                 clientId: table.clientId || 'ANONYMOUS',
                 clientName: table.clientName || `Mesa ${table.tableNumber}`
             });
             setCart([]);
             onRefresh();
             setActiveTab('CONSUMPTION');
+            showAlert('Sucesso', 'Itens lançados com sucesso!', 'success');
         } catch (e) {
-            alert('Erro ao lançar itens');
+            showAlert('Erro', 'Erro ao lançar itens', 'error');
         } finally {
             setLoading(false);
         }
@@ -136,32 +163,34 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, onClose, onRefresh }
                 });
                 onRefresh();
                 setActiveTab('CONSUMPTION');
+                showAlert('Sucesso', 'Pedido digital aprovado!', 'success');
             }
         } catch (e) {
-            alert('Erro ao aprovar pedido digital');
+            showAlert('Erro', 'Erro ao aprovar pedido digital', 'error');
         } finally {
             setLoading(false);
         }
     };
 
     const handleRejectDigital = async () => {
-        if (!confirm('Deseja REJEITAR estes itens? O cliente será notificado.')) return;
-        setLoading(true);
-        try {
-            await db.saveTableSession({
-                tableNumber: table.tableNumber,
-                items: table.items,
-                status: table.items.length > 0 ? 'occupied' : 'available',
-                hasPendingDigital: false,
-                pendingReviewItems: undefined
-            });
-            onRefresh();
-            onClose();
-        } catch (e) {
-            alert('Erro ao rejeitar pedido');
-        } finally {
-            setLoading(false);
-        }
+        showAlert('Rejeitar Pedido', 'Deseja REJEITAR estes itens? O cliente será notificado.', 'confirm', async () => {
+            setLoading(true);
+            try {
+                await db.saveTableSession({
+                    tableNumber: table.tableNumber,
+                    items: table.items,
+                    status: table.items.length > 0 ? 'occupied' : 'available',
+                    hasPendingDigital: false,
+                    pendingReviewItems: undefined
+                });
+                onRefresh();
+                onClose();
+            } catch (e) {
+                showAlert('Erro', 'Erro ao rejeitar pedido', 'error');
+            } finally {
+                setLoading(false);
+            }
+        });
     };
 
     const total = table.items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
@@ -223,18 +252,18 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, onClose, onRefresh }
                                 <h4 className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Transferir para Mesa:</h4>
                                 <button onClick={() => setShowTransfer(false)} className="text-blue-400 font-bold text-[10px] uppercase">Cancelar</button>
                             </div>
-                            <div className="flex gap-3">
+                            <div className="flex flex-col sm:flex-row gap-3">
                                 <input
                                     type="number"
                                     placeholder="Nº Mesa"
-                                    className="flex-1 bg-white border-none rounded-xl px-4 py-3 text-sm font-black outline-none focus:ring-2 focus:ring-blue-500/20"
+                                    className="flex-1 bg-white border-none rounded-xl px-4 py-4 text-sm font-black outline-none focus:ring-2 focus:ring-blue-500/20"
                                     value={transferTarget}
                                     onChange={(e) => setTransferTarget(e.target.value === '' ? '' : Number(e.target.value))}
                                 />
                                 <button
                                     onClick={handleTransfer}
                                     disabled={!transferTarget || loading}
-                                    className="px-6 py-3 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-500/30 disabled:opacity-50"
+                                    className="px-8 py-4 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-500/30 disabled:opacity-50 active:scale-95 transition-all w-full sm:w-auto"
                                 >
                                     Confirmar
                                 </button>
@@ -453,6 +482,18 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, onClose, onRefresh }
                         </div>
                     )}
                 </div>
+
+                <Modal
+                    isOpen={modal.isOpen}
+                    type={modal.type}
+                    title={modal.title}
+                    message={modal.message}
+                    onConfirm={() => {
+                        if (modal.onConfirm) modal.onConfirm();
+                        setModal({ ...modal, isOpen: false });
+                    }}
+                    onClose={() => setModal({ ...modal, isOpen: false })}
+                />
             </div>
         </div>
     );

@@ -100,7 +100,7 @@ export const db = {
         return api.post(`/tables/${tableNumber}/checkout`);
     },
 
-    transferTable: async (from: number, to: number) => {
-        return api.post('/tables/transfer', { from, to });
+    transferTable: async (from: number, to: number, waiterId: string) => {
+        return api.post('/tables/transfer', { from, to, waiterId });
     }
 };

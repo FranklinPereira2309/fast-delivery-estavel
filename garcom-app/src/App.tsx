@@ -4,12 +4,14 @@ import TableDetails from './components/TableDetails';
 import type { User, TableSession } from './types';
 import { db, socket } from './api';
 import { LogOut, LayoutGrid, RefreshCw, PlusCircle } from 'lucide-react';
+import Modal from './components/Modal';
 
 const Dashboard: React.FC<{ user: User }> = ({ user }) => {
   const [tables, setTables] = useState<TableSession[]>([]);
   const [tableCount, setTableCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [selectedTable, setSelectedTable] = useState<TableSession | null>(null);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const fetchData = async () => {
     try {
@@ -99,7 +101,7 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
             <RefreshCw size={18} />
           </button>
           <button
-            onClick={() => { if (confirm('Sair do sistema?')) { db.logout(); window.location.reload(); } }}
+            onClick={() => setShowLogoutModal(true)}
             className="p-3 bg-red-50 border border-red-100 rounded-2xl text-red-500 hover:bg-red-100 transition-colors active:scale-90"
           >
             <LogOut size={18} />
@@ -177,10 +179,24 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
       {selectedTable && (
         <TableDetails
           table={selectedTable}
+          user={user}
           onClose={() => setSelectedTable(null)}
           onRefresh={fetchData}
         />
       )}
+
+      <Modal
+        isOpen={showLogoutModal}
+        type="confirm"
+        title="Sair do Sistema"
+        message="Deseja realmente sair da aplicação e voltar para o login?"
+        confirmText="Sair Agora"
+        onConfirm={() => {
+          db.logout();
+          window.location.reload();
+        }}
+        onClose={() => setShowLogoutModal(false)}
+      />
     </div>
   );
 };
