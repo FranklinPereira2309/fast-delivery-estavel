@@ -163,20 +163,20 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col">
       {/* Header */}
-      <header className="p-6 bg-white border-b border-slate-100 flex justify-between items-center sticky top-0 z-20 shadow-sm">
-        <div className="flex items-center gap-4">
-          <div className="w-10 h-10 overflow-hidden rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
+      <header className="px-4 sm:px-6 pt-10 pb-4 bg-white sticky top-0 z-40 flex items-center justify-between gap-2 sm:gap-4 border-b border-slate-100 shadow-sm overflow-hidden">
+        <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
+          <div className="w-9 h-9 sm:w-10 sm:h-10 shrink-0 overflow-hidden rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
             <img src="/favicon.png" alt="Logo" className="w-full h-full object-cover" />
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-sm font-black text-slate-900 uppercase tracking-tighter">App Garçom</h1>
-              <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full ${storeStatus.status === 'online' ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
-                <div className={`w-1.5 h-1.5 rounded-full ${storeStatus.status === 'online' ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`}></div>
-                <span className="text-[8px] font-black uppercase tracking-widest">{storeStatus.status === 'online' ? 'Online' : 'Offline'}</span>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <h1 className="text-sm font-black text-slate-900 uppercase tracking-tighter truncate">App Garçom</h1>
+              <div className={`shrink-0 flex items-center gap-1 px-1.5 py-0.5 rounded-full ${storeStatus.status === 'online' ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
+                <div className={`w-1 h-1 rounded-full ${storeStatus.status === 'online' ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`}></div>
+                <span className="text-[7px] sm:text-[8px] font-black uppercase tracking-widest">{storeStatus.status === 'online' ? 'On' : 'Off'}</span>
               </div>
             </div>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{user.name.split(' ')[0]} • DF Service</p>
+            <p className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-widest truncate">{user.name.split(' ')[0]} • DF Service</p>
           </div>
           {tables.some(t => {
             if (!t.hasPendingDigital) return false;
@@ -187,25 +187,25 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
               return !t.pendingReviewItems?.startsWith('REJECTED:');
             }
           }) && (
-              <div className="flex items-center justify-center w-10 h-10 bg-amber-500 text-white rounded-2xl animate-bounce shadow-lg shadow-amber-500/20">
-                <AlertCircle size={24} className="animate-pulse" />
+              <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-amber-500 text-white rounded-xl sm:rounded-2xl animate-bounce shadow-lg shadow-amber-500/20 shrink-0">
+                <AlertCircle size={20} className="animate-pulse" />
               </div>
             )}
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-1.5 sm:gap-2 shrink-0">
           <button
             onClick={() => { setShowFeedbacks(true); setHasNewFeedback(false); }}
-            className={`p-3 border rounded-2xl transition-colors active:scale-90 relative ${hasNewFeedback ? 'bg-indigo-600 border-indigo-700 text-white shadow-lg shadow-indigo-200 animate-pulse' : 'bg-slate-50 border-slate-100 text-slate-400 hover:text-blue-600'}`}
+            className={`p-2.5 sm:p-3 border rounded-xl sm:rounded-2xl transition-colors active:scale-90 relative ${hasNewFeedback ? 'bg-indigo-600 border-indigo-700 text-white shadow-lg shadow-indigo-200 animate-pulse' : 'bg-slate-50 border-slate-100 text-slate-400 hover:text-blue-600'}`}
           >
             <MessageSquare size={18} />
             {hasNewFeedback && <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white animate-ping"></span>}
           </button>
-          <button onClick={fetchData} className="p-3 bg-slate-50 border border-slate-100 rounded-2xl text-slate-400 hover:text-blue-600 transition-colors active:scale-90">
+          <button onClick={fetchData} className="p-2.5 sm:p-3 bg-slate-50 border border-slate-100 rounded-xl sm:rounded-2xl text-slate-400 hover:text-blue-600 transition-colors active:scale-90">
             <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
           </button>
           <button
             onClick={() => setShowLogoutModal(true)}
-            className="p-3 bg-red-50 border border-red-100 rounded-2xl text-red-500 hover:bg-red-100 transition-colors active:scale-90"
+            className="p-2.5 sm:p-3 bg-red-50 border border-red-100 rounded-xl sm:rounded-2xl text-red-500 hover:bg-red-100 transition-colors active:scale-90"
           >
             <LogOut size={18} />
           </button>
