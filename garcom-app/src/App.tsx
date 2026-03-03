@@ -53,8 +53,12 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
     try {
       const orders = await db.getOrders();
       // Filter by current waiter
-      const targetId = resolvedWaiterId || user.id;
-      const userOrders = orders.filter(o => o.waiterId === targetId || o.waiterId === user.id);
+      const targetId = resolvedWaiterId || user.waiterId || user.id;
+      const userOrders = orders.filter(o =>
+        o.waiterId === targetId ||
+        o.waiterId === user.id ||
+        o.waiter?.email?.toLowerCase() === user.email.toLowerCase()
+      );
       setRecentOrders(userOrders);
     } catch (e) {
       console.error(e);
@@ -390,6 +394,7 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
           onClose={() => setSelectedTable(null)}
           onRefresh={fetchData}
           storeStatus={storeStatus}
+          resolvedWaiterId={resolvedWaiterId}
         />
       )}
 
@@ -399,6 +404,7 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
           onClose={() => setShowDirectOrder(false)}
           onRefresh={fetchData}
           storeStatus={storeStatus}
+          resolvedWaiterId={resolvedWaiterId}
         />
       )}
 

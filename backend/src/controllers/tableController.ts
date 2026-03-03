@@ -120,9 +120,15 @@ export const saveTableSession = async (req: Request, res: Response) => {
             }
 
             // Regra de Negócio: Somente o garçom responsável ou se a mesa estiver livre (novo atendimento)
-            if (existingSession && existingSession.waiterId && waiterId && existingSession.waiterId !== waiterId) {
-                // Se houver troca de garçom sem ser admin, poderíamos bloquear aqui, mas deixaremos o frontend gerenciar
-                // por enquanto para evitar quebras se o admin precisar intervir.
+            const isAdmin = sessionData.userPermissions?.includes('admin');
+            if (!isAdmin && existingSession && existingSession.waiterId && waiterId && existingSession.waiterId !== waiterId) {
+                // Check if they are actually the same person by email (safety)
+                const currentWaiter = await tx.waiter.findUnique({ where: { id: existingSession.waiterId } });
+                const actingWaiter = await tx.waiter.findUnique({ where: { id: waiterId } });
+
+                if (currentWaiter?.email?.toLowerCase() !== actingWaiter?.email?.toLowerCase()) {
+                    throw new Error('Esta mesa está sob responsabilidade de outro garçom.');
+                }
             }
 
             // 6. Ensure Kitchen Order exists (required for linking)
@@ -311,6 +317,16 @@ export const deleteTableSession = async (req: Request, res: Response) => {
     // Buscar sessão antes de deletar para saber se era digital
     const session = await prisma.tableSession.findUnique({ where: { tableNumber: tableNum } });
 
+    const { waiterId, userPermissions } = req.body;
+    const isAdmin = userPermissions?.includes('admin');
+    if (!isAdmin && session?.waiterId && waiterId && session.waiterId !== waiterId) {
+        const currentWaiter = await prisma.waiter.findUnique({ where: { id: session.waiterId } });
+        const actingWaiter = await prisma.waiter.findUnique({ where: { id: waiterId } });
+        if (currentWaiter?.email?.toLowerCase() !== actingWaiter?.email?.toLowerCase()) {
+            return res.status(403).json({ error: 'Apenas o garçom responsável por esta mesa pode realizar esta ação.' });
+        }
+    }
+
     try {
         const rejectionMessage = cancellation === 'true' ? "Procure o Garçom, seu pedido foi Rejeitado!" : undefined;
 
@@ -369,8 +385,13 @@ export const transferTableSession = async (req: Request, res: Response) => {
             }
 
             // Regra de Negócio: Somente o garçom responsável pode transferir
-            if (waiterId && sourceSession.waiterId && sourceSession.waiterId !== waiterId) {
-                throw new Error('Apenas o garçom responsável por esta mesa pode transferi-lá.');
+            const isAdmin = req.body.userPermissions?.includes('admin');
+            if (!isAdmin && waiterId && sourceSession.waiterId && sourceSession.waiterId !== waiterId) {
+                const currentWaiter = await tx.waiter.findUnique({ where: { id: sourceSession.waiterId } });
+                const actingWaiter = await tx.waiter.findUnique({ where: { id: waiterId } });
+                if (currentWaiter?.email?.toLowerCase() !== actingWaiter?.email?.toLowerCase()) {
+                    throw new Error('Apenas o garçom responsável por esta mesa pode transferi-lá.');
+                }
             }
 
             const targetSession = await tx.tableSession.findUnique({
@@ -458,6 +479,18 @@ export const requestCheckout = async (req: Request, res: Response) => {
     const tableNum = parseInt(tableNumber as string);
 
     try {
+        const { waiterId, userPermissions } = req.body;
+        const isAdmin = userPermissions?.includes('admin');
+        const existing = await prisma.tableSession.findUnique({ where: { tableNumber: tableNum } });
+
+        if (!isAdmin && existing?.waiterId && waiterId && existing.waiterId !== waiterId) {
+            const currentWaiter = await prisma.waiter.findUnique({ where: { id: existing.waiterId } });
+            const actingWaiter = await prisma.waiter.findUnique({ where: { id: waiterId } });
+            if (currentWaiter?.email?.toLowerCase() !== actingWaiter?.email?.toLowerCase()) {
+                throw new Error('Apenas o garçom responsável por esta mesa pode solicitar o fechamento.');
+            }
+        }
+
         const session = await prisma.tableSession.update({
             where: { tableNumber: tableNum },
             data: {

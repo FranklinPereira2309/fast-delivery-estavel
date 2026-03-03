@@ -17,7 +17,10 @@ const mapOrderResponse = (order: any) => {
 
 export const getAllOrders = async (req: Request, res: Response) => {
     const orders = await prisma.order.findMany({
-        include: { items: true }
+        include: {
+            items: true,
+            waiter: true
+        }
     });
     console.log(`Fetching ${orders.length} orders for Kitchen`);
     res.json(orders.map(mapOrderResponse));
@@ -28,7 +31,10 @@ export const getOrderById = async (req: Request, res: Response) => {
     try {
         const order = await prisma.order.findUnique({
             where: { id },
-            include: { items: true }
+            include: {
+                items: true,
+                waiter: true
+            }
         });
         if (!order) return res.status(404).json({ error: 'Pedido não encontrado' });
         res.json(mapOrderResponse(order));

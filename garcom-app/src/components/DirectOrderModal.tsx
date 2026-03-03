@@ -10,9 +10,10 @@ interface DirectOrderModalProps {
     onClose: () => void;
     onRefresh: () => void;
     storeStatus?: StoreStatus;
+    resolvedWaiterId?: string | null;
 }
 
-const DirectOrderModal: React.FC<DirectOrderModalProps> = ({ user, onClose, onRefresh, storeStatus }) => {
+const DirectOrderModal: React.FC<DirectOrderModalProps> = ({ user, onClose, onRefresh, storeStatus, resolvedWaiterId }) => {
     const orderType: SaleType = 'COUNTER';
     const [products, setProducts] = useState<Product[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
@@ -79,7 +80,7 @@ const DirectOrderModal: React.FC<DirectOrderModalProps> = ({ user, onClose, onRe
                 status: 'PENDING',
                 clientId,
                 clientName,
-                waiterId: user.waiterId || user.id,
+                waiterId: resolvedWaiterId || user.waiterId || user.id,
                 total,
                 items: cart.map(item => ({
                     uid: item.uid,

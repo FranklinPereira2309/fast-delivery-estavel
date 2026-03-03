@@ -11,9 +11,10 @@ interface TableDetailsProps {
     onClose: () => void;
     onRefresh: () => void;
     storeStatus?: StoreStatus;
+    resolvedWaiterId?: string | null;
 }
 
-const TableDetails: React.FC<TableDetailsProps> = ({ table, user, onClose, onRefresh, storeStatus }) => {
+const TableDetails: React.FC<TableDetailsProps> = ({ table, user, onClose, onRefresh, storeStatus, resolvedWaiterId }) => {
     const isSoftRejected = (() => {
         if (!table.pendingReviewItems) return false;
         try {
@@ -35,7 +36,13 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, user, onClose, onRef
     const [transferTarget, setTransferTarget] = useState<number | ''>('');
     const [showClientSelect, setShowClientSelect] = useState(false);
 
-    const isResponsible = user.permissions.includes('admin') || !table.waiterId || (user.waiterId ? table.waiterId === user.waiterId : table.waiter?.email === user.email);
+    const actingWaiterId = resolvedWaiterId || user.waiterId || user.id;
+
+    const isResponsible = user.permissions.includes('admin') ||
+        !table.waiterId ||
+        (table.waiterId === actingWaiterId) ||
+        (table.waiterId === user.id) ||
+        (table.waiter?.email?.toLowerCase() === user.email.toLowerCase());
 
     // Modal state
     const [modal, setModal] = useState<{
@@ -100,7 +107,7 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, user, onClose, onRef
 
         setLoading(true);
         try {
-            await db.transferTable(table.tableNumber, Number(transferTarget), user.waiterId || user.id);
+            await db.transferTable(table.tableNumber, Number(transferTarget), actingWaiterId, user.permissions);
             showAlert('Sucesso', 'Mesa transferida com sucesso!', 'success', () => {
                 onRefresh();
                 onClose();
@@ -113,6 +120,11 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, user, onClose, onRef
     };
 
     const handleCheckout = async (clientId?: string, clientName?: string) => {
+        if (!isResponsible) {
+            showAlert('Acesso Negado', 'Somente o garçom responsável por esta mesa pode solicitar a conta.', 'error');
+            return;
+        }
+
         if (!clientId && !clientName) {
             setShowClientSelect(true);
             return;
@@ -121,7 +133,7 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, user, onClose, onRef
         showAlert('Confirmar Fechamento', `Deseja solicitar o fechamento para ${clientName}?`, 'confirm', async () => {
             setLoading(true);
             try {
-                await db.requestCheckout(table.tableNumber, clientId, clientName);
+                await db.requestCheckout(table.tableNumber, clientId, clientName, actingWaiterId, user.permissions);
                 setShowClientSelect(false);
                 onRefresh();
                 onClose();
@@ -141,15 +153,15 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, user, onClose, onRef
         if (cart.length === 0) return;
         setLoading(true);
         try {
-            const newItems = [...table.items, ...cart];
             await db.saveTableSession({
                 tableNumber: table.tableNumber,
-                items: newItems,
+                items: [...table.items, ...cart.map(item => ({ ...item, id: undefined }))],
                 status: 'occupied',
                 clientId: table.clientId || 'ANONYMOUS',
                 clientName: table.clientName || `Mesa ${table.tableNumber}`,
-                waiterId: user.waiterId || user.id
-            });
+                waiterId: actingWaiterId,
+                userPermissions: user.permissions
+            } as any);
             setCart([]);
             onRefresh();
             setActiveTab('CONSUMPTION');
@@ -191,8 +203,10 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, user, onClose, onRef
                     hasPendingDigital: false,
                     pendingReviewItems: null as any, // Explicitly null to clear in Prisma
                     clientId: table.clientId || 'ANONYMOUS',
-                    clientName: table.clientName || `Mesa ${table.tableNumber}`
-                });
+                    clientName: table.clientName || `Mesa ${table.tableNumber}`,
+                    waiterId: actingWaiterId,
+                    userPermissions: user.permissions
+                } as any);
                 onRefresh();
                 setActiveTab('CONSUMPTION');
                 showAlert('Sucesso', 'Pedido digital aprovado!', 'success');
@@ -220,8 +234,10 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, user, onClose, onRef
                         items: table.items,
                         status: table.items.length > 0 ? 'occupied' : 'available',
                         hasPendingDigital: false,
-                        pendingReviewItems: null as any
-                    }, true);
+                        pendingReviewItems: null as any,
+                        waiterId: actingWaiterId,
+                        userPermissions: user.permissions
+                    } as any, true);
                 }
                 onRefresh();
                 onClose();

@@ -99,12 +99,12 @@ export const db = {
         return data;
     },
 
-    saveTableSession: async (session: Partial<TableSession>, isRejection: boolean = false) => {
+    saveTableSession: async (session: Partial<TableSession> & { waiterId?: string, userPermissions?: string[] }, isRejection: boolean = false) => {
         return api.post(`/tables${isRejection ? '?rejection=true' : ''}`, session);
     },
 
-    deleteTableSession: async (tableNumber: number, isCancellation: boolean = false) => {
-        return api.delete(`/tables/${tableNumber}${isCancellation ? '?cancellation=true' : ''}`);
+    deleteTableSession: async (tableNumber: number, isCancellation: boolean = false, waiterId?: string, userPermissions?: string[]) => {
+        return api.delete(`/tables/${tableNumber}${isCancellation ? '?cancellation=true' : ''}`, { data: { waiterId, userPermissions } });
     },
 
     getClients: async (): Promise<any[]> => {
@@ -112,12 +112,12 @@ export const db = {
         return data;
     },
 
-    requestCheckout: async (tableNumber: number, clientId?: string, clientName?: string) => {
-        return api.post(`/tables/${tableNumber}/checkout`, { clientId, clientName });
+    requestCheckout: async (tableNumber: number, clientId?: string, clientName?: string, waiterId?: string, userPermissions?: string[]) => {
+        return api.post(`/tables/${tableNumber}/checkout`, { clientId, clientName, waiterId, userPermissions });
     },
 
-    transferTable: async (from: number, to: number, waiterId: string) => {
-        return api.post('/tables/transfer', { from, to, waiterId });
+    transferTable: async (from: number, to: number, waiterId: string, userPermissions?: string[]) => {
+        return api.post('/tables/transfer', { from, to, waiterId, userPermissions });
     },
 
     createOrder: async (order: any) => {
