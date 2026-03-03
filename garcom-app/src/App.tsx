@@ -4,7 +4,7 @@ import TableDetails from './components/TableDetails';
 import DirectOrderModal from './components/DirectOrderModal';
 import type { User, TableSession, StoreStatus, Order } from './types';
 import { db, socket } from './api';
-import { LogOut, LayoutGrid, RefreshCw, PlusCircle, MessageSquare, History, AlertCircle } from 'lucide-react';
+import { LogOut, LayoutGrid, RefreshCw, PlusCircle, MessageSquare, History, AlertCircle, X } from 'lucide-react';
 import Modal from './components/Modal';
 import HistoryModal from './components/HistoryModal';
 
@@ -16,6 +16,9 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
   const [showDirectOrder, setShowDirectOrder] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [feedbacks, setFeedbacks] = useState<any[]>([]);
+  const [showFeedbacks, setShowFeedbacks] = useState(false);
+  const [hasNewFeedback, setHasNewFeedback] = useState(false);
   const [storeStatus, setStoreStatus] = useState<StoreStatus>({ status: 'online', is_manually_closed: false, next_status_change: null });
   const [minutesToClose, setMinutesToClose] = useState<number | null>(null);
   const [recentOrders, setRecentOrders] = useState<Order[]>([]);
@@ -74,6 +77,15 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
     }
   };
 
+  const fetchFeedbacks = async () => {
+    try {
+      const fb = await db.getFeedbacks();
+      setFeedbacks(fb);
+    } catch (e) {
+      console.error('Error fetching feedbacks', e);
+    }
+  };
+
   useEffect(() => {
     fetchData();
     fetchStatus();
@@ -87,6 +99,13 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
     socket.on('orderStatusUpdated', fetchData);
     socket.on('store_status_changed', (status: StoreStatus) => setStoreStatus(status));
 
+    const handleNewFeedback = (feedback: any) => {
+      setFeedbacks(prev => [feedback, ...prev]);
+      setHasNewFeedback(true);
+    };
+    socket.on('newFeedback', handleNewFeedback);
+    fetchFeedbacks();
+
     const interval = setInterval(() => {
       fetchStatus();
     }, 30000);
@@ -96,6 +115,7 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
       socket.off('newOrder');
       socket.off('orderStatusUpdated');
       socket.off('store_status_changed');
+      socket.off('newFeedback');
       clearInterval(interval);
     };
   }, []); // FIX: Removed selectedTable dependency to avoid infinite loop
@@ -172,8 +192,12 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
             )}
         </div>
         <div className="flex gap-2">
-          <button onClick={() => {/* Handle messages */ }} className="p-3 bg-slate-50 border border-slate-100 rounded-2xl text-slate-400 hover:text-blue-600 transition-colors active:scale-90">
+          <button
+            onClick={() => { setShowFeedbacks(true); setHasNewFeedback(false); }}
+            className={`p-3 border rounded-2xl transition-colors active:scale-90 relative ${hasNewFeedback ? 'bg-indigo-600 border-indigo-700 text-white shadow-lg shadow-indigo-200 animate-pulse' : 'bg-slate-50 border-slate-100 text-slate-400 hover:text-blue-600'}`}
+          >
             <MessageSquare size={18} />
+            {hasNewFeedback && <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white animate-ping"></span>}
           </button>
           <button onClick={fetchData} className="p-3 bg-slate-50 border border-slate-100 rounded-2xl text-slate-400 hover:text-blue-600 transition-colors active:scale-90">
             <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
@@ -341,6 +365,69 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
         }}
         onClose={() => setShowLogoutModal(false)}
       />
+
+      {/* FEEDBACKS MODAL */}
+      {showFeedbacks && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="absolute inset-0" onClick={() => setShowFeedbacks(false)} />
+          <div className="relative w-full sm:w-[480px] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col max-h-[90vh] animate-in slide-in-from-bottom-full sm:slide-in-from-bottom-10 duration-300">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-indigo-50/50 rounded-t-3xl sm:rounded-t-3xl">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600 shadow-inner">
+                  <MessageSquare size={20} />
+                </div>
+                <div>
+                  <h3 className="font-black text-slate-900 tracking-tighter uppercase text-sm">Mensagens</h3>
+                  <p className="text-[9px] font-bold text-indigo-400 uppercase tracking-widest">Feedbacks e Sugestões</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowFeedbacks(false)}
+                className="w-10 h-10 bg-white border border-slate-200 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors active:scale-95 shadow-sm"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto flex-1 space-y-4 bg-slate-50/50">
+              {feedbacks.length > 0 ? (
+                feedbacks.map((fb, i) => (
+                  <div key={i} className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex gap-4 animate-in fade-in slide-in-from-bottom-4" style={{ animationDelay: `${i * 50}ms` }}>
+                    <div className="w-10 h-10 shrink-0 bg-amber-50 rounded-xl flex items-center justify-center text-amber-600 font-black italic shadow-inner border border-amber-100/50">
+                      {fb.tableNumber}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                          {new Date(fb.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                        {fb.name && <span className="text-[10px] font-bold text-slate-500">• {fb.name}</span>}
+                      </div>
+                      <p className="text-sm font-medium text-slate-700 leading-relaxed">{fb.message}</p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="py-12 flex flex-col items-center justify-center text-slate-400 gap-3">
+                  <div className="w-16 h-16 bg-slate-100 border-2 border-slate-200 border-dashed rounded-full flex items-center justify-center">
+                    <MessageSquare size={24} className="text-slate-300" />
+                  </div>
+                  <p className="text-xs font-black uppercase tracking-widest">Nenhuma Mensagem Hoje</p>
+                </div>
+              )}
+            </div>
+
+            <div className="p-6 bg-white border-t border-slate-100 rounded-b-3xl sm:rounded-b-3xl">
+              <button
+                onClick={() => setShowFeedbacks(false)}
+                className="w-full py-4 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl font-black uppercase tracking-widest text-xs transition-all active:scale-95 flex items-center justify-center gap-2 shadow-xl shadow-slate-900/20"
+              >
+                Fechar Painel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

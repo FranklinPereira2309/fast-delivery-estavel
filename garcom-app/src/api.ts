@@ -132,5 +132,10 @@ export const db = {
             console.error('Error fetching store status', error);
             return { status: 'online', is_manually_closed: false, next_status_change: null };
         }
+    },
+
+    getFeedbacks: async (): Promise<any[]> => {
+        const { data } = await api.get<any[]>('/public/feedback');
+        return data;
     }
 };
