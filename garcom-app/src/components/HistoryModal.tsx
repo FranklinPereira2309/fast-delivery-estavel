@@ -19,8 +19,16 @@ const HistoryModal: React.FC<HistoryModalProps> = ({ user, onClose }) => {
         const fetchOrders = async () => {
             try {
                 const allOrders = await db.getOrders();
-                const isMyWaiter = (wid: string | null | undefined) => wid === user.waiterId || wid === user.id;
-                const filtered = allOrders.filter((o: Order) => isMyWaiter(o.waiterId));
+
+                // Fallback: If user.waiterId is missing (e.g. case mismatch during login), try matching by email
+                let targetId = user.waiterId;
+                if (!targetId) {
+                    const waiters = await db.getWaiters();
+                    const match = waiters.find((w: any) => w.email?.toLowerCase() === user.email.toLowerCase());
+                    if (match) targetId = match.id;
+                }
+
+                const filtered = allOrders.filter((o: Order) => o.waiterId === targetId || o.waiterId === user.id);
                 setOrders(filtered);
             } catch (err) {
                 console.error('Error fetching orders for history:', err);

@@ -35,9 +35,15 @@ export const login = async (req: Request, res: Response) => {
                 }
             });
 
-            // Find related Waiter ID if exists (based on email)
+            // Find related Waiter ID if exists (based on email) - case insensitive
             const waiter = await prisma.waiter.findFirst({
-                where: { email: user.email, active: true }
+                where: {
+                    email: {
+                        equals: user.email.toLowerCase(),
+                        mode: 'insensitive'
+                    },
+                    active: true
+                }
             });
 
             const userWithWaiter = {

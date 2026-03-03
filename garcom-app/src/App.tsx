@@ -23,6 +23,7 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
   const [storeStatus, setStoreStatus] = useState<StoreStatus>({ status: 'online', is_manually_closed: false, next_status_change: null });
   const [minutesToClose, setMinutesToClose] = useState<number | null>(null);
   const [recentOrders, setRecentOrders] = useState<Order[]>([]);
+  const [resolvedWaiterId, setResolvedWaiterId] = useState<string | null>(user.waiterId || null);
 
   const fetchStatus = async () => {
     try {
@@ -33,11 +34,27 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
     }
   };
 
+  useEffect(() => {
+    const resolveWaiter = async () => {
+      if (!user.waiterId) {
+        try {
+          const waiters = await db.getWaiters();
+          const match = waiters.find(w => w.email?.toLowerCase() === user.email.toLowerCase());
+          if (match) setResolvedWaiterId(match.id);
+        } catch (e) {
+          console.error('Error resolving waiter:', e);
+        }
+      }
+    };
+    resolveWaiter();
+  }, [user.email, user.waiterId]);
+
   const fetchOrders = async () => {
     try {
       const orders = await db.getOrders();
       // Filter by current waiter
-      const userOrders = orders.filter(o => o.waiterId === user.waiterId || o.waiterId === user.id);
+      const targetId = resolvedWaiterId || user.id;
+      const userOrders = orders.filter(o => o.waiterId === targetId || o.waiterId === user.id);
       setRecentOrders(userOrders);
     } catch (e) {
       console.error(e);
@@ -120,7 +137,11 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
       socket.off('newFeedback');
       clearInterval(interval);
     };
-  }, []); // FIX: Removed selectedTable dependency to avoid infinite loop
+  }, []);
+
+  useEffect(() => {
+    fetchOrders();
+  }, [resolvedWaiterId]);
 
   useEffect(() => {
     if (storeStatus.status === 'online' && storeStatus.next_status_change) {
@@ -308,7 +329,8 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
                 const today = new Date().toDateString();
                 const feePercentage = settings?.serviceFeePercentage || 10;
                 const isFeeActive = settings?.serviceFeeStatus !== false;
-                const isMyWaiter = (wid: string | null | undefined) => wid === user.waiterId || wid === user.id;
+                const currentWaiterId = resolvedWaiterId || user.waiterId || user.id;
+                const isMyWaiter = (wid: string | null | undefined) => wid === currentWaiterId || wid === user.id;
 
                 // 1. Commission from finalized orders
                 const myOrders = recentOrders.filter(o => {
