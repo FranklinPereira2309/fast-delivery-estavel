@@ -1589,30 +1589,29 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
                             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-2 ml-14">Resumo de desempenho e taxas de serviço por período</p>
                         </div>
 
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Início</label>
-                                    <input type="date" value={waiterStartDate} onChange={e => setWaiterStartDate(e.target.value)} className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-sm" />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Fim</label>
-                                    <input type="date" value={waiterEndDate} onChange={e => setWaiterEndDate(e.target.value)} className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-sm" />
-                                </div>
-                            </div>
-
+                        <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Filtrar por Garçom</label>
-                                <select 
-                                    value={selectedWaiterId} 
-                                    onChange={e => setSelectedWaiterId(e.target.value)} 
-                                    className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-sm"
-                                >
-                                    <option value="TODOS">TODOS OS GARÇONS</option>
-                                    {waiters.map(w => (
-                                        <option key={w.id} value={w.id}>{w.name}</option>
-                                    ))}
-                                </select>
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Início</label>
+                                <input type="date" value={waiterStartDate} onChange={e => setWaiterStartDate(e.target.value)} className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-sm" />
                             </div>
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Fim</label>
+                                <input type="date" value={waiterEndDate} onChange={e => setWaiterEndDate(e.target.value)} className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-sm" />
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Filtrar por Garçom</label>
+                            <select
+                                value={selectedWaiterId}
+                                onChange={e => setSelectedWaiterId(e.target.value)}
+                                className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-sm"
+                            >
+                                <option value="TODOS">TODOS OS GARÇONS</option>
+                                {waiters.map(w => (
+                                    <option key={w.id} value={w.id}>{w.name}</option>
+                                ))}
+                            </select>
                         </div>
 
                         <button
@@ -1625,57 +1624,57 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
                     </div>
                 )}
 
-        </div>
-
-            {/* MODAL DE PREVIEW DO PDF */ }
-    {
-        pdfPreviewUrl && (
-            <div className="fixed inset-0 z-[120] flex items-center justify-center p-12 bg-slate-900/90 backdrop-blur-xl animate-in fade-in duration-300">
-                <div className="bg-white rounded-[4rem] shadow-2xl w-full max-w-5xl h-full flex flex-col overflow-hidden">
-                    <div className="p-8 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-                        <div>
-                            <h3 className="text-xl font-black text-slate-900 uppercase tracking-tighter">Visualização do Relatório</h3>
-                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Documento gerado localmente em alta resolução</p>
-                        </div>
-                        <div className="flex gap-3">
-                            <button
-                                onClick={() => {
-                                    if (previewType === 'SALES') generateSalesPDF(true);
-                                    else if (previewType === 'CLIENTS') generateClientsPDF(true);
-                                    else if (previewType === 'CLIENT_ORDERS') generateClientOrdersPDF(true);
-                                    else if (previewType === 'DRIVERS') generateDriversPDF(true);
-                                    else if (previewType === 'INVENTORY') generateInventoryPDF(true);
-                                    else if (previewType === 'CASH') generateCashPDF(true);
-                                    else if (previewType === 'RECEIVABLES') generateReceivablesPDF(true);
-                                    else if (previewType === 'WAITERS') generateWaitersPDF(true);
-                                }}
-                                className="bg-slate-900 text-white px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all flex items-center gap-2"
-                            >
-                                Download PDF
-                            </button>
-                            <button
-                                onClick={() => {
-                                    URL.revokeObjectURL(pdfPreviewUrl);
-                                    setPdfPreviewUrl(null);
-                                    setPreviewType(null);
-                                }}
-                                className="bg-white text-slate-400 px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest border border-slate-200 hover:bg-slate-50 transition-all"
-                            >
-                                Fechar
-                            </button>
-                        </div>
-                    </div>
-                    <div className="flex-1 bg-slate-200 p-8 flex justify-center items-center">
-                        <iframe
-                            src={pdfPreviewUrl}
-                            className="w-full h-full rounded-2xl shadow-xl bg-white"
-                            title="Report Preview"
-                        />
-                    </div>
-                </div>
             </div>
-        )
-    }
+
+            {/* MODAL DE PREVIEW DO PDF */}
+            {
+                pdfPreviewUrl && (
+                    <div className="fixed inset-0 z-[120] flex items-center justify-center p-12 bg-slate-900/90 backdrop-blur-xl animate-in fade-in duration-300">
+                        <div className="bg-white rounded-[4rem] shadow-2xl w-full max-w-5xl h-full flex flex-col overflow-hidden">
+                            <div className="p-8 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                                <div>
+                                    <h3 className="text-xl font-black text-slate-900 uppercase tracking-tighter">Visualização do Relatório</h3>
+                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Documento gerado localmente em alta resolução</p>
+                                </div>
+                                <div className="flex gap-3">
+                                    <button
+                                        onClick={() => {
+                                            if (previewType === 'SALES') generateSalesPDF(true);
+                                            else if (previewType === 'CLIENTS') generateClientsPDF(true);
+                                            else if (previewType === 'CLIENT_ORDERS') generateClientOrdersPDF(true);
+                                            else if (previewType === 'DRIVERS') generateDriversPDF(true);
+                                            else if (previewType === 'INVENTORY') generateInventoryPDF(true);
+                                            else if (previewType === 'CASH') generateCashPDF(true);
+                                            else if (previewType === 'RECEIVABLES') generateReceivablesPDF(true);
+                                            else if (previewType === 'WAITERS') generateWaitersPDF(true);
+                                        }}
+                                        className="bg-slate-900 text-white px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all flex items-center gap-2"
+                                    >
+                                        Download PDF
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            URL.revokeObjectURL(pdfPreviewUrl);
+                                            setPdfPreviewUrl(null);
+                                            setPreviewType(null);
+                                        }}
+                                        className="bg-white text-slate-400 px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest border border-slate-200 hover:bg-slate-50 transition-all"
+                                    >
+                                        Fechar
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="flex-1 bg-slate-200 p-8 flex justify-center items-center">
+                                <iframe
+                                    src={pdfPreviewUrl}
+                                    className="w-full h-full rounded-2xl shadow-xl bg-white"
+                                    title="Report Preview"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
         </div >
     );
 };
