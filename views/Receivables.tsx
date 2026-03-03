@@ -308,7 +308,7 @@ const Receivables: React.FC<ReceivablesProps> = ({ currentUser, setActiveTab }) 
                     </div>
                 ) : (
                     <div className="flex-1 flex flex-col items-center justify-center py-20 opacity-30">
-                        <Icons.CRM className="w-20 h-20 mb-4" />
+                        <Icons.Receivables className="w-20 h-20 mb-4" />
                         <p className="font-black uppercase tracking-widest text-sm">Nenhum recebível encontrado</p>
                     </div>
                 )}
