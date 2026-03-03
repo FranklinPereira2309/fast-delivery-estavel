@@ -381,10 +381,10 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
     }
 
     showAlert("Rejeitar Pedido", "Deseja rejeitar estes itens? O cliente será notificado", "DANGER", async () => {
+      setAlertConfig(prev => ({ ...prev, isOpen: false })); // FECHA A MENSAGEM DE REJEITAR ANTES DE PEDIR PIN
       try {
         await requireWaiterAuth(selectedWaiterId, `Rejeitar Pedido da Mesa ${tableNum}`);
       } catch (authErr) {
-        setAlertConfig(prev => ({ ...prev, isOpen: false }));
         return;
       }
       try {
