@@ -351,10 +351,12 @@ export const createOrder = async (req: Request, res: Response) => {
             const tableNumNum = parseInt(tableNumber as string);
             const session = await tx.tableSession.findUnique({ where: { tableNumber: tableNumNum } });
 
-            // Validate products exist
+            // Validate products exist and store them for enrichment
+            const productMap = new Map<string, any>();
             for (const item of items) {
                 const product = await tx.product.findUnique({ where: { id: item.productId } });
                 if (!product) throw new Error(`Product ${item.productId} not found`);
+                productMap.set(item.productId, product);
             }
 
             let existingPending: any[] = [];
@@ -370,12 +372,17 @@ export const createOrder = async (req: Request, res: Response) => {
             }
 
             // Append new items, carrying over any observations and tracking who ordered
-            const newItems = items.map((it: any) => ({
-                productId: it.productId,
-                quantity: it.quantity,
-                observations: observations || '',
-                orderedBy: clientName || 'Digital'
-            }));
+            const newItems = items.map((it: any) => {
+                const product = productMap.get(it.productId);
+                return {
+                    productId: it.productId,
+                    productName: product ? product.name : 'Item',
+                    price: product ? product.price : 0,
+                    quantity: it.quantity,
+                    observations: observations || '',
+                    orderedBy: clientName || 'Digital'
+                };
+            });
 
             const newPending = [...existingPending, ...newItems];
 

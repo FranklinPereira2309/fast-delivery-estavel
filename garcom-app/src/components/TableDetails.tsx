@@ -172,7 +172,17 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, user, onClose, onRef
             const itemsToApprove = Array.isArray(parsed) ? parsed : (parsed.items || []);
 
             if (itemsToApprove.length > 0) {
-                const newItems = [...table.items, ...itemsToApprove];
+                // Enrich items to ensure legacy orders without price/name get populated
+                const enrichedItemsToApprove = itemsToApprove.map((item: any) => {
+                    const product = products.find(p => p.id === item.productId);
+                    return {
+                        ...item,
+                        productName: item.productName || (product ? product.name : 'Item'),
+                        price: typeof item.price === 'number' ? item.price : (product ? product.price : 0)
+                    };
+                });
+
+                const newItems = [...table.items, ...enrichedItemsToApprove];
                 await db.saveTableSession({
                     tableNumber: table.tableNumber,
                     items: newItems,
@@ -225,7 +235,17 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, user, onClose, onRef
     try {
         if (table.pendingReviewItems && !isSoftRejected) {
             const parsed = JSON.parse(table.pendingReviewItems);
-            pendingItems = Array.isArray(parsed) ? parsed : (parsed.items || []);
+            let rawPending = Array.isArray(parsed) ? parsed : (parsed.items || []);
+
+            // Enrich with product data for legacy items missing price/name
+            pendingItems = rawPending.map((item: any) => {
+                const product = products.find(p => p.id === item.productId);
+                return {
+                    ...item,
+                    productName: item.productName || (product ? product.name : 'Item'),
+                    price: typeof item.price === 'number' ? item.price : (product ? product.price : 0)
+                };
+            });
         }
     } catch (e) { }
 
