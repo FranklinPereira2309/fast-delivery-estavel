@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, AlertCircle, CheckCircle2, HelpCircle, AlertTriangle } from 'lucide-react';
+import { AlertCircle, CheckCircle2, HelpCircle, AlertTriangle } from 'lucide-react';
 
 interface ModalProps {
     isOpen: boolean;
@@ -80,8 +80,8 @@ const Modal: React.FC<ModalProps> = ({
                             else onClose();
                         }}
                         className={`flex-1 py-4 font-black rounded-2xl uppercase text-[10px] tracking-widest active:scale-95 transition-all text-white shadow-lg ${type === 'error' ? 'bg-red-500 shadow-red-500/20' :
-                                type === 'success' ? 'bg-emerald-500 shadow-emerald-500/20' :
-                                    'bg-blue-600 shadow-blue-500/20'
+                            type === 'success' ? 'bg-emerald-500 shadow-emerald-500/20' :
+                                'bg-blue-600 shadow-blue-500/20'
                             }`}
                     >
                         {confirmText}
