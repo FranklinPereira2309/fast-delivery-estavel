@@ -424,7 +424,9 @@ const SalesMonitor: React.FC = () => {
             </div>
           )}
         </div>
-        );
+      </div>
+    </div>
+  );
 };
 
-        export default SalesMonitor;
+export default SalesMonitor;
