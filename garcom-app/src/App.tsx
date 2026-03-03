@@ -185,9 +185,8 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
               return !t.pendingReviewItems?.startsWith('REJECTED:');
             }
           }) && (
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-500 text-white rounded-xl animate-bounce shadow-lg shadow-amber-500/20">
-                <AlertCircle size={14} className="animate-pulse" />
-                <span className="text-[9px] font-black uppercase tracking-widest">Novo Pedido</span>
+              <div className="flex items-center justify-center w-10 h-10 bg-amber-500 text-white rounded-2xl animate-bounce shadow-lg shadow-amber-500/20">
+                <AlertCircle size={24} className="animate-pulse" />
               </div>
             )}
         </div>
