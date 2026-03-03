@@ -283,7 +283,6 @@ const SalesMonitor: React.FC = () => {
             <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
               <div className="relative w-full max-w-[80mm] bg-white p-8 border border-dashed shadow-2xl font-receipt text-[11px] text-black is-receipt animate-in zoom-in duration-200">
                 {isNfceVisual ? (
-                  // NFC-e (DANFE) Layout - Redesigned
                   <div className="space-y-4 font-mono text-[10px] leading-tight text-black">
                     <div className="text-center space-y-1">
                       <p className="font-bold">CNPJ - {businessSettings?.cnpj} - {businessSettings?.name?.toUpperCase()}</p>
@@ -361,7 +360,6 @@ const SalesMonitor: React.FC = () => {
                     </div>
                   </div>
                 ) : (
-                  // Standard Sales Coupon Layout
                   <>
                     <div className="text-center mb-6 border-b border-dashed pb-4">
                       <h2 className="font-black text-sm uppercase tracking-tighter">{businessSettings.name}</h2>
@@ -384,7 +382,7 @@ const SalesMonitor: React.FC = () => {
                       {groupedPrintingItems.map(([id, data]) => {
                         const prodName = data.product?.name || `PROD #${id.substring(0, 5)}`;
                         return (
-                          <div key={id} className="flex justify-between font-black uppercase py-0.5" >
+                          <div key={id} className="flex justify-between font-black uppercase py-0.5">
                             <span>{data.quantity}x {prodName.substring(0, 18)}</span>
                             <span>R$ {(data.quantity * data.price).toFixed(2)}</span>
                           </div>
