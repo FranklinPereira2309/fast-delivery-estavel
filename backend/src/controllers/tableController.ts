@@ -23,8 +23,17 @@ export const getTableSessions = async (req: Request, res: Response) => {
 
 export const saveTableSession = async (req: Request, res: Response) => {
     const data = req.body;
-    // Sanitizar dados: remover campos virtuais do frontend (ex: isSoftRejected) antes de passar para o Prisma
-    const { items, isSoftRejected, ...sessionData } = data;
+    // Sanitizar dados: remover campos virtuais e objetos de relacionamento antes de passar para o Prisma
+    const { items, isSoftRejected, waiter, ...rawSessionData } = data;
+
+    // Filtro agressivo para o sessionData: manter apenas campos primitivos
+    const sessionData: any = {};
+    Object.keys(rawSessionData).forEach(key => {
+        if (typeof rawSessionData[key] !== 'object' || rawSessionData[key] === null) {
+            sessionData[key] = rawSessionData[key];
+        }
+    });
+
     console.log('SaveTableSession Request:', { table: data.tableNumber, itemsCount: items?.length });
 
     try {
@@ -110,7 +119,10 @@ export const saveTableSession = async (req: Request, res: Response) => {
             }
 
             // 6. Ensure Kitchen Order exists (required for linking)
-            const total = currentItems.reduce((acc: number, it: any) => acc + (it.price * it.quantity), 0);
+            const total = currentItems.reduce((acc: number, it: any) => {
+                const val = parseFloat(it.price?.toString()) * parseFloat(it.quantity?.toString());
+                return acc + (isNaN(val) ? 0 : val);
+            }, 0);
 
             // Calculate status based on items safely
             let calculatedStatus: any = 'PREPARING';
@@ -127,7 +139,12 @@ export const saveTableSession = async (req: Request, res: Response) => {
             // (ex: QR code lido cedo), mas o garçom está lançando o primeiro item agora no painel,
             // ou se for a transição de zero itens para n itens, nós forçamos a data real de início do pedido.
             const isFirstRealOrder = existingSession?.status === 'available' || (!existingSession?.items?.length && currentItems.length > 0);
-            const actualStartTime = isFirstRealOrder ? new Date() : (sessionData.startTime ? new Date(sessionData.startTime) : undefined);
+            let actualStartTime = isFirstRealOrder ? new Date() : (sessionData.startTime ? new Date(sessionData.startTime) : undefined);
+
+            // Validar se o actualStartTime é uma data válida antes de passar para o Prisma
+            if (actualStartTime && isNaN(actualStartTime.getTime())) {
+                actualStartTime = undefined;
+            }
 
             await tx.order.upsert({
                 where: { id: orderId },
@@ -171,7 +188,7 @@ export const saveTableSession = async (req: Request, res: Response) => {
                     waiterId: waiterId,
                     items: {
                         create: currentItems.map((item: any) => ({
-                            id: item.uid,
+                            ...(item.uid ? { id: item.uid } : {}),
                             productId: item.productId,
                             quantity: item.quantity,
                             price: item.price,
@@ -188,7 +205,7 @@ export const saveTableSession = async (req: Request, res: Response) => {
                     tableNumber: tableNum,
                     items: {
                         create: currentItems.map((item: any) => ({
-                            id: item.uid,
+                            ...(item.uid ? { id: item.uid } : {}),
                             productId: item.productId,
                             quantity: item.quantity,
                             price: item.price,

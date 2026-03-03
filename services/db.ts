@@ -97,7 +97,7 @@ class APIDBService {
   // Table Management
   public async getTableSessions(): Promise<TableSession[]> { return this.request<TableSession[]>('/tables'); }
   public async saveTableSession(session: TableSession, isRejection: boolean = false) {
-    await this.request(`/tables?${isRejection ? 'rejection=true' : ''}`, { method: 'POST', body: JSON.stringify(session) });
+    await this.request(`/tables${isRejection ? '?rejection=true' : ''}`, { method: 'POST', body: JSON.stringify(session) });
     await this.logAction(this.getCurrentSession()?.user || null, 'SYSTEM_UPDATE', `Sessão da mesa ${session.tableNumber} salva/atualizada.`);
   }
   public async deleteTableSession(tableNumber: number, isCancellation: boolean = false) {
