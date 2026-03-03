@@ -287,31 +287,29 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
       </main>
 
       {/* Quick Action */}
-      <footer className="p-6 pt-0 bg-slate-50/80 backdrop-blur-md sticky bottom-0 flex gap-3">
+      <footer className="p-4 bg-slate-50/80 backdrop-blur-md sticky bottom-0 flex gap-2">
         <button
           onClick={() => setShowHistory(true)}
-          className="flex-1 py-5 bg-white border border-slate-200 text-slate-900 rounded-[2rem] font-black uppercase text-[10px] tracking-[0.1em] shadow-sm active:translate-y-0.5 transition-all flex items-center justify-center gap-3"
+          className="flex-1 min-w-0 py-3 px-3 bg-white border border-slate-200 text-slate-900 rounded-3xl shadow-sm active:translate-y-0.5 transition-all flex items-center justify-between gap-2"
         >
-          <div className="flex justify-between items-center w-full px-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600">
-                <History size={20} />
-              </div>
-              <div className="flex flex-col items-start leading-tight">
-                <span className="text-[10px] font-black text-slate-400 tracking-widest">Produção</span>
-                <span className="text-xs font-black text-slate-900">Atendimentos</span>
-              </div>
+          <div className="flex items-center gap-2 overflow-hidden w-full">
+            <div className="w-8 h-8 shrink-0 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600">
+              <History size={16} />
             </div>
-            <div className="bg-blue-600 text-white px-4 py-2 rounded-xl shadow-lg shadow-blue-500/20">
-              <span className="text-sm font-black tracking-tighter">
-                R$ {recentOrders.filter(o => {
-                  const today = new Date().toDateString();
-                  const isToday = new Date(o.createdAt || 0).toDateString() === today;
-                  const isMyOrder = o.waiterId === (user.waiterId || user.id);
-                  return isToday && isMyOrder;
-                }).reduce((sum, o) => sum + (o.appliedServiceFee || 0), 0).toFixed(2)}
-              </span>
+            <div className="flex flex-col items-start leading-tight min-w-0 pr-1">
+              <span className="text-[8px] sm:text-[9px] font-black text-slate-400 tracking-widest truncate w-full text-left">PRODUÇÃO</span>
+              <span className="text-[10px] sm:text-[11px] font-black text-slate-900 uppercase truncate w-full text-left">Atendimentos</span>
             </div>
+          </div>
+          <div className="bg-blue-600 text-white px-2 py-1.5 rounded-xl shadow-lg shadow-blue-500/20 shrink-0">
+            <span className="text-xs sm:text-sm font-black tracking-tighter whitespace-nowrap">
+              R$ {recentOrders.filter(o => {
+                const today = new Date().toDateString();
+                const isToday = new Date(o.createdAt || 0).toDateString() === today;
+                const isMyOrder = o.waiterId === (user.waiterId || user.id);
+                return isToday && isMyOrder;
+              }).reduce((sum, o) => sum + (o.appliedServiceFee || 0), 0).toFixed(2)}
+            </span>
           </div>
         </button>
         <button
@@ -320,10 +318,13 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
             setShowDirectOrder(true);
           }}
           disabled={storeStatus.status === 'offline'}
-          className={`flex-1 py-5 bg-slate-900 border-b-4 border-slate-950 text-white rounded-[2rem] font-black uppercase text-[10px] tracking-[0.1em] shadow-2xl active:translate-y-1 active:border-b-0 transition-all flex items-center justify-center gap-2 ${storeStatus.status === 'offline' ? 'grayscale opacity-50 cursor-not-allowed' : ''}`}
+          className={`shrink-0 w-24 py-3 bg-slate-900 border-b-4 border-slate-950 text-white rounded-3xl shadow-lg active:translate-y-1 active:border-b-0 transition-all flex flex-col items-center justify-center gap-1 ${storeStatus.status === 'offline' ? 'grayscale opacity-50 cursor-not-allowed' : ''}`}
         >
-          <PlusCircle size={18} />
-          Pedido Balcão
+          <div className="flex items-center justify-center gap-1 mt-0.5">
+            <PlusCircle size={14} />
+            <span className="text-[10px] font-black uppercase text-center leading-none tracking-[0.1em]">Pedido</span>
+          </div>
+          <span className="text-[10px] font-black uppercase text-center leading-none tracking-[0.1em] block">Balcão</span>
         </button>
       </footer>
 
