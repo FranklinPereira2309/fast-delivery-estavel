@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
-import { Receivable, User, Client, Order, Product, OrderItem } from '../types';
-import { db } from '../services/db';
+import { Receivable, User, Client, Order, Product, OrderItem, SaleType } from '../types';
+import { db, BusinessSettings } from '../services/db';
 import { Icons } from '../constants';
 import CustomAlert from '../components/CustomAlert';
 
@@ -18,6 +18,8 @@ const Receivables: React.FC<ReceivablesProps> = ({ currentUser, setActiveTab }) 
     const [isEditItemsOpen, setIsEditItemsOpen] = useState(false);
     const [availableProducts, setAvailableProducts] = useState<Product[]>([]);
     const [editingItems, setEditingItems] = useState<any[]>([]);
+    const [printingOrder, setPrintingOrder] = useState<Order | null>(null);
+    const [businessSettings, setBusinessSettings] = useState<BusinessSettings | null>(null);
 
     const [alertConfig, setAlertConfig] = useState<{
         isOpen: boolean;
@@ -67,8 +69,12 @@ const Receivables: React.FC<ReceivablesProps> = ({ currentUser, setActiveTab }) 
 
     const refreshData = async () => {
         try {
-            const data = await db.getReceivables();
-            setReceivables(data.filter((r: any) => r.status !== 'PAID'));
+            const [recs, settings] = await Promise.all([
+                db.getReceivables(),
+                db.getSettings()
+            ]);
+            setReceivables(recs.filter((r: any) => r.status !== 'PAID'));
+            setBusinessSettings(settings);
         } catch (err) {
             console.error("Error fetching receivables", err);
         }
@@ -126,6 +132,16 @@ const Receivables: React.FC<ReceivablesProps> = ({ currentUser, setActiveTab }) 
         } catch (err) {
             console.error("Error fetching order details", err);
             showAlert({ title: 'ERRO', message: 'Não foi possível carregar os detalhes do pedido.', type: 'DANGER' });
+        }
+    };
+
+    const handlePrint = async (orderId: string) => {
+        try {
+            const order = await db.getOrderById(orderId);
+            setPrintingOrder(order);
+        } catch (err) {
+            console.error("Error fetching order for print", err);
+            showAlert({ title: 'ERRO', message: 'Não foi possível carregar o pedido para impressão.', type: 'DANGER' });
         }
     };
 
@@ -270,6 +286,13 @@ const Receivables: React.FC<ReceivablesProps> = ({ currentUser, setActiveTab }) 
                                                 className="flex-[2] bg-emerald-500 hover:bg-emerald-600 text-white py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-emerald-100 transition-all active:scale-95"
                                             >
                                                 Receber
+                                            </button>
+                                            <button
+                                                onClick={() => handlePrint(receivable.orderId)}
+                                                className="w-12 bg-slate-100 hover:bg-blue-50 hover:text-blue-600 text-slate-400 py-3 rounded-2xl flex items-center justify-center transition-all"
+                                                title="Imprimir Cupom de Consumo"
+                                            >
+                                                <Icons.Print className="w-4 h-4" />
                                             </button>
                                             <button
                                                 onClick={() => handleDelete(receivable.id)}
@@ -458,6 +481,58 @@ const Receivables: React.FC<ReceivablesProps> = ({ currentUser, setActiveTab }) 
                                     </button>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Printing Modal (Receipt Layout) */}
+            {printingOrder && businessSettings && (
+                <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
+                    <div className="relative w-full max-w-[80mm] bg-white p-8 border border-dashed shadow-2xl font-receipt text-[11px] text-black is-receipt animate-in zoom-in duration-200">
+                        <div className="text-center mb-6 border-b border-dashed pb-4">
+                            <h2 className="font-black text-sm uppercase tracking-tighter">{businessSettings.name}</h2>
+                            <p className="text-[9px] font-bold mt-1 uppercase">Extrato de Consumo (Fiado)</p>
+                        </div>
+                        <div className="space-y-1 mb-4 text-[10px] bg-slate-50 p-2 rounded-lg border border-slate-100">
+                            <p className="text-[8px] font-black text-slate-400 uppercase mb-1">Dados do Cliente</p>
+                            <p className="font-bold">CLIENTE: {printingOrder.clientName?.toUpperCase() || 'NAO INFORMADO'}</p>
+                            {printingOrder.clientDocument && <p>CPF/CNPJ: {printingOrder.clientDocument}</p>}
+                            {printingOrder.clientPhone && <p>FONE: {printingOrder.clientPhone}</p>}
+                            {printingOrder.tableNumber && <p className="font-black">MESA: {printingOrder.tableNumber}</p>}
+                            <p className="text-slate-500 italic mt-1">Este documento NÃO é um cupom fiscal.</p>
+                        </div>
+                        <div className="border-t border-dashed my-3 py-3">
+                            {printingOrder.items.map((item: any, idx) => {
+                                const prod = availableProducts.find(p => p.id === item.productId);
+                                return (
+                                    <div key={idx} className="flex justify-between font-black uppercase py-0.5">
+                                        <span>{item.quantity}x {prod?.name.substring(0, 18) || 'Item'}</span>
+                                        <span>R$ {(item.quantity * item.price).toFixed(2)}</span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                        {printingOrder.appliedServiceFee && printingOrder.appliedServiceFee > 0 && (
+                            <div className="flex justify-between items-center border-t border-dashed pt-4 mb-2 text-[10px] uppercase font-black">
+                                <span>Taxa Serviço:</span>
+                                <span>R$ {printingOrder.appliedServiceFee.toFixed(2)}</span>
+                            </div>
+                        )}
+                        {printingOrder.deliveryFee && printingOrder.deliveryFee > 0 && (
+                            <div className="flex justify-between items-center text-[10px] uppercase font-black mb-2">
+                                <span>Taxa Entrega:</span>
+                                <span>R$ {printingOrder.deliveryFee.toFixed(2)}</span>
+                            </div>
+                        )}
+                        <div className="flex justify-between items-end border-t border-dashed pt-4 mb-6">
+                            <span className="font-black text-[9px] uppercase tracking-widest">TOTAL DEVEDOR:</span>
+                            <span className="text-2xl font-black">R$ {printingOrder.total.toFixed(2)}</span>
+                        </div>
+
+                        <div className="flex flex-col gap-2 no-print">
+                            <button onClick={() => window.print()} className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black uppercase text-[10px] shadow-xl">Imprimir Extrato</button>
+                            <button onClick={() => setPrintingOrder(null)} className="w-full bg-slate-100 text-slate-600 py-4 rounded-2xl font-black uppercase text-[10px]">Fechar</button>
                         </div>
                     </div>
                 </div>
