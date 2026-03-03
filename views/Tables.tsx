@@ -60,6 +60,9 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
     onSuccess: (waiterId: string) => void;
   }>({ isOpen: false, waiter: null, actionDescription: '', onSuccess: () => { } });
 
+  const [transferModal, setTransferModal] = useState<{ isOpen: boolean, sourceTable: number | null }>({ isOpen: false, sourceTable: null });
+  const [transferTargetStr, setTransferTargetStr] = useState('');
+
   const requireWaiterAuth = (waiterId: string, actionDesc: string): Promise<string> => {
     return new Promise((resolve, reject) => {
       const waiter = waiters.find(w => w.id === waiterId);
@@ -662,30 +665,8 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
                         return showAlert("Acesso Negado", "Você não é o garçom dono desta mesa.", "DANGER");
                       }
 
-                      const targetInput = window.prompt(`Transferir MESA ${selectedTable} para qual número de mesa (LIVRE)?`);
-                      if (!targetInput) return;
-                      const target = parseInt(targetInput);
-                      if (isNaN(target) || target <= 0 || target > (settings?.tableCount || 0)) {
-                        return showAlert("Erro", "Mesa de destino inválida.", "DANGER");
-                      }
-
-                      if (target === selectedTable) return;
-                      if (getSessForTable(target)) {
-                        return showAlert("Mesa Ocupada", `A mesa ${target} encontra-se ocupada. Só é possível transferir para mesas livres.`, "DANGER");
-                      }
-
-                      try {
-                        await requireWaiterAuth(sess.waiterId, `Transferir Mesa ${selectedTable} para ${target}`);
-                        await (db as any).transferTable(selectedTable, target, sess.waiterId, currentUser.permissions);
-                        setSelectedTable(null);
-                        await refreshData();
-                        showAlert("Sucesso", "Transferência realizada com sucesso!", "SUCCESS");
-                      } catch (err: any) {
-                        // canceled or failed
-                        if (err.message && err.message !== 'Garçom não encontrado') {
-                          showAlert("Erro ao Transferir", err.message, "DANGER");
-                        }
-                      }
+                      setTransferTargetStr('');
+                      setTransferModal({ isOpen: true, sourceTable: selectedTable });
                     }}
                     className="flex items-center gap-2 px-6 py-4 bg-orange-100 text-orange-600 font-black uppercase tracking-widest text-xs rounded-2xl hover:bg-orange-500 hover:text-white transition-all shadow-sm"
                   >
@@ -1073,6 +1054,96 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
                   <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Nenhuma mensagem recebida hoje.</p>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL DE TRANSFERENCIA */}
+      {transferModal.isOpen && transferModal.sourceTable !== null && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="bg-white p-8 rounded-[3rem] shadow-2xl w-full max-w-md animate-in zoom-in duration-200 text-center border border-white/20">
+            <div className="text-orange-500 mb-6 flex justify-center"><Icons.Dashboard /></div>
+            <h3 className="text-2xl font-black text-slate-800 uppercase tracking-tighter mb-2">Transferir Mesa {transferModal.sourceTable}</h3>
+            <p className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-6 px-4">Digite o número da mesa de destino (Livre)</p>
+
+            <input
+              autoFocus
+              type="number"
+              className="w-full text-center text-4xl font-black text-slate-800 bg-slate-50 border-2 border-slate-200 rounded-3xl p-6 mb-8 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/20 outline-none transition-all placeholder:text-slate-300"
+              placeholder="00"
+              value={transferTargetStr}
+              onChange={e => setTransferTargetStr(e.target.value)}
+              onKeyDown={async (e) => {
+                if (e.key === 'Enter') {
+                  const target = parseInt(transferTargetStr);
+                  if (isNaN(target) || target <= 0 || target > (settings?.tableCount || 0)) {
+                    return showAlert("Erro", "Mesa de destino inválida.", "DANGER");
+                  }
+
+                  if (target === transferModal.sourceTable) return;
+                  if (getSessForTable(target)) {
+                    return showAlert("Mesa Ocupada", `A mesa ${target} encontra-se ocupada. Só é possível transferir para mesas livres.`, "DANGER");
+                  }
+
+                  const sess = getSessForTable(transferModal.sourceTable!);
+                  if (!sess || !sess.waiterId) return;
+
+                  try {
+                    setTransferModal({ isOpen: false, sourceTable: null });
+                    await requireWaiterAuth(sess.waiterId, `Transferir Mesa ${transferModal.sourceTable} para ${target}`);
+                    await (db as any).transferTable(transferModal.sourceTable, target, sess.waiterId, currentUser.permissions);
+                    setSelectedTable(null);
+                    await refreshData();
+                    showAlert("Sucesso", "Transferência realizada com sucesso!", "SUCCESS");
+                  } catch (err: any) {
+                    if (err.message && err.message !== 'Garçom não encontrado') {
+                      showAlert("Erro ao Transferir", err.message, "DANGER");
+                    }
+                  }
+                }
+              }}
+            />
+
+            <div className="flex gap-4">
+              <button
+                onClick={() => setTransferModal({ isOpen: false, sourceTable: null })}
+                className="flex-1 py-5 text-slate-400 font-black uppercase text-xs tracking-widest hover:bg-slate-50 rounded-2xl transition-all"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={async () => {
+                  const target = parseInt(transferTargetStr);
+                  if (isNaN(target) || target <= 0 || target > (settings?.tableCount || 0)) {
+                    return showAlert("Erro", "Mesa de destino inválida.", "DANGER");
+                  }
+
+                  if (target === transferModal.sourceTable) return;
+                  if (getSessForTable(target)) {
+                    return showAlert("Mesa Ocupada", `A mesa ${target} encontra-se ocupada. Só é possível transferir para mesas livres.`, "DANGER");
+                  }
+
+                  const sess = getSessForTable(transferModal.sourceTable!);
+                  if (!sess || !sess.waiterId) return;
+
+                  try {
+                    setTransferModal({ isOpen: false, sourceTable: null });
+                    await requireWaiterAuth(sess.waiterId, `Transferir Mesa ${transferModal.sourceTable} para ${target}`);
+                    await (db as any).transferTable(transferModal.sourceTable, target, sess.waiterId, currentUser.permissions);
+                    setSelectedTable(null);
+                    await refreshData();
+                    showAlert("Sucesso", "Transferência realizada com sucesso!", "SUCCESS");
+                  } catch (err: any) {
+                    if (err.message && err.message !== 'Garçom não encontrado') {
+                      showAlert("Erro ao Transferir", err.message, "DANGER");
+                    }
+                  }
+                }}
+                className="flex-1 bg-orange-500 text-white font-black uppercase text-xs tracking-widest rounded-2xl shadow-xl shadow-orange-500/30 hover:bg-orange-600 hover:scale-[1.02] active:scale-95 transition-all"
+              >
+                Confirmar
+              </button>
             </div>
           </div>
         </div>

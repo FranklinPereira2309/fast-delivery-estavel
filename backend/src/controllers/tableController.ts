@@ -422,7 +422,20 @@ export const transferTableSession = async (req: Request, res: Response) => {
             await tx.order.deleteMany({ where: { id: toOrderId } });
             await tx.tableSession.deleteMany({ where: { tableNumber: toTable } });
 
-            // 2. Criar nova sessão no destino com os itens novos
+            // 2. Mover o Pedido (Order) PRIMEIRO para evitar erro de Foreign Key nos itens
+            const order = await tx.order.findUnique({ where: { id: fromOrderId } });
+            if (order) {
+                const { id: _oldId, ...orderData } = order;
+                await tx.order.create({
+                    data: {
+                        ...orderData,
+                        id: toOrderId,
+                        tableNumber: toTable
+                    }
+                });
+            }
+
+            // 3. Criar nova sessão no destino com os itens novos
             await tx.tableSession.create({
                 data: {
                     ...sessionData,
@@ -440,19 +453,6 @@ export const transferTableSession = async (req: Request, res: Response) => {
                     }
                 }
             });
-
-            // 3. Mover o Pedido (Order)
-            const order = await tx.order.findUnique({ where: { id: fromOrderId } });
-            if (order) {
-                const { id: _oldId, ...orderData } = order;
-                await tx.order.create({
-                    data: {
-                        ...orderData,
-                        id: toOrderId,
-                        tableNumber: toTable
-                    }
-                });
-            }
 
             // 4. Deletar mesa de origem (cascade cuidará dos items órfãos se houver, mas garantimos)
             await tx.orderItem.deleteMany({ where: { tableSessionId: fromTable } });
