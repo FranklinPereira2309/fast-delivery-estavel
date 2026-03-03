@@ -146,7 +146,25 @@ export const saveOrder = async (req: Request, res: Response) => {
         return res.status(400).json({ error: 'Pedido não informado no corpo da requisição.' });
     }
 
-    console.log('Receiving order save request:', { id: order.id, type: order.type, status: order.status, itemsCount: order.items?.length });
+    // Resolve true Waiter.id if user is provided (Waiter App case)
+    let resolvedWaiterId = order.waiterId;
+    if (user && user.email) {
+        try {
+            const trueWaiter = await prisma.waiter.findUnique({
+                where: { email: user.email.toLowerCase() }
+            });
+            if (trueWaiter) {
+                resolvedWaiterId = trueWaiter.id;
+            } else {
+                // If user doesn't have a Waiter record (e.g. Admin), don't force an invalid ID
+                resolvedWaiterId = null;
+            }
+        } catch (e) {
+            console.error('Error resolving waiterId:', e);
+        }
+    }
+
+    console.log('Receiving order save request:', { id: order.id, type: order.type, status: order.status, waiterId: resolvedWaiterId });
 
     try {
         let isNewItemsAdded = false;
@@ -227,7 +245,7 @@ export const saveOrder = async (req: Request, res: Response) => {
 
             // 2. Client Synchronization and Order Counting
             const clientId = order.clientId && order.clientId !== "" ? order.clientId : 'ANONYMOUS';
-            const waiterId = order.waiterId && order.waiterId !== "" ? order.waiterId : null;
+            const waiterId = resolvedWaiterId;
             const driverId = order.driverId && order.driverId !== "" ? order.driverId : null;
 
             if (clientId === 'ANONYMOUS') {

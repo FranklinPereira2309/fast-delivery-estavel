@@ -81,6 +81,7 @@ const DirectOrderModal: React.FC<DirectOrderModalProps> = ({ user, onClose, onRe
                 waiterId: user.id,
                 total,
                 items: cart.map(item => ({
+                    uid: item.uid,
                     productId: item.productId,
                     quantity: item.quantity,
                     price: item.price,

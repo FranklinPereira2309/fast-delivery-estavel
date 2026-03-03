@@ -69,7 +69,25 @@ export const saveTableSession = async (req: Request, res: Response) => {
 
             // 5. Ensure 'ANONYMOUS' client exists if needed
             const clientId = sessionData.clientId && sessionData.clientId !== "" ? sessionData.clientId : 'ANONYMOUS';
-            const waiterId = sessionData.waiterId && sessionData.waiterId !== "" ? sessionData.waiterId : null;
+
+            // Resolve true Waiter.id from User.id if needed
+            let waiterId = sessionData.waiterId && sessionData.waiterId !== "" ? sessionData.waiterId : null;
+            if (waiterId) {
+                const waiter = await tx.waiter.findUnique({ where: { id: waiterId } });
+                if (!waiter) {
+                    const userRecord = await tx.user.findUnique({ where: { id: waiterId } });
+                    if (userRecord && userRecord.email) {
+                        const trueWaiter = await tx.waiter.findUnique({ where: { email: userRecord.email.toLowerCase() } });
+                        if (trueWaiter) {
+                            waiterId = trueWaiter.id;
+                        } else {
+                            waiterId = null;
+                        }
+                    } else {
+                        waiterId = null;
+                    }
+                }
+            }
 
             if (clientId === 'ANONYMOUS') {
                 await tx.client.upsert({
