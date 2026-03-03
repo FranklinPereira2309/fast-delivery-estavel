@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import prisma from '../prisma';
+import { TableSession } from '@prisma/client';
 import { getIO } from '../socket';
 
 const mapSessionResponse = (session: any) => {
@@ -478,7 +479,7 @@ export const requestCheckout = async (req: Request, res: Response) => {
     const tableNum = parseInt(tableNumber as string);
 
     try {
-        const sessionData: Partial<TableSession> & { userPermissions?: string[] } = req.body || {};
+        const sessionData = (req.body || {}) as Partial<TableSession> & { userPermissions?: string[] };
         const { clientId, clientName, waiterId, userPermissions } = sessionData;
         const isAdmin = userPermissions?.includes('admin');
         const existing = await prisma.tableSession.findUnique({ where: { tableNumber: tableNum } });
