@@ -33,13 +33,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
     { id: 'dashboard', label: 'Dashboard', icon: Icons.Dashboard },
     { id: 'pos', label: 'PDV / Vendas', icon: Icons.POS },
     { id: 'sales-monitor', label: 'Monitor de Vendas', icon: Icons.View },
-    {
-      id: 'tables', label: 'Gestão de Mesas', icon: () => (
-        <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-        </svg>
-      )
-    },
+    { id: 'tables', label: 'Gestão de Mesas', icon: Icons.Table },
     { id: 'kitchen', label: 'Cozinha', icon: Icons.Kitchen },
     { id: 'crm', label: 'Clientes (CRM)', icon: Icons.CRM },
     { id: 'inventory', label: 'Estoque / Cardápio', icon: Icons.Inventory },
