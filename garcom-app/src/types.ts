@@ -60,6 +60,8 @@ export interface BusinessSettings {
     tableCount: number;
     serviceFeeStatus?: boolean;
     serviceFeePercentage?: number;
+    waiterPrivacyEnabled?: boolean;
+    waiterPrivacyTimer?: number;
 }
 
 export interface Order {

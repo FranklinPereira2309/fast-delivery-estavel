@@ -10,7 +10,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
 enum OrderStatus {
   PENDING
   PREPARING
@@ -61,58 +60,58 @@ enum RejectionType {
 }
 
 model User {
-  id          String   @id @default(uuid())
-  name        String
-  email       String   @unique
-  password    String
-  phone       String?
-  recoveryCode String?
-  mustChangePassword Boolean @default(true)
-  active      Boolean  @default(true)
-  permissions String[]
-  createdAt   DateTime @default(now())
-  AuditLog    AuditLog[]
+  id                 String     @id @default(uuid())
+  name               String
+  email              String     @unique
+  password           String
+  phone              String?
+  recoveryCode       String?
+  mustChangePassword Boolean    @default(true)
+  active             Boolean    @default(true)
+  permissions        String[]
+  createdAt          DateTime   @default(now())
+  AuditLog           AuditLog[]
 }
 
 model Client {
-  id             String   @id @default(uuid())
-  name           String
-  phone          String
-  email          String?
-  document       String?
-  addresses      String[]
-  totalOrders    Int      @default(0)
-  lastOrderDate  String?
-  orders         Order[]
-  receivables    Receivable[]
+  id            String       @id @default(uuid())
+  name          String
+  phone         String
+  email         String?
+  document      String?
+  addresses     String[]
+  totalOrders   Int          @default(0)
+  lastOrderDate String?
+  orders        Order[]
+  receivables   Receivable[]
 }
 
 model Waiter {
-  id           String         @id @default(uuid())
-  name         String
-  phone        String
-  email        String?        @unique
-  active       Boolean        @default(true)
-  orders       Order[]
+  id            String         @id @default(uuid())
+  name          String
+  phone         String
+  email         String?        @unique
+  active        Boolean        @default(true)
+  orders        Order[]
   tableSessions TableSession[]
 }
 
 model Product {
-  id        String   @id @default(uuid())
-  name      String
-  price     Float
-  category  String
-  stock     Int      @default(0)
-  imageUrl  String
-  ncm       String?
-  cfop      String?
-  cest      String?
-  recipe    RecipeItem[]
+  id         String       @id @default(uuid())
+  name       String
+  price      Float
+  category   String
+  stock      Int          @default(0)
+  imageUrl   String
+  ncm        String?
+  cfop       String?
+  cest       String?
+  recipe     RecipeItem[]
   orderItems OrderItem[]
 }
 
 model InventoryItem {
-  id        String   @id @default(uuid())
+  id        String              @id @default(uuid())
   name      String
   unit      UnitType
   quantity  Float
@@ -127,10 +126,10 @@ model InventoryMovement {
   timestamp       DateTime      @default(now())
   inventoryItemId String
   inventoryItem   InventoryItem @relation(fields: [inventoryItemId], references: [id])
-  type            String        // INPUT, OUTPUT, ADJUSTMENT
+  type            String // INPUT, OUTPUT, ADJUSTMENT
   quantity        Float
-  reason          String        // e.g., "Sale", "Manual Adjustment", "Restock"
-  orderId         String?       // Link to order if applicable
+  reason          String // e.g., "Sale", "Manual Adjustment", "Restock"
+  orderId         String? // Link to order if applicable
 }
 
 model RecipeItem {
@@ -144,98 +143,98 @@ model RecipeItem {
 }
 
 model Order {
-  id            String      @id @default(uuid())
-  clientId      String
-  client        Client      @relation(fields: [clientId], references: [id])
-  clientName    String
-  clientAddress String?
-  clientPhone   String?
-  clientEmail   String?
-  clientDocument String?
-  items         OrderItem[]
-  total         Float
-  status        OrderStatus @default(PENDING)
-  type          SaleType
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @default(now()) @updatedAt
-  paymentMethod String?
-  driverId      String?
-  driver        DeliveryDriver? @relation(fields: [driverId], references: [id])
-  assignedAt    DateTime?
-  deliveryFee   Float?
-  tableNumber   Int?
-  waiterId      String?
-  waiter        Waiter?     @relation(fields: [waiterId], references: [id])
-  isOriginDigitalMenu Boolean @default(false)
-  rejections   OrderRejection[]
+  id                  String           @id @default(uuid())
+  clientId            String
+  client              Client           @relation(fields: [clientId], references: [id])
+  clientName          String
+  clientAddress       String?
+  clientPhone         String?
+  clientEmail         String?
+  clientDocument      String?
+  items               OrderItem[]
+  total               Float
+  status              OrderStatus      @default(PENDING)
+  type                SaleType
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @default(now()) @updatedAt
+  paymentMethod       String?
+  driverId            String?
+  driver              DeliveryDriver?  @relation(fields: [driverId], references: [id])
+  assignedAt          DateTime?
+  deliveryFee         Float?
+  tableNumber         Int?
+  waiterId            String?
+  waiter              Waiter?          @relation(fields: [waiterId], references: [id])
+  isOriginDigitalMenu Boolean          @default(false)
+  rejections          OrderRejection[]
   // Fiscal Fields
-  nfeStatus    String?     // PENDING, EMITTED, ERROR
-  nfeNumber    String?
-  nfeUrl       String?
-  nfeError     String?
-  splitAmount1 Float?
-  appliedServiceFee Float? // Optional Service Fee recorded at the time of order
-  digitalPin   String? // Store PIN for session recovery on reopen
-  digitalToken String? // Store token for session recovery on reopen
-  receivables  Receivable[]
+  nfeStatus           String? // PENDING, EMITTED, ERROR
+  nfeNumber           String?
+  nfeUrl              String?
+  nfeError            String?
+  splitAmount1        Float?
+  appliedServiceFee   Float? // Optional Service Fee recorded at the time of order
+  digitalPin          String? // Store PIN for session recovery on reopen
+  digitalToken        String? // Store token for session recovery on reopen
+  receivables         Receivable[]
   // Mercado Pago
-  mpPreferenceId String?
-  mpPaymentId    String?
-  paymentStatus  String? @default("PENDING") // PENDING, APPROVED, REJECTED
+  mpPreferenceId      String?
+  mpPaymentId         String?
+  paymentStatus       String?          @default("PENDING") // PENDING, APPROVED, REJECTED
 }
 
 model Receivable {
-  id             String    @id @default(uuid())
-  clientId       String
-  client         Client    @relation(fields: [clientId], references: [id])
-  orderId        String
-  order          Order     @relation(fields: [orderId], references: [id])
-  amount         Float
-  dueDate        DateTime
-  paymentMethod  String?   // Method used when the receivables are finally PAID
-  status         String    @default("PENDING") // PENDING, PAID
-  observations   String?
-  createdAt      DateTime  @default(now())
-  paidAt         DateTime?
+  id            String    @id @default(uuid())
+  clientId      String
+  client        Client    @relation(fields: [clientId], references: [id])
+  orderId       String
+  order         Order     @relation(fields: [orderId], references: [id])
+  amount        Float
+  dueDate       DateTime
+  paymentMethod String? // Method used when the receivables are finally PAID
+  status        String    @default("PENDING") // PENDING, PAID
+  observations  String?
+  createdAt     DateTime  @default(now())
+  paidAt        DateTime?
 }
 
 model OrderItem {
-  id             String   @id @default(uuid())
+  id             String        @id @default(uuid())
   orderId        String?
-  order          Order?   @relation(fields: [orderId], references: [id])
+  order          Order?        @relation(fields: [orderId], references: [id])
   tableSessionId Int?
   tableSession   TableSession? @relation(fields: [tableSessionId], references: [tableNumber])
   productId      String
-  product        Product  @relation(fields: [productId], references: [id])
+  product        Product       @relation(fields: [productId], references: [id])
   quantity       Int
   price          Float
-  isReady        Boolean  @default(false)
+  isReady        Boolean       @default(false)
   readyAt        DateTime?
   observations   String?
 }
 
 model TableSession {
-  tableNumber        Int           @id
-  status             SessionStatus @default(available)
-  items              OrderItem[]
-  clientName         String?
-  clientPhone        String?
-  clientEmail        String?
-  clientDocument     String?
-  clientId           String?
-  waiterId           String?
-  waiter             Waiter?       @relation(fields: [waiterId], references: [id])
-  startTime          DateTime      @default(now())
-  clientAddress      String?
-  hasPendingDigital  Boolean       @default(false)
-  pendingReviewItems String?       // To store stringified array of requested digital items before approval
-  isOriginDigitalMenu Boolean      @default(false)
-  pin                String?
-  sessionToken       String?
+  tableNumber         Int           @id
+  status              SessionStatus @default(available)
+  items               OrderItem[]
+  clientName          String?
+  clientPhone         String?
+  clientEmail         String?
+  clientDocument      String?
+  clientId            String?
+  waiterId            String?
+  waiter              Waiter?       @relation(fields: [waiterId], references: [id])
+  startTime           DateTime      @default(now())
+  clientAddress       String?
+  hasPendingDigital   Boolean       @default(false)
+  pendingReviewItems  String? // To store stringified array of requested digital items before approval
+  isOriginDigitalMenu Boolean       @default(false)
+  pin                 String?
+  sessionToken        String?
 }
 
 model DeliveryDriver {
-  id           String       @id @default(uuid())
+  id           String           @id @default(uuid())
   name         String
   phone        String
   email        String?
@@ -244,7 +243,7 @@ model DeliveryDriver {
   vehicleModel String
   vehicleBrand String
   vehicleType  VehicleType
-  status       DriverStatus @default(AVAILABLE)
+  status       DriverStatus     @default(AVAILABLE)
   orders       Order[]
   rejections   OrderRejection[]
 }
@@ -260,28 +259,30 @@ model AuditLog {
 }
 
 model BusinessSettings {
-  key             String @id
-  name            String
-  cnpj            String
-  address         String
-  phone           String
-  deliveryFee     String
-  tableCount      Int
-  restaurantLat   Float?
-  restaurantLng   Float?
-  geofenceRadius  Int    @default(30)
-  isManuallyClosed Boolean @default(false)
-  operatingHours  String @default("[]")
-  orderTimeoutMinutes Int @default(5)
-  maxChange       Float  @default(191)
-  serviceFeeStatus Boolean @default(true)
-  serviceFeePercentage Float @default(10)
+  key                  String  @id
+  name                 String
+  cnpj                 String
+  address              String
+  phone                String
+  deliveryFee          String
+  tableCount           Int
+  restaurantLat        Float?
+  restaurantLng        Float?
+  geofenceRadius       Int     @default(30)
+  isManuallyClosed     Boolean @default(false)
+  operatingHours       String  @default("[]")
+  orderTimeoutMinutes  Int     @default(5)
+  maxChange            Float   @default(191)
+  serviceFeeStatus     Boolean @default(true)
+  serviceFeePercentage Float   @default(10)
   // NFC-e Fields
-  ie              String?
-  cscId           String?
-  cscToken        String?
-  isNfeProduction Boolean @default(false)
-  enableNfcEmission Boolean @default(false)
+  ie                   String?
+  cscId                String?
+  cscToken             String?
+  isNfeProduction      Boolean @default(false)
+  enableNfcEmission    Boolean @default(false)
+  waiterPrivacyEnabled Boolean @default(false)
+  waiterPrivacyTimer   Int     @default(60)
 }
 
 model ChatMessage {
@@ -294,44 +295,44 @@ model ChatMessage {
 }
 
 model OrderRejection {
-  id          String        @id @default(uuid())
-  timestamp   DateTime      @default(now())
-  orderId     String
-  order       Order         @relation(fields: [orderId], references: [id])
-  driverId    String
-  driver      DeliveryDriver @relation(fields: [driverId], references: [id])
-  type        RejectionType
-  reason      String?
+  id        String         @id @default(uuid())
+  timestamp DateTime       @default(now())
+  orderId   String
+  order     Order          @relation(fields: [orderId], references: [id])
+  driverId  String
+  driver    DeliveryDriver @relation(fields: [driverId], references: [id])
+  type      RejectionType
+  reason    String?
 }
 
 model CashSession {
-  id              String   @id @default(uuid())
-  openedAt        DateTime @default(now())
-  openedBy        String
-  openedByName    String
-  initialBalance  Float
-  closedAt        DateTime?
-  closedBy        String?
-  closedByName    String?
-  status          String   @default("OPEN")
-  
-  reportedCash    Float?
-  reportedPix     Float?
-  reportedCredit  Float?
-  reportedDebit   Float?
-  reportedOthers  Float?
-  reportedFiado   Float?
-  
-  systemCash      Float?
-  systemPix       Float?
-  systemCredit    Float?
-  systemDebit     Float?
-  systemOthers    Float?
-  systemFiado     Float?
-  
-  totalSales      Float?
-  difference      Float?
-  observations    String?
+  id             String    @id @default(uuid())
+  openedAt       DateTime  @default(now())
+  openedBy       String
+  openedByName   String
+  initialBalance Float
+  closedAt       DateTime?
+  closedBy       String?
+  closedByName   String?
+  status         String    @default("OPEN")
+
+  reportedCash   Float?
+  reportedPix    Float?
+  reportedCredit Float?
+  reportedDebit  Float?
+  reportedOthers Float?
+  reportedFiado  Float?
+
+  systemCash   Float?
+  systemPix    Float?
+  systemCredit Float?
+  systemDebit  Float?
+  systemOthers Float?
+  systemFiado  Float?
+
+  totalSales   Float?
+  difference   Float?
+  observations String?
 }
 
 model Feedback {

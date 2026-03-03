@@ -1,4 +1,4 @@
-import { Client, Product, Order, User, AuditLog, InventoryItem, RecipeItem, DeliveryDriver, OrderStatus, SaleType, TableSession, OrderItem, Waiter, InventoryMovement, OrderRejection, CashSession } from '../types';
+import type { Client, Product, Order, User, AuditLog, InventoryItem, RecipeItem, DeliveryDriver, OrderStatus, TableSession, Waiter, InventoryMovement, CashSession, OrderRejection } from '../types';
 
 const API_URL = (import.meta as any).env.VITE_API_URL || 'http://localhost:3000/api';
 const AUTH_KEY = 'delivery_fast_auth';
@@ -22,6 +22,8 @@ export interface BusinessSettings {
   cscToken?: string;
   isNfeProduction?: boolean;
   enableNfcEmission: boolean;
+  waiterPrivacyEnabled: boolean;
+  waiterPrivacyTimer: number;
 }
 
 
@@ -36,7 +38,9 @@ const DEFAULT_SETTINGS: BusinessSettings = {
   isManuallyClosed: false,
   operatingHours: '[]',
   maxChange: 191,
-  enableNfcEmission: false
+  enableNfcEmission: false,
+  waiterPrivacyEnabled: false,
+  waiterPrivacyTimer: 60
 };
 
 class APIDBService {

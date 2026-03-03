@@ -7,6 +7,7 @@ import { db, socket } from './api';
 import { LogOut, LayoutGrid, RefreshCw, PlusCircle, MessageSquare, History, AlertCircle, X } from 'lucide-react';
 import Modal from './components/Modal';
 import HistoryModal from './components/HistoryModal';
+import PrivacyScreen from './components/PrivacyScreen';
 
 const Dashboard: React.FC<{ user: User }> = ({ user }) => {
   const [tables, setTables] = useState<TableSession[]>([]);
@@ -24,6 +25,10 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
   const [minutesToClose, setMinutesToClose] = useState<number | null>(null);
   const [recentOrders, setRecentOrders] = useState<Order[]>([]);
   const [resolvedWaiterId, setResolvedWaiterId] = useState<string | null>(user.waiterId || null);
+
+  // Privacy Screen States
+  const [isLocked, setIsLocked] = useState(false);
+  const [lastActivity, setLastActivity] = useState<number>(Date.now());
 
   const fetchStatus = async () => {
     try {
@@ -162,6 +167,38 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
     }
   }, [storeStatus]);
 
+  // Activity Tracker for Privacy Screen
+  useEffect(() => {
+    const handleActivity = () => setLastActivity(Date.now());
+
+    // Attach event listeners
+    window.addEventListener('mousemove', handleActivity);
+    window.addEventListener('keydown', handleActivity);
+    window.addEventListener('click', handleActivity);
+    window.addEventListener('touchstart', handleActivity);
+
+    // Initial check loop
+    const privacyInterval = setInterval(() => {
+      if (!settings?.waiterPrivacyEnabled || isLocked) return;
+
+      const now = Date.now();
+      const idleTime = now - lastActivity;
+      const maxIdleTime = (settings?.waiterPrivacyTimer || 60) * 1000;
+
+      if (idleTime > maxIdleTime) {
+        setIsLocked(true);
+      }
+    }, 1000);
+
+    return () => {
+      window.removeEventListener('mousemove', handleActivity);
+      window.removeEventListener('keydown', handleActivity);
+      window.removeEventListener('click', handleActivity);
+      window.removeEventListener('touchstart', handleActivity);
+      clearInterval(privacyInterval);
+    };
+  }, [lastActivity, settings?.waiterPrivacyEnabled, settings?.waiterPrivacyTimer, isLocked]);
+
   const getStatusStyle = (status: TableSession['status']) => {
     switch (status) {
       case 'available': return 'bg-emerald-50 text-emerald-600 border-emerald-100';
@@ -187,10 +224,16 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col">
+      {isLocked && <PrivacyScreen user={user as any} onUnlock={() => { setIsLocked(false); setLastActivity(Date.now()); }} />}
+
       {/* Header */}
       <header className="px-4 sm:px-6 pt-10 pb-4 bg-white sticky top-0 z-40 flex items-center justify-between gap-2 sm:gap-4 border-b border-slate-100 shadow-sm overflow-hidden">
         <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
-          <div className="w-9 h-9 sm:w-10 sm:h-10 shrink-0 overflow-hidden rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
+          <div
+            className="w-9 h-9 sm:w-10 sm:h-10 shrink-0 overflow-hidden rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20 cursor-pointer active:scale-90 transition-transform"
+            onClick={() => setIsLocked(true)}
+            title="Bloquear Tela"
+          >
             <img src="/favicon.png" alt="Logo" className="w-full h-full object-cover" />
           </div>
           <div className="min-w-0 flex-1">

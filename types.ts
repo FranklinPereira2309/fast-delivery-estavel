@@ -1,34 +1,43 @@
 
-export enum OrderStatus {
-  PENDING = 'PENDING',
-  PREPARING = 'PREPARING',
-  PARTIALLY_READY = 'PARTIALLY_READY',
-  READY = 'READY',
-  OUT_FOR_DELIVERY = 'OUT_FOR_DELIVERY',
-  DELIVERED = 'DELIVERED',
-  CANCELLED = 'CANCELLED',
-  REOPENED = 'REOPENED'
-}
+export const OrderStatus = {
+  PENDING: 'PENDING',
+  PREPARING: 'PREPARING',
+  PARTIALLY_READY: 'PARTIALLY_READY',
+  READY: 'READY',
+  OUT_FOR_DELIVERY: 'OUT_FOR_DELIVERY',
+  DELIVERED: 'DELIVERED',
+  CANCELLED: 'CANCELLED',
+  REOPENED: 'REOPENED'
+} as const;
+export type OrderStatus = (typeof OrderStatus)[keyof typeof OrderStatus];
 
 export const OrderStatusLabels: Record<OrderStatus, string> = {
-  [OrderStatus.PENDING]: 'PENDENTE',
-  [OrderStatus.PREPARING]: 'EM PREPARAÇÃO',
-  [OrderStatus.PARTIALLY_READY]: 'PRONTO PARCIALMENTE',
-  [OrderStatus.READY]: 'PRONTO',
-  [OrderStatus.OUT_FOR_DELIVERY]: 'EM ROTA',
-  [OrderStatus.DELIVERED]: 'FINALIZADA',
-  [OrderStatus.CANCELLED]: 'CANCELADO',
-  [OrderStatus.REOPENED]: 'REABERTA'
+  PENDING: 'PENDENTE',
+  PREPARING: 'EM PREPARAÇÃO',
+  PARTIALLY_READY: 'PRONTO PARCIALMENTE',
+  READY: 'PRONTO',
+  OUT_FOR_DELIVERY: 'EM ROTA',
+  DELIVERED: 'FINALIZADA',
+  CANCELLED: 'CANCELADO',
+  REOPENED: 'REABERTA'
 };
 
-export enum SaleType {
-  COUNTER = 'COUNTER',
-  TABLE = 'TABLE',
-  OWN_DELIVERY = 'OWN_DELIVERY',
-  THIRD_PARTY = 'THIRD_PARTY'
-}
+export const SaleType = {
+  COUNTER: 'COUNTER',
+  TABLE: 'TABLE',
+  OWN_DELIVERY: 'OWN_DELIVERY',
+  THIRD_PARTY: 'THIRD_PARTY'
+} as const;
+export type SaleType = (typeof SaleType)[keyof typeof SaleType];
 
-export type UnitType = 'G' | 'ML' | 'UN' | 'KG' | 'L';
+export const UnitType = {
+  G: 'G',
+  ML: 'ML',
+  UN: 'UN',
+  KG: 'KG',
+  L: 'L'
+} as const;
+export type UnitType = (typeof UnitType)[keyof typeof UnitType];
 
 export interface InventoryItem {
   id: string;
@@ -81,6 +90,8 @@ export interface BusinessSettings {
   cscToken?: string;
   isNfeProduction?: boolean;
   enableNfcEmission?: boolean;
+  waiterPrivacyEnabled?: boolean;
+  waiterPrivacyTimer?: number;
 }
 
 export interface Waiter {

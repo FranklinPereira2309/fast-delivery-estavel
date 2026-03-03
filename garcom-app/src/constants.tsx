@@ -1,5 +1,4 @@
 /// <reference types="react" />
-import React from 'react';
 
 export const COLORS = {
   primary: '#0f172a',
