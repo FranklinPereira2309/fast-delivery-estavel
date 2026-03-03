@@ -335,16 +335,11 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
                 }}
                 className={`aspect-[4/3] flex flex-col items-center justify-center rounded-[2.5rem] border-2 transition-all active:scale-95 shadow-sm relative group bg-white ${getStatusStyle(table.status)} ${storeStatus.status === 'offline' && table.status === 'available' ? 'grayscale opacity-50 cursor-not-allowed' : ''}`}
               >
-                <span className="text-4xl font-black italic tracking-tighter mb-1">{table.tableNumber}</span>
-                <div className="flex flex-col items-center gap-1 mt-1">
+                <span className="text-4xl font-black italic tracking-tighter mb-0.5">{table.tableNumber}</span>
+                <div className="flex flex-col items-center mt-0.5">
                   <span className="text-[9px] font-black uppercase tracking-widest opacity-80">
                     {table.status === 'available' ? 'Livre' : table.status === 'occupied' ? 'Em Uso' : table.status === 'billing' ? 'Conta' : 'Pedido'}
                   </span>
-                  {table.isOriginDigitalMenu && (
-                    <span className="bg-fuchsia-600 text-white text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest shadow-sm">
-                      App Digital
-                    </span>
-                  )}
                 </div>
 
                 {table.hasPendingDigital && (
@@ -353,11 +348,15 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
                   </div>
                 )}
 
-                {(table.status === 'occupied' || table.status === 'billing') && (
-                  <div className="absolute bottom-4 px-3 py-1 bg-slate-900/5 rounded-full">
-                    <p className="text-[8px] font-black text-slate-500 uppercase">Em Uso</p>
+                {table.isOriginDigitalMenu ? (
+                  <div className="absolute bottom-2 sm:bottom-3 px-2 py-1 bg-fuchsia-600 rounded-full w-[85%] flex justify-center items-center shadow-sm">
+                    <p className="text-[8px] sm:text-[9px] font-black text-white uppercase tracking-widest truncate leading-none pt-[1px]">App Digital</p>
                   </div>
-                )}
+                ) : (table.status === 'occupied' || table.status === 'billing') ? (
+                  <div className="absolute bottom-2 sm:bottom-3 px-3 py-1 bg-slate-900/5 rounded-full w-[85%] flex justify-center items-center">
+                    <p className="text-[8px] font-black text-slate-500 uppercase truncate leading-none pt-[1px]">Em Uso</p>
+                  </div>
+                ) : null}
               </button>
             ))}
           </div>
