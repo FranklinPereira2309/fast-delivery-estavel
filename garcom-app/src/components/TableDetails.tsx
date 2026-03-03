@@ -100,7 +100,7 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, user, onClose, onRef
         if (!transferTarget) return;
 
         // Regra de negócio: somente o garçom responsável
-        if (table.waiterId && table.waiterId !== user.id && !user.permissions.includes('admin')) {
+        if (!isResponsible) {
             showAlert('Acesso Negado', 'Somente o garçom responsável por esta mesa pode transferi-lá.', 'error');
             return;
         }
