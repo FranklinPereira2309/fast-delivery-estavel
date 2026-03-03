@@ -100,6 +100,9 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
           </div>
         </div>
         <div className="flex gap-2">
+          <button onClick={() => {/* Handle messages */ }} className="p-3 bg-blue-50 border border-blue-100 rounded-2xl text-blue-600 hover:bg-blue-100 transition-colors active:scale-90">
+            <MessageSquare size={18} />
+          </button>
           <button onClick={fetchData} className="p-3 bg-slate-50 border border-slate-100 rounded-2xl text-slate-400 hover:text-blue-600 transition-colors active:scale-90">
             <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
           </button>
@@ -172,17 +175,13 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
       </main>
 
       {/* Quick Action */}
-      <footer className="p-6 pt-0 bg-slate-50/80 backdrop-blur-md sticky bottom-0 flex gap-4">
+      <footer className="p-6 pt-0 bg-slate-50/80 backdrop-blur-md sticky bottom-0 flex flex-col">
         <button
           onClick={() => setShowDirectOrder(true)}
-          className="flex-1 py-5 bg-slate-900 border-b-4 border-slate-950 text-white rounded-[2rem] font-black uppercase text-[11px] tracking-[0.2em] shadow-2xl active:translate-y-1 active:border-b-0 transition-all flex items-center justify-center gap-3"
+          className="w-full py-5 bg-slate-900 border-b-4 border-slate-950 text-white rounded-[2rem] font-black uppercase text-[11px] tracking-[0.2em] shadow-2xl active:translate-y-1 active:border-b-0 transition-all flex items-center justify-center gap-3"
         >
           <PlusCircle size={20} />
           Lançamento Direto
-        </button>
-        <button className="flex-1 py-5 bg-slate-100 border-b-4 border-slate-200 text-slate-600 rounded-[2rem] font-black uppercase text-[11px] tracking-[0.2em] shadow-lg active:translate-y-1 active:border-b-0 transition-all flex items-center justify-center gap-3">
-          <MessageSquare size={20} />
-          Mensagens do Dia
         </button>
       </footer>
 
