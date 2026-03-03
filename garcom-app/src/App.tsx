@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Login from './components/Login';
 import TableDetails from './components/TableDetails';
 import DirectOrderModal from './components/DirectOrderModal';
-import type { User, TableSession, StoreStatus, Order } from './types';
+import type { User, TableSession, StoreStatus, Order, BusinessSettings } from './types';
 import { db, socket } from './api';
 import { LogOut, LayoutGrid, RefreshCw, PlusCircle, MessageSquare, History, AlertCircle, X } from 'lucide-react';
 import Modal from './components/Modal';
@@ -11,6 +11,7 @@ import HistoryModal from './components/HistoryModal';
 const Dashboard: React.FC<{ user: User }> = ({ user }) => {
   const [tables, setTables] = useState<TableSession[]>([]);
   const [tableCount, setTableCount] = useState(0);
+  const [settings, setSettings] = useState<BusinessSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedTable, setSelectedTable] = useState<TableSession | null>(null);
   const [showDirectOrder, setShowDirectOrder] = useState(false);
@@ -47,9 +48,10 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
     setLoading(true);
     try {
       // First fetch settings if not already fetched
-      if (tableCount === 0) {
-        const settings = await db.getSettings();
-        setTableCount(settings.tableCount);
+      if (!settings) {
+        const s = await db.getSettings();
+        setSettings(s);
+        setTableCount(s.tableCount);
       }
 
       const activeSessions = await db.getTables();
@@ -302,12 +304,29 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
           </div>
           <div className="bg-blue-600 text-white px-3 py-1.5 rounded-xl shadow-md shrink-0">
             <span className="text-sm font-black tracking-tighter">
-              R$ {recentOrders.filter(o => {
+              R$ {(() => {
                 const today = new Date().toDateString();
-                const isToday = new Date(o.createdAt || 0).toDateString() === today;
-                const isMyOrder = o.waiterId === (user.waiterId || user.id);
-                return isToday && isMyOrder;
-              }).reduce((sum, o) => sum + (o.appliedServiceFee || 0), 0).toFixed(2)}
+                const myOrders = recentOrders.filter(o => {
+                  const isToday = new Date(o.createdAt || 0).toDateString() === today;
+                  const isMyOrder = o.waiterId === (user.waiterId || user.id);
+                  return isToday && isMyOrder;
+                });
+
+                const feePercentage = settings?.serviceFeePercentage || 10;
+                const isFeeActive = settings?.serviceFeeStatus !== false;
+
+                const commission = myOrders.reduce((sum, o) => {
+                  if (o.appliedServiceFee !== null && o.appliedServiceFee !== undefined) {
+                    return sum + o.appliedServiceFee;
+                  }
+                  if (isFeeActive && o.status !== 'CANCELLED') {
+                    return sum + (o.total * feePercentage / 100);
+                  }
+                  return sum;
+                }, 0);
+
+                return commission.toFixed(2);
+              })()}
             </span>
           </div>
         </button>

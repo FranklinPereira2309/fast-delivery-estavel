@@ -79,7 +79,14 @@ export const db = {
 
     getTables: async (): Promise<TableSession[]> => {
         const { data } = await api.get<TableSession[]>('/tables');
-        return data;
+        // Map backend 'id' to frontend 'uid' for consistency in business logic
+        return data.map(table => ({
+            ...table,
+            items: table.items.map(item => ({
+                ...item,
+                uid: item.uid || (item as any).id
+            }))
+        }));
     },
 
     getProducts: async (): Promise<Product[]> => {
@@ -92,8 +99,12 @@ export const db = {
         return data;
     },
 
-    saveTableSession: async (session: Partial<TableSession>) => {
-        return api.post('/tables', session);
+    saveTableSession: async (session: Partial<TableSession>, isRejection: boolean = false) => {
+        return api.post(`/tables${isRejection ? '?rejection=true' : ''}`, session);
+    },
+
+    deleteTableSession: async (tableNumber: number, isCancellation: boolean = false) => {
+        return api.delete(`/tables/${tableNumber}${isCancellation ? '?cancellation=true' : ''}`);
     },
 
     getClients: async (): Promise<any[]> => {

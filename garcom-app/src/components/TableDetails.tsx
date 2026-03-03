@@ -68,7 +68,8 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, user, onClose, onRef
                 return prev.map(p => p.productId === product.id ? { ...p, quantity: p.quantity + 1 } : p);
             }
             return [...prev, {
-                uid: crypto.randomUUID(),
+                id: `temp-${Date.now()}-${Math.random()}`,
+                uid: `item-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
                 productId: product.id,
                 productName: product.name,
                 quantity: 1,
@@ -211,13 +212,17 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, user, onClose, onRef
         showAlert('Rejeitar Pedido', 'Deseja REJEITAR estes itens? O cliente será notificado.', 'confirm', async () => {
             setLoading(true);
             try {
-                await db.saveTableSession({
-                    tableNumber: table.tableNumber,
-                    items: table.items,
-                    status: table.items.length > 0 ? 'occupied' : 'available',
-                    hasPendingDigital: false,
-                    pendingReviewItems: null as any // Explicitly null to clear in Prisma
-                });
+                if (table.items.length === 0) {
+                    await db.deleteTableSession(table.tableNumber, true);
+                } else {
+                    await db.saveTableSession({
+                        tableNumber: table.tableNumber,
+                        items: table.items,
+                        status: table.items.length > 0 ? 'occupied' : 'available',
+                        hasPendingDigital: false,
+                        pendingReviewItems: null as any
+                    }, true);
+                }
                 onRefresh();
                 onClose();
             } catch (e) {
