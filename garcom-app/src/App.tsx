@@ -401,8 +401,9 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
                   if (o.appliedServiceFee !== null && o.appliedServiceFee !== undefined) {
                     return sum + o.appliedServiceFee;
                   }
-                  if (isFeeActive && o.status !== 'CANCELLED') {
-                    return sum + (o.total * feePercentage / 100);
+                  if (isFeeActive && o.type === 'TABLE' && o.status !== 'CANCELLED') {
+                    // Reverse calculate base value if fee was applied into the total
+                    return sum + (o.total - (o.total / (1 + (feePercentage / 100))));
                   }
                   return sum;
                 }, 0);
@@ -462,6 +463,9 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
       {showHistory && (
         <HistoryModal
           user={user}
+          tables={tables}
+          settings={settings as any}
+          resolvedWaiterId={resolvedWaiterId || ''}
           onClose={() => setShowHistory(false)}
         />
       )}

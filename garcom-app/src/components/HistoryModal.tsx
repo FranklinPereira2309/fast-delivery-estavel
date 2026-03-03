@@ -1,16 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { X, TrendingUp, History, Clock, DollarSign, Wallet, ClipboardList, ChevronRight } from 'lucide-react';
+import { X, TrendingUp, History, Clock, DollarSign, ClipboardList, ChevronRight } from 'lucide-react';
 import { db } from '../api';
-import type { User, Order } from '../types';
+import type { User, Order, TableSession, BusinessSettings } from '../types';
 
 interface HistoryModalProps {
     user: User;
+    tables: TableSession[];
+    settings: BusinessSettings;
+    resolvedWaiterId: string;
     onClose: () => void;
 }
 
 type Tab = 'COMMISSIONS' | 'ATTENDANCE';
 
-const HistoryModal: React.FC<HistoryModalProps> = ({ user, onClose }) => {
+const HistoryModal: React.FC<HistoryModalProps> = ({ user, tables, settings, resolvedWaiterId, onClose }) => {
     const [activeTab, setActiveTab] = useState<Tab>('COMMISSIONS');
     const [orders, setOrders] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
@@ -54,19 +57,47 @@ const HistoryModal: React.FC<HistoryModalProps> = ({ user, onClose }) => {
 
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-        const daily = orders
+        const feePercentage = settings?.serviceFeePercentage || 10;
+        const isFeeActive = settings?.serviceFeeStatus !== false;
+
+        const getOrderCommission = (o: Order) => {
+            if (o.appliedServiceFee !== null && o.appliedServiceFee !== undefined) return o.appliedServiceFee;
+            if (isFeeActive && o.type === 'TABLE' && o.status !== 'CANCELLED') {
+                return o.total - (o.total / (1 + (feePercentage / 100)));
+            }
+            return 0;
+        };
+
+        const dailyFinalized = orders
             .filter(o => new Date(o.createdAt || 0) >= startOfDay)
-            .reduce((sum, o) => sum + (o.appliedServiceFee || 0), 0);
+            .reduce((sum, o) => sum + getOrderCommission(o), 0);
 
         const weekly = orders
             .filter(o => new Date(o.createdAt || 0) >= startOfWeek)
-            .reduce((sum, o) => sum + (o.appliedServiceFee || 0), 0);
+            .reduce((sum, o) => sum + getOrderCommission(o), 0);
 
         const monthly = orders
             .filter(o => new Date(o.createdAt || 0) >= startOfMonth)
-            .reduce((sum, o) => sum + (o.appliedServiceFee || 0), 0);
+            .reduce((sum, o) => sum + getOrderCommission(o), 0);
 
-        return { daily, weekly, monthly };
+        const currentWaiterId = resolvedWaiterId || user.waiterId || user.id;
+        const isMyWaiter = (wid: string | null | undefined, wOrig?: any) =>
+            wid === currentWaiterId ||
+            wid === user.id ||
+            wOrig?.email?.toLowerCase() === user.email.toLowerCase();
+
+        const myActiveTables = tables.filter(t => {
+            const isMyTable = isMyWaiter(t.waiterId) || (t.waiter && isMyWaiter(t.waiter.id));
+            return t.status !== 'available' && isMyTable;
+        });
+
+        const activeCommission = myActiveTables.reduce((sum, t) => {
+            if (!isFeeActive) return sum;
+            const tableTotal = t.items.reduce((acc, it) => acc + (it.price * it.quantity), 0);
+            return sum + (tableTotal * feePercentage / 100);
+        }, 0);
+
+        return { dailyFinalized, activeCommission, totalDaily: dailyFinalized + activeCommission, weekly, monthly };
     };
 
     const commissions = calculateCommissions();
@@ -122,25 +153,39 @@ const HistoryModal: React.FC<HistoryModalProps> = ({ user, onClose }) => {
                         <>
                             {activeTab === 'COMMISSIONS' && (
                                 <div className="space-y-4">
-                                    <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex items-center gap-4">
-                                        <div className="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600">
-                                            <Wallet size={28} />
+                                    <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col gap-4 relative overflow-hidden">
+                                        <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-bl-full -z-0 opacity-50"></div>
+                                        <div className="flex justify-between items-center relative z-10 w-full mb-2">
+                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Produção Hoje</p>
+                                            <TrendingUp className="text-blue-500" size={18} />
                                         </div>
-                                        <div className="flex-1">
-                                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Hoje</p>
-                                            <h3 className="text-2xl font-black text-slate-900 tracking-tighter">R$ {commissions.daily.toFixed(2)}</h3>
+
+                                        <div className="flex gap-4 relative z-10 border-b border-slate-100 pb-4">
+                                            <div className="flex-1">
+                                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">Finalizado</p>
+                                                <h3 className="text-xl font-black text-emerald-600 tracking-tighter">R$ {commissions.dailyFinalized.toFixed(2)}</h3>
+                                            </div>
+                                            <div className="w-px bg-slate-100"></div>
+                                            <div className="flex-1">
+                                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">Em Aberto</p>
+                                                <h3 className="text-xl font-black text-amber-500 tracking-tighter">+ R$ {commissions.activeCommission.toFixed(2)}</h3>
+                                            </div>
                                         </div>
-                                        <TrendingUp className="text-emerald-500" size={20} />
+
+                                        <div className="flex justify-between items-end relative z-10">
+                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Projetado</p>
+                                            <h3 className="text-3xl font-black text-blue-600 tracking-tighter">R$ {commissions.totalDaily.toFixed(2)}</h3>
+                                        </div>
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-4">
-                                        <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
+                                        <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col">
                                             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Semana</p>
-                                            <h4 className="text-lg font-black text-slate-900 tracking-tighter">R$ {commissions.weekly.toFixed(2)}</h4>
+                                            <h4 className="text-lg font-black text-slate-900 tracking-tighter mt-auto">R$ {commissions.weekly.toFixed(2)}</h4>
                                         </div>
-                                        <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
+                                        <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col">
                                             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Este Mês</p>
-                                            <h4 className="text-lg font-black text-slate-900 tracking-tighter">R$ {commissions.monthly.toFixed(2)}</h4>
+                                            <h4 className="text-lg font-black text-slate-900 tracking-tighter mt-auto">R$ {commissions.monthly.toFixed(2)}</h4>
                                         </div>
                                     </div>
 
