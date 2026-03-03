@@ -306,16 +306,18 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
             <span className="text-sm font-black tracking-tighter">
               R$ {(() => {
                 const today = new Date().toDateString();
+                const feePercentage = settings?.serviceFeePercentage || 10;
+                const isFeeActive = settings?.serviceFeeStatus !== false;
+                const waiterId = user.waiterId || user.id;
+
+                // 1. Commission from finalized orders
                 const myOrders = recentOrders.filter(o => {
                   const isToday = new Date(o.createdAt || 0).toDateString() === today;
-                  const isMyOrder = o.waiterId === (user.waiterId || user.id);
+                  const isMyOrder = o.waiterId === waiterId;
                   return isToday && isMyOrder;
                 });
 
-                const feePercentage = settings?.serviceFeePercentage || 10;
-                const isFeeActive = settings?.serviceFeeStatus !== false;
-
-                const commission = myOrders.reduce((sum, o) => {
+                const finalizedCommission = myOrders.reduce((sum, o) => {
                   if (o.appliedServiceFee !== null && o.appliedServiceFee !== undefined) {
                     return sum + o.appliedServiceFee;
                   }
@@ -325,7 +327,19 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
                   return sum;
                 }, 0);
 
-                return commission.toFixed(2);
+                // 2. Commission from active tables (real-time)
+                const myActiveTables = tables.filter(t => {
+                  const isMyTable = t.waiterId === waiterId || (t.waiter && t.waiter.id === waiterId);
+                  return t.status !== 'available' && isMyTable;
+                });
+
+                const activeCommission = myActiveTables.reduce((sum, t) => {
+                  if (!isFeeActive) return sum;
+                  const tableTotal = t.items.reduce((acc, it) => acc + (it.price * it.quantity), 0);
+                  return sum + (tableTotal * feePercentage / 100);
+                }, 0);
+
+                return (finalizedCommission + activeCommission).toFixed(2);
               })()}
             </span>
           </div>
