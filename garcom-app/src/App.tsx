@@ -225,9 +225,6 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
             <MessageSquare size={18} />
             {hasNewFeedback && <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white animate-ping"></span>}
           </button>
-          <button onClick={fetchData} className="p-2.5 sm:p-3 bg-slate-50 border border-slate-100 rounded-xl sm:rounded-2xl text-slate-400 hover:text-blue-600 transition-colors active:scale-90" title="Atualizar dados">
-            <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
-          </button>
           <button
             onClick={() => window.location.reload()}
             className="p-2.5 sm:p-3 bg-blue-50 border border-blue-100 rounded-xl sm:rounded-2xl text-blue-600 hover:bg-blue-100 transition-colors active:scale-90"
