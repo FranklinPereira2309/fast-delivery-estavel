@@ -14,6 +14,14 @@ export interface User {
     permissions: string[];
 }
 
+export interface Waiter {
+    id: string;
+    name: string;
+    phone: string;
+    email?: string;
+    active: boolean;
+}
+
 export interface Product {
     id: string;
     name: string;
@@ -64,6 +72,7 @@ export interface Order {
     status: OrderStatus;
     type: SaleType;
     waiterId?: string;
+    waiter?: Waiter;
     tableNumber?: number;
     deliveryFee?: number;
     appliedServiceFee?: number;
