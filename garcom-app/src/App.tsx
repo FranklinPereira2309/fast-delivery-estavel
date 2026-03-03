@@ -120,7 +120,7 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
       case 'available': return 'bg-emerald-50 text-emerald-600 border-emerald-100';
       case 'occupied': return 'bg-red-50 text-red-600 border-red-100';
       case 'billing': return 'bg-orange-50 text-orange-600 border-orange-100';
-      case 'pending-digital': return 'bg-purple-50 text-purple-600 border-purple-100 animate-pulse-subtle';
+      case 'pending_digital': return 'bg-purple-50 text-purple-600 border-purple-100 animate-pulse-subtle';
       default: return 'bg-slate-50 text-slate-400 border-slate-100';
     }
   };
@@ -156,6 +156,20 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
             </div>
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{user.name.split(' ')[0]} • DF Service</p>
           </div>
+          {tables.some(t => {
+            if (!t.hasPendingDigital) return false;
+            try {
+              const parsed = JSON.parse(t.pendingReviewItems || '');
+              return !(parsed && typeof parsed === 'object' && !Array.isArray(parsed) && parsed.rejection);
+            } catch (e) {
+              return !t.pendingReviewItems?.startsWith('REJECTED:');
+            }
+          }) && (
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-500 text-white rounded-xl animate-bounce shadow-lg shadow-amber-500/20">
+                <AlertCircle size={14} className="animate-pulse" />
+                <span className="text-[9px] font-black uppercase tracking-widest">Novo Pedido</span>
+              </div>
+            )}
         </div>
         <div className="flex gap-2">
           <button onClick={() => {/* Handle messages */ }} className="p-3 bg-slate-50 border border-slate-100 rounded-2xl text-slate-400 hover:text-blue-600 transition-colors active:scale-90">

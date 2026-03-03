@@ -43,7 +43,7 @@ export interface OrderItem {
 
 export interface TableSession {
     tableNumber: number;
-    status: 'available' | 'occupied' | 'billing' | 'pending-digital';
+    status: 'available' | 'occupied' | 'billing' | 'pending_digital';
     items: OrderItem[];
     clientName?: string;
     waiterId?: string;

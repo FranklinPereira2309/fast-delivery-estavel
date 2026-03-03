@@ -14,8 +14,18 @@ interface TableDetailsProps {
 }
 
 const TableDetails: React.FC<TableDetailsProps> = ({ table, user, onClose, onRefresh, storeStatus }) => {
+    const isSoftRejected = (() => {
+        if (!table.pendingReviewItems) return false;
+        try {
+            const parsed = JSON.parse(table.pendingReviewItems);
+            return parsed && typeof parsed === 'object' && !Array.isArray(parsed) && parsed.rejection;
+        } catch (e) {
+            return table.pendingReviewItems.startsWith('REJECTED:');
+        }
+    })();
+
     const [activeTab, setActiveTab] = useState<'CONSUMPTION' | 'LAUNCH' | 'REVIEW'>(
-        table.hasPendingDigital ? 'REVIEW' : 'CONSUMPTION'
+        (table.hasPendingDigital && !isSoftRejected) ? 'REVIEW' : 'CONSUMPTION'
     );
     const [products, setProducts] = useState<Product[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
@@ -158,15 +168,17 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, user, onClose, onRef
         if (!table.pendingReviewItems) return;
         setLoading(true);
         try {
-            const pending = JSON.parse(table.pendingReviewItems);
-            if (pending.items) {
-                const newItems = [...table.items, ...pending.items];
+            const parsed = JSON.parse(table.pendingReviewItems);
+            const itemsToApprove = Array.isArray(parsed) ? parsed : (parsed.items || []);
+
+            if (itemsToApprove.length > 0) {
+                const newItems = [...table.items, ...itemsToApprove];
                 await db.saveTableSession({
                     tableNumber: table.tableNumber,
                     items: newItems,
                     status: 'occupied',
                     hasPendingDigital: false,
-                    pendingReviewItems: undefined,
+                    pendingReviewItems: null as any, // Explicitly null to clear in Prisma
                     clientId: table.clientId || 'ANONYMOUS',
                     clientName: table.clientName || `Mesa ${table.tableNumber}`
                 });
@@ -194,7 +206,7 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, user, onClose, onRef
                     items: table.items,
                     status: table.items.length > 0 ? 'occupied' : 'available',
                     hasPendingDigital: false,
-                    pendingReviewItems: undefined
+                    pendingReviewItems: null as any // Explicitly null to clear in Prisma
                 });
                 onRefresh();
                 onClose();
@@ -211,9 +223,9 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, user, onClose, onRef
 
     let pendingItems: any[] = [];
     try {
-        if (table.pendingReviewItems) {
+        if (table.pendingReviewItems && !isSoftRejected) {
             const parsed = JSON.parse(table.pendingReviewItems);
-            pendingItems = parsed.items || [];
+            pendingItems = Array.isArray(parsed) ? parsed : (parsed.items || []);
         }
     } catch (e) { }
 
@@ -303,7 +315,7 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, user, onClose, onRef
                     >
                         Lançar
                     </button>
-                    {table.hasPendingDigital && (
+                    {table.hasPendingDigital && !isSoftRejected && (
                         <button
                             onClick={() => setActiveTab('REVIEW')}
                             className={`shrink-0 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'REVIEW' ? 'bg-amber-500 text-white shadow-lg animate-pulse' : 'bg-amber-50 text-amber-500 border border-amber-100'}`}
