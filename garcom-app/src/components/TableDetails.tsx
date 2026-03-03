@@ -25,7 +25,7 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, user, onClose, onRef
     const [transferTarget, setTransferTarget] = useState<number | ''>('');
     const [showClientSelect, setShowClientSelect] = useState(false);
 
-    const isResponsible = user.permissions.includes('admin') || !table.waiterId || table.waiterId === user.id;
+    const isResponsible = user.permissions.includes('admin') || !table.waiterId || table.waiter?.email === user.email;
 
     // Modal state
     const [modal, setModal] = useState<{
@@ -123,6 +123,10 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, user, onClose, onRef
     };
 
     const handleSave = async () => {
+        if (!isResponsible) {
+            showAlert('Acesso Negado', 'Somente o garçom responsável por esta mesa pode lançar itens.', 'error');
+            return;
+        }
         if (cart.length === 0) return;
         setLoading(true);
         try {
@@ -132,7 +136,8 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, user, onClose, onRef
                 items: newItems,
                 status: 'occupied',
                 clientId: table.clientId || 'ANONYMOUS',
-                clientName: table.clientName || `Mesa ${table.tableNumber}`
+                clientName: table.clientName || `Mesa ${table.tableNumber}`,
+                waiterId: user.id
             });
             setCart([]);
             onRefresh();
@@ -146,6 +151,10 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, user, onClose, onRef
     };
 
     const handleApproveDigital = async () => {
+        if (!isResponsible) {
+            showAlert('Acesso Negado', 'Somente o garçom responsável por esta mesa pode aprovar pedidos.', 'error');
+            return;
+        }
         if (!table.pendingReviewItems) return;
         setLoading(true);
         try {
@@ -173,6 +182,10 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, user, onClose, onRef
     };
 
     const handleRejectDigital = async () => {
+        if (!isResponsible) {
+            showAlert('Acesso Negado', 'Somente o garçom responsável por esta mesa pode rejeitar pedidos.', 'error');
+            return;
+        }
         showAlert('Rejeitar Pedido', 'Deseja REJEITAR estes itens? O cliente será notificado.', 'confirm', async () => {
             setLoading(true);
             try {
@@ -444,8 +457,8 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, user, onClose, onRef
                                 </button>
                                 <button
                                     onClick={handleApproveDigital}
-                                    disabled={loading || storeStatus?.status === 'offline'}
-                                    className={`py-5 bg-emerald-600 text-white rounded-[2rem] font-black uppercase text-[11px] tracking-widest shadow-xl shadow-emerald-500/30 active:scale-95 transition-all flex items-center justify-center gap-2 ${storeStatus?.status === 'offline' ? 'grayscale opacity-50 cursor-not-allowed' : ''}`}
+                                    disabled={loading || storeStatus?.status === 'offline' || !isResponsible}
+                                    className={`py-5 bg-emerald-600 text-white rounded-[2rem] font-black uppercase text-[11px] tracking-widest shadow-xl shadow-emerald-500/30 active:scale-95 transition-all flex items-center justify-center gap-2 ${storeStatus?.status === 'offline' || !isResponsible ? 'grayscale opacity-50 cursor-not-allowed' : ''}`}
                                 >
                                     <CheckCircle2 size={18} />
                                     Aceitar Tudo
@@ -470,8 +483,8 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, user, onClose, onRef
                             </div>
                             <button
                                 onClick={handleSave}
-                                disabled={loading}
-                                className="w-full py-5 bg-slate-900 text-white rounded-[2rem] font-black uppercase text-[11px] tracking-[0.2em] shadow-2xl active:scale-[0.98] transition-all flex items-center justify-center gap-3"
+                                disabled={loading || !isResponsible}
+                                className={`w-full py-5 bg-slate-900 text-white rounded-[2rem] font-black uppercase text-[11px] tracking-[0.2em] shadow-2xl active:scale-[0.98] transition-all flex items-center justify-center gap-3 ${!isResponsible ? 'grayscale opacity-50 cursor-not-allowed' : ''}`}
                             >
                                 <ArrowRight size={20} />
                                 {loading ? 'Lançando...' : 'Confirmar Lançamento'}

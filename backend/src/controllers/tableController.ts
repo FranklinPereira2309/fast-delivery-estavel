@@ -16,7 +16,7 @@ const mapSessionResponse = (session: any) => {
 
 export const getTableSessions = async (req: Request, res: Response) => {
     const sessions = await prisma.tableSession.findMany({
-        include: { items: true }
+        include: { items: true, waiter: true }
     });
     res.json(sessions.map(mapSessionResponse));
 };
@@ -36,7 +36,7 @@ export const saveTableSession = async (req: Request, res: Response) => {
             // 1. Get existing session to check for new items (for stock deduction)
             const existingSession = await tx.tableSession.findUnique({
                 where: { tableNumber: tableNum },
-                include: { items: true }
+                include: { items: true, waiter: true }
             });
 
             // 2. Identify new items (items that don't exist in DB yet)
@@ -71,8 +71,9 @@ export const saveTableSession = async (req: Request, res: Response) => {
             const clientId = sessionData.clientId && sessionData.clientId !== "" ? sessionData.clientId : 'ANONYMOUS';
 
             // Resolve true Waiter.id from User.id if needed
-            let waiterId = sessionData.waiterId && sessionData.waiterId !== "" ? sessionData.waiterId : null;
-            if (waiterId) {
+            let waiterId = sessionData.waiterId && sessionData.waiterId !== "" ? sessionData.waiterId : (existingSession?.waiterId || null);
+
+            if (waiterId && waiterId !== existingSession?.waiterId) {
                 const waiter = await tx.waiter.findUnique({ where: { id: waiterId } });
                 if (!waiter) {
                     const userRecord = await tx.user.findUnique({ where: { id: waiterId } });
