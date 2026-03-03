@@ -4,8 +4,9 @@ import TableDetails from './components/TableDetails';
 import DirectOrderModal from './components/DirectOrderModal';
 import type { User, TableSession } from './types';
 import { db, socket } from './api';
-import { LogOut, LayoutGrid, RefreshCw, PlusCircle, MessageSquare } from 'lucide-react';
+import { LogOut, LayoutGrid, RefreshCw, PlusCircle, MessageSquare, History, TrendingUp } from 'lucide-react';
 import Modal from './components/Modal';
+import HistoryModal from './components/HistoryModal';
 
 const Dashboard: React.FC<{ user: User }> = ({ user }) => {
   const [tables, setTables] = useState<TableSession[]>([]);
@@ -13,6 +14,7 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
   const [loading, setLoading] = useState(true);
   const [selectedTable, setSelectedTable] = useState<TableSession | null>(null);
   const [showDirectOrder, setShowDirectOrder] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const fetchData = async () => {
@@ -100,7 +102,10 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
           </div>
         </div>
         <div className="flex gap-2">
-          <button onClick={() => {/* Handle messages */ }} className="p-3 bg-blue-50 border border-blue-100 rounded-2xl text-blue-600 hover:bg-blue-100 transition-colors active:scale-90">
+          <button onClick={() => setShowHistory(true)} className="p-3 bg-blue-50 border border-blue-100 rounded-2xl text-blue-600 hover:bg-blue-100 transition-colors active:scale-90">
+            <TrendingUp size={18} />
+          </button>
+          <button onClick={() => {/* Handle messages */ }} className="p-3 bg-slate-50 border border-slate-100 rounded-2xl text-slate-400 hover:text-blue-600 transition-colors active:scale-90">
             <MessageSquare size={18} />
           </button>
           <button onClick={fetchData} className="p-3 bg-slate-50 border border-slate-100 rounded-2xl text-slate-400 hover:text-blue-600 transition-colors active:scale-90">
@@ -175,13 +180,20 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
       </main>
 
       {/* Quick Action */}
-      <footer className="p-6 pt-0 bg-slate-50/80 backdrop-blur-md sticky bottom-0 flex flex-col">
+      <footer className="p-6 pt-0 bg-slate-50/80 backdrop-blur-md sticky bottom-0 flex gap-3">
+        <button
+          onClick={() => setShowHistory(true)}
+          className="flex-1 py-5 bg-white border border-slate-200 text-slate-900 rounded-[2rem] font-black uppercase text-[10px] tracking-[0.1em] shadow-sm active:translate-y-0.5 transition-all flex items-center justify-center gap-2"
+        >
+          <History size={18} />
+          Atendimentos
+        </button>
         <button
           onClick={() => setShowDirectOrder(true)}
-          className="w-full py-5 bg-slate-900 border-b-4 border-slate-950 text-white rounded-[2rem] font-black uppercase text-[11px] tracking-[0.2em] shadow-2xl active:translate-y-1 active:border-b-0 transition-all flex items-center justify-center gap-3"
+          className="flex-1 py-5 bg-slate-900 border-b-4 border-slate-950 text-white rounded-[2rem] font-black uppercase text-[10px] tracking-[0.1em] shadow-2xl active:translate-y-1 active:border-b-0 transition-all flex items-center justify-center gap-2"
         >
-          <PlusCircle size={20} />
-          Lançamento Direto
+          <PlusCircle size={18} />
+          Pedido Balcão
         </button>
       </footer>
 
@@ -199,6 +211,13 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
           user={user}
           onClose={() => setShowDirectOrder(false)}
           onRefresh={fetchData}
+        />
+      )}
+
+      {showHistory && (
+        <HistoryModal
+          user={user}
+          onClose={() => setShowHistory(false)}
         />
       )}
 

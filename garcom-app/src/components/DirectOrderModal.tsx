@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Minus, Plus, X, Search, LayoutGrid, Store, Bike, Check } from 'lucide-react';
+import { Minus, Plus, X, Search, LayoutGrid, Check } from 'lucide-react';
 import { db } from '../api';
 import type { User, Product, OrderItem, SaleType } from '../types';
 import Modal from './Modal';
@@ -12,7 +12,7 @@ interface DirectOrderModalProps {
 }
 
 const DirectOrderModal: React.FC<DirectOrderModalProps> = ({ user, onClose, onRefresh }) => {
-    const [orderType, setOrderType] = useState<SaleType>('COUNTER');
+    const orderType: SaleType = 'COUNTER';
     const [products, setProducts] = useState<Product[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [cart, setCart] = useState<OrderItem[]>([]);
@@ -73,7 +73,7 @@ const DirectOrderModal: React.FC<DirectOrderModalProps> = ({ user, onClose, onRe
         try {
             const total = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
             const orderPayload = {
-                id: `${orderType}-${Date.now()}`,
+                id: `PED-${Date.now()}`,
                 type: orderType,
                 status: 'PENDING',
                 clientId,
@@ -119,35 +119,17 @@ const DirectOrderModal: React.FC<DirectOrderModalProps> = ({ user, onClose, onRe
                         <div className="flex items-center gap-3 mb-2">
                             <span className="px-4 py-1.5 bg-slate-900 text-white text-[10px] font-black rounded-full uppercase tracking-widest shadow-lg">Lançamento Direto</span>
                         </div>
-                        <h2 className="text-2xl font-black text-slate-900 tracking-tighter uppercase leading-none">Novo Pedido</h2>
+                        <h2 className="text-2xl font-black text-slate-900 tracking-tighter uppercase leading-none">Novo Balcão</h2>
                     </div>
                     <button onClick={onClose} className="p-3 bg-slate-100 rounded-2xl text-slate-400 active:scale-90 transition-all">
                         <X size={24} />
                     </button>
                 </header>
 
-                {/* Mode Switcher */}
-                <div className="px-8 grid grid-cols-2 gap-4 mb-6">
-                    <button
-                        onClick={() => setOrderType('COUNTER')}
-                        className={`p-4 rounded-[1.5rem] border-2 transition-all flex flex-col items-center gap-2 ${orderType === 'COUNTER' ? 'border-blue-600 bg-blue-50 text-blue-600' : 'border-slate-100 bg-slate-50 text-slate-400'}`}
-                    >
-                        <Store size={24} />
-                        <span className="text-[10px] font-black uppercase tracking-widest">Balcão</span>
-                    </button>
-                    <button
-                        onClick={() => setOrderType('OWN_DELIVERY')}
-                        className={`p-4 rounded-[1.5rem] border-2 transition-all flex flex-col items-center gap-2 ${orderType === 'OWN_DELIVERY' ? 'border-blue-600 bg-blue-50 text-blue-600' : 'border-slate-100 bg-slate-50 text-slate-400'}`}
-                    >
-                        <Bike size={24} />
-                        <span className="text-[10px] font-black uppercase tracking-widest">Delivery</span>
-                    </button>
-                </div>
-
                 {/* Subtitle/Description */}
-                <div className="px-8 mb-4">
-                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50 p-2 rounded-lg text-center">
-                        {orderType === 'COUNTER' ? 'O pedido irá direto para a COZINHA' : 'O pedido irá para PDV -> COZINHA -> LOGÍSTICA'}
+                <div className="px-8 mb-6">
+                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50 p-3 rounded-2xl text-center border border-slate-100 italic">
+                        O pedido será processado como venda direta no balcão e enviado para a cozinha.
                     </p>
                 </div>
 

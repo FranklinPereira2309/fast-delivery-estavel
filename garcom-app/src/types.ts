@@ -63,6 +63,9 @@ export interface Order {
     status: OrderStatus;
     type: SaleType;
     waiterId?: string;
+    tableNumber?: number;
     deliveryFee?: number;
+    appliedServiceFee?: number;
     paymentMethod?: string;
+    createdAt?: string;
 }

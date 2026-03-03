@@ -112,5 +112,15 @@ export const db = {
     createOrder: async (order: any) => {
         const user = db.getCurrentUser();
         return api.post('/orders', { user, order });
+    },
+
+    getOrders: async (): Promise<any[]> => {
+        const { data } = await api.get<any[]>('/orders');
+        return data;
+    },
+
+    getWaiters: async (): Promise<any[]> => {
+        const { data } = await api.get<any[]>('/waiters');
+        return data;
     }
 };
