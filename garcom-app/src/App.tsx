@@ -64,8 +64,8 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
     switch (status) {
       case 'available': return 'bg-emerald-50 text-emerald-600 border-emerald-100';
       case 'occupied': return 'bg-red-50 text-red-600 border-red-100';
-      case 'billing': return 'bg-blue-50 text-blue-600 border-blue-100';
-      case 'pending-digital': return 'bg-amber-50 text-amber-600 border-amber-100 animate-pulse-subtle';
+      case 'billing': return 'bg-orange-50 text-orange-600 border-orange-100';
+      case 'pending-digital': return 'bg-purple-50 text-purple-600 border-purple-100 animate-pulse-subtle';
       default: return 'bg-slate-50 text-slate-400 border-slate-100';
     }
   };
@@ -113,19 +113,19 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
       <div className="px-6 pt-6 flex gap-2 overflow-x-auto hide-scrollbar">
         <div className="shrink-0 px-4 py-2 bg-white rounded-xl border border-slate-100 shadow-sm flex items-center gap-2">
           <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
-          <span className="text-[10px] font-black uppercase text-slate-600">{fullTableGrid.filter(t => t.status === 'available').length} Livres</span>
+          <span className="text-[10px] font-black uppercase text-slate-600">Livre</span>
+        </div>
+        <div className="shrink-0 px-4 py-2 bg-white rounded-xl border border-slate-100 shadow-sm flex items-center gap-2">
+          <div className="w-2 h-2 rounded-full bg-purple-500"></div>
+          <span className="text-[10px] font-black uppercase text-slate-600">App Digital</span>
         </div>
         <div className="shrink-0 px-4 py-2 bg-white rounded-xl border border-slate-100 shadow-sm flex items-center gap-2">
           <div className="w-2 h-2 rounded-full bg-red-500"></div>
-          <span className="text-[10px] font-black uppercase text-slate-600">{fullTableGrid.filter(t => t.status === 'occupied').length} Ocupadas</span>
+          <span className="text-[10px] font-black uppercase text-slate-600">Ocupada</span>
         </div>
         <div className="shrink-0 px-4 py-2 bg-white rounded-xl border border-slate-100 shadow-sm flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-          <span className="text-[10px] font-black uppercase text-slate-600">{fullTableGrid.filter(t => t.status === 'billing').length} Conta</span>
-        </div>
-        <div className="shrink-0 px-4 py-2 bg-white rounded-xl border border-slate-100 shadow-sm flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-amber-500"></div>
-          <span className="text-[10px] font-black uppercase text-slate-600">{fullTableGrid.filter(t => t.hasPendingDigital).length} Digital</span>
+          <div className="w-2 h-2 rounded-full bg-orange-500"></div>
+          <span className="text-[10px] font-black uppercase text-slate-600">Checkout</span>
         </div>
       </div>
 
@@ -169,10 +169,14 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
       </main>
 
       {/* Quick Action */}
-      <footer className="p-6 pt-0 bg-slate-50/80 backdrop-blur-md sticky bottom-0">
-        <button className="w-full py-5 bg-slate-900 border-b-4 border-slate-950 text-white rounded-[2rem] font-black uppercase text-[11px] tracking-[0.2em] shadow-2xl active:translate-y-1 active:border-b-0 transition-all flex items-center justify-center gap-3">
+      <footer className="p-6 pt-0 bg-slate-50/80 backdrop-blur-md sticky bottom-0 flex gap-4">
+        <button className="flex-1 py-5 bg-slate-900 border-b-4 border-slate-950 text-white rounded-[2rem] font-black uppercase text-[11px] tracking-[0.2em] shadow-2xl active:translate-y-1 active:border-b-0 transition-all flex items-center justify-center gap-3">
           <PlusCircle size={20} />
           Lançamento Direto
+        </button>
+        <button className="flex-1 py-5 bg-slate-100 border-b-4 border-slate-200 text-slate-600 rounded-[2rem] font-black uppercase text-[11px] tracking-[0.2em] shadow-lg active:translate-y-1 active:border-b-0 transition-all flex items-center justify-center gap-3">
+          <RefreshCw size={20} />
+          Mensagens do Dia
         </button>
       </footer>
 

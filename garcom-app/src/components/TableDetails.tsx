@@ -19,6 +19,11 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, user, onClose, onRef
     const [searchTerm, setSearchTerm] = useState('');
     const [cart, setCart] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
+    const [clients, setClients] = useState<any[]>([]);
+    const [showClientSelect, setShowClientSelect] = useState(false);
+    const [clientSearch, setClientSearch] = useState('');
+
+    const isResponsible = user.permissions.includes('admin') || !table.waiterId || table.waiterId === user.id;
 
     // Modal state
     const [modal, setModal] = useState<{
@@ -43,6 +48,12 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, user, onClose, onRef
             db.getProducts().then(setProducts).catch(console.error);
         }
     }, [activeTab]);
+
+    useEffect(() => {
+        if (showClientSelect) {
+            db.getClients().then(setClients).catch(console.error);
+        }
+    }, [showClientSelect]);
 
     const addToCart = (product: Product) => {
         setCart(prev => {
@@ -97,21 +108,17 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, user, onClose, onRef
         }
     };
 
-    const handleCheckout = async () => {
-        showAlert('Confirmar Fechamento', 'Deseja solicitar o fechamento desta mesa?', 'confirm', async () => {
+    const handleCheckout = async (clientId?: string, clientName?: string) => {
+        if (!clientId && !clientName) {
+            setShowClientSelect(true);
+            return;
+        }
+
+        showAlert('Confirmar Fechamento', `Deseja solicitar o fechamento para ${clientName}?`, 'confirm', async () => {
             setLoading(true);
             try {
-                if (!table.clientId && !table.clientName) {
-                    await db.saveTableSession({
-                        tableNumber: table.tableNumber,
-                        items: table.items,
-                        status: 'occupied',
-                        clientId: 'ANONYMOUS',
-                        clientName: `Mesa ${table.tableNumber}`
-                    });
-                }
-
-                await db.requestCheckout(table.tableNumber);
+                await db.requestCheckout(table.tableNumber, clientId, clientName);
+                setShowClientSelect(false);
                 onRefresh();
                 onClose();
             } catch (e) {
@@ -229,7 +236,7 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, user, onClose, onRef
                         <h2 className="text-2xl font-black text-slate-900 tracking-tighter uppercase leading-none">Gerenciar Mesa</h2>
                     </div>
                     <div className="flex gap-2">
-                        {table.status === 'occupied' && !showTransfer && (
+                        {table.status === 'occupied' && !showTransfer && isResponsible && (
                             <button
                                 onClick={() => setShowTransfer(true)}
                                 className="p-3 bg-slate-100 text-blue-600 rounded-2xl active:scale-95 transition-all text-[10px] font-black uppercase tracking-widest flex items-center gap-2"
@@ -298,6 +305,14 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, user, onClose, onRef
 
                 {/* Content Area */}
                 <main className="flex-1 overflow-y-auto px-8 pb-32 hide-scrollbar">
+                    {!isResponsible && (
+                        <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-2xl flex items-center gap-3 animate-in fade-in zoom-in duration-300">
+                            <AlertCircle className="text-red-500" size={20} />
+                            <p className="text-[10px] font-black text-red-600 uppercase tracking-widest">
+                                Esta mesa está sob responsabilidade de outro garçom.
+                            </p>
+                        </div>
+                    )}
                     {activeTab === 'CONSUMPTION' && (
                         <div className="space-y-4">
                             {table.items.length === 0 ? (
@@ -473,9 +488,9 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, user, onClose, onRef
                                 <p className="text-3xl font-black text-slate-900 tracking-tighter">R$ {total.toFixed(2)}</p>
                             </div>
                             <button
-                                onClick={handleCheckout}
-                                disabled={table.status === 'billing' || loading}
-                                className={`px-8 py-5 rounded-[2rem] font-black uppercase text-[11px] tracking-widest transition-all active:scale-95 shadow-xl ${table.status === 'billing' ? 'bg-slate-50 text-slate-300 cursor-not-allowed border border-slate-100' : 'bg-blue-600 text-white shadow-blue-500/20 hover:bg-blue-700'}`}
+                                onClick={() => handleCheckout()}
+                                disabled={table.status === 'billing' || loading || !isResponsible}
+                                className={`px-8 py-5 rounded-[2rem] font-black uppercase text-[11px] tracking-widest transition-all active:scale-95 shadow-xl ${table.status === 'billing' || !isResponsible ? 'bg-slate-50 text-slate-300 cursor-not-allowed border border-slate-100' : 'bg-blue-600 text-white shadow-blue-500/20 hover:bg-blue-700'}`}
                             >
                                 {loading ? '...' : (table.status === 'billing' ? 'Conta Solicitada' : 'Solicitar Conta')}
                             </button>
@@ -494,6 +509,57 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, user, onClose, onRef
                     }}
                     onClose={() => setModal({ ...modal, isOpen: false })}
                 />
+
+                {/* Client Selection Modal */}
+                {showClientSelect && (
+                    <div className="fixed inset-0 z-[60] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-6 animate-in fade-in duration-300">
+                        <div className="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl p-8 animate-in zoom-in duration-300">
+                            <div className="flex justify-between items-center mb-6">
+                                <h3 className="text-xl font-black text-slate-900 uppercase tracking-tighter">Identificar Cliente</h3>
+                                <button onClick={() => setShowClientSelect(false)} className="p-2 bg-slate-50 rounded-xl text-slate-400">
+                                    <X size={20} />
+                                </button>
+                            </div>
+
+                            <div className="relative mb-6">
+                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
+                                <input
+                                    type="text"
+                                    placeholder="Buscar cliente..."
+                                    className="w-full pl-12 pr-4 py-4 bg-slate-50 border-none rounded-2xl text-sm font-bold outline-none ring-2 ring-transparent focus:ring-blue-500/10"
+                                    value={clientSearch}
+                                    onChange={(e) => setClientSearch(e.target.value)}
+                                />
+                            </div>
+
+                            <div className="max-h-60 overflow-y-auto mb-6 pr-2 space-y-2 custom-scrollbar">
+                                <button
+                                    onClick={() => handleCheckout('ANONYMOUS', `Mesa ${table.tableNumber}`)}
+                                    className="w-full p-4 bg-blue-50 border border-blue-100 rounded-xl flex items-center justify-between group hover:bg-blue-600 transition-all"
+                                >
+                                    <span className="text-xs font-black text-blue-600 uppercase tracking-widest group-hover:text-white">Consumidor Avulso</span>
+                                    <ArrowRight size={16} className="text-blue-400 group-hover:text-white" />
+                                </button>
+
+                                {clients
+                                    .filter(c => c.name.toLowerCase().includes(clientSearch.toLowerCase()))
+                                    .map(client => (
+                                        <button
+                                            key={client.id}
+                                            onClick={() => handleCheckout(client.id, client.name)}
+                                            className="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-between group hover:bg-slate-900 transition-all"
+                                        >
+                                            <div className="text-left">
+                                                <p className="text-xs font-black text-slate-700 uppercase group-hover:text-white">{client.name}</p>
+                                                <p className="text-[9px] font-bold text-slate-400 group-hover:text-slate-400/60 uppercase">{client.phone}</p>
+                                            </div>
+                                            <ArrowRight size={16} className="text-slate-300 group-hover:text-white" />
+                                        </button>
+                                    ))}
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );

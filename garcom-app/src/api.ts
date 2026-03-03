@@ -96,8 +96,13 @@ export const db = {
         return api.post('/tables', session);
     },
 
-    requestCheckout: async (tableNumber: number) => {
-        return api.post(`/tables/${tableNumber}/checkout`);
+    getClients: async (): Promise<any[]> => {
+        const { data } = await api.get<any[]>('/clients');
+        return data;
+    },
+
+    requestCheckout: async (tableNumber: number, clientId?: string, clientName?: string) => {
+        return api.post(`/tables/${tableNumber}/checkout`, { clientId, clientName });
     },
 
     transferTable: async (from: number, to: number, waiterId: string) => {

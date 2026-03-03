@@ -84,6 +84,12 @@ export const saveTableSession = async (req: Request, res: Response) => {
                 });
             }
 
+            // Regra de Negócio: Somente o garçom responsável ou se a mesa estiver livre (novo atendimento)
+            if (existingSession && existingSession.waiterId && waiterId && existingSession.waiterId !== waiterId) {
+                // Se houver troca de garçom sem ser admin, poderíamos bloquear aqui, mas deixaremos o frontend gerenciar
+                // por enquanto para evitar quebras se o admin precisar intervir.
+            }
+
             // 6. Ensure Kitchen Order exists (required for linking)
             const total = currentItems.reduce((acc: number, it: any) => acc + (it.price * it.quantity), 0);
 
@@ -401,12 +407,17 @@ export const transferTableSession = async (req: Request, res: Response) => {
 };
 export const requestCheckout = async (req: Request, res: Response) => {
     const { tableNumber } = req.params;
+    const { clientId, clientName } = req.body;
     const tableNum = parseInt(tableNumber as string);
 
     try {
         const session = await prisma.tableSession.update({
             where: { tableNumber: tableNum },
-            data: { status: 'billing' }
+            data: {
+                status: 'billing',
+                clientId: clientId === 'ANONYMOUS' ? null : clientId,
+                clientName: clientName || `Mesa ${tableNum}`
+            }
         });
 
         // Notify via sockets
