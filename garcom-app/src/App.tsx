@@ -349,12 +349,12 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
                 )}
 
                 {table.isOriginDigitalMenu ? (
-                  <div className="absolute bottom-2 sm:bottom-3 px-2 py-1 bg-fuchsia-600 rounded-full w-[85%] flex justify-center items-center shadow-sm">
-                    <p className="text-[8px] sm:text-[9px] font-black text-white uppercase tracking-widest truncate leading-none pt-[1px]">App Digital</p>
+                  <div className="absolute bottom-2 sm:bottom-3 px-3 py-1 bg-fuchsia-600 rounded-full w-fit max-w-[90%] flex justify-center items-center shadow-sm mx-auto">
+                    <p className="text-[8.5px] font-black text-white uppercase tracking-widest truncate leading-none pt-[1px]">App Digital</p>
                   </div>
                 ) : (table.status === 'occupied' || table.status === 'billing') ? (
-                  <div className="absolute bottom-2 sm:bottom-3 px-3 py-1 bg-slate-900/5 rounded-full w-[85%] flex justify-center items-center">
-                    <p className="text-[8px] font-black text-slate-500 uppercase truncate leading-none pt-[1px]">Em Uso</p>
+                  <div className="absolute bottom-2 sm:bottom-3 px-3 py-1 bg-slate-900/5 rounded-full w-fit max-w-[90%] flex justify-center items-center mx-auto">
+                    <p className="text-[8.5px] font-black text-slate-500 uppercase truncate leading-none pt-[1px]">Em Uso</p>
                   </div>
                 ) : null}
               </button>
