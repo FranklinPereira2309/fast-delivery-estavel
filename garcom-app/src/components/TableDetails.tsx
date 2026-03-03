@@ -100,7 +100,7 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, user, onClose, onRef
 
         setLoading(true);
         try {
-            await db.transferTable(table.tableNumber, Number(transferTarget), user.id);
+            await db.transferTable(table.tableNumber, Number(transferTarget), user.waiterId || user.id);
             showAlert('Sucesso', 'Mesa transferida com sucesso!', 'success', () => {
                 onRefresh();
                 onClose();
@@ -148,7 +148,7 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, user, onClose, onRef
                 status: 'occupied',
                 clientId: table.clientId || 'ANONYMOUS',
                 clientName: table.clientName || `Mesa ${table.tableNumber}`,
-                waiterId: user.id
+                waiterId: user.waiterId || user.id
             });
             setCart([]);
             onRefresh();

@@ -37,7 +37,7 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
     try {
       const orders = await db.getOrders();
       // Filter by current waiter
-      const userOrders = orders.filter(o => o.waiterId === user.id);
+      const userOrders = orders.filter(o => o.waiterId === (user.waiterId || user.id));
       setRecentOrders(userOrders);
     } catch (e) {
       console.error(e);

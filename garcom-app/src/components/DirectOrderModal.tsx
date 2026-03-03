@@ -79,7 +79,7 @@ const DirectOrderModal: React.FC<DirectOrderModalProps> = ({ user, onClose, onRe
                 status: 'PENDING',
                 clientId,
                 clientName,
-                waiterId: user.id,
+                waiterId: user.waiterId || user.id,
                 total,
                 items: cart.map(item => ({
                     uid: item.uid,
