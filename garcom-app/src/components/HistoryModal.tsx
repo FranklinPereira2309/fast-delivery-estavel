@@ -28,7 +28,11 @@ const HistoryModal: React.FC<HistoryModalProps> = ({ user, onClose }) => {
                     if (match) targetId = match.id;
                 }
 
-                const filtered = allOrders.filter((o: Order) => o.waiterId === targetId || o.waiterId === user.id);
+                const filtered = allOrders.filter((o: Order) =>
+                    o.waiterId === targetId ||
+                    o.waiterId === user.id ||
+                    o.waiter?.email?.toLowerCase() === user.email.toLowerCase()
+                );
                 setOrders(filtered);
             } catch (err) {
                 console.error('Error fetching orders for history:', err);

@@ -330,12 +330,15 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
                 const feePercentage = settings?.serviceFeePercentage || 10;
                 const isFeeActive = settings?.serviceFeeStatus !== false;
                 const currentWaiterId = resolvedWaiterId || user.waiterId || user.id;
-                const isMyWaiter = (wid: string | null | undefined) => wid === currentWaiterId || wid === user.id;
+                const isMyWaiter = (wid: string | null | undefined, wOrig?: any) =>
+                  wid === currentWaiterId ||
+                  wid === user.id ||
+                  wOrig?.email?.toLowerCase() === user.email.toLowerCase();
 
                 // 1. Commission from finalized orders
                 const myOrders = recentOrders.filter(o => {
                   const isToday = new Date(o.createdAt || 0).toDateString() === today;
-                  const isMyOrder = isMyWaiter(o.waiterId);
+                  const isMyOrder = isMyWaiter(o.waiterId, o.waiter);
                   return isToday && isMyOrder;
                 });
 
