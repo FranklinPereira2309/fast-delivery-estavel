@@ -400,3 +400,26 @@ export const transferTableSession = async (req: Request, res: Response) => {
         res.status(500).json({ error: error.message });
     }
 };
+export const requestCheckout = async (req: Request, res: Response) => {
+    const { tableNumber } = req.params;
+    const tableNum = parseInt(tableNumber as string);
+
+    try {
+        const session = await prisma.tableSession.update({
+            where: { tableNumber: tableNum },
+            data: { status: 'billing' }
+        });
+
+        // Notify via sockets
+        getIO().emit('tableStatusChanged', {
+            tableNumber: tableNum,
+            status: 'billing',
+            action: 'refresh'
+        });
+
+        res.json({ message: `Pedido de fechamento da mesa ${tableNum} enviado`, session });
+    } catch (error: any) {
+        console.error('Error requesting checkout:', error);
+        res.status(500).json({ error: error.message });
+    }
+};
