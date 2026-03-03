@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Minus, Plus, X, Search, LayoutGrid, Check } from 'lucide-react';
 import { db } from '../api';
-import type { User, Product, OrderItem, SaleType } from '../types';
+import type { User, Product, OrderItem, SaleType, StoreStatus } from '../types';
 import Modal from './Modal';
 import ClientSelector from './ClientSelector';
 
@@ -9,9 +9,10 @@ interface DirectOrderModalProps {
     user: User;
     onClose: () => void;
     onRefresh: () => void;
+    storeStatus?: StoreStatus;
 }
 
-const DirectOrderModal: React.FC<DirectOrderModalProps> = ({ user, onClose, onRefresh }) => {
+const DirectOrderModal: React.FC<DirectOrderModalProps> = ({ user, onClose, onRefresh, storeStatus }) => {
     const orderType: SaleType = 'COUNTER';
     const [products, setProducts] = useState<Product[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
@@ -211,12 +212,15 @@ const DirectOrderModal: React.FC<DirectOrderModalProps> = ({ user, onClose, onRe
                         <p className="text-xl font-black text-blue-600 tracking-tighter">R$ {cartTotal.toFixed(2)}</p>
                     </div>
                     <button
-                        onClick={handleConfirmOrder}
-                        disabled={cart.length === 0 || loading}
-                        className="w-full py-5 bg-slate-900 text-white rounded-[2rem] font-black uppercase text-[11px] tracking-[0.2em] shadow-2xl active:scale-[0.98] transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+                        onClick={() => {
+                            if (storeStatus?.status === 'offline') return;
+                            handleConfirmOrder();
+                        }}
+                        disabled={cart.length === 0 || loading || storeStatus?.status === 'offline'}
+                        className={`w-full py-5 bg-slate-900 text-white rounded-[2rem] font-black uppercase text-[11px] tracking-[0.2em] shadow-2xl active:scale-[0.98] transition-all flex items-center justify-center gap-3 disabled:opacity-50 ${storeStatus?.status === 'offline' ? 'grayscale opacity-50 cursor-not-allowed' : ''}`}
                     >
                         <Check size={20} />
-                        {loading ? 'Processando...' : 'Confirmar e Identificar'}
+                        {loading ? 'Processando...' : (storeStatus?.status === 'offline' ? 'Loja Offline' : 'Confirmar e Identificar')}
                     </button>
                 </div>
 

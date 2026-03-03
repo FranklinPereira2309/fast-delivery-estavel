@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import Login from './components/Login';
 import TableDetails from './components/TableDetails';
 import DirectOrderModal from './components/DirectOrderModal';
-import type { User, TableSession } from './types';
+import type { User, TableSession, StoreStatus, Order } from './types';
 import { db, socket } from './api';
-import { LogOut, LayoutGrid, RefreshCw, PlusCircle, MessageSquare, History, TrendingUp } from 'lucide-react';
+import { LogOut, LayoutGrid, RefreshCw, PlusCircle, MessageSquare, History, AlertCircle } from 'lucide-react';
 import Modal from './components/Modal';
 import HistoryModal from './components/HistoryModal';
 
@@ -16,6 +16,29 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
   const [showDirectOrder, setShowDirectOrder] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [storeStatus, setStoreStatus] = useState<StoreStatus>({ status: 'online', is_manually_closed: false, next_status_change: null });
+  const [minutesToClose, setMinutesToClose] = useState<number | null>(null);
+  const [recentOrders, setRecentOrders] = useState<Order[]>([]);
+
+  const fetchStatus = async () => {
+    try {
+      const status = await db.getStoreStatus();
+      setStoreStatus(status);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const fetchOrders = async () => {
+    try {
+      const orders = await db.getOrders();
+      // Filter by current waiter
+      const userOrders = orders.filter(o => o.waiterId === user.id);
+      setRecentOrders(userOrders);
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   const fetchData = async () => {
     setLoading(true);
@@ -53,17 +76,44 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
 
   useEffect(() => {
     fetchData();
+    fetchStatus();
+    fetchOrders();
 
     socket.on('tableStatusChanged', fetchData);
-    socket.on('newOrder', fetchData);
+    socket.on('newOrder', () => {
+      fetchData();
+      fetchOrders();
+    });
     socket.on('orderStatusUpdated', fetchData);
+    socket.on('store_status_changed', (status: StoreStatus) => setStoreStatus(status));
+
+    const interval = setInterval(() => {
+      fetchStatus();
+    }, 30000);
 
     return () => {
       socket.off('tableStatusChanged');
       socket.off('newOrder');
       socket.off('orderStatusUpdated');
+      socket.off('store_status_changed');
+      clearInterval(interval);
     };
   }, []); // FIX: Removed selectedTable dependency to avoid infinite loop
+
+  useEffect(() => {
+    if (storeStatus.status === 'online' && storeStatus.next_status_change) {
+      const checkTime = () => {
+        const diffMs = new Date(storeStatus.next_status_change!).getTime() - new Date().getTime();
+        const diffMins = Math.floor(diffMs / 60000);
+        setMinutesToClose(diffMins > 0 && diffMins <= 30 ? diffMins : null);
+      };
+      checkTime();
+      const interval = setInterval(checkTime, 60000);
+      return () => clearInterval(interval);
+    } else {
+      setMinutesToClose(null);
+    }
+  }, [storeStatus]);
 
   const getStatusStyle = (status: TableSession['status']) => {
     switch (status) {
@@ -97,14 +147,17 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
             <img src="/favicon.png" alt="Logo" className="w-full h-full object-cover" />
           </div>
           <div>
-            <h1 className="text-sm font-black text-slate-900 uppercase tracking-tighter">App Garçom</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-sm font-black text-slate-900 uppercase tracking-tighter">App Garçom</h1>
+              <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full ${storeStatus.status === 'online' ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
+                <div className={`w-1.5 h-1.5 rounded-full ${storeStatus.status === 'online' ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`}></div>
+                <span className="text-[8px] font-black uppercase tracking-widest">{storeStatus.status === 'online' ? 'Online' : 'Offline'}</span>
+              </div>
+            </div>
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{user.name.split(' ')[0]} • DF Service</p>
           </div>
         </div>
         <div className="flex gap-2">
-          <button onClick={() => setShowHistory(true)} className="p-3 bg-blue-50 border border-blue-100 rounded-2xl text-blue-600 hover:bg-blue-100 transition-colors active:scale-90">
-            <TrendingUp size={18} />
-          </button>
           <button onClick={() => {/* Handle messages */ }} className="p-3 bg-slate-50 border border-slate-100 rounded-2xl text-slate-400 hover:text-blue-600 transition-colors active:scale-90">
             <MessageSquare size={18} />
           </button>
@@ -119,6 +172,17 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
           </button>
         </div>
       </header>
+
+      {/* Store Status Banner */}
+      {(storeStatus.status === 'offline' || minutesToClose !== null) && (
+        <div className={`px-6 py-3 border-b text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 animate-in slide-in-from-top duration-300 ${storeStatus.status === 'offline' ? 'bg-red-600 text-white border-red-700' : 'bg-orange-500 text-white border-orange-600'}`}>
+          <AlertCircle size={14} />
+          {storeStatus.status === 'offline'
+            ? (storeStatus.is_manually_closed ? 'Loja Fechada Temporariamente' : 'Loja Fora do Horário de Funcionamento')
+            : `Atenção: A loja fechará em ${minutesToClose} minutos!`
+          }
+        </div>
+      )}
 
       {/* Stats / Filter Bar */}
       <div className="px-6 pt-6 flex gap-2 overflow-x-auto hide-scrollbar">
@@ -152,8 +216,13 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
             {fullTableGrid.map(table => (
               <button
                 key={table.tableNumber}
-                onClick={() => setSelectedTable(table as any)}
-                className={`aspect-[4/3] flex flex-col items-center justify-center rounded-[2.5rem] border-2 transition-all active:scale-95 shadow-sm relative group bg-white ${getStatusStyle(table.status)}`}
+                onClick={() => {
+                  if (storeStatus.status === 'offline' && table.status === 'available') {
+                    return; // Prevent opening new tables if offline
+                  }
+                  setSelectedTable(table as any);
+                }}
+                className={`aspect-[4/3] flex flex-col items-center justify-center rounded-[2.5rem] border-2 transition-all active:scale-95 shadow-sm relative group bg-white ${getStatusStyle(table.status)} ${storeStatus.status === 'offline' && table.status === 'available' ? 'grayscale opacity-50 cursor-not-allowed' : ''}`}
               >
                 <span className="text-4xl font-black italic tracking-tighter mb-1">{table.tableNumber}</span>
                 <div className="flex flex-col items-center">
@@ -183,14 +252,39 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
       <footer className="p-6 pt-0 bg-slate-50/80 backdrop-blur-md sticky bottom-0 flex gap-3">
         <button
           onClick={() => setShowHistory(true)}
-          className="flex-1 py-5 bg-white border border-slate-200 text-slate-900 rounded-[2rem] font-black uppercase text-[10px] tracking-[0.1em] shadow-sm active:translate-y-0.5 transition-all flex items-center justify-center gap-2"
+          className="flex-1 py-5 bg-white border border-slate-200 text-slate-900 rounded-[2rem] font-black uppercase text-[10px] tracking-[0.1em] shadow-sm active:translate-y-0.5 transition-all flex items-center justify-center gap-3"
         >
-          <History size={18} />
-          Atendimentos
+          <div className="flex flex-col items-start leading-none gap-1">
+            <div className="flex items-center gap-1.5">
+              <History size={14} className="text-slate-400" />
+              <span>Atendimentos</span>
+            </div>
+            {/* Mini Gráfico de Desempenho (Sparkline) */}
+            <div className="flex items-center gap-2">
+              <svg width="40" height="12" className="text-blue-500">
+                <path
+                  d={`M 0 10 ${recentOrders.slice(-5).map((o, i) => `L ${(i + 1) * 8} ${10 - Math.min((o.appliedServiceFee || 0) * 0.5, 10)}`).join(' ')}`}
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              <span className="text-[8px] text-blue-600 italic">R$ {recentOrders.filter(o => {
+                const today = new Date().toDateString();
+                return new Date(o.createdAt || 0).toDateString() === today;
+              }).reduce((sum, o) => sum + (o.appliedServiceFee || 0), 0).toFixed(2)}</span>
+            </div>
+          </div>
         </button>
         <button
-          onClick={() => setShowDirectOrder(true)}
-          className="flex-1 py-5 bg-slate-900 border-b-4 border-slate-950 text-white rounded-[2rem] font-black uppercase text-[10px] tracking-[0.1em] shadow-2xl active:translate-y-1 active:border-b-0 transition-all flex items-center justify-center gap-2"
+          onClick={() => {
+            if (storeStatus.status === 'offline') return;
+            setShowDirectOrder(true);
+          }}
+          disabled={storeStatus.status === 'offline'}
+          className={`flex-1 py-5 bg-slate-900 border-b-4 border-slate-950 text-white rounded-[2rem] font-black uppercase text-[10px] tracking-[0.1em] shadow-2xl active:translate-y-1 active:border-b-0 transition-all flex items-center justify-center gap-2 ${storeStatus.status === 'offline' ? 'grayscale opacity-50 cursor-not-allowed' : ''}`}
         >
           <PlusCircle size={18} />
           Pedido Balcão
@@ -203,6 +297,7 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
           user={user}
           onClose={() => setSelectedTable(null)}
           onRefresh={fetchData}
+          storeStatus={storeStatus}
         />
       )}
 
@@ -211,6 +306,7 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
           user={user}
           onClose={() => setShowDirectOrder(false)}
           onRefresh={fetchData}
+          storeStatus={storeStatus}
         />
       )}
 

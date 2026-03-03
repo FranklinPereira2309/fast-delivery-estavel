@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import type { TableSession, Product, User, OrderItem } from '../types';
+import type { TableSession, Product, User, OrderItem, StoreStatus } from '../types';
 import { db } from '../api';
 import { X, Search, ShoppingCart, CheckCircle2, AlertCircle, Trash2, Plus, Minus, ArrowRight, LayoutGrid, RefreshCw } from 'lucide-react';
 import Modal from './Modal';
@@ -10,9 +10,10 @@ interface TableDetailsProps {
     user: User;
     onClose: () => void;
     onRefresh: () => void;
+    storeStatus?: StoreStatus;
 }
 
-const TableDetails: React.FC<TableDetailsProps> = ({ table, user, onClose, onRefresh }) => {
+const TableDetails: React.FC<TableDetailsProps> = ({ table, user, onClose, onRefresh, storeStatus }) => {
     const [activeTab, setActiveTab] = useState<'CONSUMPTION' | 'LAUNCH' | 'REVIEW'>(
         table.hasPendingDigital ? 'REVIEW' : 'CONSUMPTION'
     );
@@ -280,8 +281,12 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, user, onClose, onRef
                         Consumo
                     </button>
                     <button
-                        onClick={() => setActiveTab('LAUNCH')}
-                        className={`shrink-0 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'LAUNCH' ? 'bg-slate-900 text-white shadow-lg' : 'bg-slate-50 text-slate-400 border border-slate-100'}`}
+                        onClick={() => {
+                            if (storeStatus?.status === 'offline') return;
+                            setActiveTab('LAUNCH');
+                        }}
+                        disabled={storeStatus?.status === 'offline'}
+                        className={`shrink-0 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'LAUNCH' ? 'bg-slate-900 text-white shadow-lg' : (storeStatus?.status === 'offline' ? 'bg-slate-50 text-slate-200' : 'bg-slate-50 text-slate-400 border border-slate-100')}`}
                     >
                         Lançar
                     </button>
@@ -439,7 +444,8 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, user, onClose, onRef
                                 </button>
                                 <button
                                     onClick={handleApproveDigital}
-                                    className="py-5 bg-emerald-600 text-white rounded-[2rem] font-black uppercase text-[11px] tracking-widest shadow-xl shadow-emerald-500/30 active:scale-95 transition-all flex items-center justify-center gap-2"
+                                    disabled={loading || storeStatus?.status === 'offline'}
+                                    className={`py-5 bg-emerald-600 text-white rounded-[2rem] font-black uppercase text-[11px] tracking-widest shadow-xl shadow-emerald-500/30 active:scale-95 transition-all flex items-center justify-center gap-2 ${storeStatus?.status === 'offline' ? 'grayscale opacity-50 cursor-not-allowed' : ''}`}
                                 >
                                     <CheckCircle2 size={18} />
                                     Aceitar Tudo

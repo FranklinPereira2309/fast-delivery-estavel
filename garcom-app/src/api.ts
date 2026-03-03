@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { io } from 'socket.io-client';
-import type { User, TableSession, Product, BusinessSettings } from './types';
+import type { User, TableSession, Product, BusinessSettings, StoreStatus } from './types';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 const AUTH_KEY = 'delivery_fast_garcom_auth';
@@ -122,5 +122,15 @@ export const db = {
     getWaiters: async (): Promise<any[]> => {
         const { data } = await api.get<any[]>('/waiters');
         return data;
+    },
+
+    getStoreStatus: async (): Promise<StoreStatus> => {
+        try {
+            const { data } = await api.get<StoreStatus>('/public/store-status');
+            return data;
+        } catch (error) {
+            console.error('Error fetching store status', error);
+            return { status: 'online', is_manually_closed: false, next_status_change: null };
+        }
     }
 };
