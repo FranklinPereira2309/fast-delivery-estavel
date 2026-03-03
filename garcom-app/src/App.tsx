@@ -336,10 +336,15 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
                 className={`aspect-[4/3] flex flex-col items-center justify-center rounded-[2.5rem] border-2 transition-all active:scale-95 shadow-sm relative group bg-white ${getStatusStyle(table.status)} ${storeStatus.status === 'offline' && table.status === 'available' ? 'grayscale opacity-50 cursor-not-allowed' : ''}`}
               >
                 <span className="text-4xl font-black italic tracking-tighter mb-1">{table.tableNumber}</span>
-                <div className="flex flex-col items-center">
+                <div className="flex flex-col items-center gap-1 mt-1">
                   <span className="text-[9px] font-black uppercase tracking-widest opacity-80">
                     {table.status === 'available' ? 'Livre' : table.status === 'occupied' ? 'Em Uso' : table.status === 'billing' ? 'Conta' : 'Pedido'}
                   </span>
+                  {table.isOriginDigitalMenu && (
+                    <span className="bg-fuchsia-600 text-white text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest shadow-sm">
+                      App Digital
+                    </span>
+                  )}
                 </div>
 
                 {table.hasPendingDigital && (

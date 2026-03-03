@@ -293,6 +293,7 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, user, onClose, onRef
                     <div>
                         <div className="flex items-center gap-3 mb-2">
                             <span className="px-4 py-1.5 bg-blue-600 text-white text-[10px] font-black rounded-full uppercase tracking-widest shadow-lg shadow-blue-500/30">Mesa {table.tableNumber}</span>
+                            {table.isOriginDigitalMenu && <span className="px-4 py-1.5 bg-fuchsia-600 text-white text-[10px] font-black rounded-full uppercase tracking-widest">App Digital</span>}
                             {table.status === 'billing' && <span className="px-4 py-1.5 bg-amber-500 text-white text-[10px] font-black rounded-full uppercase tracking-widest">Aguardando Pagamento</span>}
                         </div>
                         <h2 className="text-2xl font-black text-slate-900 tracking-tighter uppercase leading-none">Gerenciar Mesa</h2>
@@ -404,8 +405,8 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, user, onClose, onRef
                                                             <span className="text-[9px] font-black uppercase tracking-widest">Pronto</span>
                                                         </div>
                                                     ) : (
-                                                        <div className="px-2 py-0.5 bg-amber-50 text-amber-600 rounded-md flex items-center gap-1">
-                                                            <RefreshCw size={10} className="animate-spin" />
+                                                        <div className="px-2 py-0.5 bg-orange-50 text-orange-500 rounded-md flex items-center gap-1">
+                                                            <RefreshCw size={10} />
                                                             <span className="text-[9px] font-black uppercase tracking-widest">Preparando</span>
                                                         </div>
                                                     )}

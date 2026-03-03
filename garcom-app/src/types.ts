@@ -53,6 +53,7 @@ export interface TableSession {
     startTime: string;
     hasPendingDigital?: boolean;
     pendingReviewItems?: string;
+    isOriginDigitalMenu?: boolean;
 }
 
 export interface BusinessSettings {
