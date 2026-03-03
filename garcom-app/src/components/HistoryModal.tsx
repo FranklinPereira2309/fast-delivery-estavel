@@ -18,14 +18,9 @@ const HistoryModal: React.FC<HistoryModalProps> = ({ user, onClose }) => {
     useEffect(() => {
         const fetchOrders = async () => {
             try {
-                // Resolve true Waiter.id from the user email
-                const waiters = await db.getWaiters();
-                const trueWaiter = waiters.find((w: any) => w.email?.toLowerCase() === user.email.toLowerCase());
-                const resolvedId = trueWaiter ? trueWaiter.id : user.id;
-
                 const allOrders = await db.getOrders();
-                // Filter orders by waiterId.
-                const filtered = allOrders.filter(o => o.waiterId === resolvedId || o.waiterId === user.id);
+                const isMyWaiter = (wid: string | null | undefined) => wid === user.waiterId || wid === user.id;
+                const filtered = allOrders.filter((o: Order) => isMyWaiter(o.waiterId));
                 setOrders(filtered);
             } catch (err) {
                 console.error('Error fetching orders for history:', err);

@@ -37,7 +37,7 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
     try {
       const orders = await db.getOrders();
       // Filter by current waiter
-      const userOrders = orders.filter(o => o.waiterId === (user.waiterId || user.id));
+      const userOrders = orders.filter(o => o.waiterId === user.waiterId || o.waiterId === user.id);
       setRecentOrders(userOrders);
     } catch (e) {
       console.error(e);
@@ -288,32 +288,32 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
       </main>
 
       {/* Quick Action */}
-      <footer className="p-4 bg-slate-50/80 backdrop-blur-md sticky bottom-0 flex gap-3">
+      <footer className="p-3 sm:p-4 bg-slate-50/80 backdrop-blur-md sticky bottom-0 flex gap-2 sm:gap-3">
         <button
           onClick={() => setShowHistory(true)}
-          className="flex-1 py-4 px-3 bg-white border border-slate-200 text-slate-900 rounded-3xl shadow-[0_4px_12px_rgba(0,0,0,0.05)] active:translate-y-0.5 transition-all flex items-center justify-between gap-2 overflow-hidden"
+          className="flex-1 py-3.5 sm:py-4 px-2 sm:px-3 bg-white border border-slate-200 text-slate-900 rounded-3xl shadow-[0_4px_12px_rgba(0,0,0,0.05)] active:translate-y-0.5 transition-all flex items-center justify-between gap-1 sm:gap-2 overflow-hidden"
         >
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 shrink-0 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 shrink-0 bg-blue-50 rounded-lg sm:rounded-xl flex items-center justify-center text-blue-600">
               <History size={16} />
             </div>
             <div className="flex flex-col items-start leading-tight">
-              <span className="text-[9px] font-black text-slate-400 tracking-widest uppercase">Produção</span>
+              <span className="text-[8px] sm:text-[9px] font-black text-slate-400 tracking-widest uppercase">Produção</span>
               <span className="text-[11px] sm:text-xs font-black text-slate-900 uppercase">Hoje</span>
             </div>
           </div>
-          <div className="bg-blue-600 text-white px-3 py-1.5 rounded-xl shadow-md shrink-0">
-            <span className="text-sm font-black tracking-tighter">
+          <div className="bg-blue-600 text-white px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg sm:rounded-xl shadow-md shrink-0">
+            <span className="text-xs sm:text-sm font-black tracking-tighter">
               R$ {(() => {
                 const today = new Date().toDateString();
                 const feePercentage = settings?.serviceFeePercentage || 10;
                 const isFeeActive = settings?.serviceFeeStatus !== false;
-                const waiterId = user.waiterId || user.id;
+                const isMyWaiter = (wid: string | null | undefined) => wid === user.waiterId || wid === user.id;
 
                 // 1. Commission from finalized orders
                 const myOrders = recentOrders.filter(o => {
                   const isToday = new Date(o.createdAt || 0).toDateString() === today;
-                  const isMyOrder = o.waiterId === waiterId;
+                  const isMyOrder = isMyWaiter(o.waiterId);
                   return isToday && isMyOrder;
                 });
 
@@ -329,7 +329,7 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
 
                 // 2. Commission from active tables (real-time)
                 const myActiveTables = tables.filter(t => {
-                  const isMyTable = t.waiterId === waiterId || (t.waiter && t.waiter.id === waiterId);
+                  const isMyTable = isMyWaiter(t.waiterId) || (t.waiter && isMyWaiter(t.waiter.id));
                   return t.status !== 'available' && isMyTable;
                 });
 
@@ -351,10 +351,10 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
             setShowDirectOrder(true);
           }}
           disabled={storeStatus.status === 'offline'}
-          className={`flex-1 py-4 bg-slate-900 border-b-4 border-slate-950 text-white rounded-3xl shadow-lg active:translate-y-1 active:border-b-0 transition-all flex items-center justify-center gap-2 ${storeStatus.status === 'offline' ? 'grayscale opacity-50 cursor-not-allowed' : ''}`}
+          className={`flex-1 py-3.5 sm:py-4 bg-slate-900 border-b-4 border-slate-950 text-white rounded-3xl shadow-lg active:translate-y-1 active:border-b-0 transition-all flex items-center justify-center gap-1 sm:gap-2 ${storeStatus.status === 'offline' ? 'grayscale opacity-50 cursor-not-allowed' : ''}`}
         >
           <PlusCircle size={18} />
-          <span className="text-[11px] font-black uppercase tracking-[0.1em]">Pedido Balcão</span>
+          <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-[0.05em] sm:tracking-[0.1em]">Pedido Balcão</span>
         </button>
       </footer>
 
