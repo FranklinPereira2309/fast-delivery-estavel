@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { TableSession, Product, User, OrderItem, StoreStatus } from '../types';
 import { db } from '../api';
-import { X, Search, ShoppingCart, CheckCircle2, AlertCircle, Trash2, Plus, Minus, ArrowRight, LayoutGrid, RefreshCw } from 'lucide-react';
+import { X, Search, ShoppingCart, CheckCircle2, AlertCircle, Trash2, Plus, Minus, ArrowRight, LayoutGrid, RefreshCw, MessageSquare } from 'lucide-react';
 import Modal from './Modal';
 import ClientSelector from './ClientSelector';
 
@@ -371,20 +371,38 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, user, onClose, onRef
                                 </div>
                             ) : (
                                 table.items.map((item: any, ix: number) => (
-                                    <div key={ix} className="premium-card p-5 flex justify-between items-center group">
-                                        <div>
-                                            <p className="text-sm font-black text-slate-800 uppercase tracking-tight">{item.quantity}x {item.productName || item.product?.name || 'Item'}</p>
-                                            <div className="flex items-center gap-2 mt-1">
-                                                {item.isReady ? (
-                                                    <span className="text-[9px] font-black text-emerald-500 uppercase flex items-center gap-1"><CheckCircle2 size={10} /> Pronto</span>
-                                                ) : (
-                                                    <span className="text-[9px] font-black text-amber-500 uppercase flex items-center gap-1"><RefreshCw size={10} className="animate-spin" /> Preparando</span>
-                                                )}
-                                                {item.observations && <span className="text-[9px] font-bold text-slate-400 truncate max-w-[150px]">| {item.observations}</span>}
+                                    <div key={ix} className="premium-card p-5 border-l-4 transition-all duration-300 group hover:translate-x-1" style={{ borderLeftColor: item.isReady ? '#10b981' : '#f59e0b' }}>
+                                        <div className="flex justify-between items-start gap-4">
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-sm font-black text-slate-800 uppercase tracking-tight leading-tight mb-0.5 break-words">
+                                                    {item.quantity}x {item.productName || item.product?.name || 'Item'}
+                                                </p>
+
+                                                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5">
+                                                    {item.isReady ? (
+                                                        <div className="px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-md flex items-center gap-1">
+                                                            <CheckCircle2 size={10} />
+                                                            <span className="text-[9px] font-black uppercase tracking-widest">Pronto</span>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="px-2 py-0.5 bg-amber-50 text-amber-600 rounded-md flex items-center gap-1">
+                                                            <RefreshCw size={10} className="animate-spin" />
+                                                            <span className="text-[9px] font-black uppercase tracking-widest">Preparando</span>
+                                                        </div>
+                                                    )}
+
+                                                    {item.observations && (
+                                                        <div className="px-2 py-0.5 bg-slate-100 text-slate-500 rounded-md flex items-center gap-1.5 border border-slate-200/50">
+                                                            <MessageSquare size={10} className="shrink-0" />
+                                                            <span className="text-[9px] font-bold italic truncate max-w-[180px]">{item.observations}</span>
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
-                                        </div>
-                                        <div className="text-right">
-                                            <p className="text-sm font-black text-slate-900 tracking-tighter">R$ {(item.price * item.quantity).toFixed(2)}</p>
+                                            <div className="text-right shrink-0">
+                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.1em] leading-none mb-1">Total</p>
+                                                <p className="text-sm font-black text-slate-900 tracking-tighter">R$ {(item.price * item.quantity).toFixed(2)}</p>
+                                            </div>
                                         </div>
                                     </div>
                                 ))

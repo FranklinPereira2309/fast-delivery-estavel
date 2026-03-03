@@ -9,6 +9,7 @@ const mapSessionResponse = (session: any) => {
         items: (session.items || []).map((item: any) => ({
             ...item,
             uid: item.id, // Ensure frontend gets 'uid'
+            productName: item.product?.name || null,
             observations: item.observations || null
         }))
     };
@@ -16,7 +17,10 @@ const mapSessionResponse = (session: any) => {
 
 export const getTableSessions = async (req: Request, res: Response) => {
     const sessions = await prisma.tableSession.findMany({
-        include: { items: true, waiter: true }
+        include: {
+            items: { include: { product: true } },
+            waiter: true
+        }
     });
     res.json(sessions.map(mapSessionResponse));
 };
@@ -45,7 +49,10 @@ export const saveTableSession = async (req: Request, res: Response) => {
             // 1. Get existing session to check for new items (for stock deduction)
             const existingSession = await tx.tableSession.findUnique({
                 where: { tableNumber: tableNum },
-                include: { items: true, waiter: true }
+                include: {
+                    items: { include: { product: true } },
+                    waiter: true
+                }
             });
 
             // 2. Identify new items (items that don't exist in DB yet)
@@ -216,7 +223,9 @@ export const saveTableSession = async (req: Request, res: Response) => {
                         }))
                     }
                 },
-                include: { items: true }
+                include: {
+                    items: { include: { product: true } }
+                }
             });
 
             return session;
@@ -350,7 +359,9 @@ export const transferTableSession = async (req: Request, res: Response) => {
         await prisma.$transaction(async (tx) => {
             const sourceSession = await tx.tableSession.findUnique({
                 where: { tableNumber: fromTable },
-                include: { items: true }
+                include: {
+                    items: { include: { product: true } }
+                }
             });
 
             if (!sourceSession) {
