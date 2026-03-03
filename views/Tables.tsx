@@ -316,7 +316,7 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
     const sess = getSessForTable(tableNum);
     if (!sess || !sess.hasPendingDigital) return;
 
-    showAlert("Rejeitar Pedido", "Deseja realmente excluir este pedido do cardápio digital?", "DANGER", async () => {
+    showAlert("Rejeitar Pedido", "Deseja rejeitar estes itens? O cliente será notificado", "DANGER", async () => {
       try {
         if (sess.items.length === 0) {
           // Se não há outros itens, exclui a sessão da mesa e ela volta a ficar livre

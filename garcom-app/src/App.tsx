@@ -268,27 +268,27 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
           onClick={() => setShowHistory(true)}
           className="flex-1 py-5 bg-white border border-slate-200 text-slate-900 rounded-[2rem] font-black uppercase text-[10px] tracking-[0.1em] shadow-sm active:translate-y-0.5 transition-all flex items-center justify-center gap-3"
         >
-          <div className="flex flex-col items-start leading-none gap-1">
-            <div className="flex items-center gap-1.5">
-              <History size={14} className="text-slate-400" />
-              <span>Atendimentos</span>
+          <div className="flex justify-between items-center w-full px-1">
+            <div className="flex flex-col items-start leading-none gap-1">
+              <div className="flex items-center gap-1.5">
+                <History size={14} className="text-slate-400" />
+                <span className="text-[10px] font-black uppercase text-slate-800">Atendimentos</span>
+              </div>
+              <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Sua Comissão Hoje</p>
             </div>
-            {/* Mini Gráfico de Desempenho (Sparkline) */}
-            <div className="flex items-center gap-2">
-              <svg width="40" height="12" className="text-blue-500">
-                <path
-                  d={`M 0 10 ${recentOrders.slice(-5).map((o, i) => `L ${(i + 1) * 8} ${10 - Math.min((o.appliedServiceFee || 0) * 0.5, 10)}`).join(' ')}`}
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-              <span className="text-[8px] text-blue-600 italic">R$ {recentOrders.filter(o => {
-                const today = new Date().toDateString();
-                return new Date(o.createdAt || 0).toDateString() === today;
-              }).reduce((sum, o) => sum + (o.appliedServiceFee || 0), 0).toFixed(2)}</span>
+            <div className="flex flex-col items-end">
+              <span className="text-sm font-black text-blue-600 tracking-tighter">
+                R$ {recentOrders.filter(o => {
+                  const today = new Date().toDateString();
+                  return new Date(o.createdAt || 0).toDateString() === today;
+                }).reduce((sum, o) => sum + (o.appliedServiceFee || 0), 0).toFixed(2)}
+              </span>
+              <div className="w-12 h-1 bg-slate-100 rounded-full mt-1 overflow-hidden">
+                <div
+                  className="h-full bg-blue-500 transition-all duration-1000"
+                  style={{ width: `${Math.min((recentOrders.filter(o => new Date(o.createdAt || 0).toDateString() === new Date().toDateString()).reduce((sum, o) => sum + (o.appliedServiceFee || 0), 0) / 100) * 100, 100)}%` }}
+                ></div>
+              </div>
             </div>
           </div>
         </button>

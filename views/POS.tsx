@@ -1767,14 +1767,16 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                       <span>VALOR A PAGAR R$</span>
                       <span>{printingOrder.total.toFixed(2)}</span>
                     </div>
-                    <div className="flex justify-between font-bold text-[8px] border-b border-dashed border-black pb-1">
-                      <span>FORMA DE PAGAMENTO</span>
-                      <span>Valor Pago</span>
-                    </div>
                     <div className="flex justify-between">
                       <span className="uppercase">{printingOrder.paymentMethod || 'OUTROS'}</span>
                       <span>{printingOrder.total.toFixed(2)}</span>
                     </div>
+                    {printingOrder.appliedServiceFee && printingOrder.appliedServiceFee > 0 ? (
+                      <div className="flex justify-between italic">
+                        <span>TAXA SERVICO R$</span>
+                        <span>{printingOrder.appliedServiceFee.toFixed(2)}</span>
+                      </div>
+                    ) : null}
                   </div>
 
                   <div className="text-center space-y-1 border-t border-dashed border-black pt-2">
@@ -1832,13 +1834,13 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                       </div>
                     ))}
                   </div>
-                  {printingOrder.type === SaleType.OWN_DELIVERY && (
+                  {printingOrder.appliedServiceFee && printingOrder.appliedServiceFee > 0 && (
                     <div className="flex justify-between items-center border-t border-dashed pt-4 mb-2 text-[10px] uppercase font-black">
-                      <span>Taxa Entrega:</span>
-                      <span>R$ {deliveryFeeValue.toFixed(2)}</span>
+                      <span>Taxa Serviço:</span>
+                      <span>R$ {printingOrder.appliedServiceFee.toFixed(2)}</span>
                     </div>
                   )}
-                  <div className={`flex justify-between items-end ${printingOrder.type === SaleType.OWN_DELIVERY ? '' : 'border-t border-dashed pt-4'} mb-6`}>
+                  <div className={`flex justify-between items-end ${(printingOrder.type === SaleType.OWN_DELIVERY || printingOrder.appliedServiceFee) ? '' : 'border-t border-dashed pt-4'} mb-6`}>
                     <span className="font-black text-[9px] uppercase tracking-widest">TOTAL:</span>
                     <span className="text-2xl font-black">R$ {printingOrder.total.toFixed(2)}</span>
                   </div>
