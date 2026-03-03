@@ -661,10 +661,6 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
                         return showAlert("Erro", "Não é possível transferir a mesa sem um garçom responsável.", "DANGER");
                       }
 
-                      if (!currentUser.permissions.includes('admin') && sess.waiterId !== selectedWaiterId) {
-                        return showAlert("Acesso Negado", "Você não é o garçom dono desta mesa.", "DANGER");
-                      }
-
                       setTransferTargetStr('');
                       setTransferModal({ isOpen: true, sourceTable: selectedTable });
                     }}
@@ -1091,7 +1087,9 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
 
                   try {
                     setTransferModal({ isOpen: false, sourceTable: null });
-                    await requireWaiterAuth(sess.waiterId, `Transferir Mesa ${transferModal.sourceTable} para ${target}`);
+                    if (!currentUser.permissions.includes('admin')) {
+                      await requireWaiterAuth(sess.waiterId, `Transferir Mesa ${transferModal.sourceTable} para ${target}`);
+                    }
                     await (db as any).transferTable(transferModal.sourceTable, target, sess.waiterId, currentUser.permissions);
                     setSelectedTable(null);
                     await refreshData();
@@ -1129,7 +1127,9 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
 
                   try {
                     setTransferModal({ isOpen: false, sourceTable: null });
-                    await requireWaiterAuth(sess.waiterId, `Transferir Mesa ${transferModal.sourceTable} para ${target}`);
+                    if (!currentUser.permissions.includes('admin')) {
+                      await requireWaiterAuth(sess.waiterId, `Transferir Mesa ${transferModal.sourceTable} para ${target}`);
+                    }
                     await (db as any).transferTable(transferModal.sourceTable, target, sess.waiterId, currentUser.permissions);
                     setSelectedTable(null);
                     await refreshData();
