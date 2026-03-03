@@ -35,11 +35,22 @@ export const login = async (req: Request, res: Response) => {
                 }
             });
 
-            res.json(user);
+            // Find related Waiter ID if exists (based on email)
+            const waiter = await prisma.waiter.findFirst({
+                where: { email: user.email, active: true }
+            });
+
+            const userWithWaiter = {
+                ...user,
+                waiterId: waiter?.id || null
+            };
+
+            res.json(userWithWaiter);
         } else {
             res.status(401).json({ message: 'Credenciais inválidas' });
         }
     } catch (error) {
+        console.error('Login error:', error);
         res.status(500).json({ error: 'Erro ao realizar login' });
     }
 };

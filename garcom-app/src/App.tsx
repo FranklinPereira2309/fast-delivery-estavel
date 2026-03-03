@@ -268,27 +268,25 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
           onClick={() => setShowHistory(true)}
           className="flex-1 py-5 bg-white border border-slate-200 text-slate-900 rounded-[2rem] font-black uppercase text-[10px] tracking-[0.1em] shadow-sm active:translate-y-0.5 transition-all flex items-center justify-center gap-3"
         >
-          <div className="flex justify-between items-center w-full px-1">
-            <div className="flex flex-col items-start leading-none gap-1">
-              <div className="flex items-center gap-1.5">
-                <History size={14} className="text-slate-400" />
-                <span className="text-[10px] font-black uppercase text-slate-800">Atendimentos</span>
+          <div className="flex justify-between items-center w-full px-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600">
+                <History size={20} />
               </div>
-              <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Sua Comissão Hoje</p>
+              <div className="flex flex-col items-start leading-tight">
+                <span className="text-[10px] font-black text-slate-400 tracking-widest">Produção</span>
+                <span className="text-xs font-black text-slate-900">Atendimentos</span>
+              </div>
             </div>
-            <div className="flex flex-col items-end">
-              <span className="text-sm font-black text-blue-600 tracking-tighter">
+            <div className="bg-blue-600 text-white px-4 py-2 rounded-xl shadow-lg shadow-blue-500/20">
+              <span className="text-sm font-black tracking-tighter">
                 R$ {recentOrders.filter(o => {
                   const today = new Date().toDateString();
-                  return new Date(o.createdAt || 0).toDateString() === today;
+                  const isToday = new Date(o.createdAt || 0).toDateString() === today;
+                  const isMyOrder = o.waiterId === (user.waiterId || user.id);
+                  return isToday && isMyOrder;
                 }).reduce((sum, o) => sum + (o.appliedServiceFee || 0), 0).toFixed(2)}
               </span>
-              <div className="w-12 h-1 bg-slate-100 rounded-full mt-1 overflow-hidden">
-                <div
-                  className="h-full bg-blue-500 transition-all duration-1000"
-                  style={{ width: `${Math.min((recentOrders.filter(o => new Date(o.createdAt || 0).toDateString() === new Date().toDateString()).reduce((sum, o) => sum + (o.appliedServiceFee || 0), 0) / 100) * 100, 100)}%` }}
-                ></div>
-              </div>
             </div>
           </div>
         </button>

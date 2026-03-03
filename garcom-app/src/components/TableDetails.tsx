@@ -35,7 +35,7 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, user, onClose, onRef
     const [transferTarget, setTransferTarget] = useState<number | ''>('');
     const [showClientSelect, setShowClientSelect] = useState(false);
 
-    const isResponsible = user.permissions.includes('admin') || !table.waiterId || table.waiter?.email === user.email;
+    const isResponsible = user.permissions.includes('admin') || !table.waiterId || (user.waiterId ? table.waiterId === user.waiterId : table.waiter?.email === user.email);
 
     // Modal state
     const [modal, setModal] = useState<{

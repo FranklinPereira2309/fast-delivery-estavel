@@ -12,6 +12,7 @@ export interface User {
     mustChangePassword?: boolean;
     active: boolean;
     permissions: string[];
+    waiterId?: string;
 }
 
 export interface Waiter {
