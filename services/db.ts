@@ -142,6 +142,20 @@ class APIDBService {
     }
   }
 
+  public async verifyWaiterLogin(email: string, pass: string): Promise<User | null> {
+    try {
+      // Use the standard login endpoint to validate, but do NOT persist to localStorage
+      // which allows a waiter to authenticate an action while the main Admin session remains intact.
+      const user = await this.request<User>('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ email, password: pass })
+      });
+      return user || null;
+    } catch (e) {
+      return null;
+    }
+  }
+
   public async verifyAdminPassword(password: string): Promise<boolean> {
     try {
       const resp = await this.request<{ valid: boolean }>('/auth/verify-admin', {

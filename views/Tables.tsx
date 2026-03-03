@@ -7,6 +7,7 @@ import { Icons, PLACEHOLDER_FOOD_IMAGE, formatImageUrl } from '../constants';
 import CustomAlert from '../components/CustomAlert';
 import { useDigitalAlert } from '../hooks/useDigitalAlert';
 import { validateEmail, validateCPF, validateCNPJ, maskPhone, maskDocument, toTitleCase } from '../services/validationUtils';
+import WaiterAuthModal from '../components/WaiterAuthModal';
 
 interface TablesProps {
   currentUser: User;
@@ -51,6 +52,30 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
   const [alertConfig, setAlertConfig] = useState<{ isOpen: boolean, title: string, message: string, onConfirm: () => void, onCancel?: () => void, type: 'INFO' | 'DANGER' | 'SUCCESS' }>({
     isOpen: false, title: '', message: '', onConfirm: () => { }, type: 'INFO'
   });
+
+  const [waiterAuth, setWaiterAuth] = useState<{
+    isOpen: boolean;
+    waiter: Waiter | null;
+    actionDescription: string;
+    onSuccess: (waiterId: string) => void;
+  }>({ isOpen: false, waiter: null, actionDescription: '', onSuccess: () => { } });
+
+  const requireWaiterAuth = (waiterId: string, actionDesc: string): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const waiter = waiters.find(w => w.id === waiterId);
+      if (!waiter) return reject(new Error('Garçom não encontrado'));
+
+      setWaiterAuth({
+        isOpen: true,
+        waiter,
+        actionDescription: actionDesc,
+        onSuccess: (id) => {
+          setWaiterAuth(prev => ({ ...prev, isOpen: false }));
+          resolve(id);
+        }
+      });
+    });
+  };
 
   const showAlert = (title: string, message: string, type: 'INFO' | 'DANGER' | 'SUCCESS' = 'INFO', onConfirm?: () => void, onCancel?: () => void) => {
     setAlertConfig({
@@ -152,9 +177,25 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
       return showAlert("Garçom Requerido", "Por favor, selecione o garçom responsável.", "DANGER");
     }
 
+    const existingSess = getSessForTable(selectedTable);
+
+    // Ownership Rule: Only the owner or an Admin can edit an occupied table.
+    if (existingSess && existingSess.waiterId && existingSess.waiterId !== selectedWaiterId && !currentUser.permissions.includes('admin')) {
+      setSelectedProductForLaunch(null);
+      return showAlert("Acesso Negado", "Esta mesa já está sendo atendida por outro garçom. O primeiro garçom a atender torna-se o dono da mesa.", "DANGER");
+    }
+
     if (getTableStatus(selectedTable) === 'billing') {
       setSelectedProductForLaunch(null);
       return showAlert("Mesa Bloqueada", "Esta mesa está em processo de fechamento (Faturando). Para lançar mais itens, reabra a mesa.", "DANGER");
+    }
+
+    // Require Waiter Authentication
+    try {
+      await requireWaiterAuth(selectedWaiterId, `Lançar ${product.name} na Mesa ${selectedTable}`);
+    } catch (authErr) {
+      setSelectedProductForLaunch(null);
+      return; // Cancelled or failed auth
     }
 
     const validation = await db.validateStockForOrder([{ productId: product.id, quantity: 1 }]);
@@ -164,7 +205,7 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
       return showAlert("Sem Estoque", validation.message || "Produto sem estoque.", "DANGER");
     }
 
-    const existingSess = getSessForTable(selectedTable);
+    const currentSess = getSessForTable(selectedTable);
     const newItem: OrderItem = {
       uid: `item-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
       productId: product.id,
@@ -262,6 +303,17 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
       return showAlert("Garçom Requerido", "Para oficializar estes itens, selecione qual garçom assumirá o atendimento dessa mesa.", "DANGER");
     }
 
+    // Ownership Rule
+    if (sess.waiterId && sess.waiterId !== selectedWaiterId && !currentUser.permissions.includes('admin')) {
+      return showAlert("Acesso Negado", "Esta mesa já pertence a outro garçom.", "DANGER");
+    }
+
+    try {
+      await requireWaiterAuth(selectedWaiterId, `Aprovar Pedido Digital da Mesa ${tableNum}`);
+    } catch (authErr) {
+      return;
+    }
+
     try {
       const pendingValue = sess.pendingReviewItems || '[]';
       let pendingItems = [];
@@ -316,7 +368,22 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
     const sess = getSessForTable(tableNum);
     if (!sess || !sess.hasPendingDigital) return;
 
+    if (!selectedWaiterId) {
+      return showAlert("Garçom Requerido", "Para rejeitar estes itens, selecione qual garçom está efetuando a ação.", "DANGER");
+    }
+
+    // Ownership Rule
+    if (sess.waiterId && sess.waiterId !== selectedWaiterId && !currentUser.permissions.includes('admin')) {
+      return showAlert("Acesso Negado", "Esta mesa já pertence a outro garçom.", "DANGER");
+    }
+
     showAlert("Rejeitar Pedido", "Deseja rejeitar estes itens? O cliente será notificado", "DANGER", async () => {
+      try {
+        await requireWaiterAuth(selectedWaiterId, `Rejeitar Pedido da Mesa ${tableNum}`);
+      } catch (authErr) {
+        setAlertConfig(prev => ({ ...prev, isOpen: false }));
+        return;
+      }
       try {
         if (sess.items.length === 0) {
           // Se não há outros itens, exclui a sessão da mesa e ela volta a ficar livre
@@ -482,6 +549,13 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
       // Dismiss the alerting state if active, but without visual feedback on the container
       if (isAlerting) dismissAlert();
     }}>
+      <WaiterAuthModal
+        isOpen={waiterAuth.isOpen}
+        waiter={waiterAuth.waiter}
+        actionDescription={waiterAuth.actionDescription}
+        onSuccess={waiterAuth.onSuccess}
+        onCancel={() => setWaiterAuth(prev => ({ ...prev, isOpen: false }))}
+      />
       <CustomAlert {...alertConfig} onConfirm={alertConfig.onConfirm} onCancel={alertConfig.onCancel} />
 
       {/* Header Gestão de Mesas */}
@@ -527,7 +601,14 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
               setSelectedTable(tableNum);
               const s = getSessForTable(tableNum);
               setSelectedWaiterId(s?.waiterId || '');
-              setActiveModalTab(status === 'billing' ? 'CHECKOUT' : 'LAUNCH');
+
+              if (s?.isSoftRejected) {
+                // Se for rejeitado e não ter consumo visível, vai ficar available e abriremos no Laucn
+                setActiveModalTab('LAUNCH');
+              } else {
+                setActiveModalTab(status === 'billing' ? 'CHECKOUT' : 'LAUNCH');
+              }
+
               setIsUnregisteredClient(false);
               setManualClientName(s?.clientName || '');
               setManualClientPhone(s?.clientPhone || '');
@@ -568,7 +649,51 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
                   <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">{getSessForTable(selectedTable)?.startTime ? `Aberta às ${new Date(getSessForTable(selectedTable)!.startTime).toLocaleTimeString()}` : 'Aguardando Atendimento'}</p>
                 </div>
               </div>
-              <button onClick={() => setSelectedTable(null)} className="p-4 text-slate-400 hover:text-slate-600 transition-transform active:rotate-90"><svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg></button>
+              <div className="flex items-center gap-4">
+                {getTableStatus(selectedTable) === 'occupied' && (
+                  <button
+                    onClick={async () => {
+                      const sess = getSessForTable(selectedTable);
+                      if (!sess || !sess.waiterId) {
+                        return showAlert("Erro", "Não é possível transferir a mesa sem um garçom responsável.", "DANGER");
+                      }
+
+                      if (!currentUser.permissions.includes('admin') && sess.waiterId !== selectedWaiterId) {
+                        return showAlert("Acesso Negado", "Você não é o garçom dono desta mesa.", "DANGER");
+                      }
+
+                      const targetInput = window.prompt(`Transferir MESA ${selectedTable} para qual número de mesa (LIVRE)?`);
+                      if (!targetInput) return;
+                      const target = parseInt(targetInput);
+                      if (isNaN(target) || target <= 0 || target > (settings?.tableCount || 0)) {
+                        return showAlert("Erro", "Mesa de destino inválida.", "DANGER");
+                      }
+
+                      if (target === selectedTable) return;
+                      if (getSessForTable(target)) {
+                        return showAlert("Mesa Ocupada", `A mesa ${target} encontra-se ocupada. Só é possível transferir para mesas livres.`, "DANGER");
+                      }
+
+                      try {
+                        await requireWaiterAuth(sess.waiterId, `Transferir Mesa ${selectedTable} para ${target}`);
+                        await (db as any).transferTable(selectedTable, target, sess.waiterId, currentUser.permissions);
+                        setSelectedTable(null);
+                        await refreshData();
+                        showAlert("Sucesso", "Transferência realizada com sucesso!", "SUCCESS");
+                      } catch (err: any) {
+                        // canceled or failed
+                        if (err.message && err.message !== 'Garçom não encontrado') {
+                          showAlert("Erro ao Transferir", err.message, "DANGER");
+                        }
+                      }
+                    }}
+                    className="flex items-center gap-2 px-6 py-4 bg-orange-100 text-orange-600 font-black uppercase tracking-widest text-xs rounded-2xl hover:bg-orange-500 hover:text-white transition-all shadow-sm"
+                  >
+                    Transferir
+                  </button>
+                )}
+                <button onClick={() => setSelectedTable(null)} className="p-4 bg-slate-200 text-slate-500 rounded-2xl hover:bg-slate-300 hover:text-slate-800 transition-all font-black uppercase text-xs tracking-widest flex items-center gap-2">Sair ✗</button>
+              </div>
             </div>
 
             <div className="flex flex-1 min-h-0">

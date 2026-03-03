@@ -65,6 +65,7 @@ export interface User {
   active: boolean;
   permissions: string[];
   createdAt: string;
+  waiterId?: string | null;
 }
 
 export interface BusinessSettings {
