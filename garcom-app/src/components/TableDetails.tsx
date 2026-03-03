@@ -130,6 +130,9 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, user, onClose, onRef
             return;
         }
 
+        // Hide selector before showing confirmation modal to prevent layering issues
+        setShowClientSelect(false);
+
         showAlert('Confirmar Fechamento', `Deseja solicitar o fechamento para ${clientName}?`, 'confirm', async () => {
             setLoading(true);
             try {

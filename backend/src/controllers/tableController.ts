@@ -317,7 +317,7 @@ export const deleteTableSession = async (req: Request, res: Response) => {
     // Buscar sessão antes de deletar para saber se era digital
     const session = await prisma.tableSession.findUnique({ where: { tableNumber: tableNum } });
 
-    const { waiterId, userPermissions } = req.body;
+    const { waiterId, userPermissions } = req.body || {};
     const isAdmin = userPermissions?.includes('admin');
     if (!isAdmin && session?.waiterId && waiterId && session.waiterId !== waiterId) {
         const currentWaiter = await prisma.waiter.findUnique({ where: { id: session.waiterId } });
@@ -367,7 +367,7 @@ export const deleteTableSession = async (req: Request, res: Response) => {
     res.json({ message: 'Sessão de mesa finalizada' });
 };
 export const transferTableSession = async (req: Request, res: Response) => {
-    const { from, to, waiterId } = req.body;
+    const { from, to, waiterId, userPermissions } = req.body || {};
     const fromTable = parseInt(from.toString());
     const toTable = parseInt(to.toString());
 
@@ -385,7 +385,7 @@ export const transferTableSession = async (req: Request, res: Response) => {
             }
 
             // Regra de Negócio: Somente o garçom responsável pode transferir
-            const isAdmin = req.body.userPermissions?.includes('admin');
+            const isAdmin = userPermissions?.includes('admin');
             if (!isAdmin && waiterId && sourceSession.waiterId && sourceSession.waiterId !== waiterId) {
                 const currentWaiter = await tx.waiter.findUnique({ where: { id: sourceSession.waiterId } });
                 const actingWaiter = await tx.waiter.findUnique({ where: { id: waiterId } });
@@ -475,11 +475,11 @@ export const transferTableSession = async (req: Request, res: Response) => {
 };
 export const requestCheckout = async (req: Request, res: Response) => {
     const { tableNumber } = req.params;
-    const { clientId, clientName } = req.body;
     const tableNum = parseInt(tableNumber as string);
 
     try {
-        const { waiterId, userPermissions } = req.body;
+        const sessionData: Partial<TableSession> & { userPermissions?: string[] } = req.body || {};
+        const { clientId, clientName, waiterId, userPermissions } = sessionData;
         const isAdmin = userPermissions?.includes('admin');
         const existing = await prisma.tableSession.findUnique({ where: { tableNumber: tableNum } });
 
