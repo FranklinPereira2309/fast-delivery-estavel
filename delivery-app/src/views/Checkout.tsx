@@ -3,42 +3,125 @@ import { useNavigate } from 'react-router-dom';
 import { useCart } from '../CartContext';
 import { api } from '../services/api';
 import { Icons } from '../constants';
+import CustomAlert from '../components/CustomAlert';
+
+interface AlertState {
+    isOpen: boolean;
+    title: string;
+    message: string;
+    type: 'INFO' | 'DANGER' | 'SUCCESS';
+    onConfirm: () => void;
+}
 
 const Checkout: React.FC = () => {
     const { items, total, clearCart } = useCart();
     const [paymentMethod, setPaymentMethod] = useState<'PIX' | 'CREDIT' | 'DEBIT' | 'CASH'>('PIX');
-    const [address, setAddress] = useState('');
+
+    // Address UI State
+    const [savedAddress, setSavedAddress] = useState('');
+    const [useNewAddress, setUseNewAddress] = useState(false);
+
+    const [newAddress, setNewAddress] = useState({
+        cep: '', street: '', number: '', complement: '', neighborhood: '', tag: 'Casa'
+    });
+
     const [deliveryFee, setDeliveryFee] = useState(0);
     const [isLoading, setIsLoading] = useState(false);
+    const [isFetchingCep, setIsFetchingCep] = useState(false);
+
+    const [alertState, setAlertState] = useState<AlertState>({
+        isOpen: false, title: '', message: '', type: 'INFO', onConfirm: () => { }
+    });
+
     const navigate = useNavigate();
 
     useEffect(() => {
-        const fetchSettings = async () => {
+        const init = async () => {
             try {
+                // Fetch Client Address
+                const clientStr = localStorage.getItem('delivery_app_client');
+                if (clientStr) {
+                    const client = JSON.parse(clientStr);
+                    if (client.addresses && client.addresses.length > 0) {
+                        setSavedAddress(client.addresses[0]);
+                    } else {
+                        setUseNewAddress(true); // Se não houver, força preencher novo endereço
+                    }
+                } else {
+                    setUseNewAddress(true);
+                }
+
+                // Fetch Settings
                 const settings = await api.getSettings();
                 const fee = parseFloat(settings.deliveryFee.replace('R$', '').replace(',', '.').trim()) || 0;
                 setDeliveryFee(fee);
             } catch (err) {
-                console.error('Error fetching settings:', err);
+                console.error('Error fetching settings or client:', err);
             }
         };
-        fetchSettings();
+        init();
     }, []);
 
     const finalTotal = total + deliveryFee;
 
+    const showAlert = (title: string, message: string, type: 'INFO' | 'SUCCESS' | 'DANGER' = 'INFO', onConfirm?: () => void) => {
+        setAlertState({
+            isOpen: true,
+            title,
+            message,
+            type,
+            onConfirm: () => {
+                setAlertState(prev => ({ ...prev, isOpen: false }));
+                if (onConfirm) onConfirm();
+            }
+        });
+    };
+
+    const handleCepBlur = async () => {
+        const cleanCep = newAddress.cep.replace(/\D/g, '');
+        if (cleanCep.length !== 8) return;
+
+        setIsFetchingCep(true);
+        try {
+            const res = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
+            const data = await res.json();
+            if (!data.erro) {
+                setNewAddress(prev => ({
+                    ...prev,
+                    street: data.logradouro,
+                    neighborhood: data.bairro
+                }));
+            }
+        } catch (error) {
+            console.error("Erro ao buscar CEP:", error);
+        } finally {
+            setIsFetchingCep(false);
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (items.length === 0) return;
-        if (!address) {
-            alert('Por favor, informe seu endereço.');
-            return;
+
+        let finalAddress = savedAddress;
+
+        if (useNewAddress) {
+            if (!newAddress.street || !newAddress.number || !newAddress.neighborhood) {
+                showAlert('Atenção', 'Por favor, preencha todos os campos obrigatórios do novo endereço.', 'DANGER');
+                return;
+            }
+            finalAddress = `${newAddress.street}, ${newAddress.number}, ${newAddress.neighborhood} - ${newAddress.complement ? `Comp: ${newAddress.complement}` : ''} [${newAddress.tag}]`;
+        } else {
+            if (!savedAddress) {
+                showAlert('Atenção', 'Por favor, informe seu endereço.', 'DANGER');
+                return;
+            }
         }
 
         setIsLoading(true);
         try {
             const orderData = {
-                clientAddress: address,
+                clientAddress: finalAddress,
                 paymentMethod,
                 items: items.map(i => ({
                     productId: i.product.id,
@@ -51,11 +134,14 @@ const Checkout: React.FC = () => {
             };
 
             await api.createOrder(orderData);
-            alert('Pedido realizado com sucesso!');
-            clearCart();
-            navigate('/');
+
+            showAlert('Sucesso', 'Seu pedido foi realizado com sucesso e logo entrará em preparação!', 'SUCCESS', () => {
+                clearCart();
+                navigate('/');
+            });
+
         } catch (err: any) {
-            alert('Erro ao realizar pedido: ' + err.message);
+            showAlert('Ops!', 'Erro ao realizar o pedido: ' + err.message, 'DANGER');
         } finally {
             setIsLoading(false);
         }
@@ -63,12 +149,19 @@ const Checkout: React.FC = () => {
 
     return (
         <div className="min-h-screen bg-slate-50 pb-12">
-            {/* Adiciona fundo sutil com padrão se desejar ou apenas cor sólida premium */}
-            <div className="bg-slate-900 text-white p-6 pb-8 rounded-b-[3rem] shadow-xl flex items-center gap-4 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float"></div>
-                <div className="absolute bottom-0 left-0 w-64 h-64 bg-rose-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float" style={{ animationDelay: '2s' }}></div>
+            <CustomAlert
+                isOpen={alertState.isOpen}
+                title={alertState.title}
+                message={alertState.message}
+                type={alertState.type}
+                onConfirm={alertState.onConfirm}
+            />
 
-                <button onClick={() => navigate(-1)} className="p-3 bg-white/10 backdrop-blur-md rounded-2xl text-white hover:bg-white/20 transition-all z-10">
+            {/* Header Soft Clean */}
+            <div className="bg-white text-slate-800 p-6 pb-8 rounded-b-[3rem] shadow-sm border-b border-slate-100 flex items-center gap-4 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-5 animate-float"></div>
+
+                <button onClick={() => navigate(-1)} className="p-3 bg-slate-50 backdrop-blur-md rounded-2xl text-slate-500 hover:text-indigo-600 hover:bg-slate-100 transition-all z-10 border border-slate-100">
                     <Icons.ArrowLeft className="w-5 h-5" />
                 </button>
                 <div className="flex-1 z-10">
@@ -79,18 +172,25 @@ const Checkout: React.FC = () => {
                         <button
                             type="button"
                             onClick={() => {
-                                if (window.confirm('Deseja esvaziar o carrinho?')) {
-                                    clearCart();
-                                    navigate('/');
-                                }
+                                setAlertState({
+                                    isOpen: true,
+                                    title: 'Atenção',
+                                    message: 'Deseja realmente remover todos os itens do carrinho?',
+                                    type: 'INFO',
+                                    onConfirm: () => {
+                                        clearCart();
+                                        navigate('/');
+                                        setAlertState(p => ({ ...p, isOpen: false }));
+                                    }
+                                });
                             }}
-                            className="p-3 bg-rose-500/20 backdrop-blur-md rounded-2xl text-rose-300 hover:bg-rose-500 hover:text-white transition-all z-10"
+                            className="p-3 bg-rose-50 backdrop-blur-md rounded-2xl text-rose-500 hover:bg-rose-100 transition-all z-10 border border-rose-100"
                         >
                             <Icons.Trash className="w-5 h-5" />
                         </button>
                     )
                 }
-            </div >
+            </div>
 
             <form onSubmit={handleSubmit} className="p-6 space-y-8 max-w-lg mx-auto">
                 {/* Items Summary */}
@@ -129,19 +229,105 @@ const Checkout: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Delivery Address */}
+                {/* Delivery Address Hub */}
                 <div className="space-y-4">
                     <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2 flex items-center gap-2">
                         <span className="w-2 h-2 rounded-full bg-indigo-400"></span> Local de Entrega
                     </h2>
-                    <textarea
-                        required
-                        className="w-full p-5 bg-white border border-slate-100 rounded-[2rem] focus:ring-4 focus:ring-indigo-50 focus:border-indigo-100 transition-all font-bold text-sm shadow-sm placeholder:text-slate-300 resize-none"
-                        placeholder="Ex: Rua das Flores, 123, Bairro Centro. Complemento: Casa azul."
-                        rows={3}
-                        value={address}
-                        onChange={e => setAddress(e.target.value)}
-                    />
+
+                    <div className="bg-white p-2 rounded-[2rem] shadow-sm border border-slate-100 flex overflow-hidden">
+                        {savedAddress && (
+                            <button
+                                type="button"
+                                onClick={() => setUseNewAddress(false)}
+                                className={`flex-1 py-3 px-4 text-[10px] font-black uppercase tracking-widest rounded-2xl transition-all ${!useNewAddress ? 'bg-indigo-50 text-indigo-600' : 'text-slate-400 hover:bg-slate-50'}`}
+                            >
+                                Meu Endereço
+                            </button>
+                        )}
+                        <button
+                            type="button"
+                            onClick={() => setUseNewAddress(true)}
+                            className={`flex-1 py-3 px-4 text-[10px] font-black uppercase tracking-widest rounded-2xl transition-all ${useNewAddress ? 'bg-indigo-50 text-indigo-600' : 'text-slate-400 hover:bg-slate-50'}`}
+                        >
+                            Novo Endereço
+                        </button>
+                    </div>
+
+                    {!useNewAddress ? (
+                        <div className="p-5 bg-white border border-slate-100 rounded-[2rem] shadow-sm">
+                            <div className="flex justify-between items-start mb-2">
+                                <span className="px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full text-[9px] font-black uppercase tracking-widest">Cadastrado</span>
+                            </div>
+                            <p className="text-sm font-bold text-slate-700 leading-relaxed">{savedAddress}</p>
+                        </div>
+                    ) : (
+                        <div className="p-5 bg-white border border-slate-100 rounded-[2rem] shadow-sm space-y-4 animate-in fade-in slide-in-from-top-4">
+                            <div className="relative">
+                                <input
+                                    type="text"
+                                    placeholder="CEP (somente números)"
+                                    maxLength={8}
+                                    value={newAddress.cep}
+                                    onChange={e => setNewAddress({ ...newAddress, cep: e.target.value.replace(/\D/g, '') })}
+                                    onBlur={handleCepBlur}
+                                    className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm focus:ring-4 focus:ring-indigo-50 focus:border-indigo-100 transition-all placeholder:text-slate-400 disabled:opacity-50"
+                                />
+                                {isFetchingCep && (
+                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin"></div>
+                                )}
+                            </div>
+
+                            <input
+                                type="text"
+                                placeholder="Logradouro"
+                                value={newAddress.street}
+                                onChange={e => setNewAddress({ ...newAddress, street: e.target.value })}
+                                className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm focus:ring-4 focus:ring-indigo-50 focus:border-indigo-100 transition-all placeholder:text-slate-400"
+                            />
+
+                            <div className="grid grid-cols-2 gap-3">
+                                <input
+                                    type="text"
+                                    placeholder="Número"
+                                    value={newAddress.number}
+                                    onChange={e => setNewAddress({ ...newAddress, number: e.target.value })}
+                                    className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm focus:ring-4 focus:ring-indigo-50 focus:border-indigo-100 transition-all placeholder:text-slate-400"
+                                />
+                                <input
+                                    type="text"
+                                    placeholder="Bairro"
+                                    value={newAddress.neighborhood}
+                                    onChange={e => setNewAddress({ ...newAddress, neighborhood: e.target.value })}
+                                    className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm focus:ring-4 focus:ring-indigo-50 focus:border-indigo-100 transition-all placeholder:text-slate-400"
+                                />
+                            </div>
+
+                            <input
+                                type="text"
+                                placeholder="Complemento (Opcional)"
+                                value={newAddress.complement}
+                                onChange={e => setNewAddress({ ...newAddress, complement: e.target.value })}
+                                className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm focus:ring-4 focus:ring-indigo-50 focus:border-indigo-100 transition-all placeholder:text-slate-400"
+                            />
+
+                            <div>
+                                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Salvar como</h3>
+                                <div className="flex gap-2">
+                                    {['Casa', 'Trabalho', 'Outro'].map(tag => (
+                                        <button
+                                            key={tag}
+                                            type="button"
+                                            onClick={() => setNewAddress({ ...newAddress, tag })}
+                                            className={`px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all border ${newAddress.tag === tag ? 'bg-indigo-500 text-white border-indigo-500 shadow-sm shadow-indigo-200' : 'bg-white text-slate-500 border-slate-200'} `}
+                                        >
+                                            {tag}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Payment Method */}
@@ -161,8 +347,8 @@ const Checkout: React.FC = () => {
                                 type="button"
                                 onClick={() => setPaymentMethod(method.id as any)}
                                 className={`relative p-5 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all border ${paymentMethod === method.id
-                                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-200 transform scale-[1.02]'
-                                    : 'bg-white text-slate-500 border-slate-200 hover:border-indigo-300'}`}
+                                    ? 'bg-indigo-500 text-white border-indigo-500 shadow-lg shadow-indigo-200 transform scale-[1.02]'
+                                    : 'bg-white text-slate-500 border-slate-200 hover:border-indigo-200'}`}
                             >
                                 {method.label}
                                 {method.badge && (
@@ -179,7 +365,7 @@ const Checkout: React.FC = () => {
                     <button
                         disabled={isLoading || items.length === 0}
                         type="submit"
-                        className="relative w-full overflow-hidden group bg-slate-900 text-white py-6 rounded-2xl font-black uppercase text-[11px] tracking-widest hover:bg-slate-800 transition-all shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="relative w-full overflow-hidden group bg-slate-800 text-white py-6 rounded-2xl font-black uppercase text-[11px] tracking-widest hover:bg-slate-700 transition-all shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
                         <span className="relative z-10 flex items-center justify-center gap-3">
