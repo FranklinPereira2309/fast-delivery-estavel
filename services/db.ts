@@ -275,6 +275,13 @@ class APIDBService {
     });
   }
 
+  public async updateOrderServiceFee(orderId: string, newFee: number, user: User) {
+    await this.request(`/orders/${orderId}/service-fee`, {
+      method: 'PATCH',
+      body: JSON.stringify({ newFee, user })
+    });
+  }
+
   public async deleteOrder(id: string, user: User, reason?: string) {
     await this.request(`/orders/${id}`, {
       method: 'DELETE',

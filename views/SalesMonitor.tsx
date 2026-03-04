@@ -16,6 +16,9 @@ const SalesMonitor: React.FC = () => {
   const [editingPaymentMethod, setEditingPaymentMethod] = useState(false);
   const [newPaymentMethod, setNewPaymentMethod] = useState('');
   const [isSavingPayment, setIsSavingPayment] = useState(false);
+  const [editingServiceFee, setEditingServiceFee] = useState(false);
+  const [newServiceFeeValue, setNewServiceFeeValue] = useState('0');
+  const [isSavingServiceFee, setIsSavingServiceFee] = useState(false);
   const [changedOrderIds, setChangedOrderIds] = useState<Set<string>>(new Set());
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -247,6 +250,8 @@ const SalesMonitor: React.FC = () => {
                                 setIsNfceVisual(false);
                                 setEditingPaymentMethod(false);
                                 setNewPaymentMethod(order.paymentMethod || 'DINHEIRO');
+                                setEditingServiceFee(false);
+                                setNewServiceFeeValue((order.appliedServiceFee || 0).toString());
                               }} className="p-2.5 text-blue-600 hover:bg-blue-50 rounded-2xl border border-blue-100 shadow-sm transition-all active:scale-95" title="Reemitir Cupom Simples">
                                 <Icons.Print className="w-5 h-5" />
                               </button>
@@ -257,6 +262,8 @@ const SalesMonitor: React.FC = () => {
                                   setIsNfceVisual(true);
                                   setEditingPaymentMethod(false);
                                   setNewPaymentMethod(order.paymentMethod || 'DINHEIRO');
+                                  setEditingServiceFee(false);
+                                  setNewServiceFeeValue((order.appliedServiceFee || 0).toString());
                                 }} className="p-2.5 text-emerald-600 hover:bg-emerald-50 rounded-2xl border border-emerald-100 shadow-sm transition-all active:scale-95" title="Reemitir Cupom Fiscal (NFC-e)">
                                   <Icons.Print className="w-5 h-5" />
                                 </button>
@@ -400,7 +407,72 @@ const SalesMonitor: React.FC = () => {
                       </div>
                     )}
                     {printingOrder.type === SaleType.TABLE && typeof printingOrder.appliedServiceFee === 'number' && (
-                      <div className="flex justify-between items-end mb-1">
+                      <div className="flex justify-between items-center mb-1 bg-slate-50 p-1.5 rounded border border-slate-100 no-print mx-[-6px] px-[6px]">
+                        <span className="font-black text-[9px] uppercase tracking-widest">TAXA SERVIÇO:</span>
+                        {editingServiceFee ? (
+                          <div className="flex gap-2 items-center">
+                            <span className="text-[10px] font-black">R$</span>
+                            <input
+                              type="number"
+                              step="0.01"
+                              value={newServiceFeeValue}
+                              onChange={(e) => setNewServiceFeeValue(e.target.value)}
+                              className="w-16 text-[10px] font-black text-right p-1 rounded border outline-none"
+                              disabled={isSavingServiceFee}
+                            />
+                            <button
+                              disabled={isSavingServiceFee}
+                              onClick={async () => {
+                                setIsSavingServiceFee(true);
+                                try {
+                                  let newFeeNum = parseFloat(newServiceFeeValue);
+                                  if (isNaN(newFeeNum)) newFeeNum = 0;
+
+                                  const session = db.getCurrentSession();
+                                  await db.updateOrderServiceFee(printingOrder.id, newFeeNum, session?.user || { id: 'system', name: 'Sistema', email: '', password: '', permissions: [], createdAt: '', active: true });
+
+                                  const oldFee = printingOrder.appliedServiceFee || 0;
+                                  const newTotal = printingOrder.total - oldFee + newFeeNum;
+
+                                  setPrintingOrder({ ...printingOrder, appliedServiceFee: newFeeNum, total: newTotal });
+                                  setOrders(prev => prev.map(o => o.id === printingOrder.id ? { ...o, appliedServiceFee: newFeeNum, total: newTotal } : o));
+                                  setEditingServiceFee(false);
+                                } catch (err) {
+                                  console.error('Error updating service fee', err);
+                                  alert('Erro ao atualizar taxa de serviço.');
+                                } finally {
+                                  setIsSavingServiceFee(false);
+                                }
+                              }}
+                              className="bg-emerald-500 text-white px-2 py-1 rounded text-[8px] font-black uppercase"
+                            >
+                              Salvar
+                            </button>
+                            <button
+                              onClick={() => {
+                                setEditingServiceFee(false);
+                                setNewServiceFeeValue((printingOrder.appliedServiceFee || 0).toString());
+                              }}
+                              className="bg-slate-200 text-slate-600 px-2 py-1 rounded text-[8px] font-black uppercase"
+                            >
+                              X
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-black">R$ {(printingOrder.appliedServiceFee || 0).toFixed(2)}</span>
+                            <button
+                              onClick={() => setEditingServiceFee(true)}
+                              className="text-[9px] text-blue-600 font-bold underline px-1"
+                            >
+                              Editar
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {printingOrder.type === SaleType.TABLE && typeof printingOrder.appliedServiceFee === 'number' && (
+                      <div className="hidden print:flex justify-between items-end mb-1">
                         <span className="font-black text-[9px] uppercase tracking-widest">TAXA SERVIÇO:</span>
                         <span className="text-sm font-black">R$ {(printingOrder.appliedServiceFee || 0).toFixed(2)}</span>
                       </div>

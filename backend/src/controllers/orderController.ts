@@ -815,4 +815,63 @@ export const updateOrderPaymentMethod = async (req: Request, res: Response) => {
     }
 };
 
+export const updateOrderServiceFee = async (req: Request, res: Response) => {
+    const id = req.params.id as string;
+    const { newFee, user } = req.body;
+
+    try {
+        const result = await prisma.$transaction(async (tx: any) => {
+            const order = await tx.order.findUnique({
+                where: { id },
+                include: { items: true }
+            });
+
+            if (!order) throw new Error('Pedido não encontrado.');
+
+            const oldFee = order.appliedServiceFee || 0;
+            const newFeeParsed = parseFloat(newFee) || 0;
+
+            // Recompute Total
+            const newTotal = order.total - oldFee + newFeeParsed;
+
+            const updatedOrder = await tx.order.update({
+                where: { id },
+                data: {
+                    appliedServiceFee: newFeeParsed,
+                    total: newTotal
+                },
+                include: { items: true }
+            });
+
+            // Update associated Receivable (FIADO) if amount changes
+            await tx.receivable.updateMany({
+                where: { orderId: id },
+                data: { amount: newTotal }
+            });
+
+            // Audit Log
+            if (user) {
+                await tx.auditLog.create({
+                    data: {
+                        userId: user.id,
+                        userName: user.name,
+                        action: 'EDIT_ORDER_FEE',
+                        details: `Taxa do pedido ${id} alterada de R$ ${oldFee.toFixed(2)} para R$ ${newFeeParsed.toFixed(2)}. Novo total: R$ ${newTotal.toFixed(2)}`
+                    }
+                });
+            }
+
+            return updatedOrder;
+        });
+
+        // Trigger socket to tell UI to refresh the specific order total globally
+        getIO().emit('orderStatusChanged', { action: 'feeUpdate', id, newTotal: result.total, newFee: result.appliedServiceFee });
+
+        res.json(mapOrderResponse(result));
+    } catch (error: any) {
+        console.error('Error updating service fee:', error);
+        res.status(500).json({ error: error.message });
+    }
+};
+
 
