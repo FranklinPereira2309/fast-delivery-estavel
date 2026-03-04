@@ -169,14 +169,17 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
   };
 
   const confirmLaunchProduct = async () => {
-    if (!selectedProductForLaunch) return;
     const product = selectedProductForLaunch;
+    const observationStr = modalObservation;
+
+    // Fechar a tela de "Lançar Item" imediatamente
+    setSelectedProductForLaunch(null);
+    setModalObservation('');
 
     console.log('Attempting to launch product:', product.name, 'to table:', selectedTable);
     if (selectedTable === null) return;
     if (!selectedWaiterId) {
       console.warn('Launch blocked: No waiter selected');
-      setSelectedProductForLaunch(null);
       return showAlert("Garçom Requerido", "Por favor, selecione o garçom responsável.", "DANGER");
     }
 
@@ -184,12 +187,10 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
 
     // Ownership Rule: Only the owner or an Admin can edit an occupied table.
     if (existingSess && existingSess.waiterId && existingSess.waiterId !== selectedWaiterId && !currentUser.permissions.includes('admin')) {
-      setSelectedProductForLaunch(null);
       return showAlert("Acesso Negado", "Esta mesa já está sendo atendida por outro garçom. O primeiro garçom a atender torna-se o dono da mesa.", "DANGER");
     }
 
     if (getTableStatus(selectedTable) === 'billing') {
-      setSelectedProductForLaunch(null);
       return showAlert("Mesa Bloqueada", "Esta mesa está em processo de fechamento (Faturando). Para lançar mais itens, reabra a mesa.", "DANGER");
     }
 
@@ -197,14 +198,12 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
     try {
       await requireWaiterAuth(selectedWaiterId, `Lançar ${product.name} na Mesa ${selectedTable}`);
     } catch (authErr) {
-      setSelectedProductForLaunch(null);
       return; // Cancelled or failed auth
     }
 
     const validation = await db.validateStockForOrder([{ productId: product.id, quantity: 1 }]);
     if (!validation.valid) {
       console.warn('Launch blocked: Out of stock', validation.message);
-      setSelectedProductForLaunch(null);
       return showAlert("Sem Estoque", validation.message || "Produto sem estoque.", "DANGER");
     }
 
@@ -215,7 +214,7 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
       quantity: 1,
       price: product.price,
       isReady: false,
-      observations: modalObservation || ''
+      observations: observationStr || ''
     };
     const newItems: OrderItem[] = existingSess ? [...existingSess.items, newItem] : [newItem];
     let startTime = existingSess?.startTime ? new Date(existingSess.startTime).toISOString() : new Date().toISOString();
@@ -253,8 +252,6 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
 
     setLastAddedProduct(product.id);
     setTimeout(() => setLastAddedProduct(null), 800);
-    setSelectedProductForLaunch(null);
-    setModalObservation('');
     await refreshData();
   };
 

@@ -51,7 +51,7 @@ const WaiterAuthModal: React.FC<WaiterAuthModalProps> = ({ isOpen, waiter, actio
     };
 
     return (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
             <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-300">
                 <div className="relative p-6 pt-8 bg-slate-50 border-b border-slate-100 flex flex-col items-center">
                     <button
