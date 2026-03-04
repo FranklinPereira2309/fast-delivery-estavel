@@ -278,10 +278,16 @@ const Checkout: React.FC = () => {
                             <div className="relative">
                                 <input
                                     type="text"
-                                    placeholder="CEP (somente números)"
-                                    maxLength={8}
+                                    placeholder="CEP (ex: 00.000-000)"
+                                    maxLength={10}
                                     value={newAddress.cep}
-                                    onChange={e => setNewAddress({ ...newAddress, cep: e.target.value.replace(/\D/g, '') })}
+                                    onChange={e => {
+                                        const val = e.target.value.replace(/\D/g, '');
+                                        let masked = val;
+                                        if (val.length > 2) masked = `${val.slice(0, 2)}.${val.slice(2)}`;
+                                        if (val.length > 5) masked = `${val.slice(0, 2)}.${val.slice(2, 5)}-${val.slice(5, 8)}`;
+                                        setNewAddress({ ...newAddress, cep: masked });
+                                    }}
                                     onBlur={handleCepBlur}
                                     className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm text-slate-600 focus:ring-4 focus:ring-indigo-50 focus:border-indigo-100 transition-all placeholder:text-slate-400 placeholder:font-bold"
                                 />

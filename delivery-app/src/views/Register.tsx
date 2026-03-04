@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
-import { Eye, EyeOff, MapPin, ChevronDown, ChevronUp } from 'lucide-react'; // Ícones modernos
+import { Eye, EyeOff, MapPin, ChevronDown, ChevronUp } from 'lucide-react';
+import CustomAlert from '../components/CustomAlert';
 
 const Register: React.FC = () => {
     const [formData, setFormData] = useState({
@@ -24,12 +25,39 @@ const Register: React.FC = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [showAddress, setShowAddress] = useState(false);
+    const [alertState, setAlertState] = useState({
+        isOpen: false,
+        title: '',
+        message: '',
+        type: 'INFO' as 'INFO' | 'DANGER' | 'SUCCESS',
+        onConfirm: () => { }
+    });
 
     const navigate = useNavigate();
 
+    // Máscara WhatsApp: (99) 9 9999-9999
+    const maskPhone = (value: string) => {
+        const numbers = value.replace(/\D/g, '');
+        if (numbers.length <= 2) return numbers;
+        if (numbers.length <= 3) return `(${numbers.slice(0, 2)}) ${numbers.slice(2)}`;
+        if (numbers.length <= 7) return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 3)} ${numbers.slice(3)}`;
+        return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 3)} ${numbers.slice(3, 7)}-${numbers.slice(7, 11)}`;
+    };
+
+    // Máscara CEP: 99.999-999
+    const maskCep = (value: string) => {
+        const numbers = value.replace(/\D/g, '');
+        if (numbers.length <= 2) return numbers;
+        if (numbers.length <= 5) return `${numbers.slice(0, 2)}.${numbers.slice(2)}`;
+        return `${numbers.slice(0, 2)}.${numbers.slice(2, 5)}-${numbers.slice(5, 8)}`;
+    };
+
     const handleCepBlur = async () => {
         const cleanCep = formData.cep.replace(/\D/g, '');
-        if (cleanCep.length !== 8) return;
+        if (cleanCep.length !== 8) {
+            if (cleanCep.length > 0) setError('CEP deve ter 8 dígitos');
+            return;
+        }
 
         setIsLoadingCep(true);
         try {
@@ -47,7 +75,6 @@ const Register: React.FC = () => {
                     city: data.localidade || '',
                     state: data.uf || ''
                 }));
-                // Abre o endereço automaticamente ao preencher o CEP com sucesso
                 setShowAddress(true);
             }
         } catch (err) {
@@ -60,6 +87,19 @@ const Register: React.FC = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
+
+        const cleanPhone = formData.phone.replace(/\D/g, '');
+        const cleanCep = formData.cep.replace(/\D/g, '');
+
+        if (cleanPhone.length !== 11) {
+            setError('WhatsApp deve ter 11 dígitos (DDD + 9 + Número)');
+            return;
+        }
+
+        if (cleanCep.length !== 8) {
+            setError('CEP deve ter 8 dígitos');
+            return;
+        }
 
         if (formData.password !== formData.confirmPassword) {
             setError('As senhas não conferem');
@@ -75,9 +115,9 @@ const Register: React.FC = () => {
             await api.register(
                 formData.name,
                 formData.email,
-                formData.phone,
+                cleanPhone,
                 formData.password,
-                formData.cep,
+                cleanCep,
                 formData.addressNumber,
                 formData.complement,
                 formData.street,
@@ -85,8 +125,14 @@ const Register: React.FC = () => {
                 formData.city,
                 formData.state
             );
-            alert('Cadastro realizado com sucesso! Favor realizar o login.');
-            navigate('/login');
+
+            setAlertState({
+                isOpen: true,
+                title: 'Sucesso!',
+                message: 'Cadastro realizado com sucesso! Favor realizar o login.',
+                type: 'SUCCESS',
+                onConfirm: () => navigate('/login')
+            });
         } catch (err: any) {
             setError(err.message || 'Erro ao realizar cadastro');
         }
@@ -154,7 +200,7 @@ const Register: React.FC = () => {
                                     className={inputClasses}
                                     placeholder="(11) 90000-0000"
                                     value={formData.phone}
-                                    onChange={e => setFormData({ ...formData, phone: e.target.value })}
+                                    onChange={e => setFormData({ ...formData, phone: maskPhone(e.target.value) })}
                                 />
                             </div>
                         </div>
@@ -189,12 +235,12 @@ const Register: React.FC = () => {
                                     <div className="relative">
                                         <input
                                             type="text" required
-                                            maxLength={9}
+                                            maxLength={10}
                                             className={inputClasses}
-                                            placeholder="00000-000"
+                                            placeholder="00.000-000"
                                             value={formData.cep}
                                             onBlur={handleCepBlur}
-                                            onChange={e => setFormData({ ...formData, cep: e.target.value })}
+                                            onChange={e => setFormData({ ...formData, cep: maskCep(e.target.value) })}
                                         />
                                         {isLoadingCep && <div className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>}
                                     </div>
@@ -326,6 +372,15 @@ const Register: React.FC = () => {
                     </p>
                 </div>
             </div>
+
+            <CustomAlert
+                isOpen={alertState.isOpen}
+                title={alertState.title}
+                message={alertState.message}
+                type={alertState.type}
+                onConfirm={alertState.onConfirm}
+                onCancel={() => setAlertState(prev => ({ ...prev, isOpen: false }))}
+            />
         </div>
     );
 };
