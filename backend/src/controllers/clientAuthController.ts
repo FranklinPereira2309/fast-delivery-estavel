@@ -92,7 +92,7 @@ export const loginClient = async (req: ExpressRequest, res: ExpressResponse) => 
 
 export const updateClientProfile = async (req: ExpressRequest, res: ExpressResponse) => {
     try {
-        const { id } = req.params;
+        const id = req.params.id as string;
         const { name, email, address, currentPassword, password } = req.body;
 
         const client = await prisma.client.findUnique({
