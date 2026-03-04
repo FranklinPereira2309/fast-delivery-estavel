@@ -1075,7 +1075,7 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
                   }
 
                   if (target === transferModal.sourceTable) return;
-                  if (getSessForTable(target)) {
+                  if (getTableStatus(target) !== 'available') {
                     return showAlert("Mesa Ocupada", `A mesa ${target} encontra-se ocupada. Só é possível transferir para mesas livres.`, "DANGER");
                   }
 
@@ -1115,7 +1115,7 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
                   }
 
                   if (target === transferModal.sourceTable) return;
-                  if (getSessForTable(target)) {
+                  if (getTableStatus(target) !== 'available') {
                     return showAlert("Mesa Ocupada", `A mesa ${target} encontra-se ocupada. Só é possível transferir para mesas livres.`, "DANGER");
                   }
 
