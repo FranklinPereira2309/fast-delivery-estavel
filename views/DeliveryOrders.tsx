@@ -161,7 +161,17 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
                     orders.map(order => (
                         <div key={order.id} className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 flex flex-col hover:shadow-xl hover:shadow-indigo-100/20 transition-all relative overflow-hidden group">
                             <div className="flex justify-between items-start mb-2">
-                                <h3 className="font-black text-2xl text-slate-800 tracking-tighter">#{order.id.slice(-4).toUpperCase()}</h3>
+                                <div className="flex items-center gap-3">
+                                    <h3 className="font-black text-2xl text-slate-800 tracking-tighter">#{order.id.slice(-4).toUpperCase()}</h3>
+                                    {activeTab === 'history' && (
+                                        <button
+                                            onClick={() => handlePrint(order)}
+                                            className="flex items-center gap-1.5 px-3 py-1 bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white rounded-full text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer shadow-sm"
+                                        >
+                                            <Icons.Print className="w-3.5 h-3.5" /> Cupom
+                                        </button>
+                                    )}
+                                </div>
                                 <div className="text-right">
                                     <p className="text-xl font-black text-slate-800 tracking-tighter">R$ {order.total.toFixed(2)}</p>
                                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{paymentLabels[order.paymentMethod || ''] || order.paymentMethod || 'Não Informado'}</p>
