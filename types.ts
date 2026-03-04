@@ -93,6 +93,9 @@ export interface BusinessSettings {
   enableNfcEmission?: boolean;
   waiterPrivacyEnabled?: boolean;
   waiterPrivacyTimer?: number;
+  enableDeliveryApp?: boolean;
+  enableDigitalMenu?: boolean;
+  enableWaiterApp?: boolean;
 }
 
 export interface Waiter {

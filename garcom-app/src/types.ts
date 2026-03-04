@@ -63,6 +63,9 @@ export interface BusinessSettings {
     serviceFeePercentage?: number;
     waiterPrivacyEnabled?: boolean;
     waiterPrivacyTimer?: number;
+    enableDeliveryApp?: boolean;
+    enableDigitalMenu?: boolean;
+    enableWaiterApp?: boolean;
 }
 
 export interface Order {

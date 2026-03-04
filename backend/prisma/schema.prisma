@@ -283,6 +283,10 @@ model BusinessSettings {
   enableNfcEmission    Boolean @default(false)
   waiterPrivacyEnabled Boolean @default(false)
   waiterPrivacyTimer   Int     @default(60)
+
+  enableDeliveryApp    Boolean @default(true)
+  enableDigitalMenu    Boolean @default(true)
+  enableWaiterApp      Boolean @default(true)
 }
 
 model ChatMessage {

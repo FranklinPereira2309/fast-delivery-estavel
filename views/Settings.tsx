@@ -666,6 +666,64 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings, onReset }) =
                             <div className="pt-8 border-t border-slate-100">
                                 <div className="flex justify-between items-center mb-6">
                                     <div>
+                                        <h4 className="text-sm font-black text-slate-800 uppercase tracking-tighter">Módulos e Aplicativos Adicionais</h4>
+                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Habilite ou desabilite os aplicativos para sua loja</p>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col justify-between gap-4">
+                                        <div>
+                                            <h4 className="text-[12px] font-black text-slate-800 uppercase tracking-widest">App Entregador</h4>
+                                            <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase">Acesso ao aplicativo para motoboys e entregadores.</p>
+                                        </div>
+                                        <div className="flex justify-end">
+                                            <button
+                                                type="button"
+                                                className={`w-14 h-8 rounded-full transition-all relative ${settings.enableDeliveryApp !== false ? 'bg-emerald-500' : 'bg-slate-200'}`}
+                                                onClick={() => setSettings({ ...settings, enableDeliveryApp: settings.enableDeliveryApp === false ? true : false })}
+                                            >
+                                                <div className={`absolute top-1 w-6 h-6 rounded-full bg-white transition-all ${settings.enableDeliveryApp !== false ? 'left-7' : 'left-1'}`}></div>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col justify-between gap-4">
+                                        <div>
+                                            <h4 className="text-[12px] font-black text-slate-800 uppercase tracking-widest">Menu Digital</h4>
+                                            <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase">Cardápio via QR Code para clientes nas mesas ou delivery.</p>
+                                        </div>
+                                        <div className="flex justify-end">
+                                            <button
+                                                type="button"
+                                                className={`w-14 h-8 rounded-full transition-all relative ${settings.enableDigitalMenu !== false ? 'bg-emerald-500' : 'bg-slate-200'}`}
+                                                onClick={() => setSettings({ ...settings, enableDigitalMenu: settings.enableDigitalMenu === false ? true : false })}
+                                            >
+                                                <div className={`absolute top-1 w-6 h-6 rounded-full bg-white transition-all ${settings.enableDigitalMenu !== false ? 'left-7' : 'left-1'}`}></div>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col justify-between gap-4">
+                                        <div>
+                                            <h4 className="text-[12px] font-black text-slate-800 uppercase tracking-widest">App Garçom</h4>
+                                            <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase">Acesso ao sistema para garçons.</p>
+                                        </div>
+                                        <div className="flex justify-end">
+                                            <button
+                                                type="button"
+                                                className={`w-14 h-8 rounded-full transition-all relative ${settings.enableWaiterApp !== false ? 'bg-emerald-500' : 'bg-slate-200'}`}
+                                                onClick={() => setSettings({ ...settings, enableWaiterApp: settings.enableWaiterApp === false ? true : false })}
+                                            >
+                                                <div className={`absolute top-1 w-6 h-6 rounded-full bg-white transition-all ${settings.enableWaiterApp !== false ? 'left-7' : 'left-1'}`}></div>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="pt-8 border-t border-slate-100">
+                                <div className="flex justify-between items-center mb-6">
+                                    <div>
                                         <h4 className="text-sm font-black text-slate-800 uppercase tracking-tighter">Segurança do App Garçom</h4>
                                         <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Configure a tela de privacidade contra inatividade</p>
                                     </div>

@@ -173,4 +173,7 @@ export interface BusinessSettings {
     isManuallyClosed: boolean;
     operatingHours: string;
     orderTimeoutMinutes: number;
+    enableDeliveryApp?: boolean;
+    enableDigitalMenu?: boolean;
+    enableWaiterApp?: boolean;
 }
