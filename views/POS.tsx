@@ -320,6 +320,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
   };
 
   const handleLaunchToTable = async () => {
+    if (!activeCashSession) return showAlert("Caixa Fechado", "Você precisa abrir o caixa antes de fazer lançamentos.", "DANGER");
     const num = parseInt(tableNumberInput);
     if (isNaN(num)) return showAlert("Erro", "Selecione ou digite uma mesa válida.", "DANGER");
     if (cart.length === 0) return showAlert("Carrinho Vazio", "Adicione produtos antes de lançar.", "INFO");
@@ -356,6 +357,8 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
   };
 
   const processPaymentAndFinalize = async () => {
+    if (!activeCashSession) return showAlert("Caixa Fechado", "Você precisa abrir o caixa antes de fazer lançamentos e recebimentos.", "DANGER");
+
     const total = cartTotal;
     const totalPaid = payments.reduce((acc, p) => acc + p.amount, 0);
 
@@ -411,6 +414,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
   };
 
   const handleFinalize = async () => {
+    if (!activeCashSession) return showAlert("Caixa Fechado", "Você precisa abrir o caixa para finalizar o pedido.", "DANGER");
     if (cart.length === 0) {
       return showAlert("Carrinho Vazio", "Adicione produtos antes de finalizar.", "INFO");
     }
@@ -1469,7 +1473,18 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
           </div>
         </div>
 
-        <div className="flex-1 flex flex-col min-w-0">
+        <div className="flex-1 flex flex-col min-w-0 relative">
+          {!activeCashSession && (
+            <div className="absolute inset-0 z-10 bg-slate-50/70 backdrop-blur-[2px] rounded-3xl flex items-center justify-center">
+              <div className="bg-white p-6 rounded-3xl shadow-xl border border-red-100 flex flex-col items-center gap-3 animate-in zoom-in duration-300">
+                <div className="w-12 h-12 bg-red-50 text-red-500 rounded-full flex items-center justify-center font-black text-2xl">🔒</div>
+                <div className="text-center">
+                  <h3 className="font-black text-slate-800 uppercase tracking-tighter">Vendas Bloqueadas</h3>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase mt-1">Abra o caixa no painel para iniciar as operações.</p>
+                </div>
+              </div>
+            </div>
+          )}
           <div className="flex gap-2 mb-6 overflow-x-auto pb-2 shrink-0">
             {['Todos', ...Array.from(new Set(products.map(p => p.category)))].map(cat => (
               <button key={cat as string} onClick={() => setActiveCategory(cat as string)} className={`px-4 py-2 rounded-full whitespace-nowrap text-[10px] font-black uppercase tracking-widest ${activeCategory === cat ? 'bg-blue-600 text-white shadow-lg shadow-blue-100' : 'bg-white text-slate-600 shadow-sm border'}`}>{cat as string}</button>
@@ -1489,6 +1504,27 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
         </div>
 
         <div className="w-80 lg:w-80 xl:w-96 bg-white rounded-3xl border border-slate-100 shadow-sm flex flex-col shrink-0 overflow-y-auto overflow-x-hidden relative border-l-4 border-l-blue-600/10">
+          {!activeCashSession && (
+            <div className="absolute inset-0 z-20 bg-slate-50/80 backdrop-blur-[2px] rounded-r-3xl flex items-center justify-center">
+              <div className="bg-white p-8 rounded-3xl shadow-2xl border border-red-100 flex flex-col items-center gap-4 text-center max-w-[80%]">
+                <div className="w-16 h-16 bg-red-100 text-red-600 rounded-2xl flex items-center justify-center text-3xl shadow-inner animate-pulse">
+                  💰
+                </div>
+                <div>
+                  <h3 className="text-xl font-black text-slate-800 uppercase tracking-tighter">Caixa Fechado</h3>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase mt-2 px-4 leading-relaxed">
+                    Você deve abrir o caixa informando o saldo inicial antes de registrar itens e recebimentos.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setIsOpeningModalOpen(true)}
+                  className="mt-2 text-[10px] font-black uppercase text-blue-600 bg-blue-50 px-6 py-3 rounded-full hover:bg-blue-600 hover:text-white transition-colors"
+                >
+                  Abrir Caixa Agora
+                </button>
+              </div>
+            </div>
+          )}
           {isLoadingOrder && (
             <div className="absolute inset-0 z-20 bg-white/80 backdrop-blur-sm flex items-center justify-center animate-in fade-in duration-300">
               <div className="flex flex-col items-center gap-4">
@@ -1651,7 +1687,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                 {!editingOrderId && !pendingTables.some(t => t.tableNumber === parseInt(tableNumberInput)) && (
                   <button
                     onClick={handleLaunchToTable}
-                    disabled={cart.length === 0}
+                    disabled={cart.length === 0 || !activeCashSession}
                     className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-black py-3 xl:py-4 rounded-xl xl:rounded-2xl shadow-xl uppercase text-[9px] xl:text-[10px] tracking-widest transition-all active:scale-95 disabled:opacity-30"
                   >
                     Lançar na Mesa

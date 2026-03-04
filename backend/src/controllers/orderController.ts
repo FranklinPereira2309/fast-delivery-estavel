@@ -177,6 +177,21 @@ export const saveOrder = async (req: Request, res: Response) => {
 
     console.log('Receiving order save request:', { id: order.id, type: order.type, status: order.status, waiterId: resolvedWaiterId });
 
+    // Server-side Cash Session Enforcement for POS Operations
+    // We block saving if there's no active cash session, UNLESS it's from the Digital Menu or Waiter App
+    if (!order.isOriginDigitalMenu && !resolvedWaiterId && order.status !== 'CANCELLED') {
+        const activeCashSession = await prisma.cashSession.findFirst({
+            where: { status: 'OPEN' }
+        });
+
+        // We allow updates to DELIVERED (if they are syncing from somewhere else), 
+        // but generally block new POS creations or finalizations if closed.
+        if (!activeCashSession) {
+            console.warn(`Blocked saveOrder for ${order.id}: Cash Session is closed.`);
+            return res.status(403).json({ error: 'Caixa Fechado. Abra o caixa antes de processar pedidos no PDV.' });
+        }
+    }
+
     try {
         let isNewItemsAdded = false;
 
