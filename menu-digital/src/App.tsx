@@ -728,7 +728,7 @@ function AppContent() {
       {/* Header Fixo */}
       <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-100 p-4 pt-6 flex justify-between items-center">
         <div>
-          <h1 className="text-xl font-black text-slate-900 tracking-tighter uppercase">Delivery Fast</h1>
+          <h1 className="text-xl font-black text-slate-900 tracking-tighter uppercase">Cardápio Digital</h1>
           <div className="flex flex-col gap-0.5 mt-0.5">
             <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
               Mesa {tableNumber} {clientName ? `• ${clientName}` : '• Disponível'}
