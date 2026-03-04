@@ -5,6 +5,7 @@ import Register from './views/Register';
 import Checkout from './views/Checkout';
 import OrderHistory from './views/OrderHistory';
 import OrderDetails from './views/OrderDetails';
+import Profile from './views/Profile';
 import { CartProvider } from './CartContext';
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
                     <Route path="/checkout" element={<Checkout />} />
                     <Route path="/history" element={<OrderHistory />} />
                     <Route path="/order/:id" element={<OrderDetails />} />
+                    <Route path="/profile" element={<Profile />} />
                     <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
             </BrowserRouter>

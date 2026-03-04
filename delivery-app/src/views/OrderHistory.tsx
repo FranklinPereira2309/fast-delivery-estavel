@@ -102,16 +102,27 @@ const OrderHistory: React.FC = () => {
                                     <div key={idx} className="flex justify-between items-center text-sm">
                                         <span className="font-bold text-slate-700 flex items-center gap-2">
                                             <span className="text-indigo-600 font-black text-[10px] bg-indigo-50 px-2 py-0.5 rounded-lg">{item.quantity}x</span>
-                                            {item.productName || 'Item'}
+                                            {item.product?.name || item.productName || 'Item'}
                                         </span>
-                                        <span className="font-black text-slate-500 text-xs">R$ {(item.price * item.quantity).toFixed(2)}</span>
+                                        <span className="font-black text-slate-500 text-xs">R$ {((item.price || 0) * item.quantity).toFixed(2)}</span>
                                     </div>
                                 ))}
                             </div>
 
-                            <div className="flex justify-between items-center pt-4">
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Pago</span>
-                                <span className="text-xl font-black text-indigo-600 tracking-tighter">R$ {order.total.toFixed(2)}</span>
+                            <div className="flex flex-col gap-2 pt-4">
+                                {order.deliveryFee > 0 && (
+                                    <div className="flex justify-between items-center text-slate-400">
+                                        <span className="text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5">
+                                            <Icons.Smartphone className="w-3 h-3 opacity-50" />
+                                            Taxa de Entrega
+                                        </span>
+                                        <span className="text-xs font-bold">R$ {order.deliveryFee.toFixed(2)}</span>
+                                    </div>
+                                )}
+                                <div className="flex justify-between items-center">
+                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Pago</span>
+                                    <span className="text-xl font-black text-indigo-600 tracking-tighter">R$ {order.total.toFixed(2)}</span>
+                                </div>
                             </div>
                         </div>
                     ))

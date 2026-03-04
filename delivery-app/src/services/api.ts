@@ -82,6 +82,13 @@ class DeliveryApiService {
         return this.request<any[]>(`/orders/client/my-orders?clientId=${client.id}`);
     }
 
+    async updateClient(clientId: string, data: any) {
+        return this.request<any>(`/client-auth/profile/${clientId}`, {
+            method: 'PUT',
+            body: JSON.stringify(data),
+        });
+    }
+
     logout() {
         localStorage.removeItem('delivery_app_token');
         localStorage.removeItem('delivery_app_client');
