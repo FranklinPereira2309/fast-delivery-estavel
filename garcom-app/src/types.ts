@@ -66,6 +66,7 @@ export interface BusinessSettings {
     enableDeliveryApp?: boolean;
     enableDigitalMenu?: boolean;
     enableWaiterApp?: boolean;
+    enableDriverApp?: boolean;
 }
 
 export interface Order {

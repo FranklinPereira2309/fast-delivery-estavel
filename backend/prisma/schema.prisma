@@ -291,6 +291,7 @@ model BusinessSettings {
   enableDeliveryApp    Boolean @default(true)
   enableDigitalMenu    Boolean @default(true)
   enableWaiterApp      Boolean @default(true)
+  enableDriverApp      Boolean @default(true)
 }
 
 model ChatMessage {

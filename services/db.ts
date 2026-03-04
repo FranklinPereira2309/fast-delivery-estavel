@@ -24,9 +24,12 @@ export interface BusinessSettings {
   enableNfcEmission: boolean;
   waiterPrivacyEnabled: boolean;
   waiterPrivacyTimer: number;
+  serviceFeeStatus?: boolean;
+  serviceFeePercentage?: number;
   enableDeliveryApp?: boolean;
   enableDigitalMenu?: boolean;
   enableWaiterApp?: boolean;
+  enableDriverApp?: boolean;
 }
 
 
@@ -46,7 +49,8 @@ const DEFAULT_SETTINGS: BusinessSettings = {
   waiterPrivacyTimer: 60,
   enableDeliveryApp: true,
   enableDigitalMenu: true,
-  enableWaiterApp: true
+  enableWaiterApp: true,
+  enableDriverApp: true
 };
 
 class APIDBService {

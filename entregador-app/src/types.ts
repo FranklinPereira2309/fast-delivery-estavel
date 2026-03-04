@@ -170,10 +170,11 @@ export interface BusinessSettings {
     restaurantLat?: number;
     restaurantLng?: number;
     geofenceRadius: number;
-    isManuallyClosed: boolean;
-    operatingHours: string;
+    isManuallyClosed?: boolean;
+    operatingHours?: string;
     orderTimeoutMinutes: number;
     enableDeliveryApp?: boolean;
     enableDigitalMenu?: boolean;
     enableWaiterApp?: boolean;
+    enableDriverApp?: boolean;
 }

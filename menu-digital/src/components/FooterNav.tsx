@@ -179,7 +179,7 @@ const FooterNav: React.FC<FooterNavProps> = ({ tableNumber, isOwner, pin }) => {
                                     </div>
                                 ) : (
                                     <>
-                                        <h3 className="text-xl font-black text-slate-900 uppercase tracking-tighter">Do que você precisa...</h3>
+                                        <h3 className="text-xl font-black text-slate-900 uppercase tracking-tighter">Do que você precisa?</h3>
                                         <form onSubmit={handleSubmitFeedback} className="space-y-4">
                                             <div>
                                                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2 px-2">Seu Nome (Opcional)</label>

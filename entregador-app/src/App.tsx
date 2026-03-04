@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { DeliveryDriver, Order, OrderStatus, OrderStatusLabels, SaleType, User, Product } from './types';
+import { DeliveryDriver, Order, OrderStatus, OrderStatusLabels, SaleType, User, Product, BusinessSettings } from './types';
 import { db } from './services/db';
 import { socket } from './services/socket';
 import { Icons } from './constants';
@@ -57,6 +57,7 @@ const App: React.FC = () => {
   const [printingOrder, setPrintingOrder] = useState<Order | null>(null);
 
   const [activeTab, setActiveTab] = useState<'PENDING' | 'HISTORY' | 'CHAT'>('PENDING');
+  const [settings, setSettings] = useState<BusinessSettings | null>(null);
   const [historyOrders, setHistoryOrders] = useState<Order[]>([]);
   const [historyStartDate, setHistoryStartDate] = useState(() => {
     const d = new Date();
@@ -188,6 +189,7 @@ const App: React.FC = () => {
       ]);
 
       setProducts(allProds);
+      setSettings(_settings);
       setStoreStatus(status);
 
       const driverOrders = allOrders.filter(o =>
@@ -333,6 +335,21 @@ const App: React.FC = () => {
           Sua conta (<span className="font-bold text-slate-700">{currentUser.email}</span>) não está vinculada a um entregador.
         </p>
         <button onClick={handleLogout} className="px-8 py-4 bg-slate-900 text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl active:scale-95 transition-all">Sair</button>
+      </div>
+    );
+  }
+
+  if (settings && settings.enableDriverApp === false) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-8 text-center select-none">
+        <div className="w-24 h-24 bg-rose-600 rounded-3xl flex items-center justify-center shadow-2xl shadow-rose-500/20 transform -rotate-12 mb-8 animate-bounce">
+          <span className="text-white text-4xl font-black">!</span>
+        </div>
+        <h1 className="text-3xl font-black text-white tracking-tighter uppercase mb-4">Módulo Desativado</h1>
+        <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest leading-relaxed max-w-xs">
+          O acesso ao aplicativo de entregas foi desativado nas configurações do estabelecimento.
+        </p>
+        <div className="mt-12 h-1 w-12 bg-rose-600 rounded-full"></div>
       </div>
     );
   }

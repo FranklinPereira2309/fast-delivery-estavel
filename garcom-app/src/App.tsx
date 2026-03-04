@@ -222,6 +222,21 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
     };
   });
 
+  if (settings && settings.enableWaiterApp === false) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-8 text-center select-none">
+        <div className="w-24 h-24 bg-rose-600 rounded-3xl flex items-center justify-center shadow-2xl shadow-rose-500/20 transform -rotate-12 mb-8 animate-bounce">
+          <span className="text-white text-4xl font-black">!</span>
+        </div>
+        <h1 className="text-3xl font-black text-white tracking-tighter uppercase mb-4">Módulo Desativado</h1>
+        <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest leading-relaxed max-w-xs">
+          O acesso ao aplicativo de garçons foi desativado nas configurações do estabelecimento.
+        </p>
+        <div className="mt-12 h-1 w-12 bg-rose-600 rounded-full"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col">
       {isLocked && <PrivacyScreen user={user as any} onUnlock={() => { setIsLocked(false); setLastActivity(Date.now()); }} />}

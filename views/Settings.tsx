@@ -670,11 +670,11 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings, onReset }) =
                                         <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Habilite ou desabilite os aplicativos para sua loja</p>
                                     </div>
                                 </div>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                                     <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col justify-between gap-4">
                                         <div>
-                                            <h4 className="text-[12px] font-black text-slate-800 uppercase tracking-widest">App Entregador</h4>
-                                            <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase">Acesso ao aplicativo para motoboys e entregadores.</p>
+                                            <h4 className="text-[12px] font-black text-slate-800 uppercase tracking-widest">App Delivery</h4>
+                                            <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase">Clientes fazem pedidos via app próprio (pedidos online).</p>
                                         </div>
                                         <div className="flex justify-end">
                                             <button
@@ -690,7 +690,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings, onReset }) =
                                     <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col justify-between gap-4">
                                         <div>
                                             <h4 className="text-[12px] font-black text-slate-800 uppercase tracking-widest">Menu Digital</h4>
-                                            <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase">Cardápio via QR Code para clientes nas mesas ou delivery.</p>
+                                            <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase">Cardápio via QR Code para clientes nas mesas.</p>
                                         </div>
                                         <div className="flex justify-end">
                                             <button
@@ -706,7 +706,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings, onReset }) =
                                     <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col justify-between gap-4">
                                         <div>
                                             <h4 className="text-[12px] font-black text-slate-800 uppercase tracking-widest">App Garçom</h4>
-                                            <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase">Acesso ao sistema para garçons.</p>
+                                            <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase">Acesso ao sistema para garçons lançarem pedidos.</p>
                                         </div>
                                         <div className="flex justify-end">
                                             <button
@@ -715,6 +715,22 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings, onReset }) =
                                                 onClick={() => setSettings({ ...settings, enableWaiterApp: settings.enableWaiterApp === false ? true : false })}
                                             >
                                                 <div className={`absolute top-1 w-6 h-6 rounded-full bg-white transition-all ${settings.enableWaiterApp !== false ? 'left-7' : 'left-1'}`}></div>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col justify-between gap-4">
+                                        <div>
+                                            <h4 className="text-[12px] font-black text-slate-800 uppercase tracking-widest">App Entregador</h4>
+                                            <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase">Acesso ao aplicativo para motoboys e entregas.</p>
+                                        </div>
+                                        <div className="flex justify-end">
+                                            <button
+                                                type="button"
+                                                className={`w-14 h-8 rounded-full transition-all relative ${settings.enableDriverApp !== false ? 'bg-emerald-500' : 'bg-slate-200'}`}
+                                                onClick={() => setSettings({ ...settings, enableDriverApp: settings.enableDriverApp === false ? true : false })}
+                                            >
+                                                <div className={`absolute top-1 w-6 h-6 rounded-full bg-white transition-all ${settings.enableDriverApp !== false ? 'left-7' : 'left-1'}`}></div>
                                             </button>
                                         </div>
                                     </div>
@@ -804,31 +820,6 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings, onReset }) =
                                         <input type="number" className="w-full p-4 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-blue-50 transition-all font-bold text-sm" value={settings.geofenceRadius || 0} onChange={e => setSettings({ ...settings, geofenceRadius: parseInt(e.target.value) || 0 })} placeholder="Recomendado: 150" />
                                         <p className="text-[8px] text-slate-400 font-bold uppercase tracking-widest ml-1 opacity-60">Sugestão: 150m cobre a maioria das oscilações de GPS interno.</p>
                                     </div>
-                                </div>
-                            </div>
-                            <div className="pt-8 border-t border-slate-100">
-                                <h4 className="text-sm font-black text-slate-800 uppercase tracking-tighter mb-6">Módulos e Aplicativos</h4>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    {[
-                                        { id: 'enableDeliveryApp', label: 'App Delivery (Pedidos Online)', desc: 'Permite que clientes façam pedidos via app próprio.' },
-                                        { id: 'enableDigitalMenu', label: 'Cardápio Digital (Mesas)', desc: 'Ativa o autoatendimento via QR Code nas mesas.' },
-                                        { id: 'enableWaiterApp', label: 'App Garçom', desc: 'Permite que garçons lancem pedidos via smartphone.' },
-                                        { id: 'enableDriverApp', label: 'App Entregador', desc: 'Ativa a integração com o app de logística para motoboys.' },
-                                    ].map((app) => (
-                                        <div key={app.id} className="p-5 bg-slate-50 rounded-3xl border border-slate-100 flex items-center justify-between">
-                                            <div>
-                                                <h5 className="text-[11px] font-black text-slate-800 uppercase tracking-widest">{app.label}</h5>
-                                                <p className="text-[9px] font-bold text-slate-400 mt-1 uppercase leading-tight max-w-[200px]">{app.desc}</p>
-                                            </div>
-                                            <button
-                                                type="button"
-                                                className={`w-12 h-7 rounded-full transition-all relative shrink-0 ${settings[app.id as keyof BusinessSettings] ? 'bg-emerald-500' : 'bg-slate-200'}`}
-                                                onClick={() => setSettings({ ...settings, [app.id]: !settings[app.id as keyof BusinessSettings] })}
-                                            >
-                                                <div className={`absolute top-1 w-5 h-5 rounded-full bg-white transition-all ${settings[app.id as keyof BusinessSettings] ? 'left-6' : 'left-1'}`}></div>
-                                            </button>
-                                        </div>
-                                    ))}
                                 </div>
                             </div>
 

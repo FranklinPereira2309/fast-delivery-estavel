@@ -24,6 +24,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
   const [shouldBlinkDeliveryApp, setShouldBlinkDeliveryApp] = useState(false);
   const [shouldBlinkLogisticsChat, setShouldBlinkLogisticsChat] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
+  const [settings, setSettings] = useState<any>(null);
   const { isAlerting } = useDigitalAlert();
   const lastOrdersMap = useRef<Record<string, { status: OrderStatus, itemCount: number }>>({});
   const isFirstRun = useRef(true);
@@ -134,6 +135,8 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
 
     const checkData = async () => {
       // Primeiro 'run' silencioso para evitar alerta de login
+      const initialSettings = await db.getSettings();
+      setSettings(initialSettings);
       await monitorSystem(true);
       isDataInitialized.current = true;
     };
@@ -176,7 +179,19 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
     if (activeTab === 'tables') setShouldBlinkTables(false);
   }, [activeTab]);
 
-  const navItems = allNavItems.filter(item => currentUser.permissions.includes(item.id));
+  const navItems = allNavItems.filter(item => {
+    const hasPermission = currentUser.permissions.includes(item.id);
+    if (!hasPermission) return false;
+
+    if (settings) {
+      if (item.id === 'delivery-orders' && settings.enableDeliveryApp === false) return false;
+      if (item.id === 'tables' && (settings.enableDigitalMenu === false && settings.enableWaiterApp === false)) return false;
+      if (item.id === 'qrcodes' && settings.enableDigitalMenu === false) return false;
+      if (item.id === 'logistics' && settings.enableDeliveryApp === false && settings.enableDriverApp === false) return false;
+    }
+
+    return true;
+  });
 
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden">
