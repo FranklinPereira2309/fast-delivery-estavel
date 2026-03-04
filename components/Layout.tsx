@@ -21,6 +21,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
   const [shouldBlinkLogistics, setShouldBlinkLogistics] = useState(false);
   const [shouldBlinkKitchen, setShouldBlinkKitchen] = useState(false);
   const [shouldBlinkTables, setShouldBlinkTables] = useState(false);
+  const [shouldBlinkDeliveryApp, setShouldBlinkDeliveryApp] = useState(false);
   const [shouldBlinkLogisticsChat, setShouldBlinkLogisticsChat] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
   const { isAlerting } = useDigitalAlert();
@@ -37,6 +38,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
     { id: 'kitchen', label: 'Cozinha', icon: Icons.Kitchen },
     { id: 'crm', label: 'Clientes (CRM)', icon: Icons.CRM },
     { id: 'inventory', label: 'Estoque / Cardápio', icon: Icons.Inventory },
+    { id: 'delivery-orders', label: 'App Delivery (Pedidos)', icon: Icons.Smartphone },
     { id: 'logistics', label: 'Logística', icon: Icons.Logistics },
     { id: 'receivables', label: 'Recebimentos (Fiado)', icon: Icons.Receivables },
     { id: 'qrcodes', label: 'QR Codes das Mesas', icon: Icons.Dashboard }, // Consider adding a specific icon later if needed
@@ -104,19 +106,27 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
         setShouldBlinkTables(hasPendingDigital);
       }
 
+      // 4.1 Checagem Delivery App (Pedidos novos esperando aceite)
+      const hasDeliveryAppOrders = orders.some(o => o.isOriginDeliveryApp && o.status === OrderStatus.PENDING);
+      if (!silent && !isFirstRun.current) {
+        setShouldBlinkDeliveryApp(hasDeliveryAppOrders);
+      }
+
       // 5. Tocar Alertas Sonoros apenas em transições (false -> true)
       if (!silent && isDataInitialized.current) {
         const alertState = prevAlertStates.current;
         if (hasNewOrder && !alertState.kitchen) audioAlert.play();
         if (hasPendingDigital && !alertState.tables) audioAlert.play();
         if (hasReadyDelivery && !alertState.logistics) audioAlert.play();
+        if (hasDeliveryAppOrders && !alertState.deliveryApp) audioAlert.play();
       }
 
       // Sincroniza estados anteriores para o próximo loop
       prevAlertStates.current = {
         kitchen: hasNewOrder,
         tables: hasPendingDigital,
-        logistics: hasReadyDelivery
+        logistics: hasReadyDelivery,
+        deliveryApp: hasDeliveryAppOrders
       };
 
       isFirstRun.current = false;
@@ -198,11 +208,13 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
             const isLogistics = item.id === 'logistics';
             const isKitchen = item.id === 'kitchen';
             const isTables = item.id === 'tables';
+            const isDeliveryApp = item.id === 'delivery-orders';
             const blinkClass = (isMonitor && shouldBlinkMonitor) ||
               (isPOS && shouldBlinkPOS) ||
               (isLogistics && (shouldBlinkLogistics || shouldBlinkLogisticsChat)) ||
               (isKitchen && (isAlerting || shouldBlinkKitchen)) ||
-              (isTables && (isAlerting || shouldBlinkTables))
+              (isTables && (isAlerting || shouldBlinkTables)) ||
+              (isDeliveryApp && shouldBlinkDeliveryApp)
               ? 'animate-notify-turquoise border-none' : '';
 
             return (

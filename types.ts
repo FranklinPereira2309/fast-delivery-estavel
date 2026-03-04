@@ -96,6 +96,7 @@ export interface BusinessSettings {
   enableDeliveryApp?: boolean;
   enableDigitalMenu?: boolean;
   enableWaiterApp?: boolean;
+  enableDriverApp?: boolean;
 }
 
 export interface Waiter {
@@ -183,6 +184,7 @@ export interface Order {
   tableNumber?: number;
   waiterId?: string;
   isOriginDigitalMenu?: boolean;
+  isOriginDeliveryApp?: boolean;
   updatedAt?: string;
   // NFe Status
   nfeStatus?: 'PENDING' | 'EMITTED' | 'ERROR';

@@ -11,6 +11,7 @@ import Logistics from './views/Logistics';
 import SalesMonitor from './views/SalesMonitor';
 import Reports from './views/Reports';
 import Settings from './views/Settings';
+import DeliveryOrders from './views/DeliveryOrders';
 import Login from './components/Login';
 import AuditLogs from './views/AuditLogs';
 import QRCodes from './views/QRCodes';
@@ -130,6 +131,7 @@ const App: React.FC = () => {
       case 'kitchen': return <Kitchen />;
       case 'crm': return <CRM currentUser={currentUser} />;
       case 'inventory': return <Inventory />;
+      case 'delivery-orders': return <DeliveryOrders currentUser={currentUser} />;
       case 'logistics': return <Logistics />;
       case 'receivables': return <Receivables currentUser={currentUser} setActiveTab={setActiveTab} />;
       case 'reports': return <Reports currentUser={currentUser} />;

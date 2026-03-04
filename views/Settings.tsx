@@ -806,6 +806,32 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings, onReset }) =
                                     </div>
                                 </div>
                             </div>
+                            <div className="pt-8 border-t border-slate-100">
+                                <h4 className="text-sm font-black text-slate-800 uppercase tracking-tighter mb-6">Módulos e Aplicativos</h4>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    {[
+                                        { id: 'enableDeliveryApp', label: 'App Delivery (Pedidos Online)', desc: 'Permite que clientes façam pedidos via app próprio.' },
+                                        { id: 'enableDigitalMenu', label: 'Cardápio Digital (Mesas)', desc: 'Ativa o autoatendimento via QR Code nas mesas.' },
+                                        { id: 'enableWaiterApp', label: 'App Garçom', desc: 'Permite que garçons lancem pedidos via smartphone.' },
+                                        { id: 'enableDriverApp', label: 'App Entregador', desc: 'Ativa a integração com o app de logística para motoboys.' },
+                                    ].map((app) => (
+                                        <div key={app.id} className="p-5 bg-slate-50 rounded-3xl border border-slate-100 flex items-center justify-between">
+                                            <div>
+                                                <h5 className="text-[11px] font-black text-slate-800 uppercase tracking-widest">{app.label}</h5>
+                                                <p className="text-[9px] font-bold text-slate-400 mt-1 uppercase leading-tight max-w-[200px]">{app.desc}</p>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                className={`w-12 h-7 rounded-full transition-all relative shrink-0 ${settings[app.id as keyof BusinessSettings] ? 'bg-emerald-500' : 'bg-slate-200'}`}
+                                                onClick={() => setSettings({ ...settings, [app.id]: !settings[app.id as keyof BusinessSettings] })}
+                                            >
+                                                <div className={`absolute top-1 w-5 h-5 rounded-full bg-white transition-all ${settings[app.id as keyof BusinessSettings] ? 'left-6' : 'left-1'}`}></div>
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
                             <button type="submit" className="w-full md:w-auto bg-blue-600 text-white px-12 py-5 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-blue-700 transition-all shadow-2xl shadow-blue-100">Salvar Dados da Empresa</button>
                         </form>
                     </div>

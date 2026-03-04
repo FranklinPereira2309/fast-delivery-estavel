@@ -78,6 +78,8 @@ model Client {
   name          String
   phone         String
   email         String?
+  password      String?
+  recoveryCode  String?
   document      String?
   addresses     String[]
   totalOrders   Int          @default(0)
@@ -166,7 +168,9 @@ model Order {
   waiterId            String?
   waiter              Waiter?          @relation(fields: [waiterId], references: [id])
   isOriginDigitalMenu Boolean          @default(false)
+  isOriginDeliveryApp Boolean          @default(false)
   rejections          OrderRejection[]
+  messages            OrderMessage[]
   // Fiscal Fields
   nfeStatus           String? // PENDING, EMITTED, ERROR
   nfeNumber           String?
@@ -347,4 +351,13 @@ model Feedback {
   tableNumber Int
   isRead      Boolean  @default(false)
   createdAt   DateTime @default(now())
+}
+
+model OrderMessage {
+  id        String   @id @default(uuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id])
+  sender    String   // 'STORE' | 'CLIENT'
+  text      String
+  createdAt DateTime @default(now())
 }

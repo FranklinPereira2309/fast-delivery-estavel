@@ -392,6 +392,18 @@ class APIDBService {
     return this.request<OrderRejection[]>('/drivers/rejections');
   }
 
+  // Client Chat (Delivery App)
+  public async getClientChatHistory(orderId: string): Promise<any[]> {
+    return this.request<any[]>(`/orders/${orderId}/messages`);
+  }
+
+  public async sendClientChatMessage(orderId: string, content: string, senderName: string, isFromClient: boolean) {
+    return this.request(`/orders/${orderId}/messages`, {
+      method: 'POST',
+      body: JSON.stringify({ content, senderName, isFromClient })
+    });
+  }
+
   // Cash Session
   public async getActiveCashSession(): Promise<CashSession | null> {
     try {

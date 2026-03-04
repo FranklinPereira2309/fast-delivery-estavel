@@ -178,8 +178,8 @@ export const saveOrder = async (req: Request, res: Response) => {
     console.log('Receiving order save request:', { id: order.id, type: order.type, status: order.status, waiterId: resolvedWaiterId });
 
     // Server-side Cash Session Enforcement for POS Operations
-    // We block saving if there's no active cash session, UNLESS it's from the Digital Menu or Waiter App
-    if (!order.isOriginDigitalMenu && !resolvedWaiterId && order.status !== 'CANCELLED') {
+    // We block saving if there's no active cash session, UNLESS it's from the Digital Menu, Delivery App, or Waiter App
+    if (!order.isOriginDigitalMenu && !order.isOriginDeliveryApp && !resolvedWaiterId && order.status !== 'CANCELLED') {
         const activeCashSession = await prisma.cashSession.findFirst({
             where: { status: 'OPEN' }
         });
@@ -329,6 +329,7 @@ export const saveOrder = async (req: Request, res: Response) => {
                     clientEmail: order.clientEmail || null,
                     clientDocument: order.clientDocument || null,
                     isOriginDigitalMenu: order.isOriginDigitalMenu !== undefined ? order.isOriginDigitalMenu : false, // Fix: Preserve Origin into Update
+                    isOriginDeliveryApp: order.isOriginDeliveryApp !== undefined ? order.isOriginDeliveryApp : false,
                     nfeStatus: order.nfeStatus || null,
                     nfeNumber: order.nfeNumber || null,
                     nfeUrl: order.nfeUrl || null,
@@ -372,6 +373,7 @@ export const saveOrder = async (req: Request, res: Response) => {
                     clientEmail: order.clientEmail || null,
                     clientDocument: order.clientDocument || null,
                     isOriginDigitalMenu: order.isOriginDigitalMenu !== undefined ? order.isOriginDigitalMenu : false,
+                    isOriginDeliveryApp: order.isOriginDeliveryApp !== undefined ? order.isOriginDeliveryApp : false,
                     createdAt: (order.createdAt && !isNaN(Date.parse(order.createdAt))) ? new Date(order.createdAt) : new Date(),
                     nfeStatus: order.nfeStatus || null,
                     nfeNumber: order.nfeNumber || null,
@@ -885,6 +887,48 @@ export const updateOrderServiceFee = async (req: Request, res: Response) => {
         res.json(mapOrderResponse(result));
     } catch (error: any) {
         console.error('Error updating service fee:', error);
+        res.status(500).json({ error: error.message });
+    }
+};
+
+export const getClientOrders = async (req: Request, res: Response) => {
+    const { clientId } = req.query;
+    if (!clientId) return res.status(400).json({ error: 'clientId é obrigatório' });
+    try {
+        const orders = await prisma.order.findMany({
+            where: { clientId: String(clientId) },
+            include: { items: true },
+            orderBy: { createdAt: 'desc' }
+        });
+        res.json(orders.map(mapOrderResponse));
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+export const getOrderMessages = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    try {
+        const messages = await prisma.orderMessage.findMany({
+            where: { orderId: String(id) },
+            orderBy: { createdAt: 'asc' }
+        });
+        res.json(messages);
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+export const addOrderMessage = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const { sender, text } = req.body;
+    try {
+        const message = await prisma.orderMessage.create({
+            data: { orderId: String(id), sender, text }
+        });
+        getIO().emit('newOrderMessage', { orderId: id, message });
+        res.status(201).json(message);
+    } catch (error: any) {
         res.status(500).json({ error: error.message });
     }
 };
