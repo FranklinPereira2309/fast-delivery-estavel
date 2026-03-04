@@ -1087,7 +1087,7 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
                     if (!currentUser.permissions.includes('admin')) {
                       await requireWaiterAuth(sess.waiterId, `Transferir Mesa ${transferModal.sourceTable} para ${target}`);
                     }
-                    await (db as any).transferTable(transferModal.sourceTable, target, sess.waiterId, currentUser.permissions);
+                    await db.transferTable(transferModal.sourceTable, target, sess.waiterId, currentUser.permissions);
                     setSelectedTable(null);
                     await refreshData();
                     showAlert("Sucesso", "Transferência realizada com sucesso!", "SUCCESS");
@@ -1127,7 +1127,7 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
                     if (!currentUser.permissions.includes('admin')) {
                       await requireWaiterAuth(sess.waiterId, `Transferir Mesa ${transferModal.sourceTable} para ${target}`);
                     }
-                    await (db as any).transferTable(transferModal.sourceTable, target, sess.waiterId, currentUser.permissions);
+                    await db.transferTable(transferModal.sourceTable, target, sess.waiterId, currentUser.permissions);
                     setSelectedTable(null);
                     await refreshData();
                     showAlert("Sucesso", "Transferência realizada com sucesso!", "SUCCESS");

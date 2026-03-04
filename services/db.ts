@@ -282,6 +282,13 @@ class APIDBService {
     });
   }
 
+  public async transferTable(from: number, to: number, waiterId: string, userPermissions?: string[]) {
+    return this.request('/tables/transfer', {
+      method: 'POST',
+      body: JSON.stringify({ from, to, waiterId, userPermissions })
+    });
+  }
+
   public async deleteOrder(id: string, user: User, reason?: string) {
     await this.request(`/orders/${id}`, {
       method: 'DELETE',
