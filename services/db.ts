@@ -69,8 +69,9 @@ class APIDBService {
     await this.logAction(this.getCurrentSession()?.user || null, 'SYSTEM_UPDATE', waiter.id ? `Garçom editado: ${waiter.name}` : `Novo garçom cadastrado: ${waiter.name}`);
   }
   public async deleteWaiter(id: string) {
-    await this.request(`/waiters/${id}`, { method: 'DELETE' });
+    const resp = await this.request<any>(`/waiters/${id}`, { method: 'DELETE' });
     await this.logAction(this.getCurrentSession()?.user || null, 'SYSTEM_DELETE', `Garçom removido: ${id}`);
+    return resp;
   }
   public async toggleWaiterStatus(id: string, active: boolean) {
     await this.request('/waiters/toggle-status', { method: 'POST', body: JSON.stringify({ id, active }) });
@@ -88,8 +89,9 @@ class APIDBService {
     await this.logAction(this.getCurrentSession()?.user || null, 'SYSTEM_UPDATE', `Sessão da mesa ${session.tableNumber} salva/atualizada.`);
   }
   public async deleteTableSession(tableNumber: number, isCancellation: boolean = false) {
-    await this.request(`/tables/${tableNumber}${isCancellation ? '?cancellation=true' : ''}`, { method: 'DELETE' });
+    const resp = await this.request<any>(`/tables/${tableNumber}${isCancellation ? '?cancellation=true' : ''}`, { method: 'DELETE' });
     await this.logAction(this.getCurrentSession()?.user || null, 'SYSTEM_DELETE', `Sessão da mesa ${tableNumber} cancelada/removida.`);
+    return resp;
   }
 
   public async logAction(user: User | null, action: AuditLog['action'], details: string) {
@@ -169,8 +171,9 @@ class APIDBService {
     await this.logAction(this.getCurrentSession()?.user || null, 'SYSTEM_UPDATE', driver.id ? `Driver editado: ${driver.name}` : `Novo driver cadastrado: ${driver.name}`);
   }
   public async deleteDriver(id: string) {
-    await this.request(`/drivers/${id}`, { method: 'DELETE' });
+    const resp = await this.request<any>(`/drivers/${id}`, { method: 'DELETE' });
     await this.logAction(this.getCurrentSession()?.user || null, 'SYSTEM_DELETE', `Driver deletado: ${id}`);
+    return resp;
   }
 
   // Inventory
@@ -180,8 +183,9 @@ class APIDBService {
     await this.logAction(this.getCurrentSession()?.user || null, 'SYSTEM_UPDATE', item.id ? `Item de estoque editado: ${item.name}` : `Novo item de estoque: ${item.name}`);
   }
   public async deleteInventoryItem(id: string) {
-    await this.request(`/inventory/${id}`, { method: 'DELETE' });
+    const resp = await this.request<any>(`/inventory/${id}`, { method: 'DELETE' });
     await this.logAction(this.getCurrentSession()?.user || null, 'SYSTEM_DELETE', `Item de estoque deletado: ${id}`);
+    return resp;
   }
 
   // Products
@@ -191,8 +195,9 @@ class APIDBService {
     await this.logAction(this.getCurrentSession()?.user || null, 'SYSTEM_UPDATE', product.id ? `Produto editado: ${product.name}` : `Novo produto criado: ${product.name}`);
   }
   public async deleteProduct(id: string) {
-    await this.request(`/products/${id}`, { method: 'DELETE' });
+    const resp = await this.request<any>(`/products/${id}`, { method: 'DELETE' });
     await this.logAction(this.getCurrentSession()?.user || null, 'SYSTEM_DELETE', `Produto deletado: ${id}`);
+    return resp;
   }
   public async updateProductRecipe(productId: string, recipe: RecipeItem[]) {
     const products = await this.getProducts();
