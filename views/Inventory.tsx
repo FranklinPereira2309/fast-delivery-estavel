@@ -204,25 +204,25 @@ const Inventory: React.FC = () => {
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 overflow-y-auto pb-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 overflow-y-auto pb-10">
           {products.map(product => (
             <div key={product.id} className="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 p-6 flex flex-col group hover:shadow-xl hover:border-blue-100 transition-all">
               <div className="relative mb-4 bg-slate-50 rounded-3xl overflow-hidden aspect-square flex items-center justify-center border border-slate-50 group-hover:scale-[1.02] transition-transform">
                 <img src={formatImageUrl(product.imageUrl)} onError={e => e.currentTarget.src = PLACEHOLDER_FOOD_IMAGE} className="w-full h-full object-contain" />
               </div>
-              <h4 className="font-black text-slate-800 text-sm uppercase truncate mb-1">{product.name}</h4>
+              <h4 className="font-black text-slate-800 text-sm uppercase mb-1 h-10 line-clamp-2 leading-tight">{product.name}</h4>
               <p className="text-lg font-black text-blue-600 mb-6">R$ {product.price.toFixed(2)}</p>
-              <div className="flex gap-2">
-                <button onClick={() => openProdModal(product)} className="flex-1 py-4 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-2xl text-[10px] font-black uppercase transition-all flex items-center justify-center gap-2" title="Editar">
-                  <Icons.Edit />
-                  Editar
+              <div className="flex gap-1.5">
+                <button onClick={() => openProdModal(product)} className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-2xl text-[9px] font-black uppercase transition-all flex items-center justify-center gap-1.5" title="Editar">
+                  <Icons.Edit className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span className="truncate">Editar</span>
                 </button>
-                <button onClick={() => { setEditingProduct(product); setTempRecipe(product.recipe || []); setIsRecipeModalOpen(true); }} className="flex-1 py-4 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-2xl text-[10px] font-black uppercase transition-all flex items-center justify-center gap-2" title="Ficha Técnica">
-                  <Icons.View />
-                  Ficha
+                <button onClick={() => { setEditingProduct(product); setTempRecipe(product.recipe || []); setIsRecipeModalOpen(true); }} className="flex-1 py-3 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-2xl text-[9px] font-black uppercase transition-all flex items-center justify-center gap-1.5" title="Ficha Técnica">
+                  <Icons.View className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span className="truncate">Ficha</span>
                 </button>
-                <button onClick={() => deleteProd(product.id)} className="w-14 py-4 bg-red-50 hover:bg-red-100 text-red-600 rounded-2xl transition-all flex items-center justify-center" title="Excluir">
-                  <Icons.Delete />
+                <button onClick={() => deleteProd(product.id)} className="w-12 py-3 bg-red-50 hover:bg-red-100 text-red-600 rounded-2xl transition-all flex items-center justify-center flex-shrink-0" title="Excluir">
+                  <Icons.Delete className="w-4 h-4" />
                 </button>
               </div>
             </div>
