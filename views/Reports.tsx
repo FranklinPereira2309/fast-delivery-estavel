@@ -44,11 +44,12 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
     const [clientSearch, setClientSearch] = useState('');
     const [selectedClient, setSelectedClient] = useState<Client | null>(null);
     const [showClientDropdown, setShowClientDropdown] = useState(false);
-    const [previewType, setPreviewType] = useState<'SALES' | 'CLIENTS' | 'CLIENT_ORDERS' | 'DRIVERS' | 'INVENTORY' | 'CASH' | 'RECEIVABLES' | 'WAITERS' | null>(null);
+    const [previewType, setPreviewType] = useState<'SALES' | 'CLIENTS' | 'CLIENT_ORDERS' | 'DRIVERS' | 'INVENTORY' | 'CASH' | 'RECEIVABLES' | 'WAITERS' | 'WAITERS_ANALYTICAL' | null>(null);
 
     // Waiter Filters
     const [waiterStartDate, setWaiterStartDate] = useState(getLocalIsoDate());
     const [waiterEndDate, setWaiterEndDate] = useState(getLocalIsoDate());
+    const [waiterReportType, setWaiterReportType] = useState<'CONSOLIDADO' | 'ANALITICO'>('CONSOLIDADO');
 
     // Editing Cash Reports
     const [isEditReportModalOpen, setIsEditReportModalOpen] = useState(false);
@@ -1021,6 +1022,109 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
         }
     };
 
+    const generateWaitersAnalyticalPDF = async (downloadOnly = false) => {
+        if (!businessSettings) return;
+
+        try {
+            const pdfDoc = await PDFDocument.create();
+            const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+            const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+
+            // Filtrar pedidos entregues no período que possuem garçom e batem com o filtro
+            const filteredOrders = orders.filter(o => {
+                const orderDate = getLocalIsoDate(new Date(o.createdAt));
+                const inDate = orderDate >= waiterStartDate && orderDate <= waiterEndDate;
+                const inWaiter = selectedWaiterId === 'TODOS' || o.waiterId === selectedWaiterId;
+                return inDate && inWaiter && o.status === OrderStatus.DELIVERED && o.waiterId;
+            }).sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+
+            if (filteredOrders.length === 0) {
+                alert('Nenhum pedido encontrado para o período e garçom selecionados.');
+                return;
+            }
+
+            let page = pdfDoc.addPage([595.28, 841.89]);
+            const { width, height } = page.getSize();
+            let y = height - 50;
+
+            const waiterName = selectedWaiterId === 'TODOS' ? 'Todos os Garçons' : (waiters.find(w => w.id === selectedWaiterId)?.name || 'Desconhecido');
+
+            // Header
+            page.drawText('RELATÓRIO ANALÍTICO DE COMISSÕES', { x: 50, y, size: 18, font: fontBold });
+            y -= 25;
+            page.drawText(businessSettings.name, { x: 50, y, size: 12, font: fontBold });
+            y -= 15;
+            page.drawText(`Garçom: ${waiterName}`, { x: 50, y, size: 10, font: fontBold });
+            y -= 15;
+            page.drawText(`Período: ${new Date(waiterStartDate + 'T00:00:00').toLocaleDateString('pt-BR')} a ${new Date(waiterEndDate + 'T00:00:00').toLocaleDateString('pt-BR')}`, { x: 50, y, size: 10, font });
+
+            y -= 40;
+            // Table Header
+            page.drawRectangle({ x: 50, y: y - 5, width: width - 100, height: 20, color: rgb(0.95, 0.95, 0.95) });
+            page.drawText('DATA e HORA', { x: 55, y, size: 8, font: fontBold });
+            page.drawText('GARÇOM', { x: 140, y, size: 8, font: fontBold });
+            page.drawText('MESA', { x: 230, y, size: 8, font: fontBold });
+            page.drawText('CLIENTE', { x: 280, y, size: 8, font: fontBold });
+            page.drawText('VENDIDO', { x: 440, y, size: 8, font: fontBold });
+            page.drawText('COMISSÃO', { x: 500, y, size: 8, font: fontBold });
+            y -= 25;
+
+            let grandTotalSales = 0;
+            let grandTotalCommission = 0;
+
+            for (const o of filteredOrders) {
+                if (y < 70) {
+                    page = pdfDoc.addPage([595.28, 841.89]);
+                    y = page.getHeight() - 50;
+                }
+                const dateObj = new Date(o.createdAt);
+                const dateStr = `${dateObj.toLocaleDateString('pt-BR')} ${dateObj.toLocaleTimeString('pt-BR').substring(0, 5)}`;
+                const wName = waiters.find(w => w.id === o.waiterId)?.name || `ID: ${o.waiterId}`;
+
+                const commission = o.appliedServiceFee || 0;
+                // O order.total já inclui a comissão em ordens de mesa!
+                // Então o "Vendido" (produtos em si) é total - comissão
+                const productsTotal = o.total - commission;
+
+                page.drawText(dateStr, { x: 55, y, size: 7, font });
+                page.drawText(wName.substring(0, 18), { x: 140, y, size: 7, font });
+                page.drawText(o.tableNumber ? `Mesa ${o.tableNumber}` : 'Balcão', { x: 230, y, size: 7, font: fontBold });
+                page.drawText(o.clientName.substring(0, 30), { x: 280, y, size: 7, font });
+                page.drawText(`R$ ${productsTotal.toFixed(2)}`, { x: 440, y, size: 7, font });
+                page.drawText(`R$ ${commission.toFixed(2)}`, { x: 500, y, size: 7, font: fontBold });
+
+                grandTotalSales += productsTotal;
+                grandTotalCommission += commission;
+                y -= 20;
+            }
+
+            y -= 10;
+            page.drawRectangle({ x: 50, y: y - 5, width: width - 100, height: 2, color: rgb(0, 0, 0) });
+            y -= 20;
+            page.drawText('TOTAIS GERAIS DO PERÍODO', { x: 55, y, size: 10, font: fontBold });
+            page.drawText(`R$ ${grandTotalSales.toFixed(2)}`, { x: 440, y, size: 9, font: fontBold });
+            page.drawText(`R$ ${grandTotalCommission.toFixed(2)}`, { x: 500, y, size: 9, font: fontBold, color: rgb(0, 0.5, 0) });
+
+            const pdfBytes = await pdfDoc.save();
+            const blob = new Blob([pdfBytes as any], { type: 'application/pdf' });
+            const url = URL.createObjectURL(blob);
+
+            if (downloadOnly) {
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `comissoes_analitico_${waiterStartDate}_${waiterEndDate}.pdf`;
+                link.click();
+                URL.revokeObjectURL(url);
+            } else {
+                setPreviewType('WAITERS_ANALYTICAL');
+                setPdfPreviewUrl(url);
+            }
+        } catch (error) {
+            console.error('Erro ao gerar PDF analítico de comissões:', error);
+            alert('Erro ao gerar relatório analítico.');
+        }
+    };
+
     return (
         <div className="flex flex-col h-full gap-8 animate-in fade-in duration-500 overflow-y-auto pb-8">
             {alert && (
@@ -1600,22 +1704,41 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
                             </div>
                         </div>
 
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Filtrar por Garçom</label>
-                            <select
-                                value={selectedWaiterId}
-                                onChange={e => setSelectedWaiterId(e.target.value)}
-                                className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-sm"
-                            >
-                                <option value="TODOS">TODOS OS GARÇONS</option>
-                                {waiters.map(w => (
-                                    <option key={w.id} value={w.id}>{w.name}</option>
-                                ))}
-                            </select>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Filtrar por Garçom</label>
+                                <select
+                                    value={selectedWaiterId}
+                                    onChange={e => setSelectedWaiterId(e.target.value)}
+                                    className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-sm"
+                                >
+                                    <option value="TODOS">TODOS OS GARÇONS</option>
+                                    {waiters.map(w => (
+                                        <option key={w.id} value={w.id}>{w.name}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Tipo de Relatório</label>
+                                <select
+                                    value={waiterReportType}
+                                    onChange={e => setWaiterReportType(e.target.value as 'CONSOLIDADO' | 'ANALITICO')}
+                                    className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-sm"
+                                >
+                                    <option value="CONSOLIDADO">RESUMO CONSOLIDADO</option>
+                                    <option value="ANALITICO">DETALHADO ANALÍTICO</option>
+                                </select>
+                            </div>
                         </div>
 
                         <button
-                            onClick={() => generateWaitersPDF(false)}
+                            onClick={() => {
+                                if (waiterReportType === 'CONSOLIDADO') {
+                                    generateWaitersPDF(false);
+                                } else {
+                                    generateWaitersAnalyticalPDF(false);
+                                }
+                            }}
                             className="mt-8 w-full py-6 bg-slate-900 hover:bg-black text-white rounded-[2rem] font-black uppercase text-xs tracking-widest shadow-xl transition-all flex items-center justify-center gap-3"
                         >
                             <Icons.Print />
@@ -1647,6 +1770,7 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
                                             else if (previewType === 'CASH') generateCashPDF(true);
                                             else if (previewType === 'RECEIVABLES') generateReceivablesPDF(true);
                                             else if (previewType === 'WAITERS') generateWaitersPDF(true);
+                                            else if (previewType === 'WAITERS_ANALYTICAL') generateWaitersAnalyticalPDF(true);
                                         }}
                                         className="bg-slate-900 text-white px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all flex items-center gap-2"
                                     >
