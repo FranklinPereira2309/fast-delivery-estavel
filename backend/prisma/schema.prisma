@@ -83,6 +83,7 @@ model Client {
   document      String?
   cep           String?
   street        String?
+  addressNumber String?
   neighborhood  String?
   city          String?
   state         String?
