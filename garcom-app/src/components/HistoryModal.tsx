@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, TrendingUp, History, Clock, DollarSign, ClipboardList, ChevronRight, Printer } from 'lucide-react';
+import { X, TrendingUp, History, Clock, DollarSign, ClipboardList, Printer } from 'lucide-react';
 import { db } from '../api';
 import type { User, Order, TableSession, BusinessSettings } from '../types';
 
