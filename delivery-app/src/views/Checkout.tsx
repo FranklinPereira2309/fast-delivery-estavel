@@ -235,33 +235,47 @@ const Checkout: React.FC = () => {
                         <span className="w-2 h-2 rounded-full bg-indigo-400"></span> Local de Entrega
                     </h2>
 
-                    {savedAddress && !useNewAddress ? (
-                        <div className="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-[2rem] shadow-sm">
+                    {savedAddress && (
+                        <div className={`flex items-center justify-between p-4 bg-white border border-slate-100 rounded-[2rem] shadow-sm transition-all ${useNewAddress ? 'opacity-50 grayscale' : ''}`}>
                             <div className="flex-1 pr-4">
                                 <span className="text-[9px] font-black uppercase text-emerald-500 tracking-widest block mb-1">CADASTRADO</span>
                                 <p className="text-xs font-bold text-slate-700 leading-snug line-clamp-2">{savedAddress}</p>
                             </div>
-                            <button
-                                type="button"
-                                onClick={() => setUseNewAddress(true)}
-                                className="text-[9px] font-black uppercase text-indigo-500 tracking-widest px-4 py-2 bg-indigo-50 rounded-full hover:bg-indigo-100 transition-all shrink-0"
-                            >
-                                Trocar
-                            </button>
+                            {!useNewAddress && (
+                                <button
+                                    type="button"
+                                    onClick={() => setUseNewAddress(true)}
+                                    className="text-[9px] font-black uppercase text-indigo-500 tracking-widest px-4 py-2 bg-indigo-50 rounded-full hover:bg-indigo-100 transition-all shrink-0"
+                                >
+                                    Novo Endereço
+                                </button>
+                            )}
                         </div>
-                    ) : (
-                        <div className="p-6 bg-white border border-slate-100 rounded-[2rem] shadow-sm space-y-4">
+                    )}
+
+                    {!savedAddress && !useNewAddress && (
+                        <button
+                            type="button"
+                            onClick={() => setUseNewAddress(true)}
+                            className="w-full p-6 bg-white border border-dashed border-slate-200 rounded-[2rem] text-slate-400 font-bold text-sm hover:border-indigo-300 hover:text-indigo-500 transition-all flex items-center justify-center gap-2"
+                        >
+                            <Icons.Smartphone className="w-5 h-5" />
+                            Cadastrar Endereço de Entrega
+                        </button>
+                    )}
+
+                    {useNewAddress && (
+                        <div className="p-6 bg-white border border-slate-100 rounded-[2rem] shadow-sm space-y-4 animate-in fade-in slide-in-from-top-4 duration-300">
                             <div className="flex justify-between items-center mb-2">
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Novo Endereço</span>
-                                {savedAddress && (
-                                    <button
-                                        type="button"
-                                        onClick={() => setUseNewAddress(false)}
-                                        className="text-[9px] font-black uppercase text-rose-500 tracking-widest px-3 py-1.5 bg-rose-50 rounded-full hover:bg-rose-100 transition-all font-bold"
-                                    >
-                                        Cancelar
-                                    </button>
-                                )}
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Informações de Entrega</span>
+                                <button
+                                    type="button"
+                                    onClick={() => setUseNewAddress(false)}
+                                    className="p-2 bg-slate-50 text-slate-400 rounded-full hover:bg-rose-50 hover:text-rose-500 transition-all"
+                                    title="Fechar"
+                                >
+                                    <Icons.X className="w-4 h-4" />
+                                </button>
                             </div>
 
                             <div className="relative">
