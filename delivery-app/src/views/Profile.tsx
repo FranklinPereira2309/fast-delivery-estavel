@@ -8,10 +8,15 @@ const Profile: React.FC = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [client, setClient] = useState<any>(null);
+    const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
     const [formData, setFormData] = useState({
         name: '',
         email: '',
         address: '',
+        currentPassword: '',
         password: '',
         confirmPassword: ''
     });
@@ -31,6 +36,7 @@ const Profile: React.FC = () => {
                 name: data.name || '',
                 email: data.email || '',
                 address: data.address || '',
+                currentPassword: '',
                 password: '',
                 confirmPassword: ''
             });
@@ -48,7 +54,12 @@ const Profile: React.FC = () => {
         setSuccess('');
 
         if (formData.password && formData.password !== formData.confirmPassword) {
-            setError('As senhas não coincidem.');
+            setError('As novas senhas não coincidem.');
+            return;
+        }
+
+        if ((formData.name !== client.name || formData.email !== client.email || formData.address !== client.address || formData.password) && !formData.currentPassword) {
+            setError('Por favor, informe sua senha atual para salvar as alterações.');
             return;
         }
 
@@ -58,6 +69,7 @@ const Profile: React.FC = () => {
                 name: formData.name,
                 email: formData.email,
                 address: formData.address,
+                currentPassword: formData.currentPassword
             };
             if (formData.password) {
                 updateData.password = formData.password;
@@ -67,9 +79,9 @@ const Profile: React.FC = () => {
             localStorage.setItem('delivery_app_client', JSON.stringify(updatedClient));
             setClient(updatedClient);
             setSuccess('Perfil atualizado com sucesso!');
-            setFormData(prev => ({ ...prev, password: '', confirmPassword: '' }));
+            setFormData(prev => ({ ...prev, currentPassword: '', password: '', confirmPassword: '' }));
         } catch (err: any) {
-            setError(err.response?.data?.error || 'Erro ao atualizar perfil.');
+            setError(err.response?.data?.error || 'Erro ao atualizar perfil. Verifique sua senha atual.');
         } finally {
             setIsSaving(false);
         }
@@ -124,12 +136,12 @@ const Profile: React.FC = () => {
 
                             <div>
                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4 mb-2 block">Endereço Principal</label>
-                                <input
-                                    type="text"
+                                <textarea
                                     required
+                                    rows={2}
                                     value={formData.address}
                                     onChange={e => setFormData({ ...formData, address: e.target.value })}
-                                    className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm focus:ring-4 focus:ring-indigo-50 focus:border-indigo-200 transition-all outline-none"
+                                    className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm focus:ring-4 focus:ring-indigo-50 focus:border-indigo-200 transition-all outline-none resize-none"
                                 />
                             </div>
                         </div>
@@ -148,7 +160,8 @@ const Profile: React.FC = () => {
                         <div className="bg-amber-50 rounded-2xl p-4 flex gap-3 border border-amber-100">
                             <Icons.Mail className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
                             <p className="text-[10px] font-bold text-amber-600 leading-relaxed uppercase tracking-tight">
-                                Para trocar o número de WhatsApp, envie um e-mail para: <span className="font-black text-amber-700 underline block mt-1">fransoft.developer.2026@gmail.com</span>
+                                Para trocar o número de WhatsApp, envie seus <span className="font-black">Nome, e-mail, número atual e novo número</span> para:
+                                <span className="font-black text-amber-700 underline block mt-1">fransoft.developer.2026@gmail.com</span>
                             </p>
                         </div>
                     </div>
@@ -156,20 +169,42 @@ const Profile: React.FC = () => {
                     <div className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 space-y-4">
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4 mb-2 block">Alterar Senha (Opcional)</label>
                         <div className="space-y-3">
-                            <input
-                                type="password"
-                                placeholder="Nova Senha"
-                                value={formData.password}
-                                onChange={e => setFormData({ ...formData, password: e.target.value })}
-                                className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm focus:ring-4 focus:ring-indigo-50 transition-all outline-none"
-                            />
-                            <input
-                                type="password"
-                                placeholder="Confirmar Nova Senha"
-                                value={formData.confirmPassword}
-                                onChange={e => setFormData({ ...formData, confirmPassword: e.target.value })}
-                                className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm focus:ring-4 focus:ring-indigo-50 transition-all outline-none"
-                            />
+                            <div className="relative">
+                                <input
+                                    type={showCurrentPassword ? "text" : "password"}
+                                    placeholder="Senha Atual"
+                                    value={formData.currentPassword}
+                                    onChange={e => setFormData({ ...formData, currentPassword: e.target.value })}
+                                    className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm focus:ring-4 focus:ring-indigo-50 transition-all outline-none"
+                                />
+                                <button type="button" onClick={() => setShowCurrentPassword(!showCurrentPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">
+                                    {showCurrentPassword ? <Icons.Smartphone className="w-4 h-4" /> : <Icons.Mail className="w-4 h-4" />}
+                                </button>
+                            </div>
+                            <div className="relative">
+                                <input
+                                    type={showPassword ? "text" : "password"}
+                                    placeholder="Nova Senha"
+                                    value={formData.password}
+                                    onChange={e => setFormData({ ...formData, password: e.target.value })}
+                                    className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm focus:ring-4 focus:ring-indigo-50 transition-all outline-none"
+                                />
+                                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">
+                                    {showPassword ? <Icons.Smartphone className="w-4 h-4" /> : <Icons.Mail className="w-4 h-4" />}
+                                </button>
+                            </div>
+                            <div className="relative">
+                                <input
+                                    type={showConfirmPassword ? "text" : "password"}
+                                    placeholder="Confirmar Nova Senha"
+                                    value={formData.confirmPassword}
+                                    onChange={e => setFormData({ ...formData, confirmPassword: e.target.value })}
+                                    className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm focus:ring-4 focus:ring-indigo-50 transition-all outline-none"
+                                />
+                                <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">
+                                    {showConfirmPassword ? <Icons.Smartphone className="w-4 h-4" /> : <Icons.Mail className="w-4 h-4" />}
+                                </button>
+                            </div>
                         </div>
                     </div>
 

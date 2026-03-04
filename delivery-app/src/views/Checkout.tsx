@@ -243,27 +243,26 @@ const Checkout: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Delivery Address Hub */}
                 <div className="space-y-4">
                     <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2 flex items-center gap-2">
                         <span className="w-2 h-2 rounded-full bg-indigo-400"></span> Local de Entrega
                     </h2>
 
                     {savedAddress && !useNewAddress && (
-                        <div className="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-[1.5rem] shadow-sm transition-all hover:border-indigo-100 group">
-                            <div className="flex-1 pr-4 flex items-center gap-3">
-                                <div className="w-8 h-8 bg-emerald-50 rounded-xl flex items-center justify-center shrink-0">
-                                    <Icons.Smartphone className="w-4 h-4 text-emerald-500" />
+                        <div className="flex items-center justify-between p-5 bg-white border border-slate-100 rounded-[2rem] shadow-sm transition-all hover:border-indigo-100 group">
+                            <div className="flex-1 pr-4 flex items-center gap-4">
+                                <div className="w-12 h-12 bg-[#ecfdf5] rounded-[1.25rem] flex items-center justify-center shrink-0">
+                                    <Icons.Smartphone className="w-5 h-5 text-[#10b981]" />
                                 </div>
-                                <div>
-                                    <span className="text-[8px] font-black uppercase text-emerald-500 tracking-widest block leading-none mb-0.5">Entregar em:</span>
-                                    <p className="text-[11px] font-bold text-slate-700 leading-tight line-clamp-1">{savedAddress}</p>
+                                <div className="overflow-hidden">
+                                    <span className="text-[9px] font-black uppercase text-[#10b981] tracking-[0.1em] block leading-none mb-1.5">Entregar em:</span>
+                                    <p className="text-[13px] font-bold text-slate-800 leading-tight truncate">{savedAddress}</p>
                                 </div>
                             </div>
                             <button
                                 type="button"
                                 onClick={() => setUseNewAddress(true)}
-                                className="text-[9px] font-black uppercase text-indigo-500 tracking-widest px-4 py-2 bg-indigo-50 rounded-full hover:bg-indigo-100 transition-all shrink-0 active:scale-95"
+                                className="text-[10px] font-black uppercase text-[#6366f1] tracking-widest px-6 py-3 bg-[#eef2ff] rounded-full hover:bg-indigo-100 transition-all shrink-0 active:scale-95 shadow-sm shadow-indigo-100/50"
                             >
                                 Alterar
                             </button>
