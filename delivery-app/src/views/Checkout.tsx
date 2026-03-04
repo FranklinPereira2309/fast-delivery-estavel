@@ -11,6 +11,7 @@ interface AlertState {
     message: string;
     type: 'INFO' | 'DANGER' | 'SUCCESS';
     onConfirm: () => void;
+    onCancel?: () => void;
 }
 
 const Checkout: React.FC = () => {
@@ -30,7 +31,7 @@ const Checkout: React.FC = () => {
     const [isFetchingCep, setIsFetchingCep] = useState(false);
 
     const [alertState, setAlertState] = useState<AlertState>({
-        isOpen: false, title: '', message: '', type: 'INFO', onConfirm: () => { }
+        isOpen: false, title: '', message: '', type: 'INFO', onConfirm: () => { }, onCancel: () => setAlertState(prev => ({ ...prev, isOpen: false }))
     });
 
     const navigate = useNavigate();
@@ -60,7 +61,7 @@ const Checkout: React.FC = () => {
 
     const finalTotal = total + deliveryFee;
 
-    const showAlert = (title: string, message: string, type: 'INFO' | 'SUCCESS' | 'DANGER' = 'INFO', onConfirm?: () => void) => {
+    const showAlert = (title: string, message: string, type: 'INFO' | 'SUCCESS' | 'DANGER' = 'INFO', onConfirm?: () => void, onCancel?: () => void) => {
         setAlertState({
             isOpen: true,
             title,
@@ -69,7 +70,8 @@ const Checkout: React.FC = () => {
             onConfirm: () => {
                 setAlertState(prev => ({ ...prev, isOpen: false }));
                 if (onConfirm) onConfirm();
-            }
+            },
+            onCancel: onCancel || (() => setAlertState(prev => ({ ...prev, isOpen: false })))
         });
     };
 
@@ -114,41 +116,48 @@ const Checkout: React.FC = () => {
             }
         }
 
-        setIsLoading(true);
-        try {
-            const clientStr = localStorage.getItem('delivery_app_client');
-            const client = clientStr ? JSON.parse(clientStr) : null;
+        showAlert(
+            'Confirmar Pedido',
+            `Deseja enviar seu pedido no valor de R$ ${finalTotal.toFixed(2)} para a cozinha?`,
+            'INFO',
+            async () => {
+                setIsLoading(true);
+                try {
+                    const clientStr = localStorage.getItem('delivery_app_client');
+                    const client = clientStr ? JSON.parse(clientStr) : null;
 
-            const orderData = {
-                clientId: client?.id || 'ANONYMOUS',
-                clientName: client?.name || 'Cliente App',
-                clientPhone: client?.phone || '',
-                clientEmail: client?.email || '',
-                clientAddress: finalAddress,
-                paymentMethod,
-                items: items.map(i => ({
-                    productId: i.product.id,
-                    quantity: i.quantity,
-                    price: i.product.price
-                })),
-                total: finalTotal,
-                deliveryFee: deliveryFee,
-                type: 'OWN_DELIVERY',
-                status: 'PENDING'
-            };
+                    const orderData = {
+                        clientId: client?.id || 'ANONYMOUS',
+                        clientName: client?.name || 'Cliente App',
+                        clientPhone: client?.phone || '',
+                        clientEmail: client?.email || '',
+                        clientAddress: finalAddress,
+                        paymentMethod,
+                        items: items.map(i => ({
+                            productId: i.product.id,
+                            quantity: i.quantity,
+                            price: i.product.price
+                        })),
+                        total: finalTotal,
+                        deliveryFee: deliveryFee,
+                        type: 'OWN_DELIVERY',
+                        status: 'PENDING'
+                    };
 
-            await api.createOrder(orderData);
+                    await api.createOrder(orderData);
 
-            showAlert('Sucesso', 'Seu pedido foi realizado com sucesso e logo entrará em preparação!', 'SUCCESS', () => {
-                clearCart();
-                navigate('/');
-            });
+                    showAlert('Sucesso', 'Seu pedido foi realizado com sucesso e logo entrará em preparação!', 'SUCCESS', () => {
+                        clearCart();
+                        navigate('/history');
+                    });
 
-        } catch (err: any) {
-            showAlert('Ops!', 'Erro ao realizar o pedido: ' + err.message, 'DANGER');
-        } finally {
-            setIsLoading(false);
-        }
+                } catch (err: any) {
+                    showAlert('Ops!', 'Erro ao realizar o pedido: ' + err.message, 'DANGER');
+                } finally {
+                    setIsLoading(false);
+                }
+            }
+        );
     };
 
     return (
