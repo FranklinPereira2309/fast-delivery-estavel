@@ -43,8 +43,18 @@ const Checkout: React.FC = () => {
                 const clientStr = localStorage.getItem('delivery_app_client');
                 if (clientStr) {
                     const client = JSON.parse(clientStr);
-                    if (client.addresses && client.addresses.length > 0) {
-                        setSavedAddress(client.addresses[0]);
+
+                    // Smart Address Extraction (Multi-fallback)
+                    let initialAddress = client.address || '';
+                    if (!initialAddress && client.addresses && client.addresses.length > 0) {
+                        initialAddress = client.addresses[0];
+                    }
+                    if (!initialAddress && client.street) {
+                        initialAddress = `${client.street}, ${client.addressNumber || ''}, ${client.neighborhood || ''}`;
+                    }
+
+                    if (initialAddress) {
+                        setSavedAddress(initialAddress);
                     }
                 }
 
