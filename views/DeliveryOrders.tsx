@@ -186,6 +186,9 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
                                         <button onClick={() => approveOrder(order.id)} className="flex-1 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest transition-all shadow-lg shadow-indigo-100 flex justify-center items-center gap-2">
                                             Aceitar
                                         </button>
+                                        <button onClick={() => handlePrint(order)} className="w-12 h-12 bg-indigo-50 hover:bg-indigo-600 text-indigo-600 hover:text-white rounded-2xl flex items-center justify-center transition-all shadow-sm">
+                                            <Icons.Print className="w-5 h-5" />
+                                        </button>
                                         <button onClick={() => setEditingOrder(order)} className="w-12 h-12 bg-slate-100 hover:bg-indigo-50 text-slate-400 hover:text-indigo-600 rounded-2xl flex items-center justify-center transition-all">
                                             <Icons.Edit className="w-5 h-5" />
                                         </button>
