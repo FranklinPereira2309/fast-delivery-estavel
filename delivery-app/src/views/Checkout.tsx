@@ -128,9 +128,9 @@ const Checkout: React.FC = () => {
         }
 
         showAlert(
-            'Confirmar Pedido',
+            'Finalizar Pedido',
             `Deseja enviar seu pedido no valor de R$ ${finalTotal.toFixed(2)} para a cozinha?`,
-            'INFO',
+            'SUCCESS',
             async () => {
                 setIsLoading(true);
                 try {
@@ -157,10 +157,9 @@ const Checkout: React.FC = () => {
 
                     await api.createOrder(orderData);
 
-                    showAlert('Sucesso', 'Seu pedido foi realizado com sucesso e logo entrará em preparação!', 'SUCCESS', () => {
-                        clearCart();
-                        navigate('/history');
-                    });
+                    // Redireciona direto após o sucesso, mantendo apenas a tela verde de confirmação como interação prévia
+                    clearCart();
+                    navigate('/history');
 
                 } catch (err: any) {
                     showAlert('Ops!', 'Erro ao realizar o pedido: ' + err.message, 'DANGER');
