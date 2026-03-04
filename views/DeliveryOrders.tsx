@@ -18,6 +18,17 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
     const [businessSettings, setBusinessSettings] = useState<any>(null);
     const [printingOrder, setPrintingOrder] = useState<Order | null>(null);
 
+    const paymentLabels: { [key: string]: string } = {
+        'pix': 'PIX',
+        'PIX': 'PIX',
+        'cartao_credito': 'Cartão de Crédito',
+        'CREDIT': 'Cartão de Crédito',
+        'cartao_debito': 'Cartão de Débito',
+        'DEBIT': 'Cartão de Débito',
+        'dinheiro': 'Dinheiro',
+        'CASH': 'Dinheiro'
+    };
+
     const fetchOrders = async () => {
         setIsLoading(true);
         const [allOrders, prods, settings] = await Promise.all([
@@ -129,7 +140,7 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
                                 <h3 className="font-black text-2xl text-slate-800 tracking-tighter">#{order.id.slice(-4).toUpperCase()}</h3>
                                 <div className="text-right">
                                     <p className="text-xl font-black text-slate-800 tracking-tighter">R$ {order.total.toFixed(2)}</p>
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{order.paymentMethod}</p>
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{paymentLabels[order.paymentMethod] || order.paymentMethod}</p>
                                 </div>
                             </div>
 
@@ -202,8 +213,9 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
             </div>
 
             {printingOrder && businessSettings && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md animate-in fade-in duration-300 no-print">
-                    <div className="bg-white w-full max-w-[80mm] border border-dashed shadow-2xl p-8 is-receipt animate-in zoom-in duration-300 overflow-y-auto max-h-[95vh] custom-scrollbar">
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md animate-in fade-in duration-300">
+                    <div className="absolute inset-0 no-print" onClick={() => setPrintingOrder(null)}></div>
+                    <div className="bg-white w-full max-w-[80mm] border border-dashed shadow-2xl p-8 is-receipt animate-in zoom-in duration-300 overflow-y-auto max-h-[95vh] custom-scrollbar relative">
                         <div className="text-center mb-6 border-b border-dashed pb-4">
                             <h2 className="font-black text-sm uppercase tracking-tighter">{businessSettings.name}</h2>
                             <p className="text-[9px] font-bold mt-1">CNPJ: {businessSettings.cnpj}</p>
@@ -220,11 +232,10 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
                             <p>STATUS: {(OrderStatusLabels[printingOrder.status] || printingOrder.status).toUpperCase()}</p>
 
                             <div className="mt-2 pt-2 border-t border-dashed w-full">
-                                <div className="flex justify-between items-center bg-slate-50 p-2 rounded-lg border border-slate-100">
-                                    <p className="font-black text-[10px]">PAGTO: {printingOrder.paymentMethod?.toUpperCase()}</p>
-                                    <button className="text-[9px] text-blue-600 font-bold underline px-2">Editar</button>
+                                <div className="flex justify-between items-center bg-slate-50 p-2 rounded-lg border border-slate-100 no-print">
+                                    <p className="font-black text-[10px]">PAGTO: {(paymentLabels[printingOrder.paymentMethod] || printingOrder.paymentMethod).toUpperCase()}</p>
                                 </div>
-                                <p className="font-black hidden print:block pt-1 text-[10px]">PAGTO: {printingOrder.paymentMethod?.toUpperCase()}</p>
+                                <p className="font-black hidden print:block pt-1 text-[10px]">PAGTO: {(paymentLabels[printingOrder.paymentMethod] || printingOrder.paymentMethod).toUpperCase()}</p>
                             </div>
                         </div>
 
@@ -418,10 +429,10 @@ const OrderEditModal: React.FC<{
                                         onChange={e => setPaymentMethod(e.target.value)}
                                         className="w-full bg-white/10 border-white/20 rounded-xl p-3 text-[10px] font-black uppercase outline-none focus:ring-2 focus:ring-white/20"
                                     >
-                                        <option value="pix" className="text-slate-900">PIX</option>
-                                        <option value="cartao_credito" className="text-slate-900">Cartão de Crédito</option>
-                                        <option value="cartao_debito" className="text-slate-900">Cartão de Débito</option>
-                                        <option value="dinheiro" className="text-slate-900">Dinheiro</option>
+                                        <option value="PIX" className="text-slate-900">PIX</option>
+                                        <option value="CREDIT" className="text-slate-900">Cartão de Crédito</option>
+                                        <option value="DEBIT" className="text-slate-900">Cartão de Débito</option>
+                                        <option value="CASH" className="text-slate-900">Dinheiro</option>
                                     </select>
                                 </div>
                                 <button
