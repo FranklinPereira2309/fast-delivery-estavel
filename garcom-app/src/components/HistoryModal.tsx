@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, TrendingUp, History, Clock, DollarSign, ClipboardList, ChevronRight } from 'lucide-react';
+import { X, TrendingUp, History, Clock, DollarSign, ClipboardList, ChevronRight, Printer } from 'lucide-react';
 import { db } from '../api';
 import type { User, Order, TableSession, BusinessSettings } from '../types';
 
@@ -17,6 +17,7 @@ const HistoryModal: React.FC<HistoryModalProps> = ({ user, tables, settings, res
     const [activeTab, setActiveTab] = useState<Tab>('COMMISSIONS');
     const [orders, setOrders] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
+    const [printingOrder, setPrintingOrder] = useState<Order | null>(null);
 
     useEffect(() => {
         const fetchOrders = async () => {
@@ -229,7 +230,12 @@ const HistoryModal: React.FC<HistoryModalProps> = ({ user, tables, settings, res
                                                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Total</p>
                                                     <p className="text-sm font-black text-blue-600 tracking-tighter">R$ {order.total.toFixed(2)}</p>
                                                 </div>
-                                                <ChevronRight size={16} className="text-slate-200" />
+                                                <button
+                                                    onClick={() => setPrintingOrder(order)}
+                                                    className="p-2 text-blue-600 hover:bg-blue-50 rounded-xl transition-colors active:scale-95 border border-slate-50 shadow-sm ml-2"
+                                                >
+                                                    <Printer size={16} />
+                                                </button>
                                             </div>
                                         ))
                                     )}
@@ -239,6 +245,40 @@ const HistoryModal: React.FC<HistoryModalProps> = ({ user, tables, settings, res
                     )}
                 </main>
             </div>
+
+            {printingOrder && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md" onClick={() => setPrintingOrder(null)}>
+                    <div className="relative w-full max-w-[80mm] bg-[#f9f9f5] p-8 shadow-2xl font-mono text-[11px] text-black animate-in zoom-in duration-200" onClick={e => e.stopPropagation()}>
+                        <div className="text-center mb-6 border-b border-dashed border-slate-300 pb-4">
+                            <h2 className="font-bold text-sm uppercase">{settings?.name || 'ESTABELECIMENTO'}</h2>
+                            <p className="text-[10px] mt-2 uppercase">CÓPIA DE COMPROVANTE</p>
+                        </div>
+                        <div className="space-y-2 mb-6 border-b border-dashed border-slate-300 pb-4">
+                            <p>DATA: {new Date(printingOrder.createdAt || new Date()).toLocaleString('pt-BR')}</p>
+                            <p>CLIENTE: {printingOrder.clientName || 'Consumidor'}</p>
+                            <p>PAGAMENTO: {printingOrder.paymentMethod || 'Pendente'}</p>
+                            <p>GARÇOM: {user.name?.toUpperCase()}</p>
+                        </div>
+
+                        <div className="flex justify-between items-end mb-4 font-bold border-b border-dashed border-slate-300 pb-4">
+                            <span className="text-[10px] uppercase">TAXA SERVIÇO:</span>
+                            <span className="text-[11px]">R$ {((printingOrder.appliedServiceFee !== null && printingOrder.appliedServiceFee !== undefined) ? printingOrder.appliedServiceFee : (printingOrder.total - (printingOrder.total / (1 + ((settings?.serviceFeePercentage || 10) / 100))))).toFixed(2)}</span>
+                        </div>
+
+                        <div className="flex justify-between items-center mb-8">
+                            <span className="font-bold text-[11px] uppercase">TOTAL:</span>
+                            <span className="text-3xl font-bold tracking-tighter">R$ {printingOrder.total.toFixed(2)}</span>
+                        </div>
+
+                        <div className="flex flex-col gap-2 no-print">
+                            <div className="flex gap-2">
+                                <button onClick={() => window.print()} className="flex-[2] bg-slate-900 text-white font-bold py-4 rounded-3xl uppercase text-[10px] tracking-widest shadow-xl active:scale-95 transition-all">Imprimir</button>
+                                <button onClick={() => setPrintingOrder(null)} className="flex-1 bg-slate-200 text-slate-600 font-bold py-4 rounded-3xl uppercase text-[10px] tracking-widest active:scale-95 transition-all">Fechar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
