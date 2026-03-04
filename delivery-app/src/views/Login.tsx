@@ -67,7 +67,12 @@ const Login: React.FC = () => {
                     <p className="text-xs font-bold text-slate-400">
                         Não tem conta? <button onClick={() => navigate('/register')} className="text-indigo-600 ml-1">Cadastre-se</button>
                     </p>
-                    <button className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Esqueci minha senha</button>
+                    <button
+                        onClick={() => alert('Opção de recuperação em desenvolvimento. Entre em contato com o suporte.')}
+                        className="text-[10px] font-black text-slate-300 uppercase tracking-widest hover:text-indigo-400 transition-colors"
+                    >
+                        Esqueci minha senha
+                    </button>
                 </div>
             </div>
         </div>

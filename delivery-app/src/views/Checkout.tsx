@@ -67,7 +67,23 @@ const Checkout: React.FC = () => {
                 <button onClick={() => navigate(-1)} className="p-3 bg-slate-100 rounded-2xl text-slate-600">
                     <Icons.ArrowLeft className="w-5 h-5" />
                 </button>
-                <h1 className="text-xl font-black text-slate-800 uppercase tracking-tighter">Finalizar Pedido</h1>
+                <div className="flex-1">
+                    <h1 className="text-xl font-black text-slate-800 uppercase tracking-tighter">Finalizar Pedido</h1>
+                </div>
+                {items.length > 0 && (
+                    <button
+                        type="button"
+                        onClick={() => {
+                            if (window.confirm('Deseja esvaziar o carrinho?')) {
+                                clearCart();
+                                navigate('/');
+                            }
+                        }}
+                        className="p-3 bg-rose-50 rounded-2xl text-rose-500 hover:bg-rose-100 transition-all"
+                    >
+                        <Icons.Trash className="w-5 h-5" />
+                    </button>
+                )}
             </div>
 
             <form onSubmit={handleSubmit} className="p-6 space-y-8">

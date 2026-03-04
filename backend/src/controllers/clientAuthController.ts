@@ -9,7 +9,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_delivery_fast';
 
 export const registerClient = async (req: ExpressRequest, res: ExpressResponse) => {
     try {
-        const { name, email, phone, password } = req.body;
+        const { name, email, phone, password, cep, complement } = req.body;
 
         if (!name || !phone || !password) {
             return res.status(400).json({ message: 'Nome, celular e senha são obrigatórios.' });
@@ -33,7 +33,7 @@ export const registerClient = async (req: ExpressRequest, res: ExpressResponse) 
                 const hashedPassword = await bcrypt.hash(password, 10);
                 const updated = await prisma.client.update({
                     where: { id: existingClient.id },
-                    data: { password: hashedPassword, email: email || existingClient.email, name }
+                    data: { password: hashedPassword, email: email || existingClient.email, name, cep, complement }
                 });
                 const token = jwt.sign({ id: updated.id, role: 'CLIENT' }, JWT_SECRET, { expiresIn: '30d' });
                 return res.status(200).json({ token, client: updated });
@@ -47,6 +47,8 @@ export const registerClient = async (req: ExpressRequest, res: ExpressResponse) 
                 phone,
                 email,
                 password: hashedPassword,
+                cep,
+                complement
             }
         });
 

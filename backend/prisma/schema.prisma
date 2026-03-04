@@ -81,6 +81,8 @@ model Client {
   password      String?
   recoveryCode  String?
   document      String?
+  cep           String?
+  complement    String?
   addresses     String[]
   totalOrders   Int          @default(0)
   lastOrderDate String?
@@ -153,6 +155,8 @@ model Order {
   clientPhone         String?
   clientEmail         String?
   clientDocument      String?
+  clientCep           String?
+  clientComplement    String?
   items               OrderItem[]
   total               Float
   status              OrderStatus      @default(PENDING)
@@ -230,6 +234,8 @@ model TableSession {
   waiter              Waiter?       @relation(fields: [waiterId], references: [id])
   startTime           DateTime      @default(now())
   clientAddress       String?
+  clientCep           String?
+  clientComplement    String?
   hasPendingDigital   Boolean       @default(false)
   pendingReviewItems  String? // To store stringified array of requested digital items before approval
   isOriginDigitalMenu Boolean       @default(false)

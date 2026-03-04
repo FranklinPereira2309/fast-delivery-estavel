@@ -25,20 +25,20 @@ class DeliveryApiService {
     }
 
     // Auth
-    async login(email: string, pass: string) {
-        const data = await this.request<{ user: any, token: string }>('/client-auth/login', {
+    async login(phone: string, pass: string) {
+        const data = await this.request<{ client: any, token: string }>('/client-auth/login', {
             method: 'POST',
-            body: JSON.stringify({ email, password: pass }),
+            body: JSON.stringify({ phone, password: pass }),
         });
         localStorage.setItem('delivery_app_token', data.token);
-        localStorage.setItem('delivery_app_client', JSON.stringify(data.user));
+        localStorage.setItem('delivery_app_client', JSON.stringify(data.client));
         return data;
     }
 
-    async register(name: string, email: string, phone: string, pass: string) {
+    async register(name: string, email: string, phone: string, pass: string, cep?: string, complement?: string) {
         return this.request('/client-auth/register', {
             method: 'POST',
-            body: JSON.stringify({ name, email, phone, password: pass }),
+            body: JSON.stringify({ name, email, phone, password: pass, cep, complement }),
         });
     }
 
