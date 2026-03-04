@@ -94,7 +94,7 @@ const Home: React.FC = () => {
     return (
         <div className="min-h-screen bg-slate-50 pb-28">
             {/* Header / Store Status Premium Soft */}
-            <div className="bg-white pt-8 p-6 pb-12 rounded-b-[3rem] shadow-sm border-b border-slate-100 relative overflow-hidden">
+            <div className="bg-white pt-8 p-6 pb-8 rounded-b-[3rem] shadow-sm border-b border-slate-100 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-5 animate-float"></div>
                 <div className="absolute bottom-0 left-0 w-64 h-64 bg-rose-500 rounded-full mix-blend-multiply filter blur-3xl opacity-5 animate-float" style={{ animationDelay: '2s' }}></div>
 
@@ -149,7 +149,7 @@ const Home: React.FC = () => {
             </div>
 
             {/* Categories */}
-            <div className="flex gap-3 overflow-x-auto p-6 no-scrollbar -mt-6">
+            <div className="flex gap-3 overflow-x-auto p-6 no-scrollbar -mt-4">
                 {categories.map(cat => (
                     <button
                         key={cat}
