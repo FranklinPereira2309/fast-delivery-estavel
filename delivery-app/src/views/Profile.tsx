@@ -150,52 +150,62 @@ const Profile: React.FC = () => {
                                     <span className="w-2 h-2 rounded-full bg-blue-600"></span> Endereço para Entregas
                                 </h2>
 
-                                {!isEditingAddress ? (
-                                    <div className="flex items-center justify-between p-5 bg-slate-50 border border-slate-100 rounded-[2rem] shadow-sm transition-all hover:border-indigo-100 group">
-                                        <div className="flex-1 pr-4 flex items-center gap-4">
-                                            <div className="w-12 h-12 bg-emerald-50 rounded-[1.25rem] flex items-center justify-center shrink-0">
-                                                <Icons.Smartphone className="w-5 h-5 text-emerald-500" />
-                                            </div>
-                                            <div className="flex-1">
-                                                <span className="text-[9px] font-black uppercase text-emerald-500 tracking-[0.1em] block leading-none mb-1.5">Entregar em:</span>
-                                                <p className="text-[13px] font-bold text-slate-800 leading-tight">{formData.address || 'Nenhum endereço cadastrado'}</p>
-                                            </div>
+                                <div className="flex items-center justify-between p-5 bg-slate-50 border border-slate-100 rounded-[2rem] shadow-sm transition-all hover:border-indigo-100 group">
+                                    <div className="flex-1 pr-4 flex items-center gap-4">
+                                        <div className="w-12 h-12 bg-emerald-50 rounded-[1.25rem] flex items-center justify-center shrink-0">
+                                            <Icons.Smartphone className="w-5 h-5 text-emerald-500" />
                                         </div>
-                                        <button
-                                            type="button"
-                                            onClick={() => setIsEditingAddress(true)}
-                                            className="text-[10px] font-black uppercase text-blue-600 tracking-widest px-6 py-3 bg-blue-50 rounded-full hover:bg-blue-100 transition-all shrink-0 active:scale-95 shadow-sm shadow-blue-100/50"
-                                        >
-                                            Alterar
-                                        </button>
+                                        <div className="flex-1">
+                                            <span className="text-[9px] font-black uppercase text-emerald-500 tracking-[0.1em] block leading-none mb-1.5">Entregar em:</span>
+                                            <p className="text-[13px] font-bold text-slate-800 leading-tight">{formData.address || 'Nenhum endereço cadastrado'}</p>
+                                        </div>
                                     </div>
-                                ) : (
-                                    <div className="p-6 bg-slate-50 border border-slate-100 rounded-[2rem] space-y-4 animate-in fade-in slide-in-from-top-4 duration-300">
-                                        <div className="flex justify-between items-center mb-2">
-                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Editar Endereço</span>
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsEditingAddress(true)}
+                                        className="text-[10px] font-black uppercase text-blue-600 tracking-widest px-6 py-3 bg-blue-50 rounded-full hover:bg-blue-100 transition-all shrink-0 active:scale-95 shadow-sm shadow-blue-100/50"
+                                    >
+                                        Alterar
+                                    </button>
+                                </div>
+
+                                {isEditingAddress && (
+                                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 animate-in fade-in duration-300">
+                                        <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setIsEditingAddress(false)}></div>
+
+                                        <div className="bg-slate-50 w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl relative animate-in zoom-in-95 duration-300 border border-white">
                                             <button
                                                 type="button"
                                                 onClick={() => setIsEditingAddress(false)}
-                                                className="p-2 bg-white text-slate-400 rounded-full hover:bg-rose-50 hover:text-rose-500 transition-all shadow-sm"
+                                                className="absolute top-6 right-6 w-10 h-10 bg-white rounded-full flex items-center justify-center text-slate-400 hover:text-rose-500 transition-all shadow-sm border border-slate-100 active:scale-95"
                                             >
-                                                <Icons.X className="w-4 h-4" />
+                                                <Icons.X className="w-5 h-5" />
+                                            </button>
+
+                                            <div className="mb-6 px-2">
+                                                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Editar Endereço</h3>
+                                            </div>
+
+                                            <div className="bg-white rounded-[1.5rem] p-6 shadow-sm border border-slate-100 mb-8">
+                                                <textarea
+                                                    required
+                                                    rows={3}
+                                                    autoFocus
+                                                    value={formData.address}
+                                                    onChange={e => setFormData({ ...formData, address: e.target.value })}
+                                                    className="w-full font-bold text-slate-800 text-[15px] leading-relaxed outline-none resize-none placeholder:text-slate-300"
+                                                    placeholder="Digite seu endereço completo..."
+                                                />
+                                            </div>
+
+                                            <button
+                                                type="button"
+                                                onClick={() => setIsEditingAddress(false)}
+                                                className="w-full py-5 bg-indigo-600 text-white rounded-[1.5rem] font-black uppercase text-[12px] tracking-widest shadow-xl shadow-indigo-200 active:scale-95 transition-all"
+                                            >
+                                                Confirmar Endereço
                                             </button>
                                         </div>
-                                        <textarea
-                                            required
-                                            rows={2}
-                                            value={formData.address}
-                                            onChange={e => setFormData({ ...formData, address: e.target.value })}
-                                            className="w-full p-4 bg-white border border-slate-100 rounded-2xl font-bold text-sm focus:ring-4 focus:ring-indigo-50 focus:border-indigo-200 transition-all outline-none resize-none"
-                                            placeholder="Ex: Rua, Número, Bairro, CEP..."
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() => setIsEditingAddress(false)}
-                                            className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-indigo-100"
-                                        >
-                                            Confirmar Endereço
-                                        </button>
                                     </div>
                                 )}
                             </div>

@@ -21,6 +21,7 @@ const Checkout: React.FC = () => {
     // Address UI State
     const [savedAddress, setSavedAddress] = useState('');
     const [useNewAddress, setUseNewAddress] = useState(false);
+    const [isEditingSavedAddress, setIsEditingSavedAddress] = useState(false);
 
     const [newAddress, setNewAddress] = useState({
         cep: '', street: '', number: '', complement: '', neighborhood: '', tag: 'Casa'
@@ -258,7 +259,7 @@ const Checkout: React.FC = () => {
                         <span className="w-2 h-2 rounded-full bg-blue-600"></span> Local de Entrega
                     </h2>
 
-                    {savedAddress && !useNewAddress && (
+                    {savedAddress && (
                         <div className="flex items-center justify-between p-5 bg-white border border-slate-100 rounded-[2rem] shadow-sm transition-all hover:border-indigo-100 group">
                             <div className="flex-1 pr-4 flex items-center gap-4">
                                 <div className="w-12 h-12 bg-emerald-50 rounded-[1.25rem] flex items-center justify-center shrink-0">
@@ -269,13 +270,62 @@ const Checkout: React.FC = () => {
                                     <p className="text-[13px] font-bold text-slate-800 leading-tight">{savedAddress}</p>
                                 </div>
                             </div>
-                            <button
-                                type="button"
-                                onClick={() => setUseNewAddress(true)}
-                                className="text-[10px] font-black uppercase text-blue-600 tracking-widest px-6 py-3 bg-blue-50 rounded-full hover:bg-blue-100 transition-all shrink-0 active:scale-95 shadow-sm shadow-blue-100/50"
-                            >
-                                Alterar
-                            </button>
+                            <div className="flex flex-col gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsEditingSavedAddress(true)}
+                                    className="text-[10px] font-black uppercase text-indigo-600 tracking-widest px-6 py-3 bg-indigo-50 rounded-full hover:bg-indigo-100 transition-all shrink-0 active:scale-95 shadow-sm shadow-indigo-100/50"
+                                >
+                                    Alterar
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setUseNewAddress(true)}
+                                    className="text-[9px] font-black uppercase text-slate-400 tracking-widest px-4 py-2 hover:text-indigo-500 transition-all"
+                                >
+                                    Novo local
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {isEditingSavedAddress && (
+                        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 animate-in fade-in duration-300">
+                            <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setIsEditingSavedAddress(false)}></div>
+
+                            <div className="bg-slate-50 w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl relative animate-in zoom-in-95 duration-300 border border-white">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsEditingSavedAddress(false)}
+                                    className="absolute top-6 right-6 w-10 h-10 bg-white rounded-full flex items-center justify-center text-slate-400 hover:text-rose-500 transition-all shadow-sm border border-slate-100 active:scale-95"
+                                >
+                                    <Icons.X className="w-5 h-5" />
+                                </button>
+
+                                <div className="mb-6 px-2">
+                                    <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Editar Endereço</h3>
+                                </div>
+
+                                <div className="bg-white rounded-[1.5rem] p-6 shadow-sm border border-slate-100 mb-8">
+                                    <textarea
+                                        required
+                                        rows={4}
+                                        autoFocus
+                                        value={savedAddress}
+                                        onChange={e => setSavedAddress(e.target.value)}
+                                        className="w-full font-bold text-slate-800 text-[15px] leading-relaxed outline-none resize-none placeholder:text-slate-300"
+                                        placeholder="Digite seu endereço completo..."
+                                    />
+                                </div>
+
+                                <button
+                                    type="button"
+                                    onClick={() => setIsEditingSavedAddress(false)}
+                                    className="w-full py-5 bg-indigo-600 text-white rounded-[1.5rem] font-black uppercase text-[12px] tracking-widest shadow-xl shadow-indigo-200 active:scale-95 transition-all"
+                                >
+                                    Confirmar Endereço
+                                </button>
+                            </div>
                         </div>
                     )}
 
