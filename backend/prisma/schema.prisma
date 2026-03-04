@@ -112,6 +112,7 @@ model Product {
   category   String
   stock      Int          @default(0)
   imageUrl   String
+  active     Boolean      @default(true)
   ncm        String?
   cfop       String?
   cest       String?

@@ -3,6 +3,7 @@ import prisma from '../prisma';
 
 export const getAllProducts = async (req: Request, res: Response) => {
     const products = await prisma.product.findMany({
+        where: { active: true },
         include: { recipe: true }
     });
     res.json(products);
@@ -41,36 +42,46 @@ export const saveProduct = async (req: Request, res: Response) => {
 };
 
 export const deleteProduct = async (req: Request, res: Response) => {
+    const id = req.params.id as string;
     try {
-        const id = req.params.id as string;
-
-        // Check if there are any order items linked to this product first!
+        // Check if there are any order items linked to this product
         const linkedOrderItemsCount = await prisma.orderItem.count({
             where: { productId: id }
         });
 
         if (linkedOrderItemsCount > 0) {
-            return res.status(400).json({
-                message: 'Não é possível excluir este produto pois ele possui histórico de vendas. Sugerimos apenas renomeá-lo ou deixá-lo fora de estoque.'
+            // Soft delete: just mark as inactive
+            await prisma.product.update({
+                where: { id },
+                data: { active: false }
             });
+            return res.json({ message: 'O produto possui histórico de vendas e foi apenas removido do cardápio comercial.' });
         }
 
+        // Permanent delete for items without history
         // Delete recipe first
         await prisma.recipeItem.deleteMany({
             where: { productId: id }
         });
 
-        // Try to delete the product
         await prisma.product.delete({ where: { id } });
-        res.json({ message: 'Produto removido com sucesso.' });
+        res.json({ message: 'Produto removido permanentemente com sucesso.' });
     } catch (error: any) {
         console.error('Delete Product Error:', error);
 
-        // Fallback catch (Prisma code P2003) Just in case!
+        // Fallback for foreign key constraints if count failed or race condition
         if (error.code === 'P2003' || (error.message && error.message.includes('Foreign key constraint failed'))) {
-            return res.status(400).json({
-                message: 'Não é possível excluir este produto pois ele possui histórico de vendas. Sugerimos apenas renomeá-lo ou deixá-lo fora de estoque.'
-            });
+            try {
+                await prisma.product.update({
+                    where: { id },
+                    data: { active: false }
+                });
+                return res.json({ message: 'O produto possui histórico de vendas e foi apenas removido do cardápio comercial.' });
+            } catch (innerError) {
+                return res.status(400).json({
+                    message: 'Não é possível excluir este produto devido a restrições de integridade.'
+                });
+            }
         }
 
         res.status(500).json({ message: 'Erro interno ao remover produto.' });

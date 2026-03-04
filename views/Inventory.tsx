@@ -142,9 +142,15 @@ const Inventory: React.FC = () => {
       "Deseja excluir este produto permanentemente do cardápio?",
       "DANGER",
       async () => {
-        await db.deleteProduct(id);
-        await refreshData();
-        setAlertConfig(prev => ({ ...prev, isOpen: false }));
+        try {
+          const response = await db.deleteProduct(id);
+          await refreshData();
+          setAlertConfig(prev => ({ ...prev, isOpen: false }));
+          showAlert("Sucesso", response.message || "Produto removido com sucesso.", "SUCCESS");
+        } catch (error: any) {
+          setAlertConfig(prev => ({ ...prev, isOpen: false }));
+          showAlert("Não foi possível excluir", error.message || "Este produto possui histórico e não pode ser apagado.", "INFO");
+        }
       },
       () => setAlertConfig(prev => ({ ...prev, isOpen: false }))
     );
