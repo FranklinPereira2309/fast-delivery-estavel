@@ -14,8 +14,11 @@ const Home: React.FC = () => {
     const [settings, setSettings] = useState<BusinessSettings | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isClosingSoon, setIsClosingSoon] = useState(false);
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
 
     useEffect(() => {
+        const client = localStorage.getItem('delivery_app_client');
+        setIsLoggedIn(!!client);
         const init = async () => {
             try {
                 const [p, s] = await Promise.all([
@@ -62,7 +65,7 @@ const Home: React.FC = () => {
         ? products
         : products.filter(p => p.category === selectedCategory);
 
-    if (isLoading) return <div className="h-screen flex items-center justify-center font-bold text-slate-400">Carregando...</div>;
+    if (isLoading) return <div className="h-screen flex items-center justify-center font-bold text-slate-400 font-black uppercase tracking-widest text-[10px]">Carregando...</div>;
 
     if (settings && settings.enableDeliveryApp === false) {
         return (
@@ -93,9 +96,15 @@ const Home: React.FC = () => {
                             </span>
                         </div>
                     </div>
-                    <Link to="/history" className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-600 hover:bg-slate-200 transition-all shadow-sm">
-                        <Icons.Smartphone className="w-6 h-6" />
-                    </Link>
+                    {isLoggedIn ? (
+                        <Link to="/history" className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-600 hover:bg-slate-200 transition-all shadow-sm">
+                            <Icons.Smartphone className="w-6 h-6" />
+                        </Link>
+                    ) : (
+                        <Link to="/login" className="px-6 h-12 bg-indigo-600 text-white rounded-2xl flex items-center justify-center font-black uppercase text-[10px] tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200">
+                            Entrar
+                        </Link>
+                    )}
                 </div>
 
                 {settings?.isManuallyClosed && (

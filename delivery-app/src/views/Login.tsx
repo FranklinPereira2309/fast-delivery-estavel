@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 
 const Login: React.FC = () => {
-    const [email, setEmail] = useState('');
+    const [phone, setPhone] = useState('');
     const [password, setPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
@@ -12,10 +12,10 @@ const Login: React.FC = () => {
         e.preventDefault();
         setIsLoading(true);
         try {
-            await api.login(email, password);
+            await api.login(phone, password);
             navigate('/');
-        } catch (err) {
-            alert('Erro ao entrar. Verifique suas credenciais.');
+        } catch (err: any) {
+            alert(err.message || 'Erro ao entrar. Verifique suas credenciais.');
         } finally {
             setIsLoading(false);
         }
@@ -31,13 +31,13 @@ const Login: React.FC = () => {
 
                 <form onSubmit={handleLogin} className="space-y-6">
                     <div className="space-y-2">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">E-mail</label>
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">WhatsApp</label>
                         <input
-                            type="email"
+                            type="tel"
                             className="w-full p-5 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-indigo-100 transition-all font-bold text-sm"
-                            placeholder="seu@email.com"
-                            value={email}
-                            onChange={e => setEmail(e.target.value)}
+                            placeholder="(00) 00000-0000"
+                            value={phone}
+                            onChange={e => setPhone(e.target.value)}
                             required
                         />
                     </div>
