@@ -1,14 +1,9 @@
-import { Order, OrderStatus, DeliveryDriver, User, Product } from '../types';
+import { Order, OrderStatus, DeliveryDriver, User, Product, BusinessSettings } from '../types';
 
 const API_URL = (import.meta as any).env.VITE_API_URL || 'http://localhost:3000/api';
 const AUTH_KEY = 'entregador_auth';
 
-export interface BusinessSettings {
-    name: string;
-    phone: string;
-    address: string;
-    deliveryFee: string;
-}
+
 
 class DriverDBService {
     private async request<T>(path: string, options: RequestInit = {}): Promise<T> {

@@ -1,36 +1,9 @@
-import type { Client, Product, Order, User, AuditLog, InventoryItem, RecipeItem, DeliveryDriver, OrderStatus, TableSession, Waiter, InventoryMovement, CashSession, OrderRejection } from '../types';
+import type { Client, Product, Order, User, AuditLog, InventoryItem, RecipeItem, DeliveryDriver, OrderStatus, TableSession, Waiter, InventoryMovement, CashSession, OrderRejection, BusinessSettings } from '../types';
 
 const API_URL = (import.meta as any).env.VITE_API_URL || 'http://localhost:3000/api';
 const AUTH_KEY = 'delivery_fast_auth';
 
-export interface BusinessSettings {
-  name: string;
-  cnpj: string;
-  address: string;
-  phone: string;
-  deliveryFee: string;
-  tableCount: number;
-  restaurantLat?: number;
-  restaurantLng?: number;
-  geofenceRadius?: number;
-  isManuallyClosed: boolean;
-  operatingHours: string;
-  maxChange?: number;
-  // NFC-e Fields
-  ie?: string;
-  cscId?: string;
-  cscToken?: string;
-  isNfeProduction?: boolean;
-  enableNfcEmission: boolean;
-  waiterPrivacyEnabled: boolean;
-  waiterPrivacyTimer: number;
-  serviceFeeStatus?: boolean;
-  serviceFeePercentage?: number;
-  enableDeliveryApp?: boolean;
-  enableDigitalMenu?: boolean;
-  enableWaiterApp?: boolean;
-  enableDriverApp?: boolean;
-}
+
 
 
 const DEFAULT_SETTINGS: BusinessSettings = {
