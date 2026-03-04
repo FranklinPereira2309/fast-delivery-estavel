@@ -51,15 +51,15 @@ const OrderHistory: React.FC = () => {
 
     return (
         <div className="min-h-screen bg-slate-50 pb-12">
-            <div className="bg-slate-900 text-white p-6 pb-8 rounded-b-[3rem] shadow-xl flex items-center gap-4 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float"></div>
-                <div className="absolute bottom-0 left-0 w-64 h-64 bg-rose-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float" style={{ animationDelay: '2s' }}></div>
+            <div className="bg-white p-6 pb-8 rounded-b-[3.5rem] shadow-xl shadow-slate-200/40 flex items-center gap-4 relative overflow-hidden border-b border-slate-100">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50 rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-float"></div>
+                <div className="absolute bottom-0 left-0 w-64 h-64 bg-rose-50 rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-float" style={{ animationDelay: '2s' }}></div>
 
-                <button onClick={() => navigate('/')} className="p-3 bg-white/10 backdrop-blur-md rounded-2xl text-white hover:bg-white/20 transition-all z-10">
+                <button onClick={() => navigate('/')} className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 hover:text-indigo-600 hover:bg-white transition-all shadow-sm border border-slate-100 active:scale-95 z-10">
                     <Icons.ArrowLeft className="w-5 h-5" />
                 </button>
                 <div className="flex-1 z-10">
-                    <h1 className="text-xl font-black uppercase tracking-tighter">Meus Pedidos</h1>
+                    <h1 className="text-xl font-black text-slate-800 uppercase tracking-tighter italic">Meus Pedidos</h1>
                 </div>
             </div>
 
