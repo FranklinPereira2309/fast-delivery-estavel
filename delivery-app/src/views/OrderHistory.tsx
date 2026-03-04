@@ -110,13 +110,13 @@ const OrderHistory: React.FC = () => {
                             </div>
 
                             <div className="flex flex-col gap-2 pt-4">
-                                {order.deliveryFee > 0 && (
+                                {((order.deliveryFee || 0) > 0) && (
                                     <div className="flex justify-between items-center text-slate-400">
                                         <span className="text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5">
                                             <Icons.Smartphone className="w-3 h-3 opacity-50" />
                                             Taxa de Entrega
                                         </span>
-                                        <span className="text-xs font-bold">R$ {order.deliveryFee.toFixed(2)}</span>
+                                        <span className="text-xs font-bold">R$ {(order.deliveryFee || 0).toFixed(2)}</span>
                                     </div>
                                 )}
                                 <div className="flex justify-between items-center">
