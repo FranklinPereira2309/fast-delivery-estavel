@@ -35,10 +35,10 @@ class DeliveryApiService {
         return data;
     }
 
-    async register(name: string, email: string, phone: string, pass: string, cep?: string, complement?: string) {
+    async register(name: string, email: string, phone: string, pass: string, cep?: string, complement?: string, street?: string, neighborhood?: string, city?: string, state?: string) {
         return this.request('/client-auth/register', {
             method: 'POST',
-            body: JSON.stringify({ name, email, phone, password: pass, cep, complement }),
+            body: JSON.stringify({ name, email, phone, password: pass, cep, complement, street, neighborhood, city, state }),
         });
     }
 

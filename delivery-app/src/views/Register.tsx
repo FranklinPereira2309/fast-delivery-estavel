@@ -8,6 +8,10 @@ const Register: React.FC = () => {
         email: '',
         phone: '',
         cep: '',
+        street: '',
+        neighborhood: '',
+        city: '',
+        state: '',
         complement: '',
         password: '',
         confirmPassword: ''
@@ -29,7 +33,13 @@ const Register: React.FC = () => {
                 setError('CEP não encontrado');
             } else {
                 setError('');
-                console.log('ViaCEP data:', data);
+                setFormData(prev => ({
+                    ...prev,
+                    street: data.logradouro || '',
+                    neighborhood: data.bairro || '',
+                    city: data.localidade || '',
+                    state: data.uf || ''
+                }));
             }
         } catch (err) {
             console.error('ViaCEP Error:', err);
@@ -59,7 +69,11 @@ const Register: React.FC = () => {
                 formData.phone,
                 formData.password,
                 formData.cep,
-                formData.complement
+                formData.complement,
+                formData.street,
+                formData.neighborhood,
+                formData.city,
+                formData.state
             );
             alert('Cadastro realizado com sucesso! Favor realizar o login.');
             navigate('/login');
@@ -69,7 +83,15 @@ const Register: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 py-12">
+        <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 py-12 relative">
+            <button
+                onClick={() => navigate('/')}
+                className="absolute top-6 right-6 lg:top-10 lg:right-10 w-12 h-12 bg-white rounded-full flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all shadow-sm z-10"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
             <div className="w-full max-w-md bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/50 p-10 border border-slate-100">
                 <div className="flex flex-col items-center mb-10">
                     <h1 className="text-3xl font-black text-slate-800 tracking-tighter uppercase">Criar Conta</h1>
@@ -132,6 +154,53 @@ const Register: React.FC = () => {
                                 />
                                 {isLoadingCep && <div className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>}
                             </div>
+                        </div>
+                        <div className="space-y-1">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Rua</label>
+                            <input
+                                type="text" required
+                                className="w-full p-4 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-indigo-50 transition-all font-bold text-sm"
+                                placeholder="Nome da rua, av..."
+                                value={formData.street}
+                                onChange={e => setFormData({ ...formData, street: e.target.value })}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Bairro</label>
+                            <input
+                                type="text" required
+                                className="w-full p-4 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-indigo-50 transition-all font-bold text-sm"
+                                placeholder="Seu bairro"
+                                value={formData.neighborhood}
+                                onChange={e => setFormData({ ...formData, neighborhood: e.target.value })}
+                            />
+                        </div>
+                        <div className="space-y-1">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Cidade</label>
+                            <input
+                                type="text" required
+                                className="w-full p-4 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-indigo-50 transition-all font-bold text-sm"
+                                placeholder="Sua cidade"
+                                value={formData.city}
+                                onChange={e => setFormData({ ...formData, city: e.target.value })}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Estado</label>
+                            <input
+                                type="text" required
+                                maxLength={2}
+                                className="w-full p-4 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-indigo-50 transition-all font-bold text-sm uppercase"
+                                placeholder="UF"
+                                value={formData.state}
+                                onChange={e => setFormData({ ...formData, state: e.target.value.toUpperCase() })}
+                            />
                         </div>
                         <div className="space-y-1">
                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Complemento</label>

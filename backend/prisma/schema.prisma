@@ -82,6 +82,10 @@ model Client {
   recoveryCode  String?
   document      String?
   cep           String?
+  street        String?
+  neighborhood  String?
+  city          String?
+  state         String?
   complement    String?
   addresses     String[]
   totalOrders   Int          @default(0)
@@ -156,6 +160,10 @@ model Order {
   clientEmail         String?
   clientDocument      String?
   clientCep           String?
+  clientStreet        String?
+  clientNeighborhood  String?
+  clientCity          String?
+  clientState         String?
   clientComplement    String?
   items               OrderItem[]
   total               Float
