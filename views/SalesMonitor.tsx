@@ -24,6 +24,20 @@ const SalesMonitor: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 15;
 
+  const paymentLabels: { [key: string]: string } = {
+    'pix': 'PIX',
+    'PIX': 'PIX',
+    'cartao_credito': 'Cartão de Crédito',
+    'CREDIT': 'Cartão de Crédito',
+    'CRÉDITO': 'Cartão de Crédito',
+    'cartao_debito': 'Cartão de Débito',
+    'DEBIT': 'Cartão de Débito',
+    'DÉBITO': 'Cartão de Débito',
+    'dinheiro': 'Dinheiro',
+    'CASH': 'Dinheiro',
+    'DINHEIRO': 'Dinheiro'
+  };
+
   const prevOrdersRef = useRef<Record<string, OrderStatus>>({});
 
   useEffect(() => {
@@ -136,7 +150,7 @@ const SalesMonitor: React.FC = () => {
           </div>
         ) : (
           <>
-            <p className="font-black text-[10px]">PAGTO: {printingOrder?.paymentMethod || 'PENDENTE'}</p>
+            <p className="font-black text-[10px]">PAGTO: {(paymentLabels[printingOrder?.paymentMethod || ''] || printingOrder?.paymentMethod || 'PENDENTE').toUpperCase()}</p>
             <button
               onClick={() => setEditingPaymentMethod(true)}
               className="text-[9px] text-blue-600 font-bold underline px-2"

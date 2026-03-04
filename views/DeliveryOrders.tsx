@@ -4,6 +4,7 @@ import { socket } from '../services/socket';
 import { Order, OrderStatus, User, OrderStatusLabels } from '../types';
 import { Icons, formatImageUrl } from '../constants';
 import { audioAlert } from '../services/audioAlert';
+import CustomAlert from '../components/CustomAlert';
 
 interface DeliveryOrdersProps {
     currentUser: User;
@@ -17,16 +18,32 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
     const [activeTab, setActiveTab] = useState<'active' | 'history'>('active');
     const [businessSettings, setBusinessSettings] = useState<any>(null);
     const [printingOrder, setPrintingOrder] = useState<Order | null>(null);
+    const [alertConfig, setAlertConfig] = useState<{
+        isOpen: boolean;
+        title: string;
+        message: string;
+        type: 'INFO' | 'DANGER' | 'SUCCESS';
+        onConfirm: () => void;
+    }>({
+        isOpen: false,
+        title: '',
+        message: '',
+        type: 'INFO',
+        onConfirm: () => { }
+    });
 
     const paymentLabels: { [key: string]: string } = {
         'pix': 'PIX',
         'PIX': 'PIX',
         'cartao_credito': 'Cartão de Crédito',
         'CREDIT': 'Cartão de Crédito',
+        'CRÉDITO': 'Cartão de Crédito',
         'cartao_debito': 'Cartão de Débito',
         'DEBIT': 'Cartão de Débito',
+        'DÉBITO': 'Cartão de Débito',
         'dinheiro': 'Dinheiro',
-        'CASH': 'Dinheiro'
+        'CASH': 'Dinheiro',
+        'DINHEIRO': 'Dinheiro'
     };
 
     const fetchOrders = async () => {
@@ -84,10 +101,17 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
     };
 
     const rejectOrder = async (orderId: string) => {
-        if (window.confirm("Deseja realmente rejeitar/excluir este pedido?")) {
-            await db.updateOrderStatus(orderId, 'CANCELLED', currentUser);
-            await fetchOrders();
-        }
+        setAlertConfig({
+            isOpen: true,
+            title: 'REJEITAR PEDIDO',
+            message: 'Deseja realmente rejeitar/excluir este pedido? Esta ação não pode ser desfeita.',
+            type: 'DANGER',
+            onConfirm: async () => {
+                await db.updateOrderStatus(orderId, 'CANCELLED', currentUser);
+                await fetchOrders();
+                setAlertConfig(prev => ({ ...prev, isOpen: false }));
+            }
+        });
     };
 
     const handlePrint = (order: Order) => {
@@ -140,7 +164,7 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
                                 <h3 className="font-black text-2xl text-slate-800 tracking-tighter">#{order.id.slice(-4).toUpperCase()}</h3>
                                 <div className="text-right">
                                     <p className="text-xl font-black text-slate-800 tracking-tighter">R$ {order.total.toFixed(2)}</p>
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{paymentLabels[order.paymentMethod] || order.paymentMethod}</p>
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{paymentLabels[order.paymentMethod || ''] || order.paymentMethod || 'Não Informado'}</p>
                                 </div>
                             </div>
 
@@ -148,7 +172,7 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
                                 <div className={`text-[10px] font-black px-3 py-1 rounded-full w-fit uppercase tracking-widest ${order.status === 'PENDING' ? 'bg-amber-100 text-amber-600' :
                                     order.status === 'CANCELLED' ? 'bg-rose-100 text-rose-600' : 'bg-green-100 text-green-600'
                                     }`}>
-                                    {order.status === 'PENDING' ? 'Aguardando Aceite' : (OrderStatusLabels[order.status] || order.status)}
+                                    {OrderStatusLabels[order.status] || order.status}
                                 </div>
                             </div>
 
@@ -156,7 +180,7 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
                                 <div>
                                     <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-1">Cliente</p>
                                     <p className="font-bold text-slate-700 leading-tight">{order.clientName}</p>
-                                    <p className="text-xs font-bold text-slate-400 mt-0.5">{order.clientPhone}</p>
+                                    {order.clientPhone && <p className="text-xs font-bold text-slate-400 mt-0.5">{order.clientPhone}</p>}
                                 </div>
                                 {order.clientAddress && (
                                     <div>
@@ -166,10 +190,10 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
                                 )}
                             </div>
 
-                            <div className="bg-slate-50 rounded-[2rem] p-5 mb-6 flex-1">
+                            <div className="bg-slate-50 rounded-[2rem] p-5 mb-6 flex-1 min-h-[100px]">
                                 <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-3">Itens</p>
                                 <div className="space-y-2 max-h-40 overflow-y-auto pr-1 custom-scrollbar">
-                                    {order.items?.map((item, idx) => (
+                                    {(order.items || []).map((item, idx) => (
                                         <div key={idx} className="flex gap-2 text-sm">
                                             <span className="text-indigo-600 font-black">{item.quantity}x</span>
                                             <span className="font-bold text-slate-600 leading-tight">
@@ -177,29 +201,32 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
                                             </span>
                                         </div>
                                     ))}
+                                    {(!order.items || order.items.length === 0) && (
+                                        <p className="text-[10px] text-slate-400 italic">Nenhum item</p>
+                                    )}
                                 </div>
                             </div>
 
-                            <div className="flex gap-3 mt-auto">
+                            <div className="flex gap-3 mt-auto pt-4 border-t border-slate-50">
                                 {order.status === 'PENDING' ? (
                                     <>
                                         <button onClick={() => approveOrder(order.id)} className="flex-1 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest transition-all shadow-lg shadow-indigo-100 flex justify-center items-center gap-2">
                                             Aceitar
                                         </button>
-                                        <button onClick={() => handlePrint(order)} className="w-12 h-12 bg-indigo-50 hover:bg-indigo-600 text-indigo-600 hover:text-white rounded-2xl flex items-center justify-center transition-all shadow-sm">
+                                        <button onClick={() => handlePrint(order)} className="w-12 h-12 bg-white border border-slate-200 text-slate-400 hover:text-indigo-600 rounded-2xl flex items-center justify-center transition-all shadow-sm">
                                             <Icons.Print className="w-5 h-5" />
                                         </button>
-                                        <button onClick={() => setEditingOrder(order)} className="w-12 h-12 bg-slate-100 hover:bg-indigo-50 text-slate-400 hover:text-indigo-600 rounded-2xl flex items-center justify-center transition-all">
+                                        <button onClick={() => setEditingOrder(order)} className="w-12 h-12 bg-white border border-slate-200 text-slate-400 hover:text-indigo-600 rounded-2xl flex items-center justify-center transition-all">
                                             <Icons.Edit className="w-5 h-5" />
                                         </button>
-                                        <button onClick={() => rejectOrder(order.id)} className="w-12 h-12 bg-rose-50 hover:bg-rose-500 text-rose-400 hover:text-white rounded-2xl flex items-center justify-center transition-all">
+                                        <button onClick={() => rejectOrder(order.id)} className="w-12 h-12 bg-white border border-slate-200 text-rose-400 hover:bg-rose-50 rounded-2xl flex items-center justify-center transition-all">
                                             <Icons.Delete className="w-5 h-5" />
                                         </button>
                                     </>
                                 ) : (
                                     <>
                                         <div className="flex-1 py-4 bg-slate-50 text-slate-400 rounded-2xl font-black uppercase text-[10px] tracking-widest flex items-center justify-center">
-                                            {order.status === 'DELIVERED' ? 'Finalizado' : OrderStatusLabels[order.status] || order.status}
+                                            {OrderStatusLabels[order.status] || order.status}
                                         </div>
                                         <button
                                             onClick={() => handlePrint(order)}
@@ -308,6 +335,15 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
                     }}
                 />
             )}
+
+            <CustomAlert
+                isOpen={alertConfig.isOpen}
+                title={alertConfig.title}
+                message={alertConfig.message}
+                type={alertConfig.type}
+                onConfirm={alertConfig.onConfirm}
+                onCancel={() => setAlertConfig(prev => ({ ...prev, isOpen: false }))}
+            />
         </div>
     );
 };
@@ -436,6 +472,10 @@ const OrderEditModal: React.FC<{
                                         <option value="CREDIT" className="text-slate-900">Cartão de Crédito</option>
                                         <option value="DEBIT" className="text-slate-900">Cartão de Débito</option>
                                         <option value="CASH" className="text-slate-900">Dinheiro</option>
+                                        <option value="pix" className="hidden">PIX</option>
+                                        <option value="cartao_credito" className="hidden">Cartão de Crédito</option>
+                                        <option value="cartao_debito" className="hidden">Cartão de Débito</option>
+                                        <option value="dinheiro" className="hidden">Dinheiro</option>
                                     </select>
                                 </div>
                                 <button
