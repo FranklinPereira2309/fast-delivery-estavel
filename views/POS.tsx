@@ -1362,7 +1362,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                 className={`p-2 rounded-xl transition-all relative ${hasNewFeedback ? 'bg-indigo-600 text-white animate-moderate-blink shadow-lg' : 'bg-slate-200 text-slate-500 hover:bg-slate-300'}`}
                 title="Mensagens do Dia"
               >
-                <Icons.View className="w-3.5 h-3.5" />
+                <Icons.Message className="w-3.5 h-3.5" />
                 {hasNewFeedback && <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full border border-white animate-ping"></span>}
               </button>
             </h3>
