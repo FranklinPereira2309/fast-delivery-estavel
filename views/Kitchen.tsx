@@ -51,7 +51,8 @@ const Kitchen: React.FC = () => {
     const activeOrders = allOrders.filter(o =>
       o.status !== OrderStatus.CANCELLED &&
       o.status !== OrderStatus.DELIVERED &&
-      o.items.length > 0
+      o.items.length > 0 &&
+      !(o.isOriginDeliveryApp && o.status === OrderStatus.PENDING)
     );
 
     // Detectar novos itens em pedidos existentes para resetar o blink

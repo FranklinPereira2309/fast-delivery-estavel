@@ -14,28 +14,43 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
     const [isLoading, setIsLoading] = useState(true);
     const [editingOrder, setEditingOrder] = useState<Order | null>(null);
     const [allProducts, setAllProducts] = useState<any[]>([]);
+    const [activeTab, setActiveTab] = useState<'active' | 'history'>('active');
+    const [businessSettings, setBusinessSettings] = useState<any>(null);
+    const [printingOrder, setPrintingOrder] = useState<Order | null>(null);
 
     const fetchOrders = async () => {
         setIsLoading(true);
-        const [allOrders, prods] = await Promise.all([db.getOrders(), db.getProducts()]);
+        const [allOrders, prods, settings] = await Promise.all([
+            db.getOrders(),
+            db.getProducts(),
+            db.getSettings()
+        ]);
         setAllProducts(prods);
-        // Only fetch orders that are from the Delivery App AND not delivered/cancelled
-        const appOrders = allOrders.filter(
-            (o) => o.isOriginDeliveryApp && !['DELIVERED', 'CANCELLED'].includes(o.status)
-        );
-        setOrders(appOrders);
+        setBusinessSettings(settings);
+
+        // Separate orders by status
+        const appOrders = allOrders.filter(o => o.isOriginDeliveryApp);
+
+        if (activeTab === 'active') {
+            setOrders(appOrders.filter(o => !['DELIVERED', 'CANCELLED'].includes(o.status)));
+        } else {
+            setOrders(appOrders.filter(o => ['DELIVERED', 'CANCELLED'].includes(o.status)));
+        }
+
         setIsLoading(false);
     };
 
     useEffect(() => {
         fetchOrders();
+    }, [activeTab]);
 
+    useEffect(() => {
         const handleOrdersUpdate = () => {
             fetchOrders();
         };
 
         const handleNewOrder = (order: Order) => {
-            if (order.isOriginDeliveryApp) {
+            if (activeTab === 'active' && order.isOriginDeliveryApp) {
                 audioAlert.play();
                 setOrders((prev) => [order, ...prev.filter(o => o.id !== order.id)]);
             }
@@ -64,7 +79,10 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
         }
     };
 
-    // We will build edit and print logic next
+    const handlePrint = (order: Order) => {
+        setPrintingOrder(order);
+        setTimeout(() => window.print(), 500);
+    };
 
     if (isLoading) {
         return <div className="p-8 flex items-center justify-center">Carregando pedidos...</div>;
@@ -72,7 +90,7 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
 
     return (
         <div className="p-6 h-full flex flex-col bg-slate-50">
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-6 no-print">
                 <div>
                     <h1 className="text-2xl font-black text-slate-800 uppercase tracking-tighter flex items-center gap-3">
                         <div className="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center">
@@ -82,9 +100,24 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
                     </h1>
                     <p className="text-sm text-slate-500 font-medium ml-14">Aprove, edite e envie pedidos do app para a cozinha.</p>
                 </div>
+
+                <div className="flex bg-white p-1 rounded-2xl border border-slate-200 shadow-sm">
+                    <button
+                        onClick={() => setActiveTab('active')}
+                        className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'active' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' : 'text-slate-400 hover:bg-slate-50'}`}
+                    >
+                        Pedidos Ativos
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('history')}
+                        className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'history' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' : 'text-slate-400 hover:bg-slate-50'}`}
+                    >
+                        Histórico
+                    </button>
+                </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 flex-1 overflow-y-auto pr-2 pb-20">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 flex-1 overflow-y-auto pr-2 pb-20 no-print">
                 {orders.length === 0 ? (
                     <div className="col-span-full h-64 flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-3xl bg-white">
                         <Icons.Smartphone className="w-12 h-12 text-slate-300 mb-4" />
@@ -150,11 +183,14 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
                                 </div>
                             ) : (
                                 <div className="flex gap-2 mt-auto">
-                                    <button className="flex-1 py-2.5 bg-slate-100 text-slate-400 rounded-xl font-bold cursor-not-allowed">
-                                        Já na Cozinha
-                                    </button>
-                                    <button className="px-3 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-colors flex items-center justify-center">
-                                        <Icons.Print className="w-5 h-5 pointer-events-none" />
+                                    <div className="flex-1 py-2.5 bg-slate-100 text-slate-500 rounded-xl font-bold text-xs flex items-center justify-center">
+                                        {activeTab === 'history' ? (order.status === 'DELIVERED' ? 'Finalizado' : 'Cancelado') : 'Em Preparo'}
+                                    </div>
+                                    <button
+                                        onClick={() => handlePrint(order)}
+                                        className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl transition-all shadow-lg shadow-indigo-100 flex items-center justify-center gap-2 font-bold text-xs"
+                                    >
+                                        <Icons.Print className="w-4 h-4" /> Cupom
                                     </button>
                                 </div>
                             )}
@@ -162,6 +198,74 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
                     ))
                 )}
             </div>
+
+            {/* Printing Modal (Hidden except during printing) */}
+            {printingOrder && businessSettings && (
+                <div className="print-only fixed inset-0 z-[100] bg-white text-black p-8 font-receipt text-[11px] is-receipt">
+                    <div className="text-center mb-6 space-y-1">
+                        <p className="font-bold text-lg">{businessSettings.name?.toUpperCase()}</p>
+                        <p className="uppercase">{businessSettings.address}</p>
+                        <p className="uppercase">CNPJ: {businessSettings.cnpj}</p>
+                        <p className="uppercase mt-2 font-black border-y border-black py-2">Resumo do Pedido do App</p>
+                    </div>
+
+                    <div className="space-y-4">
+                        <div>
+                            <p className="font-bold">PEDIDO: #{printingOrder.id.slice(-4).toUpperCase()}</p>
+                            <p>DATA: {new Date(printingOrder.createdAt).toLocaleString('pt-BR')}</p>
+                            <p>ORIGEM: DELIVERY APP</p>
+                        </div>
+
+                        <div className="border-t border-black pt-2">
+                            <p className="font-bold">CLIENTE: {printingOrder.clientName?.toUpperCase()}</p>
+                            <p>PHONE: {printingOrder.clientPhone}</p>
+                            {printingOrder.clientAddress && <p>ENDERECO: {printingOrder.clientAddress.toUpperCase()}</p>}
+                        </div>
+
+                        <div className="border-y border-black py-2">
+                            <div className="flex justify-between font-bold mb-1">
+                                <span>ITEM</span>
+                                <span>TOTAL</span>
+                            </div>
+                            {printingOrder.items.map((it: any, idx: number) => (
+                                <div key={idx} className="flex justify-between items-start mb-1 text-[10px]">
+                                    <span className="flex-1 mr-2">{it.quantity}x {it.product?.name || allProducts.find(p => p.id === it.productId)?.name || 'PRODUTO'}</span>
+                                    <span>R$ {(it.price * it.quantity).toFixed(2)}</span>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="space-y-1">
+                            <div className="flex justify-between">
+                                <span>SUBTOTAL</span>
+                                <span>R$ {(printingOrder.total - (printingOrder.deliveryFee || 0)).toFixed(2)}</span>
+                            </div>
+                            {printingOrder.deliveryFee > 0 && (
+                                <div className="flex justify-between">
+                                    <span>TAXA ENTREGA</span>
+                                    <span>R$ {printingOrder.deliveryFee.toFixed(2)}</span>
+                                </div>
+                            )}
+                            <div className="flex justify-between font-bold text-sm border-t border-black pt-2">
+                                <span>TOTAL PAGO</span>
+                                <span>R$ {printingOrder.total.toFixed(2)}</span>
+                            </div>
+                        </div>
+
+                        <div className="border-t border-black pt-4 text-center">
+                            <p className="font-bold uppercase tracking-widest">{printingOrder.paymentMethod}</p>
+                            <p className="mt-4 opacity-70 italic">Gerado via Delivery Fast</p>
+                        </div>
+                    </div>
+
+                    <button
+                        onClick={() => setPrintingOrder(null)}
+                        className="no-print fixed top-6 right-6 p-4 bg-rose-500 text-white rounded-full shadow-2xl hover:bg-rose-600 transition-all font-black"
+                    >
+                        X FECHAR
+                    </button>
+                </div>
+            )}
 
             {editingOrder && (
                 <OrderEditModal
