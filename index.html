@@ -125,13 +125,17 @@
                 visibility: visible !important;
             }
 
-            .print-container {
+            .print-container,
+            .is-receipt {
                 position: absolute !important;
-                left: 0 !important;
+                left: 50% !important;
                 top: 0 !important;
-                width: 100% !important;
-                margin: 0 !important;
-                padding: 0 !important;
+                transform: translateX(-50%) !important;
+                width: 80mm !important;
+                max-width: 80mm !important;
+                margin: 0 auto !important;
+                padding: 10mm 2mm !important;
+                background: white !important;
             }
 
             .no-print {
