@@ -235,34 +235,35 @@ const Checkout: React.FC = () => {
                         <span className="w-2 h-2 rounded-full bg-indigo-400"></span> Local de Entrega
                     </h2>
 
-                    <div className="bg-white p-2 rounded-[2rem] shadow-sm border border-slate-100 flex overflow-hidden">
-                        {savedAddress && (
+                    {savedAddress && !useNewAddress ? (
+                        <div className="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-[2rem] shadow-sm">
+                            <div className="flex-1 pr-4">
+                                <span className="text-[9px] font-black uppercase text-emerald-500 tracking-widest block mb-1">CADASTRADO</span>
+                                <p className="text-xs font-bold text-slate-700 leading-snug line-clamp-2">{savedAddress}</p>
+                            </div>
                             <button
                                 type="button"
-                                onClick={() => setUseNewAddress(false)}
-                                className={`flex-1 py-3 px-4 text-[10px] font-black uppercase tracking-widest rounded-2xl transition-all ${!useNewAddress ? 'bg-indigo-50 text-indigo-600' : 'text-slate-400 hover:bg-slate-50'}`}
+                                onClick={() => setUseNewAddress(true)}
+                                className="text-[9px] font-black uppercase text-indigo-500 tracking-widest px-4 py-2 bg-indigo-50 rounded-full hover:bg-indigo-100 transition-all shrink-0"
                             >
-                                Meu Endereço
+                                Trocar
                             </button>
-                        )}
-                        <button
-                            type="button"
-                            onClick={() => setUseNewAddress(true)}
-                            className={`flex-1 py-3 px-4 text-[10px] font-black uppercase tracking-widest rounded-2xl transition-all ${useNewAddress ? 'bg-indigo-50 text-indigo-600' : 'text-slate-400 hover:bg-slate-50'}`}
-                        >
-                            Novo Endereço
-                        </button>
-                    </div>
-
-                    {!useNewAddress ? (
-                        <div className="p-5 bg-white border border-slate-100 rounded-[2rem] shadow-sm">
-                            <div className="flex justify-between items-start mb-2">
-                                <span className="px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full text-[9px] font-black uppercase tracking-widest">Cadastrado</span>
-                            </div>
-                            <p className="text-sm font-bold text-slate-700 leading-relaxed">{savedAddress}</p>
                         </div>
                     ) : (
-                        <div className="p-5 bg-white border border-slate-100 rounded-[2rem] shadow-sm space-y-4 animate-in fade-in slide-in-from-top-4">
+                        <div className="p-6 bg-white border border-slate-100 rounded-[2rem] shadow-sm space-y-4">
+                            <div className="flex justify-between items-center mb-2">
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Novo Endereço</span>
+                                {savedAddress && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setUseNewAddress(false)}
+                                        className="text-[9px] font-black uppercase text-rose-500 tracking-widest px-3 py-1.5 bg-rose-50 rounded-full hover:bg-rose-100 transition-all font-bold"
+                                    >
+                                        Cancelar
+                                    </button>
+                                )}
+                            </div>
+
                             <div className="relative">
                                 <input
                                     type="text"
@@ -271,7 +272,7 @@ const Checkout: React.FC = () => {
                                     value={newAddress.cep}
                                     onChange={e => setNewAddress({ ...newAddress, cep: e.target.value.replace(/\D/g, '') })}
                                     onBlur={handleCepBlur}
-                                    className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm focus:ring-4 focus:ring-indigo-50 focus:border-indigo-100 transition-all placeholder:text-slate-400 disabled:opacity-50"
+                                    className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm text-slate-600 focus:ring-4 focus:ring-indigo-50 focus:border-indigo-100 transition-all placeholder:text-slate-400 placeholder:font-bold"
                                 />
                                 {isFetchingCep && (
                                     <div className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin"></div>
@@ -283,7 +284,7 @@ const Checkout: React.FC = () => {
                                 placeholder="Logradouro"
                                 value={newAddress.street}
                                 onChange={e => setNewAddress({ ...newAddress, street: e.target.value })}
-                                className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm focus:ring-4 focus:ring-indigo-50 focus:border-indigo-100 transition-all placeholder:text-slate-400"
+                                className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm text-slate-600 focus:ring-4 focus:ring-indigo-50 focus:border-indigo-100 transition-all placeholder:text-slate-400 placeholder:font-bold"
                             />
 
                             <div className="grid grid-cols-2 gap-3">
@@ -292,14 +293,14 @@ const Checkout: React.FC = () => {
                                     placeholder="Número"
                                     value={newAddress.number}
                                     onChange={e => setNewAddress({ ...newAddress, number: e.target.value })}
-                                    className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm focus:ring-4 focus:ring-indigo-50 focus:border-indigo-100 transition-all placeholder:text-slate-400"
+                                    className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm text-slate-600 focus:ring-4 focus:ring-indigo-50 focus:border-indigo-100 transition-all placeholder:text-slate-400 placeholder:font-bold"
                                 />
                                 <input
                                     type="text"
                                     placeholder="Bairro"
                                     value={newAddress.neighborhood}
                                     onChange={e => setNewAddress({ ...newAddress, neighborhood: e.target.value })}
-                                    className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm focus:ring-4 focus:ring-indigo-50 focus:border-indigo-100 transition-all placeholder:text-slate-400"
+                                    className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm text-slate-600 focus:ring-4 focus:ring-indigo-50 focus:border-indigo-100 transition-all placeholder:text-slate-400 placeholder:font-bold"
                                 />
                             </div>
 
@@ -308,18 +309,18 @@ const Checkout: React.FC = () => {
                                 placeholder="Complemento (Opcional)"
                                 value={newAddress.complement}
                                 onChange={e => setNewAddress({ ...newAddress, complement: e.target.value })}
-                                className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm focus:ring-4 focus:ring-indigo-50 focus:border-indigo-100 transition-all placeholder:text-slate-400"
+                                className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm text-slate-600 focus:ring-4 focus:ring-indigo-50 focus:border-indigo-100 transition-all placeholder:text-slate-400 placeholder:font-bold"
                             />
 
-                            <div>
-                                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Salvar como</h3>
+                            <div className="pt-2">
+                                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Salvar Como</h3>
                                 <div className="flex gap-2">
                                     {['Casa', 'Trabalho', 'Outro'].map(tag => (
                                         <button
                                             key={tag}
                                             type="button"
                                             onClick={() => setNewAddress({ ...newAddress, tag })}
-                                            className={`px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all border ${newAddress.tag === tag ? 'bg-indigo-500 text-white border-indigo-500 shadow-sm shadow-indigo-200' : 'bg-white text-slate-500 border-slate-200'} `}
+                                            className={`px-5 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all border ${newAddress.tag === tag ? 'bg-indigo-500 text-white border-indigo-500 shadow-sm shadow-indigo-100' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'}`}
                                         >
                                             {tag}
                                         </button>
@@ -335,29 +336,20 @@ const Checkout: React.FC = () => {
                     <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2 flex items-center gap-2">
                         <span className="w-2 h-2 rounded-full bg-emerald-400"></span> Forma de Pagamento
                     </h2>
-                    <div className="grid grid-cols-2 gap-3">
-                        {[
-                            { id: 'PIX', label: 'PIX', badge: 'Rápido' },
-                            { id: 'CREDIT', label: 'Crédito', badge: null },
-                            { id: 'DEBIT', label: 'Débito', badge: null },
-                            { id: 'CASH', label: 'Dinheiro', badge: null }
-                        ].map(method => (
-                            <button
-                                key={method.id}
-                                type="button"
-                                onClick={() => setPaymentMethod(method.id as any)}
-                                className={`relative p-5 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all border ${paymentMethod === method.id
-                                    ? 'bg-indigo-500 text-white border-indigo-500 shadow-lg shadow-indigo-200 transform scale-[1.02]'
-                                    : 'bg-white text-slate-500 border-slate-200 hover:border-indigo-200'}`}
-                            >
-                                {method.label}
-                                {method.badge && (
-                                    <span className={`absolute -top-2 -right-2 text-[8px] px-2 py-1 rounded-full ${paymentMethod === method.id ? 'bg-white text-indigo-600' : 'bg-emerald-100 text-emerald-600'}`}>
-                                        {method.badge}
-                                    </span>
-                                )}
-                            </button>
-                        ))}
+                    <div className="relative">
+                        <select
+                            value={paymentMethod}
+                            onChange={e => setPaymentMethod(e.target.value as any)}
+                            className="w-full p-5 bg-white border border-slate-100 rounded-[2rem] font-black text-xs uppercase tracking-widest text-slate-600 shadow-sm appearance-none focus:ring-4 focus:ring-indigo-50 focus:border-indigo-100 transition-all cursor-pointer outline-none"
+                        >
+                            <option value="PIX">PIX (Rápido)</option>
+                            <option value="CREDIT">Cartão de Crédito</option>
+                            <option value="DEBIT">Cartão de Débito</option>
+                            <option value="CASH">Dinheiro</option>
+                        </select>
+                        <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                            <Icons.ChevronDown className="w-5 h-5" />
+                        </div>
                     </div>
                 </div>
 
