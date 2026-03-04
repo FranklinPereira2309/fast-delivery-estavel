@@ -130,7 +130,7 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
                                     <div key={idx} className="flex justify-between items-center text-sm mb-1 pb-1 border-b border-slate-100 last:border-0 last:pb-0">
                                         <span className="font-medium text-slate-700 text-xs">
                                             <span className="text-indigo-600 font-bold mr-1">{item.quantity}x</span>
-                                            {item.product.name}
+                                            {item.product?.name || allProducts.find(p => p.id === item.productId)?.name || 'Produto'}
                                         </span>
                                     </div>
                                 ))}
@@ -246,7 +246,7 @@ const OrderEditModal: React.FC<{
                                     {it.quantity}x
                                 </div>
                                 <div className="flex-1">
-                                    <p className="font-bold text-slate-700 text-sm">{it.product.name}</p>
+                                    <p className="font-bold text-slate-700 text-sm">{it.product?.name || allProducts.find(p => p.id === it.productId)?.name || 'Produto'}</p>
                                     <p className="text-[10px] font-bold text-slate-400">R$ {it.price.toFixed(2)}/un</p>
                                 </div>
                                 <div className="flex items-center gap-2">

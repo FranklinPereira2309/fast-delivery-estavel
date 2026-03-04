@@ -18,7 +18,7 @@ const mapOrderResponse = (order: any) => {
 export const getAllOrders = async (req: Request, res: Response) => {
     const orders = await prisma.order.findMany({
         include: {
-            items: true,
+            items: { include: { product: true } },
             waiter: true
         }
     });
@@ -32,7 +32,7 @@ export const getOrderById = async (req: Request, res: Response) => {
         const order = await prisma.order.findUnique({
             where: { id },
             include: {
-                items: true,
+                items: { include: { product: true } },
                 waiter: true
             }
         });
@@ -198,7 +198,7 @@ export const saveOrder = async (req: Request, res: Response) => {
         const result = await prisma.$transaction(async (tx: any) => {
             const existingOrder = await tx.order.findUnique({
                 where: { id: order.id },
-                include: { items: true }
+                include: { items: { include: { product: true } } }
             });
 
             if (!existingOrder) {
@@ -399,7 +399,7 @@ export const saveOrder = async (req: Request, res: Response) => {
                         }))
                     }
                 },
-                include: { items: true }
+                include: { items: { include: { product: true } } }
             });
         });
 
@@ -553,7 +553,7 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
         const result = await prisma.$transaction(async (tx: any) => {
             const oldOrder = await tx.order.findUnique({
                 where: { id: id as string },
-                include: { items: true }
+                include: { items: { include: { product: true } } }
             });
 
             const oldStatus = oldOrder?.status;
@@ -663,7 +663,7 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
             const order = await tx.order.update({
                 where: { id: id as string },
                 data: updateData,
-                include: { items: true }
+                include: { items: { include: { product: true } } }
             });
 
             // 3. Client Sync and Stats
@@ -727,7 +727,7 @@ export const updateOrderItems = async (req: Request, res: Response) => {
         const result = await prisma.$transaction(async (tx: any) => {
             const order = await tx.order.findUnique({
                 where: { id },
-                include: { items: true }
+                include: { items: { include: { product: true } } }
             });
 
             if (!order) throw new Error('Pedido não encontrado');
@@ -759,7 +759,7 @@ export const updateOrderItems = async (req: Request, res: Response) => {
                         }))
                     }
                 },
-                include: { items: true }
+                include: { items: { include: { product: true } } }
             });
 
             // 4. Subtract new items from inventory
@@ -804,7 +804,7 @@ export const updateOrderPaymentMethod = async (req: Request, res: Response) => {
             data: {
                 paymentMethod
             },
-            include: { items: true }
+            include: { items: { include: { product: true } } }
         });
 
         // Registrar na auditoria a edição do cupom
@@ -840,7 +840,7 @@ export const updateOrderServiceFee = async (req: Request, res: Response) => {
         const result = await prisma.$transaction(async (tx: any) => {
             const order = await tx.order.findUnique({
                 where: { id },
-                include: { items: true }
+                include: { items: { include: { product: true } } }
             });
 
             if (!order) throw new Error('Pedido não encontrado.');
@@ -857,7 +857,7 @@ export const updateOrderServiceFee = async (req: Request, res: Response) => {
                     appliedServiceFee: newFeeParsed,
                     total: newTotal
                 },
-                include: { items: true }
+                include: { items: { include: { product: true } } }
             });
 
             // Update associated Receivable (FIADO) if amount changes
@@ -897,7 +897,7 @@ export const getClientOrders = async (req: Request, res: Response) => {
     try {
         const orders = await prisma.order.findMany({
             where: { clientId: String(clientId) },
-            include: { items: true },
+            include: { items: { include: { product: true } } },
             orderBy: { createdAt: 'desc' }
         });
         res.json(orders.map(mapOrderResponse));
