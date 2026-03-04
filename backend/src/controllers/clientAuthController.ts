@@ -1,4 +1,4 @@
-import { Request, Response } from 'react'; // fake import for type hints
+
 import { Request as ExpressRequest, Response as ExpressResponse } from 'express';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
