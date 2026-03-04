@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../services/db';
 import { socket } from '../services/socket';
-import { Order, OrderStatus, User } from '../types';
+import { Order, OrderStatus, User, OrderStatusLabels } from '../types';
 import { Icons, formatImageUrl } from '../constants';
 import { audioAlert } from '../services/audioAlert';
 
@@ -125,145 +125,202 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
                     </div>
                 ) : (
                     orders.map(order => (
-                        <div key={order.id} className="bg-white p-5 rounded-3xl shadow-sm border border-slate-200 flex flex-col hover:shadow-md transition-shadow relative overflow-hidden group">
-                            {order.status === 'PENDING' && (
-                                <div className="absolute top-0 left-0 w-full h-1.5 bg-rose-500 animate-pulse"></div>
-                            )}
-
-                            <div className="flex justify-between items-start mb-4">
-                                <div>
-                                    <h3 className="font-bold text-lg text-slate-800">#{order.id.slice(-4).toUpperCase()}</h3>
-                                    <div className="text-xs font-semibold px-2 py-1 rounded-full w-fit mt-1 bg-amber-100 text-amber-700">
-                                        {order.status === 'PENDING' ? 'Aguardando Aceite' : order.status}
-                                    </div>
-                                </div>
+                        <div key={order.id} className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 flex flex-col hover:shadow-xl hover:shadow-indigo-100/20 transition-all relative overflow-hidden group">
+                            <div className="flex justify-between items-start mb-2">
+                                <h3 className="font-black text-2xl text-slate-800 tracking-tighter">#{order.id.slice(-4).toUpperCase()}</h3>
                                 <div className="text-right">
-                                    <p className="text-xl font-black text-slate-800">R$ {order.total.toFixed(2)}</p>
-                                    <p className="text-xs font-semibold text-slate-400 capitalize">{order.paymentMethod}</p>
+                                    <p className="text-xl font-black text-slate-800 tracking-tighter">R$ {order.total.toFixed(2)}</p>
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{order.paymentMethod}</p>
                                 </div>
                             </div>
 
-                            <div className="space-y-2 mb-4">
+                            <div className="mb-6">
+                                <div className={`text-[10px] font-black px-3 py-1 rounded-full w-fit uppercase tracking-widest ${order.status === 'PENDING' ? 'bg-amber-100 text-amber-600' :
+                                    order.status === 'CANCELLED' ? 'bg-rose-100 text-rose-600' : 'bg-green-100 text-green-600'
+                                    }`}>
+                                    {order.status === 'PENDING' ? 'Aguardando Aceite' : (OrderStatusLabels[order.status] || order.status)}
+                                </div>
+                            </div>
+
+                            <div className="space-y-4 mb-6">
                                 <div>
-                                    <p className="text-xs font-bold text-slate-400 uppercase">Cliente</p>
-                                    <p className="font-semibold text-sm text-slate-700">{order.clientName}</p>
-                                    <p className="text-xs text-slate-500">{order.clientPhone}</p>
+                                    <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-1">Cliente</p>
+                                    <p className="font-bold text-slate-700 leading-tight">{order.clientName}</p>
+                                    <p className="text-xs font-bold text-slate-400 mt-0.5">{order.clientPhone}</p>
                                 </div>
                                 {order.clientAddress && (
                                     <div>
-                                        <p className="text-xs font-bold text-slate-400 uppercase">Endereço</p>
-                                        <p className="text-xs text-slate-600 leading-tight">{order.clientAddress}</p>
+                                        <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-1">Endereço</p>
+                                        <p className="text-xs font-bold text-slate-500 leading-relaxed">{order.clientAddress}</p>
                                     </div>
                                 )}
                             </div>
 
-                            <div className="flex-1 bg-slate-50 rounded-xl p-3 mb-4 overflow-y-auto max-h-32">
-                                <p className="text-xs font-bold text-slate-400 uppercase mb-2">Itens</p>
-                                {order.items?.map((item, idx) => (
-                                    <div key={idx} className="flex justify-between items-center text-sm mb-1 pb-1 border-b border-slate-100 last:border-0 last:pb-0">
-                                        <span className="font-medium text-slate-700 text-xs">
-                                            <span className="text-indigo-600 font-bold mr-1">{item.quantity}x</span>
-                                            {item.product?.name || allProducts.find(p => p.id === item.productId)?.name || 'Produto'}
-                                        </span>
-                                    </div>
-                                ))}
+                            <div className="bg-slate-50 rounded-[2rem] p-5 mb-6 flex-1">
+                                <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-3">Itens</p>
+                                <div className="space-y-2 max-h-40 overflow-y-auto pr-1 custom-scrollbar">
+                                    {order.items?.map((item, idx) => (
+                                        <div key={idx} className="flex gap-2 text-sm">
+                                            <span className="text-indigo-600 font-black">{item.quantity}x</span>
+                                            <span className="font-bold text-slate-600 leading-tight">
+                                                {item.product?.name || allProducts.find(p => p.id === item.productId)?.name || 'Produto'}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
 
-                            {order.status === 'PENDING' ? (
-                                <div className="flex gap-2 mt-auto">
-                                    <button onClick={() => approveOrder(order.id)} className="flex-1 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold flex justify-center items-center gap-2 transition-colors">
-                                        <Icons.Kitchen className="w-4 h-4" /> Aceitar
-                                    </button>
-                                    <button onClick={() => setEditingOrder(order)} className="flex-1 py-2.5 bg-indigo-100 hover:bg-indigo-200 text-indigo-600 rounded-xl font-bold flex justify-center items-center gap-2 transition-colors">
-                                        <Icons.Edit className="w-4 h-4" /> Editar
-                                    </button>
-                                    <button onClick={() => rejectOrder(order.id)} className="px-3 py-2.5 bg-rose-50 cursor-pointer hover:bg-rose-100 text-rose-600 rounded-xl transition-colors flex items-center justify-center">
-                                        <Icons.Delete className="w-5 h-5 pointer-events-none" />
-                                    </button>
-                                </div>
-                            ) : (
-                                <div className="flex gap-2 mt-auto">
-                                    <div className="flex-1 py-2.5 bg-slate-100 text-slate-500 rounded-xl font-bold text-xs flex items-center justify-center">
-                                        {activeTab === 'history' ? (order.status === 'DELIVERED' ? 'Finalizado' : 'Cancelado') : 'Em Preparo'}
-                                    </div>
-                                    <button
-                                        onClick={() => handlePrint(order)}
-                                        className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl transition-all shadow-lg shadow-indigo-100 flex items-center justify-center gap-2 font-bold text-xs"
-                                    >
-                                        <Icons.Print className="w-4 h-4" /> Cupom
-                                    </button>
-                                </div>
-                            )}
+                            <div className="flex gap-3 mt-auto">
+                                {order.status === 'PENDING' ? (
+                                    <>
+                                        <button onClick={() => approveOrder(order.id)} className="flex-1 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest transition-all shadow-lg shadow-indigo-100 flex justify-center items-center gap-2">
+                                            Aceitar
+                                        </button>
+                                        <button onClick={() => setEditingOrder(order)} className="w-12 h-12 bg-slate-100 hover:bg-indigo-50 text-slate-400 hover:text-indigo-600 rounded-2xl flex items-center justify-center transition-all">
+                                            <Icons.Edit className="w-5 h-5" />
+                                        </button>
+                                        <button onClick={() => rejectOrder(order.id)} className="w-12 h-12 bg-rose-50 hover:bg-rose-500 text-rose-400 hover:text-white rounded-2xl flex items-center justify-center transition-all">
+                                            <Icons.Delete className="w-5 h-5" />
+                                        </button>
+                                    </>
+                                ) : (
+                                    <>
+                                        <div className="flex-1 py-4 bg-slate-50 text-slate-400 rounded-2xl font-black uppercase text-[10px] tracking-widest flex items-center justify-center">
+                                            {order.status === 'DELIVERED' ? 'Finalizado' : OrderStatusLabels[order.status] || order.status}
+                                        </div>
+                                        <button
+                                            onClick={() => handlePrint(order)}
+                                            className="flex-1 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest transition-all shadow-lg shadow-indigo-100 flex items-center justify-center gap-2"
+                                        >
+                                            <Icons.Print className="w-4 h-4" /> Cupom
+                                        </button>
+                                    </>
+                                )}
+                            </div>
                         </div>
                     ))
                 )}
             </div>
 
-            {/* Printing Modal (Hidden except during printing) */}
             {printingOrder && businessSettings && (
-                <div className="print-only fixed inset-0 z-[100] bg-white text-black p-8 font-receipt text-[11px] is-receipt">
-                    <div className="text-center mb-6 space-y-1">
-                        <p className="font-bold text-lg">{businessSettings.name?.toUpperCase()}</p>
-                        <p className="uppercase">{businessSettings.address}</p>
-                        <p className="uppercase">CNPJ: {businessSettings.cnpj}</p>
-                        <p className="uppercase mt-2 font-black border-y border-black py-2">Resumo do Pedido do App</p>
-                    </div>
-
-                    <div className="space-y-4">
-                        <div>
-                            <p className="font-bold">PEDIDO: #{printingOrder.id.slice(-4).toUpperCase()}</p>
-                            <p>DATA: {new Date(printingOrder.createdAt).toLocaleString('pt-BR')}</p>
-                            <p>ORIGEM: DELIVERY APP</p>
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md animate-in fade-in duration-300">
+                    <div className="bg-white w-full max-w-[450px] rounded-[3rem] shadow-2xl p-10 flex flex-col items-center animate-in zoom-in duration-300 overflow-y-auto max-h-[95vh] custom-scrollbar">
+                        <div className="w-full text-center space-y-1 mb-8">
+                            <p className="font-black text-xl text-slate-800 tracking-tighter receipt-mono">{businessSettings.name?.toUpperCase()}</p>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">CNPJ: {businessSettings.cnpj}</p>
                         </div>
 
-                        <div className="border-t border-black pt-2">
-                            <p className="font-bold">CLIENTE: {printingOrder.clientName?.toUpperCase()}</p>
-                            <p>PHONE: {printingOrder.clientPhone}</p>
-                            {printingOrder.clientAddress && <p>ENDERECO: {printingOrder.clientAddress.toUpperCase()}</p>}
+                        <div className="w-full border-2 border-slate-800 p-3 text-center mb-8">
+                            <p className="font-black text-xs uppercase tracking-[0.2em] text-slate-800 receipt-mono">Comprovante de Pagamento</p>
                         </div>
 
-                        <div className="border-y border-black py-2">
-                            <div className="flex justify-between font-bold mb-1">
-                                <span>ITEM</span>
-                                <span>TOTAL</span>
+                        <div className="w-full space-y-3 mb-8 text-[11px] font-bold text-slate-600 receipt-mono">
+                            <div className="flex gap-2">
+                                <span className="text-slate-400 uppercase">Data:</span>
+                                <span>{new Date(printingOrder.createdAt).toLocaleString('pt-BR')}</span>
                             </div>
+                            <div className="flex gap-2">
+                                <span className="text-slate-400 uppercase">Cliente:</span>
+                                <span className="text-slate-800">{printingOrder.clientName?.toUpperCase()}</span>
+                            </div>
+                            <div className="flex gap-2">
+                                <span className="text-slate-400 uppercase">Fone:</span>
+                                <span>{printingOrder.clientPhone}</span>
+                            </div>
+                            {printingOrder.clientAddress && (
+                                <div className="flex gap-2">
+                                    <span className="text-slate-400 uppercase shrink-0">Entrega:</span>
+                                    <span className="leading-relaxed">{printingOrder.clientAddress.toUpperCase()}</span>
+                                </div>
+                            )}
+                            <div className="flex gap-2 border-b border-dashed border-slate-200 pb-3">
+                                <span className="text-slate-400 uppercase">Status:</span>
+                                <span className="text-indigo-600">{(OrderStatusLabels[printingOrder.status] || printingOrder.status).toUpperCase()}</span>
+                            </div>
+                        </div>
+
+                        <div className="w-full bg-slate-50 border border-slate-100 p-4 rounded-2xl flex justify-between items-center mb-10 receipt-mono">
+                            <div className="flex gap-2 text-xs font-black uppercase">
+                                <span className="text-slate-400">Pagto:</span>
+                                <span className="text-slate-800">{printingOrder.paymentMethod}</span>
+                            </div>
+                            <button className="text-[10px] font-bold text-blue-600 underline">Editar</button>
+                        </div>
+
+                        <div className="w-full space-y-4 mb-8 receipt-mono border-t border-dashed border-slate-200 pt-6">
                             {printingOrder.items.map((it: any, idx: number) => (
-                                <div key={idx} className="flex justify-between items-start mb-1 text-[10px]">
-                                    <span className="flex-1 mr-2">{it.quantity}x {it.product?.name || allProducts.find(p => p.id === it.productId)?.name || 'PRODUTO'}</span>
-                                    <span>R$ {(it.price * it.quantity).toFixed(2)}</span>
+                                <div key={idx} className="flex justify-between items-start text-xs font-bold text-slate-600">
+                                    <span className="flex-1 mr-4">{it.quantity}X {it.product?.name || allProducts.find(p => p.id === it.productId)?.name || 'PRODUTO'}</span>
+                                    <span className="text-slate-800 whitespace-nowrap">R$ {(it.price * it.quantity).toFixed(2)}</span>
                                 </div>
                             ))}
                         </div>
 
-                        <div className="space-y-1">
-                            <div className="flex justify-between">
-                                <span>SUBTOTAL</span>
-                                <span>R$ {(printingOrder.total - (printingOrder.deliveryFee || 0)).toFixed(2)}</span>
+                        <div className="w-full space-y-2 mb-8 receipt-mono border-t border-dashed border-slate-200 pt-6">
+                            <div className="flex justify-between text-[11px] font-bold text-slate-500">
+                                <span className="uppercase">Subtotal:</span>
+                                <span className="text-slate-800">R$ {(printingOrder.total - (printingOrder.deliveryFee || 0)).toFixed(2)}</span>
                             </div>
                             {printingOrder.deliveryFee > 0 && (
-                                <div className="flex justify-between">
-                                    <span>TAXA ENTREGA</span>
-                                    <span>R$ {printingOrder.deliveryFee.toFixed(2)}</span>
+                                <div className="flex justify-between text-[11px] font-bold text-slate-500">
+                                    <span className="uppercase">Taxa Entrega:</span>
+                                    <span className="text-slate-800">R$ {printingOrder.deliveryFee.toFixed(2)}</span>
                                 </div>
                             )}
-                            <div className="flex justify-between font-bold text-sm border-t border-black pt-2">
-                                <span>TOTAL PAGO</span>
-                                <span>R$ {printingOrder.total.toFixed(2)}</span>
+                        </div>
+
+                        <div className="w-full flex justify-between items-baseline mb-12 receipt-mono border-t border-dashed border-slate-200 pt-6">
+                            <span className="text-[11px] font-black text-slate-400 uppercase">Total:</span>
+                            <span className="text-4xl font-black text-slate-800 tracking-tighter">R$ {printingOrder.total.toFixed(2)}</span>
+                        </div>
+
+                        <div className="w-full flex gap-4 no-print">
+                            <button
+                                onClick={() => window.print()}
+                                className="flex-1 py-5 bg-[#0f172a] hover:bg-slate-800 text-white rounded-3xl font-black uppercase text-xs tracking-widest shadow-xl transition-all active:scale-95"
+                            >
+                                Imprimir
+                            </button>
+                            <button
+                                onClick={() => setPrintingOrder(null)}
+                                className="flex-1 py-5 bg-slate-50 hover:bg-slate-100 text-slate-500 rounded-3xl font-black uppercase text-xs tracking-widest transition-all"
+                            >
+                                Fechar
+                            </button>
+                        </div>
+
+                        {/* Hidden Actual Printable Component */}
+                        <div className="print-only fixed inset-0 bg-white text-black p-4 font-receipt text-[10px] is-receipt">
+                            <div className="text-center mb-4 space-y-1">
+                                <p className="font-bold">{businessSettings.name?.toUpperCase()}</p>
+                                <p>CNPJ: {businessSettings.cnpj}</p>
+                                <p className="border-y border-black py-1 my-2">COMPROVANTE DE PAGAMENTO</p>
+                            </div>
+                            <div className="space-y-1 mb-4">
+                                <p>DATA: {new Date(printingOrder.createdAt).toLocaleString('pt-BR')}</p>
+                                <p>CLIENTE: {printingOrder.clientName?.toUpperCase()}</p>
+                                <p>FONE: {printingOrder.clientPhone}</p>
+                                {printingOrder.clientAddress && <p>ENTREGA: {printingOrder.clientAddress.toUpperCase()}</p>}
+                                <p>PAGTO: {printingOrder.paymentMethod?.toUpperCase()}</p>
+                            </div>
+                            <div className="border-t border-black pt-2 space-y-1">
+                                {printingOrder.items.map((it: any, idx: number) => (
+                                    <div key={idx} className="flex justify-between font-bold">
+                                        <span>{it.quantity}X {it.product?.name || 'PRODUTO'}</span>
+                                        <span>R$ {(it.price * it.quantity).toFixed(2)}</span>
+                                    </div>
+                                ))}
+                            </div>
+                            <div className="border-t border-black mt-2 pt-2 text-right space-y-1">
+                                <p>SUBTOTAL R$ {(printingOrder.total - (printingOrder.deliveryFee || 0)).toFixed(2)}</p>
+                                {printingOrder.deliveryFee > 0 && <p>TAXA ENTREGA R$ {printingOrder.deliveryFee.toFixed(2)}</p>}
+                                <p className="font-bold text-base mt-2">TOTAL R$ {printingOrder.total.toFixed(2)}</p>
+                            </div>
+                            <div className="text-center mt-6 border-t border-black pt-2 op-70">
+                                <p>DELIVERY FAST - OBRIGADO PELA PREFERENCIA</p>
                             </div>
                         </div>
-
-                        <div className="border-t border-black pt-4 text-center">
-                            <p className="font-bold uppercase tracking-widest">{printingOrder.paymentMethod}</p>
-                            <p className="mt-4 opacity-70 italic">Gerado via Delivery Fast</p>
-                        </div>
                     </div>
-
-                    <button
-                        onClick={() => setPrintingOrder(null)}
-                        className="no-print fixed top-6 right-6 p-4 bg-rose-500 text-white rounded-full shadow-2xl hover:bg-rose-600 transition-all font-black"
-                    >
-                        X FECHAR
-                    </button>
                 </div>
             )}
 
