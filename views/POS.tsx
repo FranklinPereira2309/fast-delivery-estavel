@@ -8,6 +8,8 @@ import CustomAlert from '../components/CustomAlert';
 import { validateEmail, validateCPF, validateCNPJ, maskPhone, maskDocument, toTitleCase } from '../services/validationUtils';
 import { QRCodeCanvas } from 'qrcode.react';
 
+const API_URL = (import.meta as any).env.VITE_API_URL || 'http://localhost:3000/api';
+
 interface POSProps {
   currentUser: User;
 }
@@ -1956,7 +1958,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                         const doAuth = async () => {
                           if (!userPassword) return showAlert("Atenção", "Digite sua senha.", "INFO");
                           try {
-                            const res = await fetch('http://localhost:3001/api/auth/verify-password', {
+                            const res = await fetch(`${API_URL}/api/auth/verify-password`, {
                               method: 'POST',
                               headers: { 'Content-Type': 'application/json' },
                               body: JSON.stringify({ userId: currentUser.id, password: userPassword })
@@ -1989,7 +1991,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                   onClick={async () => {
                     if (!userPassword) return showAlert("Atenção", "Digite sua senha.", "INFO");
                     try {
-                      const res = await fetch('http://localhost:3001/api/auth/verify-password', {
+                      const res = await fetch(`${API_URL}/api/auth/verify-password`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ userId: currentUser.id, password: userPassword })
