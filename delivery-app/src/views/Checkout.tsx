@@ -44,11 +44,7 @@ const Checkout: React.FC = () => {
                     const client = JSON.parse(clientStr);
                     if (client.addresses && client.addresses.length > 0) {
                         setSavedAddress(client.addresses[0]);
-                    } else {
-                        setUseNewAddress(true); // Se não houver, força preencher novo endereço
                     }
-                } else {
-                    setUseNewAddress(true);
                 }
 
                 // Fetch Settings
