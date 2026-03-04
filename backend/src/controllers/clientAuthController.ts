@@ -90,6 +90,49 @@ export const loginClient = async (req: ExpressRequest, res: ExpressResponse) => 
     }
 };
 
+export const updateClientProfile = async (req: ExpressRequest, res: ExpressResponse) => {
+    try {
+        const { id } = req.params;
+        const { name, email, address, currentPassword, password } = req.body;
+
+        const client = await prisma.client.findUnique({
+            where: { id }
+        });
+
+        if (!client || !client.password) {
+            return res.status(404).json({ error: 'Cliente não encontrado.' });
+        }
+
+        // Validate current password
+        const valid = await bcrypt.compare(currentPassword, client.password);
+        if (!valid) {
+            return res.status(401).json({ error: 'Senha atual incorreta.' });
+        }
+
+        const data: any = {
+            name,
+            email,
+            addresses: [address] // Save the full address string to the addresses array
+        };
+
+        if (password) {
+            data.password = await bcrypt.hash(password, 10);
+        }
+
+        const updatedClient = await prisma.client.update({
+            where: { id },
+            data
+        });
+
+        // Remove password from response
+        const { password: _, ...clientWithoutPassword } = updatedClient;
+        res.json(clientWithoutPassword);
+    } catch (error) {
+        console.error('Update Client Profile Error:', error);
+        res.status(500).json({ error: 'Erro ao atualizar perfil.' });
+    }
+};
+
 export const recoverPassword = async (req: ExpressRequest, res: ExpressResponse) => {
     // Skeleton for SMS PIN later
     res.status(501).json({ message: 'Módulo de SMS em desenvolvimento. Contate a loja.' });

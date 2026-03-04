@@ -33,10 +33,20 @@ const Profile: React.FC = () => {
         try {
             const data = JSON.parse(clientStr);
             setClient(data);
+
+            // Consolidate address from various possible sources
+            let initialAddress = data.address || '';
+            if (!initialAddress && data.addresses && data.addresses.length > 0) {
+                initialAddress = data.addresses[0];
+            }
+            if (!initialAddress && data.street) {
+                initialAddress = `${data.street}, ${data.addressNumber || ''}, ${data.neighborhood || ''}`;
+            }
+
             setFormData({
                 name: data.name || '',
                 email: data.email || '',
-                address: data.address || '',
+                address: initialAddress,
                 currentPassword: '',
                 password: '',
                 confirmPassword: ''
