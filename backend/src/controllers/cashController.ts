@@ -31,6 +31,15 @@ export const openCashSession = async (req: Request, res: Response) => {
         }
     });
 
+    await prisma.auditLog.create({
+        data: {
+            userId: user.id,
+            userName: user.name,
+            action: 'OPEN_CASH',
+            details: `Usuário abriu o caixa com saldo inicial de R$ ${parseFloat(initialBalance).toFixed(2)}`
+        }
+    });
+
     res.json(session);
 };
 
@@ -156,6 +165,15 @@ export const closeCashSession = async (req: Request, res: Response) => {
             totalSales: totals.totalSales,
             difference,
             observations
+        }
+    });
+
+    await prisma.auditLog.create({
+        data: {
+            userId: user.id,
+            userName: user.name,
+            action: 'CLOSE_CASH',
+            details: `Usuário fechou o caixa com diferença de R$ ${difference.toFixed(2)}. ${observations ? `Obs: ${observations}` : ''}`
         }
     });
 

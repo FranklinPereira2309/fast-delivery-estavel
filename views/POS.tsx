@@ -77,7 +77,9 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
   const [isAdjustModalOpen, setIsAdjustModalOpen] = useState(false);
   const [closingMode, setClosingMode] = useState<'MANUAL' | 'SYSTEM'>('MANUAL');
   const [adminPassword, setAdminPassword] = useState('');
-  const [reviewSession, setReviewSession] = useState<CashSession | null>(null);
+  const [userPassword, setUserPassword] = useState('');
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authModalAction, setAuthModalAction] = useState<'OPEN_CASH' | 'CLOSE_CASH' | null>(null);
   const [initialBalanceInput, setInitialBalanceInput] = useState('0.00');
   const [closingReport, setClosingReport] = useState({
     cash: '',
@@ -1408,9 +1410,11 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
               <button
                 onClick={() => {
                   if (activeCashSession) {
-                    setIsClosingModalOpen(true);
+                    setAuthModalAction('CLOSE_CASH');
+                    setIsAuthModalOpen(true);
                   } else {
-                    setIsOpeningModalOpen(true);
+                    setAuthModalAction('OPEN_CASH');
+                    setIsAuthModalOpen(true);
                   }
                 }}
                 className={`w-12 h-6 rounded-full transition-all relative ${activeCashSession ? 'bg-emerald-600 ring-4 ring-emerald-500/20' : 'bg-slate-300'}`}
@@ -1463,7 +1467,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
 
             {activeCashSession && (
               <button
-                onClick={() => setIsClosingModalOpen(true)}
+                onClick={() => { setAuthModalAction('CLOSE_CASH'); setIsAuthModalOpen(true); }}
                 className="w-full py-4 bg-slate-900 border border-slate-800 hover:bg-orange-600 hover:border-orange-500 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2 group"
               >
                 <Icons.Dashboard className="w-3 h-3 group-hover:rotate-12 transition-transform" />
@@ -1517,7 +1521,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                   </p>
                 </div>
                 <button
-                  onClick={() => setIsOpeningModalOpen(true)}
+                  onClick={() => { setAuthModalAction('OPEN_CASH'); setIsAuthModalOpen(true); }}
                   className="mt-2 text-[10px] font-black uppercase text-blue-600 bg-blue-50 px-6 py-3 rounded-full hover:bg-blue-600 hover:text-white transition-colors"
                 >
                   Abrir Caixa Agora
@@ -1910,6 +1914,108 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
               <div>
                 <p className="font-black uppercase text-xs tracking-widest">NFC-e Emitida com Sucesso</p>
                 <p className="text-[10px] font-bold opacity-80 uppercase">A nota fiscal foi processada e enviada para a SEFAZ.</p>
+              </div>
+            </div>
+          </div>
+        )
+      }
+
+      {/* MODAL DE AUTENTICAÇÃO DE CAIXA */}
+      {
+        isAuthModalOpen && (
+          <div className="fixed inset-0 z-[400] flex items-center justify-center p-4 bg-slate-900/90 backdrop-blur-md animate-in zoom-in duration-300">
+            <div className="bg-white rounded-[2.5rem] shadow-2xl p-8 lg:p-10 w-full max-w-sm border border-slate-200 relative overflow-hidden">
+              <button
+                onClick={() => { setIsAuthModalOpen(false); setUserPassword(''); }}
+                className="absolute top-6 right-6 w-10 h-10 flex items-center justify-center bg-slate-50 hover:bg-red-50 text-slate-400 hover:text-red-500 rounded-full font-black text-xl transition-all"
+              >
+                ×
+              </button>
+
+              <div className="text-center mb-8">
+                <div className="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <span className="text-3xl">🔑</span>
+                </div>
+                <h3 className="text-xl font-black text-slate-800 uppercase tracking-tighter">Confirme sua Identidade</h3>
+                <p className="text-center text-[10px] font-bold text-slate-400 uppercase mt-2">
+                  {authModalAction === 'OPEN_CASH' ? 'Para abrir o caixa' : 'Para fechar o caixa'}, digite sua senha de acesso.
+                </p>
+              </div>
+
+              <div className="space-y-6">
+                <div>
+                  <input
+                    autoFocus
+                    type="password"
+                    placeholder="Sua senha..."
+                    value={userPassword}
+                    onChange={(e) => setUserPassword(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        // handle Auth Submit
+                        const doAuth = async () => {
+                          if (!userPassword) return showAlert("Atenção", "Digite sua senha.", "INFO");
+                          try {
+                            const res = await fetch('http://localhost:3001/api/auth/verify-password', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ userId: currentUser.id, password: userPassword })
+                            });
+                            const data = await res.json();
+                            if (res.ok && data.valid) {
+                              setIsAuthModalOpen(false);
+                              setUserPassword('');
+                              if (authModalAction === 'OPEN_CASH') {
+                                setIsOpeningModalOpen(true);
+                                setAdminPassword('');
+                                setSystemPreview(null);
+                              } else {
+                                setIsClosingModalOpen(true);
+                              }
+                            } else {
+                              showAlert("Erro", data.message || "Senha incorreta.", "DANGER");
+                            }
+                          } catch (err) {
+                            showAlert("Erro", "Falha de comunicação com servidor.", "DANGER");
+                          }
+                        };
+                        doAuth();
+                      }
+                    }}
+                    className="w-full p-5 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-indigo-500 font-bold text-lg text-center outline-none transition-all placeholder:font-normal placeholder:opacity-50"
+                  />
+                </div>
+                <button
+                  onClick={async () => {
+                    if (!userPassword) return showAlert("Atenção", "Digite sua senha.", "INFO");
+                    try {
+                      const res = await fetch('http://localhost:3001/api/auth/verify-password', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ userId: currentUser.id, password: userPassword })
+                      });
+                      const data = await res.json();
+                      if (res.ok && data.valid) {
+                        setIsAuthModalOpen(false);
+                        setUserPassword('');
+                        if (authModalAction === 'OPEN_CASH') {
+                          setIsOpeningModalOpen(true);
+                          setAdminPassword('');
+                          setSystemPreview(null);
+                        } else {
+                          setIsClosingModalOpen(true);
+                        }
+                      } else {
+                        showAlert("Erro", data.message || "Senha incorreta.", "DANGER");
+                      }
+                    } catch (err) {
+                      showAlert("Erro", "Falha de comunicação com servidor.", "DANGER");
+                    }
+                  }}
+                  className="w-full py-5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-indigo-200 transition-all active:scale-95 flex justify-center items-center gap-2"
+                >
+                  Validar Senha ✓
+                </button>
               </div>
             </div>
           </div>
