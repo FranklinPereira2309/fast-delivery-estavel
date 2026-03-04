@@ -7,20 +7,27 @@ import { Icons } from '../constants';
 const OrderHistory: React.FC = () => {
     const [orders, setOrders] = useState<Order[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(true);
+    const [printingOrder, setPrintingOrder] = useState<Order | null>(null);
+    const [businessSettings, setBusinessSettings] = useState<any>(null);
     const navigate = useNavigate();
 
     useEffect(() => {
-        const fetchOrders = async () => {
+        const fetchData = async () => {
             try {
-                const data = await api.getMyOrders();
-                setOrders(data);
+                const [ordersData, settingsData] = await Promise.all([
+                    api.getMyOrders(),
+                    api.getSettings().catch(() => null)
+                ]);
+                setOrders(ordersData);
+                setBusinessSettings(settingsData);
             } catch (err) {
                 console.error(err);
             } finally {
                 setIsLoading(false);
             }
         };
-        fetchOrders();
+        fetchData();
     }, []);
 
     const getStatusStyle = (status: string) => {
@@ -123,11 +130,98 @@ const OrderHistory: React.FC = () => {
                                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Pago</span>
                                     <span className="text-xl font-black text-indigo-600 tracking-tighter">R$ {order.total.toFixed(2)}</span>
                                 </div>
+                                <button
+                                    onClick={() => setPrintingOrder(order)}
+                                    className="mt-2 w-full flex items-center justify-center gap-2 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all"
+                                >
+                                    <Icons.Print className="w-4 h-4" /> Comprovante
+                                </button>
                             </div>
                         </div>
                     ))
                 )}
             </div>
+
+            {printingOrder && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md animate-in fade-in duration-300">
+                    <div className="absolute inset-0 no-print" onClick={() => setPrintingOrder(null)}></div>
+                    <div className="bg-white w-full max-w-[80mm] border border-dashed shadow-2xl p-8 is-receipt animate-in zoom-in duration-300 overflow-y-auto max-h-[95vh] custom-scrollbar relative">
+                        <div className="text-center mb-6 border-b border-dashed pb-4">
+                            <h2 className="font-black text-sm uppercase tracking-tighter">{businessSettings?.name || 'Sistema de Delivery'}</h2>
+                            {businessSettings?.cnpj && <p className="text-[9px] font-bold mt-1">CNPJ: {businessSettings.cnpj}</p>}
+                            <p className="text-[10px] font-black mt-3 border border-slate-900 py-1 uppercase tracking-widest">Comprovante de Pagamento</p>
+                        </div>
+
+                        <div className="space-y-1 mb-4 text-[11px] font-receipt">
+                            <p>DATA: {new Date(printingOrder.createdAt).toLocaleString('pt-BR')}</p>
+                            <p className="uppercase">CLIENTE: {printingOrder.clientName}</p>
+                            {printingOrder.clientPhone && <p>FONE: {printingOrder.clientPhone}</p>}
+                            {printingOrder.clientAddress && (
+                                <p className="font-bold border-t border-dashed mt-2 pt-1 uppercase leading-tight">ENTREGA: {printingOrder.clientAddress}</p>
+                            )}
+                            <p>STATUS: {(getStatusLabel(printingOrder.status)).toUpperCase()}</p>
+
+                            <div className="mt-2 pt-2 border-t border-dashed w-full">
+                                <div className="flex justify-between items-center bg-slate-50 p-2 rounded-lg border border-slate-100 no-print">
+                                    <p className="font-black text-[10px]">PAGTO: {(printingOrder.paymentMethod || 'PENDENTE').toUpperCase()}</p>
+                                </div>
+                                <p className="font-black hidden print:block pt-1 text-[10px]">PAGTO: {(printingOrder.paymentMethod || 'PENDENTE').toUpperCase()}</p>
+                            </div>
+                        </div>
+
+                        <div className="border-t border-dashed my-3 py-3 font-receipt">
+                            {printingOrder.items.map((it: any, idx: number) => {
+                                const prodName = it.product?.name || it.productName || 'PRODUTO';
+                                return (
+                                    <div key={idx} className="flex justify-between font-black uppercase py-0.5 text-[11px]">
+                                        <span>{it.quantity}x {prodName.substring(0, 18)}</span>
+                                        <span>R$ {((it.price || 0) * it.quantity).toFixed(2)}</span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        <div className="flex flex-col gap-1 font-receipt">
+                            <div className="flex justify-between items-center py-1">
+                                <span className="text-[10px] font-black uppercase">SUBTOTAL:</span>
+                                <span className="font-black text-xs">R$ {(printingOrder.total - (printingOrder.deliveryFee || 0)).toFixed(2)}</span>
+                            </div>
+
+                            {((printingOrder.deliveryFee || 0) > 0) && (
+                                <div className="flex justify-between items-center py-1">
+                                    <span className="text-[10px] uppercase font-bold">TAXA ENTREGA:</span>
+                                    <span className="font-bold text-[11px]">R$ {(printingOrder.deliveryFee || 0).toFixed(2)}</span>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="flex justify-between items-end border-t border-black pt-4 mb-2 mt-2 font-receipt">
+                            <span className="font-black text-xs uppercase tracking-widest">TOTAL:</span>
+                            <span className="text-xl font-black">R$ {printingOrder.total.toFixed(2)}</span>
+                        </div>
+
+                        <div className="mt-8 text-center text-[9px] text-slate-500 font-bold border-t border-dashed pt-4 font-receipt">
+                            <p>OBRIGADO POR ESCOLHER NOSSO DELIVERY!</p>
+                            <p className="mt-1">ESTE DOCUMENTO NÃO É DOCUMENTO FISCAL</p>
+                        </div>
+
+                        <div className="mt-8 flex gap-2 no-print">
+                            <button
+                                onClick={() => window.print()}
+                                className="flex-1 bg-slate-900 hover:bg-black text-white py-4 rounded-xl font-black uppercase text-[10px] shadow-xl transition-all flex items-center justify-center gap-2"
+                            >
+                                <Icons.Print className="w-4 h-4" /> Imprimir
+                            </button>
+                            <button
+                                onClick={() => setPrintingOrder(null)}
+                                className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 py-4 rounded-xl font-black uppercase text-[10px] transition-all"
+                            >
+                                Fechar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
