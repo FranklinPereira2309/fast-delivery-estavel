@@ -232,6 +232,7 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
             let totalDebito = 0;
             let totalPix = 0;
             let totalOutros = 0;
+            let totalFiado = 0;
 
             filteredOrders.forEach(o => {
                 const method = (o.paymentMethod || '').toUpperCase();
@@ -246,18 +247,21 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
                     else if (parts[0].includes('CRÉDITO')) totalCredito += split1;
                     else if (parts[0].includes('DÉBITO')) totalDebito += split1;
                     else if (parts[0].includes('PIX')) totalPix += split1;
+                    else if (parts[0].includes('FIADO')) totalFiado += split1;
                     else totalOutros += split1;
                     // Part 2
                     if (parts[1].includes('DINHEIRO')) totalDinheiro += split2;
                     else if (parts[1].includes('CRÉDITO')) totalCredito += split2;
                     else if (parts[1].includes('DÉBITO')) totalDebito += split2;
                     else if (parts[1].includes('PIX')) totalPix += split2;
+                    else if (parts[1].includes('FIADO')) totalFiado += split2;
                     else totalOutros += split2;
                 } else {
                     if (method.includes('DINHEIRO')) totalDinheiro += total;
                     else if (method.includes('CRÉDITO')) totalCredito += total;
                     else if (method.includes('DÉBITO')) totalDebito += total;
                     else if (method.includes('PIX')) totalPix += total;
+                    else if (method.includes('FIADO')) totalFiado += total;
                     else totalOutros += total;
                 }
             });
@@ -296,6 +300,10 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
             page.drawText(`Cartão de Débito: R$ ${totalDebito.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, { x: 50, y, size: 10, font });
             y -= 15;
             page.drawText(`PIX: R$ ${totalPix.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, { x: 50, y, size: 10, font });
+            if (totalFiado > 0) {
+                y -= 15;
+                page.drawText(`Vendas a Prazo (FIADO): R$ ${totalFiado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, { x: 50, y, size: 10, font });
+            }
             if (totalOutros > 0) {
                 y -= 15;
                 page.drawText(`Outros: R$ ${totalOutros.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, { x: 50, y, size: 10, font });

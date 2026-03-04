@@ -259,8 +259,9 @@ export interface CashSession {
   systemCredit?: number;
   systemDebit?: number;
   systemOthers?: number;
-
+  systemFiado?: number;
   totalSales?: number;
+  orphanSales?: number;
   difference?: number;
   observations?: string;
 }

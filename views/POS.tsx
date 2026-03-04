@@ -93,6 +93,8 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
     credit: number;
     debit: number;
     others: number;
+    fiado: number;
+    orphanSales: number;
   } | null>(null);
 
   const showAlert = (title: string, message: string, type: 'INFO' | 'DANGER' | 'SUCCESS' = 'INFO') => {
@@ -627,7 +629,9 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
         pix: preview.systemPix,
         credit: preview.systemCredit,
         debit: preview.systemDebit,
-        others: preview.systemOthers
+        others: preview.systemOthers,
+        fiado: preview.systemFiado,
+        orphanSales: preview.orphanSales
       });
 
       // Auto-preencher os campos do relatório de fechamento
@@ -2193,6 +2197,30 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                     <span className="text-2xl font-black italic">R$ {reviewSession.difference.toFixed(2)}</span>
                   </div>
                 </div>
+
+                {/* Informações Complementares Section */}
+                {((reviewSession.systemFiado || 0) > 0 || (reviewSession.orphanSales || 0) > 0) && (
+                  <div className="mt-8 pt-6 border-t border-slate-100">
+                    <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Informações Complementares</h4>
+                    <div className="space-y-3">
+                      {(reviewSession.systemFiado || 0) > 0 && (
+                        <div className="flex justify-between items-center bg-slate-50 px-4 py-3 rounded-xl border border-slate-100">
+                          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Vendas a Prazo (FIADO)</span>
+                          <span className="text-sm font-black text-slate-700 italic">R$ {reviewSession.systemFiado!.toFixed(2)}</span>
+                        </div>
+                      )}
+                      {(reviewSession.orphanSales || 0) > 0 && (
+                        <div className="flex justify-between items-start bg-amber-50 px-4 py-3 rounded-xl border border-amber-100">
+                          <div className="flex flex-col">
+                            <span className="text-[10px] font-bold text-amber-700 uppercase tracking-wider">Vendas sem Sessão Aberta</span>
+                            <span className="text-[9px] text-amber-600 font-medium italic">Ocorridas antes da abertura oficial</span>
+                          </div>
+                          <span className="text-sm font-black text-amber-800 italic">R$ {reviewSession.orphanSales!.toFixed(2)}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 {reviewSession.observations && (
                   <div className="mt-8 border-t border-dashed border-slate-200 pt-6">

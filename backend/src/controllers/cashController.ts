@@ -35,56 +35,73 @@ export const openCashSession = async (req: Request, res: Response) => {
 };
 
 const calculateSessionTotals = async (openedAt: Date) => {
-    // Get all orders completed since opening
-    const orders = await prisma.order.findMany({
+    // Get the start of the day for orphan sales detection
+    const startOfDay = new Date(openedAt);
+    startOfDay.setHours(0, 0, 0, 0);
+
+    // Get all orders from the start of the day until now
+    const allOrdersOfDay = await prisma.order.findMany({
         where: {
-            createdAt: { gte: openedAt },
+            createdAt: { gte: startOfDay },
             status: 'DELIVERED'
         }
     });
 
-    let systemCash = 0;
-    let systemPix = 0;
-    let systemCredit = 0;
-    let systemDebit = 0;
-    let systemOthers = 0;
+    // Orders within the session
+    const sessionOrders = allOrdersOfDay.filter(o => o.createdAt >= openedAt);
+    // Orders before the session opened (orphans)
+    const orphanOrders = allOrdersOfDay.filter(o => o.createdAt < openedAt);
 
-    orders.forEach(order => {
-        const method = order.paymentMethod?.toUpperCase() || '';
-        const total = order.total || 0;
-        const split1 = order.splitAmount1 || 0;
-        const split2 = total - split1;
+    const calc = (orderList: any[]) => {
+        let cash = 0, pix = 0, credit = 0, debit = 0, others = 0, fiado = 0;
+        orderList.forEach(order => {
+            const method = order.paymentMethod?.toUpperCase() || '';
+            const total = order.total || 0;
+            const split1 = order.splitAmount1 || 0;
+            const split2 = total - split1;
 
-        if (method.includes('+')) {
-            const parts = method.split('+').map(p => p.trim());
+            if (method.includes('+')) {
+                const parts = method.split('+').map((p: any) => p.trim());
+                // First part
+                if (parts[0].includes('DINHEIRO')) cash += split1;
+                else if (parts[0].includes('PIX')) pix += split1;
+                else if (parts[0].includes('CRÉDITO')) credit += split1;
+                else if (parts[0].includes('DÉBITO')) debit += split1;
+                else if (parts[0].includes('FIADO')) fiado += split1;
+                else others += split1;
 
-            // First part (split1)
-            if (parts[0].includes('DINHEIRO')) systemCash += split1;
-            else if (parts[0].includes('PIX')) systemPix += split1;
-            else if (parts[0].includes('CRÉDITO')) systemCredit += split1;
-            else if (parts[0].includes('DÉBITO')) systemDebit += split1;
-            else systemOthers += split1;
-
-            // Second part (split2)
-            if (parts[1].includes('DINHEIRO')) systemCash += split2;
-            else if (parts[1].includes('PIX')) systemPix += split2;
-            else if (parts[1].includes('CRÉDITO')) systemCredit += split2;
-            else if (parts[1].includes('DÉBITO')) systemDebit += split2;
-            else systemOthers += split2;
-        } else {
-            if (method.includes('DINHEIRO')) systemCash += total;
-            else if (method.includes('PIX')) systemPix += total;
-            else if (method.includes('CRÉDITO')) systemCredit += total;
-            else if (method.includes('DÉBITO')) systemDebit += total;
-            else if (method.includes('FIADO')) {
-                // Do nothing, FIADO doesn't enter the daily cash sum until paid
+                // Second part
+                if (parts[1].includes('DINHEIRO')) cash += split2;
+                else if (parts[1].includes('PIX')) pix += split2;
+                else if (parts[1].includes('CRÉDITO')) credit += split2;
+                else if (parts[1].includes('DÉBITO')) debit += split2;
+                else if (parts[1].includes('FIADO')) fiado += split2;
+                else others += split2;
+            } else {
+                if (method.includes('DINHEIRO')) cash += total;
+                else if (method.includes('PIX')) pix += total;
+                else if (method.includes('CRÉDITO')) credit += total;
+                else if (method.includes('DÉBITO')) debit += total;
+                else if (method.includes('FIADO')) fiado += total;
+                else others += total;
             }
-            else systemOthers += total;
-        }
-    });
+        });
+        return { cash, pix, credit, debit, others, fiado, total: cash + pix + credit + debit + others };
+    };
 
-    const totalSales = systemCash + systemPix + systemCredit + systemDebit + systemOthers;
-    return { systemCash, systemPix, systemCredit, systemDebit, systemOthers, totalSales };
+    const sessionTotals = calc(sessionOrders);
+    const orphanTotals = calc(orphanOrders);
+
+    return {
+        systemCash: sessionTotals.cash,
+        systemPix: sessionTotals.pix,
+        systemCredit: sessionTotals.credit,
+        systemDebit: sessionTotals.debit,
+        systemOthers: sessionTotals.others,
+        systemFiado: sessionTotals.fiado, // Informative only
+        totalSales: sessionTotals.total,
+        orphanSales: orphanTotals.total + orphanTotals.fiado // Total value lost before session
+    };
 };
 
 export const getClosurePreview = async (req: Request, res: Response) => {
@@ -129,13 +146,14 @@ export const closeCashSession = async (req: Request, res: Response) => {
             reportedDebit: parseFloat(debit),
             reportedOthers: parseFloat(others || 0),
             reportedFiado: parseFloat(fiado || 0),
-            systemCash: totals.systemCash + (session.systemCash || 0),
-            systemPix: totals.systemPix + (session.systemPix || 0),
-            systemCredit: totals.systemCredit + (session.systemCredit || 0),
-            systemDebit: totals.systemDebit + (session.systemDebit || 0),
-            systemOthers: totals.systemOthers + (session.systemOthers || 0),
-            // systemFiado is already updated by receivableController
-            totalSales: totals.totalSales + (session.systemFiado || 0),
+            systemCash: totals.systemCash,
+            systemPix: totals.systemPix,
+            systemCredit: totals.systemCredit,
+            systemDebit: totals.systemDebit,
+            systemOthers: totals.systemOthers,
+            systemFiado: totals.systemFiado,
+            orphanSales: totals.orphanSales,
+            totalSales: totals.totalSales,
             difference,
             observations
         }
