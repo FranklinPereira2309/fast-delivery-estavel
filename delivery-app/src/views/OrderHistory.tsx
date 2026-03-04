@@ -4,6 +4,13 @@ import { api } from '../services/api';
 import type { Order } from '../types';
 import { Icons } from '../constants';
 
+const paymentLabels: Record<string, string> = {
+    'CREDIT': 'Cartão de Crédito',
+    'DEBIT': 'Cartão de Débito',
+    'CASH': 'Dinheiro',
+    'PIX': 'PIX'
+};
+
 const OrderHistory: React.FC = () => {
     const [orders, setOrders] = useState<Order[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -162,9 +169,9 @@ const OrderHistory: React.FC = () => {
 
                             <div className="mt-2 pt-2 border-t border-dashed w-full">
                                 <div className="flex justify-between items-center bg-slate-50 p-2 rounded-lg border border-slate-100 no-print">
-                                    <p className="font-black text-[10px]">PAGTO: {(printingOrder.paymentMethod || 'PENDENTE').toUpperCase()}</p>
+                                    <p className="font-black text-[10px]">PAGTO: {(paymentLabels[(printingOrder.paymentMethod || '').toUpperCase()] || printingOrder.paymentMethod || 'PENDENTE').toUpperCase()}</p>
                                 </div>
-                                <p className="font-black hidden print:block pt-1 text-[10px]">PAGTO: {(printingOrder.paymentMethod || 'PENDENTE').toUpperCase()}</p>
+                                <p className="font-black hidden print:block pt-1 text-[10px]">PAGTO: {(paymentLabels[(printingOrder.paymentMethod || '').toUpperCase()] || printingOrder.paymentMethod || 'PENDENTE').toUpperCase()}</p>
                             </div>
                         </div>
 

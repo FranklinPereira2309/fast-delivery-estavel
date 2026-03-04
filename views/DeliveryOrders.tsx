@@ -273,9 +273,9 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
 
                             <div className="mt-2 pt-2 border-t border-dashed w-full">
                                 <div className="flex justify-between items-center bg-slate-50 p-2 rounded-lg border border-slate-100 no-print">
-                                    <p className="font-black text-[10px]">PAGTO: {(paymentLabels[printingOrder.paymentMethod] || printingOrder.paymentMethod).toUpperCase()}</p>
+                                    <p className="font-black text-[10px]">PAGTO: {(paymentLabels[(printingOrder.paymentMethod || '').toUpperCase()] || printingOrder.paymentMethod).toUpperCase()}</p>
                                 </div>
-                                <p className="font-black hidden print:block pt-1 text-[10px]">PAGTO: {(paymentLabels[printingOrder.paymentMethod] || printingOrder.paymentMethod).toUpperCase()}</p>
+                                <p className="font-black hidden print:block pt-1 text-[10px]">PAGTO: {(paymentLabels[(printingOrder.paymentMethod || '').toUpperCase()] || printingOrder.paymentMethod).toUpperCase()}</p>
                             </div>
                         </div>
 

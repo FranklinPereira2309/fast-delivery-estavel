@@ -4,6 +4,13 @@ import { db } from './services/db';
 import { socket } from './services/socket';
 import { Icons } from './constants';
 
+const paymentLabels: Record<string, string> = {
+  'CREDIT': 'Cartão de Crédito',
+  'DEBIT': 'Cartão de Débito',
+  'CASH': 'Dinheiro',
+  'PIX': 'PIX'
+};
+
 const playNotificationSound = () => {
   try {
     const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -674,7 +681,7 @@ const App: React.FC = () => {
               <p className="leading-tight mt-1 bg-slate-50 p-3 rounded-xl border border-slate-100">DESTINO: {printingOrder.clientAddress}</p>
               <p className="mt-1 flex justify-between">
                 <span>PAGAMENTO:</span>
-                <span className="text-blue-600 uppercase">{printingOrder.paymentMethod || 'PENDENTE'}</span>
+                <span className="text-blue-600 uppercase">{paymentLabels[(printingOrder.paymentMethod || '').toUpperCase()] || printingOrder.paymentMethod || 'PENDENTE'}</span>
               </p>
             </div>
             <div className="border-y border-dashed border-slate-200 py-3 mb-4 max-h-40 overflow-y-auto custom-scrollbar">
@@ -711,7 +718,7 @@ const App: React.FC = () => {
               {printingHistoryOrder.clientAddress && (
                 <p className="font-bold border-t border-dashed mt-2 pt-1 uppercase leading-tight">ENTREGA: {printingHistoryOrder.clientAddress}</p>
               )}
-              <p className="font-bold border-t border-dashed mt-2 pt-1 uppercase">PAGAMENTO: {printingHistoryOrder.paymentMethod || 'DINHEIRO'}</p>
+              <p className="font-bold border-t border-dashed mt-2 pt-1 uppercase">PAGAMENTO: {paymentLabels[(printingHistoryOrder.paymentMethod || '').toUpperCase()] || printingHistoryOrder.paymentMethod || 'DINHEIRO'}</p>
               <p className="font-bold border-t border-dashed mt-2 pt-1 uppercase">ENTREGADOR: {driver.name}</p>
             </div>
             <div className="flex justify-between items-center border-t border-dashed pt-4 mb-2 text-[10px] uppercase font-black">
