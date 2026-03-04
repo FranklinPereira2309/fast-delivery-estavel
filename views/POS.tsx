@@ -2131,7 +2131,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
 
                   <div className="flex flex-col sm:flex-row justify-between items-end gap-4">
                     <div className="text-[10px] font-bold text-slate-600 uppercase tracking-widest space-y-1">
-                      <div><span className="opacity-50">Estabelecimento:</span> {settings?.name || 'Fast Food Express'}</div>
+                      <div><span className="opacity-50">Estabelecimento:</span> {businessSettings?.name || 'Fast Food Express'}</div>
                       <div><span className="opacity-50">ID da Sessão:</span> {reviewSession.id.substring(0, 8)}</div>
                       <div><span className="opacity-50">Operador:</span> {reviewSession.closedByName}</div>
                     </div>
