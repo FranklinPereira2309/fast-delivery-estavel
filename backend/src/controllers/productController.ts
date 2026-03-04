@@ -41,7 +41,28 @@ export const saveProduct = async (req: Request, res: Response) => {
 };
 
 export const deleteProduct = async (req: Request, res: Response) => {
-    const id = req.params.id as string;
-    await prisma.product.delete({ where: { id: id as string } });
-    res.json({ message: 'Produto removido' });
+    try {
+        const id = req.params.id as string;
+
+        // Delete recipe first
+        await prisma.recipeItem.deleteMany({
+            where: { productId: id }
+        });
+
+        // Try to delete the product
+        await prisma.product.delete({ where: { id } });
+        res.json({ message: 'Produto removido com sucesso.' });
+    } catch (error: any) {
+        console.error('Delete Product Error:', error);
+
+        // Handle foreign key constraint (Prisma code P2003)
+        if (error.code === 'P2003' || (error.message && error.message.includes('Foreign key constraint failed'))) {
+            return res.status(400).json({
+                message: 'Não é possível excluir este produto pois ele possui histórico de vendas. Sugerimos apenas renomeá-lo ou deixá-lo fora de estoque.'
+            });
+        }
+
+        res.status(500).json({ message: 'Erro interno ao remover produto.' });
+    }
 };
+
