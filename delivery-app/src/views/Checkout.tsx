@@ -116,7 +116,14 @@ const Checkout: React.FC = () => {
 
         setIsLoading(true);
         try {
+            const clientStr = localStorage.getItem('delivery_app_client');
+            const client = clientStr ? JSON.parse(clientStr) : null;
+
             const orderData = {
+                clientId: client?.id || 'ANONYMOUS',
+                clientName: client?.name || 'Cliente App',
+                clientPhone: client?.phone || '',
+                clientEmail: client?.email || '',
                 clientAddress: finalAddress,
                 paymentMethod,
                 items: items.map(i => ({
@@ -124,7 +131,8 @@ const Checkout: React.FC = () => {
                     quantity: i.quantity,
                     price: i.product.price
                 })),
-                total,
+                total: finalTotal,
+                deliveryFee: deliveryFee,
                 type: 'OWN_DELIVERY',
                 status: 'PENDING'
             };

@@ -67,7 +67,13 @@ class DeliveryApiService {
     async createOrder(orderData: any) {
         return this.request('/orders', {
             method: 'POST',
-            body: JSON.stringify({ ...orderData, isOriginDeliveryApp: true }),
+            body: JSON.stringify({
+                order: {
+                    ...orderData,
+                    id: orderData.id || `ORD-APP-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                    isOriginDeliveryApp: true
+                }
+            }),
         });
     }
 
