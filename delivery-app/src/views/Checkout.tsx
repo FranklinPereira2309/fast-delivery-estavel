@@ -232,21 +232,24 @@ const Checkout: React.FC = () => {
                         <span className="w-2 h-2 rounded-full bg-indigo-400"></span> Local de Entrega
                     </h2>
 
-                    {savedAddress && (
-                        <div className={`flex items-center justify-between p-4 bg-white border border-slate-100 rounded-[2rem] shadow-sm transition-all ${useNewAddress ? 'opacity-50 grayscale' : ''}`}>
-                            <div className="flex-1 pr-4">
-                                <span className="text-[9px] font-black uppercase text-emerald-500 tracking-widest block mb-1">CADASTRADO</span>
-                                <p className="text-xs font-bold text-slate-700 leading-snug line-clamp-2">{savedAddress}</p>
+                    {savedAddress && !useNewAddress && (
+                        <div className="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-[1.5rem] shadow-sm transition-all hover:border-indigo-100 group">
+                            <div className="flex-1 pr-4 flex items-center gap-3">
+                                <div className="w-8 h-8 bg-emerald-50 rounded-xl flex items-center justify-center shrink-0">
+                                    <Icons.Smartphone className="w-4 h-4 text-emerald-500" />
+                                </div>
+                                <div>
+                                    <span className="text-[8px] font-black uppercase text-emerald-500 tracking-widest block leading-none mb-0.5">Entregar em:</span>
+                                    <p className="text-[11px] font-bold text-slate-700 leading-tight line-clamp-1">{savedAddress}</p>
+                                </div>
                             </div>
-                            {!useNewAddress && (
-                                <button
-                                    type="button"
-                                    onClick={() => setUseNewAddress(true)}
-                                    className="text-[9px] font-black uppercase text-indigo-500 tracking-widest px-4 py-2 bg-indigo-50 rounded-full hover:bg-indigo-100 transition-all shrink-0"
-                                >
-                                    Novo Endereço
-                                </button>
-                            )}
+                            <button
+                                type="button"
+                                onClick={() => setUseNewAddress(true)}
+                                className="text-[9px] font-black uppercase text-indigo-500 tracking-widest px-4 py-2 bg-indigo-50 rounded-full hover:bg-indigo-100 transition-all shrink-0 active:scale-95"
+                            >
+                                Alterar
+                            </button>
                         </div>
                     )}
 
@@ -254,9 +257,9 @@ const Checkout: React.FC = () => {
                         <button
                             type="button"
                             onClick={() => setUseNewAddress(true)}
-                            className="w-full p-6 bg-white border border-dashed border-slate-200 rounded-[2rem] text-slate-400 font-bold text-sm hover:border-indigo-300 hover:text-indigo-500 transition-all flex items-center justify-center gap-2"
+                            className="w-full p-5 bg-white border border-dashed border-slate-200 rounded-[2rem] text-slate-400 font-bold text-sm hover:border-indigo-300 hover:text-indigo-500 transition-all flex items-center justify-center gap-2 group active:scale-[0.98]"
                         >
-                            <Icons.Smartphone className="w-5 h-5" />
+                            <Icons.Smartphone className="w-5 h-5 group-hover:scale-110 transition-transform" />
                             Cadastrar Endereço de Entrega
                         </button>
                     )}
