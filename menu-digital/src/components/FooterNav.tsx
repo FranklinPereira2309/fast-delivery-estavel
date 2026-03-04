@@ -90,7 +90,7 @@ const FooterNav: React.FC<FooterNavProps> = ({ tableNumber, isOwner, pin }) => {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5h8M11 12h8M11 19h8M5 5h.01M5 12h.01M5 19h.01" />
                         </svg>
                     </div>
-                    <span className="text-[9px] font-black uppercase tracking-widest">Feedback</span>
+                    <span className="text-[9px] font-black uppercase tracking-widest">Mensagem</span>
                 </button>
             </nav>
 
@@ -179,13 +179,13 @@ const FooterNav: React.FC<FooterNavProps> = ({ tableNumber, isOwner, pin }) => {
                                     </div>
                                 ) : (
                                     <>
-                                        <h3 className="text-xl font-black text-slate-900 uppercase tracking-tighter">Deixe sua opinião</h3>
+                                        <h3 className="text-xl font-black text-slate-900 uppercase tracking-tighter">Do que você precisa...</h3>
                                         <form onSubmit={handleSubmitFeedback} className="space-y-4">
                                             <div>
                                                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2 px-2">Seu Nome (Opcional)</label>
                                                 <input
                                                     type="text"
-                                                    placeholder="Como gostaria de ser chamado?"
+                                                    placeholder="Informe sua Mesa ou Nome"
                                                     value={feedbackName}
                                                     onChange={e => setFeedbackName(e.target.value)}
                                                     className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-sm font-bold focus:ring-4 focus:ring-blue-50 outline-none"
@@ -196,7 +196,7 @@ const FooterNav: React.FC<FooterNavProps> = ({ tableNumber, isOwner, pin }) => {
                                                 <textarea
                                                     required
                                                     rows={4}
-                                                    placeholder="O que você achou do nosso atendimento?"
+                                                    placeholder="Preencha aqui sua solicitação"
                                                     value={feedbackMsg}
                                                     onChange={e => setFeedbackMsg(e.target.value)}
                                                     className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-sm font-bold focus:ring-4 focus:ring-blue-50 outline-none resize-none"
@@ -207,7 +207,7 @@ const FooterNav: React.FC<FooterNavProps> = ({ tableNumber, isOwner, pin }) => {
                                                 disabled={submittingFeedback || !feedbackMsg}
                                                 className="w-full bg-slate-900 text-white font-black py-4 rounded-2xl shadow-xl hover:bg-slate-800 disabled:opacity-50 transition-all uppercase tracking-widest text-sm"
                                             >
-                                                {submittingFeedback ? 'Enviando...' : 'Enviar Feedback'}
+                                                {submittingFeedback ? 'Enviando...' : 'Enviar Solicitação'}
                                             </button>
                                         </form>
                                     </>
