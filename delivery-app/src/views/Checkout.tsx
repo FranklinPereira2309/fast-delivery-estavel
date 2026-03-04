@@ -155,6 +155,7 @@ const Checkout: React.FC = () => {
                 message={alertState.message}
                 type={alertState.type}
                 onConfirm={alertState.onConfirm}
+                onCancel={() => setAlertState(prev => ({ ...prev, isOpen: false }))}
             />
 
             {/* Header Soft Clean */}
