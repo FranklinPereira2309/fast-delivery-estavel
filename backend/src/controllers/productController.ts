@@ -44,6 +44,17 @@ export const deleteProduct = async (req: Request, res: Response) => {
     try {
         const id = req.params.id as string;
 
+        // Check if there are any order items linked to this product first!
+        const linkedOrderItemsCount = await prisma.orderItem.count({
+            where: { productId: id }
+        });
+
+        if (linkedOrderItemsCount > 0) {
+            return res.status(400).json({
+                message: 'Não é possível excluir este produto pois ele possui histórico de vendas. Sugerimos apenas renomeá-lo ou deixá-lo fora de estoque.'
+            });
+        }
+
         // Delete recipe first
         await prisma.recipeItem.deleteMany({
             where: { productId: id }
@@ -55,7 +66,7 @@ export const deleteProduct = async (req: Request, res: Response) => {
     } catch (error: any) {
         console.error('Delete Product Error:', error);
 
-        // Handle foreign key constraint (Prisma code P2003)
+        // Fallback catch (Prisma code P2003) Just in case!
         if (error.code === 'P2003' || (error.message && error.message.includes('Foreign key constraint failed'))) {
             return res.status(400).json({
                 message: 'Não é possível excluir este produto pois ele possui histórico de vendas. Sugerimos apenas renomeá-lo ou deixá-lo fora de estoque.'
