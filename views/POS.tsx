@@ -1958,7 +1958,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                         const doAuth = async () => {
                           if (!userPassword) return showAlert("Atenção", "Digite sua senha.", "INFO");
                           try {
-                            const res = await fetch(`${API_URL}/api/auth/verify-password`, {
+                            const res = await fetch(`${API_URL}/auth/verify-password`, {
                               method: 'POST',
                               headers: { 'Content-Type': 'application/json' },
                               body: JSON.stringify({ userId: currentUser.id, password: userPassword })
@@ -1991,7 +1991,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                   onClick={async () => {
                     if (!userPassword) return showAlert("Atenção", "Digite sua senha.", "INFO");
                     try {
-                      const res = await fetch(`${API_URL}/api/auth/verify-password`, {
+                      const res = await fetch(`${API_URL}/auth/verify-password`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ userId: currentUser.id, password: userPassword })
