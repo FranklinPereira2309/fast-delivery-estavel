@@ -117,8 +117,8 @@ const SalesMonitor: React.FC = () => {
                 'DINHEIRO', 'PIX', 'CRÉDITO', 'DÉBITO', 'FIADO',
                 'PIX + DINHEIRO', 'CRÉDITO + DINHEIRO', 'DÉBITO + DINHEIRO',
                 'PIX + CRÉDITO', 'CRÉDITO + DÉBITO'
-              ].includes(printingOrder.paymentMethod) && (
-                  <option value={printingOrder.paymentMethod}>{printingOrder.paymentMethod}</option>
+              ].includes((paymentLabels[(printingOrder.paymentMethod || '').toUpperCase()] || printingOrder.paymentMethod).toUpperCase()) && (
+                  <option value={printingOrder.paymentMethod}>{(paymentLabels[(printingOrder.paymentMethod || '').toUpperCase()] || printingOrder.paymentMethod).toUpperCase()}</option>
                 )}
             </select>
             <button
@@ -152,7 +152,12 @@ const SalesMonitor: React.FC = () => {
           <>
             <p className="font-black text-[10px]">PAGTO: {(paymentLabels[(printingOrder?.paymentMethod || '').toUpperCase()] || printingOrder?.paymentMethod || 'PENDENTE').toUpperCase()}</p>
             <button
-              onClick={() => setEditingPaymentMethod(true)}
+              onClick={() => {
+                const rawMethod = printingOrder?.paymentMethod || 'DINHEIRO';
+                const mappedMethod = (paymentLabels[rawMethod.toUpperCase()] || rawMethod).toUpperCase();
+                setNewPaymentMethod(mappedMethod);
+                setEditingPaymentMethod(true);
+              }}
               className="text-[9px] text-blue-600 font-bold underline px-2"
             >
               Editar
