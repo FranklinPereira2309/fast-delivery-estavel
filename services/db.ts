@@ -340,6 +340,13 @@ class APIDBService {
     await this.logAction(this.getCurrentSession()?.user || null, 'SYSTEM_DELETE', `Cliente deletado: ${id}`);
   }
 
+  public async resetClientPin(id: string, user: User): Promise<{ message: string, pin: string }> {
+    return this.request<{ message: string, pin: string }>(`/clients/${id}/reset-pin`, {
+      method: 'PUT',
+      body: JSON.stringify({ user })
+    });
+  }
+
   public async getAuditLogs(startDate?: string, endDate?: string): Promise<AuditLog[]> {
     let path = '/audit';
     const params = new URLSearchParams();

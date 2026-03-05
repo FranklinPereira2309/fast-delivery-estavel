@@ -68,19 +68,12 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
     }
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/clients/${clientId}/reset-pin`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user: currentUser })
-      });
-
-      if (!response.ok) throw new Error('Falha ao resetar PIN');
-      const data = await response.json();
+      const data = await db.resetClientPin(clientId, currentUser);
       showAlert('Sucesso', 'PIN resetado com sucesso! Novo PIN gerado: ' + data.pin, 'SUCCESS');
       refreshClients();
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      showAlert('Erro', 'Não foi possível resetar o PIN.', 'DANGER');
+      showAlert('Erro', error.message || 'Não foi possível resetar o PIN.', 'DANGER');
     }
   };
 
