@@ -4,6 +4,7 @@ import { Client, User } from '../types';
 import { db } from '../services/db';
 import CustomAlert from '../components/CustomAlert';
 import { validateEmail, validateCPF, validateCNPJ, maskPhone, maskDocument, toTitleCase } from '../services/validationUtils';
+import { Eye, EyeOff, RefreshCw } from 'lucide-react';
 
 interface CRMProps {
   currentUser: User;
@@ -300,7 +301,7 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
                     <div className="flex items-center gap-2">
                       <span className="font-mono bg-slate-100 px-2 py-1 rounded w-16 text-center select-all">{visiblePins[client.id] ? client.pin : '••••'}</span>
                       <button onClick={() => togglePinVisibility(client.id)} className="text-slate-400 hover:text-indigo-600 transition-colors" title={visiblePins[client.id] ? "Ocultar PIN" : "Revelar PIN"}>
-                        {visiblePins[client.id] ? <Icons.EyeOff className="w-4 h-4" /> : <Icons.Eye className="w-4 h-4" />}
+                        {visiblePins[client.id] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
                     </div>
                   ) : <span className="text-xs text-slate-400 italic">Não gerado</span>}
@@ -318,7 +319,7 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
                       className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-all"
                       title="Regerar PIN de Acesso"
                     >
-                      <Icons.RefreshCw className="w-4 h-4" />
+                      <RefreshCw className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => openEditModal(client)}
