@@ -4,6 +4,7 @@ import { db } from './services/db';
 import { socket } from './services/socket';
 import { Icons } from './constants';
 import LogoutModal from './components/LogoutModal';
+import Login from './components/Login';
 
 const paymentLabels: Record<string, string> = {
   'CREDIT': 'Cartão de Crédito',
@@ -54,9 +55,6 @@ const BlinkCSS = () => (
 const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [loginError, setLoginError] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
 
   const [driver, setDriver] = useState<DeliveryDriver | null>(null);
   const [myOrders, setMyOrders] = useState<Order[]>([]);
@@ -157,17 +155,6 @@ const App: React.FC = () => {
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoginError('');
-    try {
-      const user = await db.login(email, password);
-      setCurrentUser(user);
-    } catch (err: any) {
-      setLoginError(err.message);
-    }
-  };
 
   const handleLogout = () => {
     db.logout();
@@ -287,50 +274,7 @@ const App: React.FC = () => {
   if (isLoading) return null;
 
   if (!currentUser) {
-    return (
-      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-6 select-none">
-        <div className="w-24 h-24 bg-blue-600 rounded-3xl flex items-center justify-center shadow-2xl shadow-blue-500/20 transform -rotate-12 mb-8">
-          <span className="text-white text-4xl font-black">DA</span>
-        </div>
-        <div className="w-full max-w-md bg-white p-10 rounded-[2.5rem] shadow-2xl">
-          <h2 className="text-3xl font-black text-slate-900 tracking-tighter mb-2">DRIVER APP</h2>
-          <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest mb-8">Acesso restrito para entregadores</p>
-
-          <form onSubmit={handleLogin} className="space-y-6">
-            <div className="space-y-2">
-              <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">E-mail</label>
-              <input
-                type="email"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                className="w-full bg-slate-50 border-none rounded-2xl px-6 py-4 text-sm font-bold focus:ring-4 focus:ring-blue-500/10 transition-all outline-none"
-                placeholder="seu@email.com"
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Senha</label>
-              <input
-                type="password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                className="w-full bg-slate-50 border-none rounded-2xl px-6 py-4 text-sm font-bold focus:ring-4 focus:ring-blue-500/10 transition-all outline-none"
-                placeholder="••••••••"
-                required
-              />
-            </div>
-            {loginError && <p className="text-xs font-black text-red-500 uppercase text-center">{loginError}</p>}
-            <button
-              type="submit"
-              className="w-full bg-blue-600 text-white py-5 rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl shadow-blue-500/20 active:scale-95 transition-all mt-4"
-            >
-              Entrar no Sistema
-            </button>
-          </form>
-        </div>
-        <p className="mt-8 text-slate-600 text-[10px] font-black uppercase tracking-[0.3em]">Fransoft Developer®</p>
-      </div>
-    );
+    return <Login onLoginSuccess={setCurrentUser} />;
   }
 
   if (!driver) {

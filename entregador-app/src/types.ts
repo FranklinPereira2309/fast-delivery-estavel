@@ -51,6 +51,8 @@ export interface User {
     password: string;
     permissions: string[];
     createdAt: string;
+    mustChangePassword?: boolean;
+    recoveryCode?: string;
 }
 
 export interface Waiter {

@@ -42,6 +42,21 @@ class DriverDBService {
         localStorage.removeItem(AUTH_KEY);
     }
 
+    public async verifyRecoveryCode(email: string, recoveryCode: string): Promise<boolean> {
+        const data = await this.request<{ valid: boolean }>('/auth/recovery/verify', {
+            method: 'POST',
+            body: JSON.stringify({ email, recoveryCode })
+        });
+        return data.valid;
+    }
+
+    public async resetPassword(payload: any) {
+        return this.request('/auth/reset-password', {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        });
+    }
+
     // Drivers
     public async getDriverProfile(userId: string): Promise<DeliveryDriver> {
         const drivers = await this.request<DeliveryDriver[]>('/drivers');
