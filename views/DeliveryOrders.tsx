@@ -410,42 +410,45 @@ const OrderEditModal: React.FC<{
                     {/* Items List */}
                     <div className="flex-1 flex flex-col gap-4 overflow-y-auto pr-4 custom-scrollbar">
                         <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Itens do Pedido</h5>
-                        {items.map((it, idx) => (
-                            <div key={idx} className="bg-slate-50 p-4 rounded-2xl flex items-center gap-4 group">
-                                <div className="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center font-bold text-indigo-600">
-                                    {it.quantity}x
+                        <div className="bg-slate-50 p-5 rounded-3xl border border-slate-100 font-receipt">
+                            {items.length === 0 && <p className="text-[10px] uppercase font-black text-slate-400 tracking-widest text-center py-4">Nenhum item</p>}
+                            {items.map((it, idx) => (
+                                <div key={idx} className="flex items-center justify-between py-2.5 border-b border-dashed border-slate-200 last:border-0 hover:bg-white/50 transition-colors -mx-2 px-2 rounded-xl group/item">
+                                    <div className="flex-1 flex flex-col pr-2">
+                                        <span className="font-black text-sm text-slate-800 uppercase tracking-tighter">{it.product?.name || allProducts.find(p => p.id === it.productId)?.name || 'PRODUTO'}</span>
+                                        <span className="text-[10px] font-bold text-slate-500 tracking-widest mt-0.5">{it.quantity}x R$ {it.price.toFixed(2)}</span>
+                                    </div>
+                                    <div className="flex items-center gap-1 bg-white p-1 rounded-lg border border-slate-200 shadow-sm opacity-100 md:opacity-50 group-hover/item:opacity-100 transition-opacity">
+                                        <button onClick={() => updateQty(idx, -1)} className="w-6 h-6 flex items-center justify-center rounded text-slate-500 hover:bg-slate-100 hover:text-slate-800 font-black">-</button>
+                                        <button onClick={() => updateQty(idx, 1)} className="w-6 h-6 flex items-center justify-center rounded text-slate-500 hover:bg-slate-100 hover:text-slate-800 font-black">+</button>
+                                        <button onClick={() => removeItem(idx)} className="w-6 h-6 flex items-center justify-center rounded text-rose-400 hover:bg-rose-50 hover:text-rose-600 transition-all ml-0.5">
+                                            <Icons.X className="w-3.5 h-3.5" />
+                                        </button>
+                                    </div>
                                 </div>
-                                <div className="flex-1">
-                                    <p className="font-bold text-slate-700 text-sm">{it.product?.name || allProducts.find(p => p.id === it.productId)?.name || 'Produto'}</p>
-                                    <p className="text-[10px] font-bold text-slate-400">R$ {it.price.toFixed(2)}/un</p>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <button onClick={() => updateQty(idx, -1)} className="w-8 h-8 bg-white border border-slate-200 rounded-lg flex items-center justify-center hover:bg-slate-100">-</button>
-                                    <button onClick={() => updateQty(idx, 1)} className="w-8 h-8 bg-white border border-slate-200 rounded-lg flex items-center justify-center hover:bg-slate-100">+</button>
-                                    <button onClick={() => removeItem(idx)} className="w-8 h-8 bg-rose-50 text-rose-500 rounded-lg flex items-center justify-center hover:bg-rose-500 hover:text-white transition-all ml-2">
-                                        <Icons.Delete className="w-4 h-4" />
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
+                            ))}
+                        </div>
                     </div>
 
                     {/* Menu & Summary */}
                     <div className="w-full md:w-72 flex flex-col gap-6 shrink-0 border-t md:border-t-0 md:border-l border-slate-100 pt-6 md:pt-0 md:pl-6">
-                        <div className="flex-1 bg-slate-50 rounded-3xl p-5 flex flex-col overflow-hidden border border-slate-100 h-64 md:h-auto">
-                            <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Adicionar Item</h5>
-                            <div className="flex-1 overflow-y-auto space-y-2 pr-2 custom-scrollbar text-xs">
+                        <div className="bg-slate-50 rounded-3xl p-5 flex flex-col border border-slate-100 shrink-0">
+                            <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Adicionar Item</h5>
+                            <select
+                                className="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs font-bold text-slate-600 uppercase tracking-tighter outline-none focus:ring-2 focus:ring-indigo-500/20"
+                                value=""
+                                onChange={(e) => {
+                                    if (e.target.value) {
+                                        const p = allProducts.find(prod => prod.id === e.target.value);
+                                        if (p) addItem(p);
+                                    }
+                                }}
+                            >
+                                <option value="">Selecione um Produto...</option>
                                 {allProducts.map(p => (
-                                    <button
-                                        key={p.id}
-                                        onClick={() => addItem(p)}
-                                        className="w-full text-left p-3 bg-white rounded-xl hover:bg-indigo-50 border border-transparent hover:border-indigo-100 transition-all flex justify-between items-center group"
-                                    >
-                                        <span className="font-bold text-slate-600 group-hover:text-indigo-600 truncate mr-2">{p.name}</span>
-                                        <span className="font-black text-slate-400 group-hover:text-indigo-600 flex-shrink-0">R$ {p.price}</span>
-                                    </button>
+                                    <option key={p.id} value={p.id}>{p.name} - R$ {p.price.toFixed(2)}</option>
                                 ))}
-                            </div>
+                            </select>
                         </div>
 
                         <div className="bg-indigo-600 text-white p-6 rounded-[2rem] shadow-xl shadow-indigo-100">
