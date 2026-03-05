@@ -5,6 +5,7 @@ import Register from './views/Register';
 import Checkout from './views/Checkout';
 import OrderHistory from './views/OrderHistory';
 import OrderDetails from './views/OrderDetails';
+import RecoverPassword from './views/RecoverPassword';
 import Profile from './views/Profile';
 import { CartProvider } from './CartContext';
 
@@ -15,6 +16,7 @@ function App() {
                 <Routes>
                     <Route path="/" element={<Home />} />
                     <Route path="/login" element={<Login />} />
+                    <Route path="/recover" element={<RecoverPassword />} />
                     <Route path="/register" element={<Register />} />
                     <Route path="/checkout" element={<Checkout />} />
                     <Route path="/history" element={<OrderHistory />} />

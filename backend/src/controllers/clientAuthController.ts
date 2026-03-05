@@ -26,27 +26,19 @@ export const registerClient = async (req: ExpressRequest, res: ExpressResponse) 
         });
 
         if (existingClient) {
-            if (existingClient.password) {
-                return res.status(400).json({ message: 'Conta já existe para este número/email.' });
-            } else {
-                // Upgrade existing manual client to have a password
-                const hashedPassword = await bcrypt.hash(password, 10);
-                const updated = await prisma.client.update({
-                    where: { id: existingClient.id },
-                    data: { password: hashedPassword, email: email || existingClient.email, name, cep, street, addressNumber, neighborhood, city, state, complement }
-                });
-                const token = jwt.sign({ id: updated.id, role: 'CLIENT' }, JWT_SECRET, { expiresIn: '30d' });
-                return res.status(200).json({ token, client: updated });
-            }
+            return res.status(409).json({ message: 'Telefone ou e-mail já em uso. Por favor, substitua os dados informados ou efetue a recuperação de conta.' });
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
+        const pin = Math.floor(1000 + Math.random() * 9000).toString();
+
         const newClient = await prisma.client.create({
             data: {
                 name,
                 phone,
                 email,
                 password: hashedPassword,
+                pin,
                 cep,
                 street,
                 addressNumber,
@@ -134,6 +126,34 @@ export const updateClientProfile = async (req: ExpressRequest, res: ExpressRespo
 };
 
 export const recoverPassword = async (req: ExpressRequest, res: ExpressResponse) => {
-    // Skeleton for SMS PIN later
-    res.status(501).json({ message: 'Módulo de SMS em desenvolvimento. Contate a loja.' });
+    try {
+        const { email, phone, newPassword } = req.body;
+
+        if (!email || !phone || !newPassword) {
+            return res.status(400).json({ message: 'E-mail, telefone e nova senha são obrigatórios.' });
+        }
+
+        const client = await prisma.client.findFirst({
+            where: {
+                email,
+                phone
+            }
+        });
+
+        if (!client) {
+            return res.status(404).json({ message: 'Nenhuma conta encontrada combinando este e-mail associado a este telefone.' });
+        }
+
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        await prisma.client.update({
+            where: { id: client.id },
+            data: { password: hashedPassword }
+        });
+
+        res.status(200).json({ message: 'Senha redefinida com sucesso. Faça seu login.' });
+    } catch (error) {
+        console.error('Recover Password Error:', error);
+        res.status(500).json({ message: 'Erro ao recuperar senha.' });
+    }
 };

@@ -79,6 +79,7 @@ model Client {
   phone         String
   email         String?
   password      String?
+  pin           String?
   recoveryCode  String?
   document      String?
   cep           String?

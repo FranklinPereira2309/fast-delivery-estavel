@@ -112,6 +112,7 @@ export interface Client {
   name: string;
   phone: string;
   email?: string;
+  pin?: string;
   document?: string;
   addresses: string[];
   totalOrders: number;

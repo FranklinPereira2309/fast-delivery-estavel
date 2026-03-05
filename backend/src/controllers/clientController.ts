@@ -36,3 +36,25 @@ export const deleteClient = async (req: Request, res: Response) => {
         res.status(500).json({ message: 'Erro ao remover cliente.' });
     }
 };
+
+export const resetClientPin = async (req: Request, res: Response) => {
+    const id = req.params.id as string;
+    const { user } = req.body;
+
+    if (!user?.permissions?.includes('admin') && !user?.permissions?.includes('settings')) {
+        return res.status(403).json({ message: 'Apenas usuários autorizados podem resetar senhas ou PIN.' });
+    }
+
+    try {
+        const pin = Math.floor(1000 + Math.random() * 9000).toString();
+        const updatedClient = await prisma.client.update({
+            where: { id },
+            data: { pin }
+        });
+
+        res.status(200).json({ message: 'PIN redefinido com sucesso.', pin: updatedClient.pin });
+    } catch (error) {
+        console.error('Error resetting PIN:', error);
+        res.status(500).json({ message: 'Erro ao redefinir PIN do cliente.' });
+    }
+};

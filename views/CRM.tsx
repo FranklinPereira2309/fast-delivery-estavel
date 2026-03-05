@@ -54,6 +54,34 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
   });
 
   const [errors, setErrors] = useState<Record<string, boolean>>({});
+  const [visiblePins, setVisiblePins] = useState<Record<string, boolean>>({});
+
+  const togglePinVisibility = (clientId: string) => {
+    setVisiblePins(prev => ({ ...prev, [clientId]: !prev[clientId] }));
+  };
+
+  const handleResetPin = async (clientId: string) => {
+    if (!currentUser.permissions.includes('admin') && !currentUser.permissions.includes('settings')) {
+      showAlert('Acesso Negado', 'Apenas usuários autorizados podem resetar o PIN.', 'DANGER');
+      return;
+    }
+
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/clients/${clientId}/reset-pin`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user: currentUser })
+      });
+
+      if (!response.ok) throw new Error('Falha ao resetar PIN');
+      const data = await response.json();
+      showAlert('Sucesso', 'PIN resetado com sucesso! Novo PIN gerado: ' + data.pin, 'SUCCESS');
+      refreshClients();
+    } catch (error) {
+      console.error(error);
+      showAlert('Erro', 'Não foi possível resetar o PIN.', 'DANGER');
+    }
+  };
 
   useEffect(() => {
     refreshClients();
@@ -253,6 +281,7 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
             <tr className="bg-slate-50 border-b border-slate-100">
               <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Cliente</th>
               <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Telefone</th>
+              <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">PIN (Acesso App)</th>
               <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Endereço Principal</th>
               <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Pedidos</th>
               <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider text-right">Ações</th>
@@ -266,6 +295,16 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
                   <p className="text-xs text-slate-400">Último: {client.lastOrderDate || '-'}</p>
                 </td>
                 <td className="px-6 py-4 text-sm text-slate-600">{client.phone}</td>
+                <td className="px-6 py-4 text-sm text-slate-600">
+                  {client.pin ? (
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono bg-slate-100 px-2 py-1 rounded w-16 text-center select-all">{visiblePins[client.id] ? client.pin : '••••'}</span>
+                      <button onClick={() => togglePinVisibility(client.id)} className="text-slate-400 hover:text-indigo-600 transition-colors" title={visiblePins[client.id] ? "Ocultar PIN" : "Revelar PIN"}>
+                        {visiblePins[client.id] ? <Icons.EyeOff className="w-4 h-4" /> : <Icons.Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  ) : <span className="text-xs text-slate-400 italic">Não gerado</span>}
+                </td>
                 <td className="px-6 py-4 text-sm text-slate-600 max-w-xs truncate">{client.addresses[0] || 'Nenhum endereço'}</td>
                 <td className="px-6 py-4">
                   <span className="bg-blue-50 text-blue-600 px-2 py-1 rounded-lg text-xs font-bold">
@@ -274,6 +313,13 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
                 </td>
                 <td className="px-6 py-4 text-right">
                   <div className="flex justify-end gap-2">
+                    <button
+                      onClick={() => handleResetPin(client.id)}
+                      className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-all"
+                      title="Regerar PIN de Acesso"
+                    >
+                      <Icons.RefreshCw className="w-4 h-4" />
+                    </button>
                     <button
                       onClick={() => openEditModal(client)}
                       className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"

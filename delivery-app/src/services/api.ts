@@ -42,6 +42,13 @@ class DeliveryApiService {
         });
     }
 
+    async recoverPassword(email: string, phone: string, newPassword: string) {
+        return this.request('/client-auth/recover', {
+            method: 'POST',
+            body: JSON.stringify({ email, phone, newPassword }),
+        });
+    }
+
     // Catalog
     async getProducts() {
         return this.request<any[]>('/products');

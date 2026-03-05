@@ -134,7 +134,15 @@ const Register: React.FC = () => {
                 onConfirm: () => navigate('/login')
             });
         } catch (err: any) {
-            setError(err.message || 'Erro ao realizar cadastro');
+            const errorMessage = err.message || 'Erro ao realizar cadastro';
+            setError(errorMessage);
+            setAlertState({
+                isOpen: true,
+                title: 'Atenção',
+                message: errorMessage,
+                type: 'DANGER',
+                onConfirm: () => setAlertState(prev => ({ ...prev, isOpen: false }))
+            });
         }
     };
 
