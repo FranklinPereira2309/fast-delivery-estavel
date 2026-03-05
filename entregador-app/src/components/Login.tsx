@@ -112,7 +112,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                                 <label className="text-[10px] font-black text-slate-400 uppercase ml-4 tracking-widest">E-mail Corporativo</label>
                                 <div className="relative group">
                                     <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-blue-500 transition-colors">
-                                        <Icons.Chat className="w-5 h-5" />
+                                        <Icons.Mail className="w-5 h-5" />
                                     </div>
                                     <input
                                         type="email"
