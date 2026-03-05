@@ -30,7 +30,8 @@ const Register: React.FC = () => {
         title: '',
         message: '',
         type: 'INFO' as 'INFO' | 'DANGER' | 'SUCCESS',
-        onConfirm: () => { }
+        onConfirm: () => { },
+        onCancel: undefined as (() => void) | undefined
     });
 
     const navigate = useNavigate();
@@ -389,7 +390,7 @@ const Register: React.FC = () => {
                 message={alertState.message}
                 type={alertState.type}
                 onConfirm={alertState.onConfirm}
-                onCancel={() => setAlertState(prev => ({ ...prev, isOpen: false }))}
+                onCancel={alertState.onCancel}
             />
         </div>
     );
