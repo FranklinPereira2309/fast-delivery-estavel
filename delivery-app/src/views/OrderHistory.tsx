@@ -23,9 +23,13 @@ const OrderHistory: React.FC = () => {
         const clientStr = localStorage.getItem('delivery_app_client');
         const client = clientStr ? JSON.parse(clientStr) : null;
 
-        if (client && client.id) {
-            socket.emit('join_client', client.id);
-        }
+        const joinRoom = () => {
+            if (client && client.id) {
+                socket.emit('join_client', client.id);
+            }
+        };
+
+        joinRoom();
 
         const fetchData = async () => {
             try {
@@ -41,18 +45,23 @@ const OrderHistory: React.FC = () => {
                 setIsLoading(false);
             }
         };
+
         fetchData();
+        const interval = setInterval(fetchData, 5000);
 
         const handleOrderUpdate = (data?: any) => {
             console.log('Real-time order update received:', data);
             fetchData();
         };
 
+        socket.on('connect', joinRoom);
         socket.on('orderUpdated', handleOrderUpdate);
         socket.on('statusUpdated', handleOrderUpdate);
         socket.on('newOrder', handleOrderUpdate);
 
         return () => {
+            clearInterval(interval);
+            socket.off('connect', joinRoom);
             socket.off('orderUpdated', handleOrderUpdate);
             socket.off('statusUpdated', handleOrderUpdate);
             socket.off('newOrder', handleOrderUpdate);
