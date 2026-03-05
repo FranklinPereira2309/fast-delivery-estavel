@@ -159,7 +159,7 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
                     </div>
                 ) : (
                     orders.map(order => (
-                        <div key={order.id} className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 flex flex-col hover:shadow-xl hover:shadow-indigo-100/20 transition-all relative overflow-hidden group">
+                        <div key={order.id} className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 flex flex-col hover:shadow-xl hover:shadow-indigo-100/20 transition-all relative h-fit group">
                             <div className="flex flex-wrap justify-between items-start mb-2 gap-y-3">
                                 <div className="flex flex-wrap items-center gap-3">
                                     <h3 className="font-black text-2xl text-slate-800 tracking-tighter">#{order.id.slice(-4).toUpperCase()}</h3>
