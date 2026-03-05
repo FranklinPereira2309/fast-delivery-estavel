@@ -4,6 +4,7 @@ import { api } from '../services/api';
 import type { Product, BusinessSettings } from '../types';
 import { Icons } from '../constants';
 import { useCart } from '../CartContext';
+import CustomAlert from '../components/CustomAlert';
 
 const Home: React.FC = () => {
     const { addToCart, items, total } = useCart();
@@ -16,6 +17,7 @@ const Home: React.FC = () => {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [clientName, setClientName] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
+    const [showLogoutAlert, setShowLogoutAlert] = useState(false);
 
 
     useEffect(() => {
@@ -104,10 +106,7 @@ const Home: React.FC = () => {
                                 <Icons.User className="w-5 h-5" />
                             </Link>
                             <button
-                                onClick={() => {
-                                    localStorage.removeItem('delivery_app_client');
-                                    window.location.reload();
-                                }}
+                                onClick={() => setShowLogoutAlert(true)}
                                 className="w-11 h-11 bg-rose-50 rounded-2xl flex items-center justify-center text-rose-500 hover:bg-rose-100 transition-all shadow-sm border border-rose-100 active:scale-95"
                             >
                                 <Icons.LogOut className="w-5 h-5" />
@@ -193,6 +192,18 @@ const Home: React.FC = () => {
                     </button>
                 </div>
             )}
+
+            <CustomAlert
+                isOpen={showLogoutAlert}
+                title="SAIR DO SISTEMA"
+                message="DESEJA REALMENTE SAIR DA APLICAÇÃO E VOLTAR PARA O LOGIN?"
+                onConfirm={() => {
+                    localStorage.removeItem('delivery_app_client');
+                    window.location.reload();
+                }}
+                onCancel={() => setShowLogoutAlert(false)}
+                type="QUESTION"
+            />
         </div>
     );
 };

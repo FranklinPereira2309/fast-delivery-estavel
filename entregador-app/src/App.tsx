@@ -3,6 +3,7 @@ import { DeliveryDriver, Order, OrderStatus, OrderStatusLabels, SaleType, User, 
 import { db } from './services/db';
 import { socket } from './services/socket';
 import { Icons } from './constants';
+import LogoutModal from './components/LogoutModal';
 
 const paymentLabels: Record<string, string> = {
   'CREDIT': 'Cartão de Crédito',
@@ -62,6 +63,7 @@ const App: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [printingOrder, setPrintingOrder] = useState<Order | null>(null);
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
   const [activeTab, setActiveTab] = useState<'PENDING' | 'HISTORY' | 'CHAT'>('PENDING');
   const [settings, setSettings] = useState<BusinessSettings | null>(null);
@@ -341,7 +343,7 @@ const App: React.FC = () => {
         <p className="text-slate-500 text-sm max-w-xs leading-relaxed mb-8">
           Sua conta (<span className="font-bold text-slate-700">{currentUser.email}</span>) não está vinculada a um entregador.
         </p>
-        <button onClick={handleLogout} className="px-8 py-4 bg-slate-900 text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl active:scale-95 transition-all">Sair</button>
+        <button onClick={() => setIsLogoutModalOpen(true)} className="px-8 py-4 bg-slate-900 text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl active:scale-95 transition-all">Sair</button>
       </div>
     );
   }
@@ -393,7 +395,7 @@ const App: React.FC = () => {
             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Olá,</span>
             <span className="text-sm font-black text-slate-800">{driver.name.split(' ')[0]}</span>
           </div>
-          <button onClick={handleLogout} className="p-2 text-slate-300 hover:text-red-500 transition-all">
+          <button onClick={() => setIsLogoutModalOpen(true)} className="p-2 text-slate-300 hover:text-red-500 transition-all">
             <Icons.SignOut className="w-5 h-5" />
           </button>
         </div>
@@ -736,6 +738,15 @@ const App: React.FC = () => {
           </div>
         </div>
       )}
+
+      <LogoutModal
+        isOpen={isLogoutModalOpen}
+        onConfirm={() => {
+          handleLogout();
+          setIsLogoutModalOpen(false);
+        }}
+        onCancel={() => setIsLogoutModalOpen(false)}
+      />
     </div>
   );
 };
