@@ -95,21 +95,22 @@ export const updateClientProfile = async (req: ExpressRequest, res: ExpressRespo
             return res.status(404).json({ error: 'Cliente não encontrado.' });
         }
 
-        // Validate current password
-        const valid = await bcrypt.compare(currentPassword, client.password);
-        if (!valid) {
-            return res.status(401).json({ error: 'Senha atual incorreta.' });
-        }
-
-        const data: any = {
-            name,
-            email,
-            addresses: [address] // Save the full address string to the addresses array
-        };
-
+        // Se for enviado uma nova senha, a senha atual passa a ser obrigatória para autenticação da troca.
         if (password) {
-            data.password = await bcrypt.hash(password, 10);
+            if (!currentPassword) {
+                return res.status(401).json({ error: 'Senha atual é obrigatória para realizar a troca de senhas.' });
+            }
+            const valid = await bcrypt.compare(currentPassword, client.password);
+            if (!valid) {
+                return res.status(401).json({ error: 'Senha atual incorreta.' });
+            }
         }
+
+        const data: any = {};
+        if (name) data.name = name;
+        if (email) data.email = email;
+        if (address) data.addresses = [address]; // Salva a nova string inteira se enviada
+        if (password) data.password = await bcrypt.hash(password, 10);
 
         const updatedClient = await prisma.client.update({
             where: { id },

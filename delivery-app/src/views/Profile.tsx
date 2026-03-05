@@ -6,12 +6,18 @@ import { Icons } from '../constants';
 const Profile: React.FC = () => {
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(true);
-    const [isSaving, setIsSaving] = useState(false);
+    const [isSavingDetails, setIsSavingDetails] = useState(false);
+    const [isSavingPassword, setIsSavingPassword] = useState(false);
     const [client, setClient] = useState<any>(null);
     const [showCurrentPassword, setShowCurrentPassword] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [isEditingAddress, setIsEditingAddress] = useState(false);
+
+    const [detailsError, setDetailsError] = useState('');
+    const [detailsSuccess, setDetailsSuccess] = useState('');
+    const [passwordError, setPasswordError] = useState('');
+    const [passwordSuccess, setPasswordSuccess] = useState('');
 
     const [formData, setFormData] = useState({
         name: '',
@@ -21,8 +27,6 @@ const Profile: React.FC = () => {
         password: '',
         confirmPassword: ''
     });
-    const [error, setError] = useState('');
-    const [success, setSuccess] = useState('');
 
     useEffect(() => {
         const clientStr = localStorage.getItem('delivery_app_client');
@@ -59,42 +63,59 @@ const Profile: React.FC = () => {
         }
     }, [navigate]);
 
-    const handleSave = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setError('');
-        setSuccess('');
+    const handleSavePersonalInfo = async () => {
+        setDetailsError('');
+        setDetailsSuccess('');
 
-        if (formData.password && formData.password !== formData.confirmPassword) {
-            setError('As novas senhas não coincidem.');
-            return;
-        }
-
-        if ((formData.name !== client.name || formData.email !== client.email || formData.address !== client.address || formData.password) && !formData.currentPassword) {
-            setError('Por favor, informe sua senha atual para salvar as alterações.');
-            return;
-        }
-
-        setIsSaving(true);
+        setIsSavingDetails(true);
         try {
-            const updateData: any = {
+            const updateData = {
                 name: formData.name,
                 email: formData.email,
                 address: formData.address,
-                currentPassword: formData.currentPassword
             };
-            if (formData.password) {
-                updateData.password = formData.password;
-            }
 
             const updatedClient = await api.updateClient(client.id, updateData);
             localStorage.setItem('delivery_app_client', JSON.stringify(updatedClient));
             setClient(updatedClient);
-            setSuccess('Perfil atualizado com sucesso!');
+            setDetailsSuccess('Dados pessoais atualizados!');
+        } catch (err: any) {
+            setDetailsError(err.response?.data?.error || err.message || 'Erro ao atualizar dados.');
+        } finally {
+            setIsSavingDetails(false);
+        }
+    };
+
+    const handleSavePassword = async () => {
+        setPasswordError('');
+        setPasswordSuccess('');
+
+        if (!formData.currentPassword || !formData.password || !formData.confirmPassword) {
+            setPasswordError('Preencha os três campos para atualizar sua senha.');
+            return;
+        }
+
+        if (formData.password !== formData.confirmPassword) {
+            setPasswordError('As novas senhas não coincidem.');
+            return;
+        }
+
+        setIsSavingPassword(true);
+        try {
+            const updateData = {
+                currentPassword: formData.currentPassword,
+                password: formData.password
+            };
+
+            const updatedClient = await api.updateClient(client.id, updateData);
+            localStorage.setItem('delivery_app_client', JSON.stringify(updatedClient));
+            setClient(updatedClient);
+            setPasswordSuccess('Senha substituída com sucesso!');
             setFormData(prev => ({ ...prev, currentPassword: '', password: '', confirmPassword: '' }));
         } catch (err: any) {
-            setError(err.response?.data?.error || 'Erro ao atualizar perfil. Verifique sua senha atual.');
+            setPasswordError(err.response?.data?.error || err.message || 'Erro ao trocar senha. Verifique sua senha atual.');
         } finally {
-            setIsSaving(false);
+            setIsSavingPassword(false);
         }
     };
 
@@ -120,7 +141,7 @@ const Profile: React.FC = () => {
             </div>
 
             <div className="p-6 space-y-6 max-w-lg mx-auto">
-                <form onSubmit={handleSave} className="space-y-4">
+                <div className="space-y-6">
                     <div className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 space-y-4">
                         <div className="space-y-4">
                             <div>
@@ -209,6 +230,26 @@ const Profile: React.FC = () => {
                                     </div>
                                 )}
                             </div>
+
+                            {detailsError && (
+                                <div className="bg-rose-50 text-rose-600 p-4 rounded-2xl text-[10px] font-black uppercase tracking-widest border border-rose-100 animate-in fade-in duration-300">
+                                    {detailsError}
+                                </div>
+                            )}
+                            {detailsSuccess && (
+                                <div className="bg-emerald-50 text-emerald-600 p-4 rounded-2xl text-[10px] font-black uppercase tracking-widest border border-emerald-100 animate-in fade-in duration-300">
+                                    {detailsSuccess}
+                                </div>
+                            )}
+
+                            <button
+                                type="button"
+                                onClick={handleSavePersonalInfo}
+                                disabled={isSavingDetails}
+                                className="w-full py-4 bg-blue-600 text-white rounded-2xl font-black uppercase text-[11px] tracking-widest shadow-lg shadow-blue-200 active:scale-95 transition-all disabled:opacity-50 mt-4"
+                            >
+                                {isSavingDetails ? 'Salvando...' : 'Salvar Dados e Endereço'}
+                            </button>
                         </div>
                     </div>
 
@@ -225,7 +266,7 @@ const Profile: React.FC = () => {
                         <div className="bg-amber-50 rounded-2xl p-4 flex gap-3 border border-amber-100">
                             <Icons.Mail className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
                             <p className="text-[10px] font-bold text-amber-600 leading-relaxed uppercase tracking-tight">
-                                Para trocar o número de WhatsApp, envie seus <span className="font-black">Nome, e-mail, número atual e novo número</span> para:
+                                Para trocar o número de WhatsApp, envie seu <span className="font-black">Nome, e-mail, número atual e novo número</span> para:
                                 <span className="font-black text-amber-700 underline block mt-1">fransoft.developer.2026@gmail.com</span>
                             </p>
                         </div>
@@ -270,29 +311,29 @@ const Profile: React.FC = () => {
                                     {showConfirmPassword ? <Icons.EyeOff className="w-5 h-5" /> : <Icons.Eye className="w-5 h-5" />}
                                 </button>
                             </div>
+
+                            {passwordError && (
+                                <div className="bg-rose-50 text-rose-600 p-4 rounded-2xl text-[10px] font-black uppercase tracking-widest border border-rose-100 animate-in fade-in duration-300">
+                                    {passwordError}
+                                </div>
+                            )}
+                            {passwordSuccess && (
+                                <div className="bg-emerald-50 text-emerald-600 p-4 rounded-2xl text-[10px] font-black uppercase tracking-widest border border-emerald-100 animate-in fade-in duration-300">
+                                    {passwordSuccess}
+                                </div>
+                            )}
+
+                            <button
+                                type="button"
+                                onClick={handleSavePassword}
+                                disabled={isSavingPassword}
+                                className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black uppercase text-[11px] tracking-widest shadow-lg shadow-indigo-200 active:scale-95 transition-all disabled:opacity-50 mt-2"
+                            >
+                                {isSavingPassword ? 'Atualizando...' : 'Alterar Senha'}
+                            </button>
                         </div>
                     </div>
-
-                    {error && (
-                        <div className="bg-rose-50 text-rose-600 p-4 rounded-2xl text-[10px] font-black uppercase tracking-widest border border-rose-100 animate-in fade-in duration-300">
-                            {error}
-                        </div>
-                    )}
-
-                    {success && (
-                        <div className="bg-emerald-50 text-emerald-600 p-4 rounded-2xl text-[10px] font-black uppercase tracking-widest border border-emerald-100 animate-in fade-in duration-300">
-                            {success}
-                        </div>
-                    )}
-
-                    <button
-                        type="submit"
-                        disabled={isSaving}
-                        className="w-full py-5 bg-indigo-600 text-white rounded-[2rem] font-black uppercase text-[11px] tracking-widest shadow-xl shadow-indigo-100 active:scale-95 transition-all disabled:opacity-50"
-                    >
-                        {isSaving ? 'Salvando...' : 'Salvar Alterações'}
-                    </button>
-                </form>
+                </div>
             </div>
         </div>
     );
