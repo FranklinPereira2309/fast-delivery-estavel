@@ -15,10 +15,11 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
     const [isLoading, setIsLoading] = useState(true);
     const [editingOrder, setEditingOrder] = useState<Order | null>(null);
     const [allProducts, setAllProducts] = useState<any[]>([]);
-    const [activeTab, setActiveTab] = useState<'active' | 'history'>('active');
+    const [activeTab, setActiveTab] = useState<'active' | 'history' | 'chat'>('active');
     const [businessSettings, setBusinessSettings] = useState<any>(null);
     const [printingOrder, setPrintingOrder] = useState<Order | null>(null);
     const [supportMessages, setSupportMessages] = useState<any[]>([]);
+    const [hasUnreadSupport, setHasUnreadSupport] = useState(false);
     const [alertConfig, setAlertConfig] = useState<{
         isOpen: boolean;
         title: string;
@@ -101,6 +102,9 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
 
         const handleNewSupportMessage = (msg: any) => {
             setSupportMessages(prev => [...prev.filter(m => m.id !== msg.id), msg]);
+            if (activeTab !== 'chat') {
+                setHasUnreadSupport(true);
+            }
             audioAlert.play();
         };
 
@@ -170,11 +174,20 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
                     >
                         Histórico
                     </button>
+                    <button
+                        onClick={() => {
+                            setActiveTab('chat');
+                            setHasUnreadSupport(false);
+                        }}
+                        className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all relative ${activeTab === 'chat' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' : 'text-slate-400 hover:bg-slate-50'} ${hasUnreadSupport ? 'animate-notify-turquoise' : ''}`}
+                    >
+                        Chat {hasUnreadSupport && <span className="absolute -top-1 -right-1 w-3 h-3 bg-rose-500 rounded-full border-2 border-white animate-pulse"></span>}
+                    </button>
                 </div>
             </div>
 
             <div className="flex flex-1 gap-6 overflow-hidden mt-6">
-                <div className="flex-1 overflow-y-auto pr-2 pb-20 no-print">
+                <div className={`flex-1 overflow-y-auto pr-2 pb-20 no-print ${activeTab === 'chat' ? 'hidden lg:block' : ''}`}>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
                         {orders.length === 0 ? (
                             <div className="col-span-full h-64 flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-3xl bg-white">
@@ -270,7 +283,7 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
                 </div>
 
                 {/* Messages Panel */}
-                <div className="w-96 bg-white rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col overflow-hidden no-print">
+                <div className={`${activeTab === 'chat' ? 'flex-1 md:w-96 flex' : 'w-96 hidden xl:flex'} bg-white rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col overflow-hidden no-print animate-in slide-in-from-right duration-500`}>
                     <div className="p-6 border-b border-slate-50 bg-slate-50/50">
                         <h2 className="font-black text-slate-800 uppercase tracking-tighter flex items-center gap-2">
                             <Icons.Message className="w-5 h-5 text-indigo-500" />
