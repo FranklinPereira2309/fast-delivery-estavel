@@ -110,10 +110,10 @@ const Home: React.FC = () => {
                 <div className="flex justify-between items-start mb-8 relative z-10">
                     <div>
                         <h1 className="text-3xl font-black text-slate-800 tracking-tighter uppercase">Delivery <span className="text-indigo-500">Fast</span></h1>
-                        <div className="flex items-center gap-2 mt-2 bg-slate-50 px-3 py-1.5 rounded-full inline-flex border border-slate-100">
+                        <div className="flex items-center gap-2 mt-2 bg-slate-50 px-3 py-1.5 rounded-full inline-flex border border-slate-100 whitespace-nowrap">
                             <div className={`w-2 h-2 rounded-full ${settings?.isManuallyClosed ? 'bg-rose-500' : 'bg-emerald-500 animate-pulse-ring'}`}></div>
-                            <span className={`text-[9px] font-black uppercase tracking-widest ${settings?.isManuallyClosed ? 'text-rose-500' : 'text-emerald-500'}`}>
-                                {settings?.isManuallyClosed ? 'Loja Fechada' : 'Aberto para Entrega'}
+                            <span className={`text-[10px] font-black uppercase tracking-widest ${settings?.isManuallyClosed ? 'text-rose-500' : 'text-emerald-500'}`}>
+                                {settings?.isManuallyClosed ? 'Delivery OFF' : 'Delivery ON'}
                             </span>
                         </div>
                     </div>
