@@ -81,7 +81,7 @@ const Checkout: React.FC = () => {
                 setAlertState(prev => ({ ...prev, isOpen: false }));
                 if (onConfirm) onConfirm();
             },
-            onCancel: onCancel || (() => setAlertState(prev => ({ ...prev, isOpen: false })))
+            onCancel: onCancel
         });
     };
 
@@ -165,7 +165,8 @@ const Checkout: React.FC = () => {
                 } finally {
                     setIsLoading(false);
                 }
-            }
+            },
+            () => setAlertState(prev => ({ ...prev, isOpen: false }))
         );
     };
 
@@ -205,7 +206,8 @@ const Checkout: React.FC = () => {
                                         clearCart();
                                         navigate('/');
                                         setAlertState(p => ({ ...p, isOpen: false }));
-                                    }
+                                    },
+                                    onCancel: () => setAlertState(p => ({ ...p, isOpen: false }))
                                 });
                             }}
                             className="p-3 bg-rose-50 backdrop-blur-md rounded-2xl text-rose-500 hover:bg-rose-100 transition-all z-10 border border-rose-100"
