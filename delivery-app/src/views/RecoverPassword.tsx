@@ -8,6 +8,7 @@ const RecoverPassword: React.FC = () => {
     const [email, setEmail] = useState('');
     const [phone, setPhone] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [alertState, setAlertState] = useState({
         isOpen: false,
@@ -126,14 +127,23 @@ const RecoverPassword: React.FC = () => {
 
                     <div className="space-y-2 pt-2 border-t border-slate-100">
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4 mt-2 block">Crie uma Nova Senha</label>
-                        <input
-                            type="password"
-                            className="w-full p-4 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-indigo-100 transition-all font-bold text-sm"
-                            placeholder="••••••••"
-                            value={password}
-                            onChange={e => setPassword(e.target.value)}
-                            required
-                        />
+                        <div className="relative">
+                            <input
+                                type={showPassword ? "text" : "password"}
+                                className="w-full p-4 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-indigo-100 transition-all font-bold text-sm pr-12"
+                                placeholder="••••••••"
+                                value={password}
+                                onChange={e => setPassword(e.target.value)}
+                                required
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-4 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-indigo-600 transition-all rounded-xl active:scale-90"
+                            >
+                                {showPassword ? <Icons.EyeOff className="w-5 h-5" /> : <Icons.Eye className="w-5 h-5" />}
+                            </button>
+                        </div>
                     </div>
 
                     <button
