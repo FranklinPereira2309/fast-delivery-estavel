@@ -212,6 +212,10 @@ class APIDBService {
   // Orders
   public async getOrders(): Promise<Order[]> { return this.request<Order[]>('/orders'); }
 
+  public async getSupportMessages(): Promise<any[]> {
+    return this.request('/support');
+  }
+
   public async validateStockForOrder(items: { productId: string, quantity: number }[]): Promise<{ valid: boolean, message?: string }> {
     const inventory = await this.getInventory();
     const products = await this.getProducts();

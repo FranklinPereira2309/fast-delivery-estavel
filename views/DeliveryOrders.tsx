@@ -273,7 +273,7 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
                 <div className="w-96 bg-white rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col overflow-hidden no-print">
                     <div className="p-6 border-b border-slate-50 bg-slate-50/50">
                         <h2 className="font-black text-slate-800 uppercase tracking-tighter flex items-center gap-2">
-                            <Icons.MessageSquare className="w-5 h-5 text-indigo-500" />
+                            <Icons.Message className="w-5 h-5 text-indigo-500" />
                             Mensagens de Clientes
                         </h2>
                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Chat do App Delivery</p>
@@ -282,7 +282,7 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
                         {supportMessages.length === 0 ? (
                             <div className="flex flex-col items-center justify-center h-full text-center p-8">
                                 <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-300 mb-4 transform rotate-12">
-                                    <Icons.MessageSquare className="w-8 h-8" />
+                                    <Icons.Message className="w-8 h-8" />
                                 </div>
                                 <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Nenhuma mensagem no momento.</p>
                             </div>
