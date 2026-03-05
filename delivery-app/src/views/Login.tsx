@@ -59,13 +59,13 @@ const Login: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 relative">
+        <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 md:p-6 relative">
 
-            <div className="w-full max-w-md bg-white p-10 rounded-[3rem] shadow-xl shadow-slate-200/50 border border-slate-100 relative">
+            <div className="w-full max-w-md bg-white p-6 md:p-10 rounded-[2.5rem] md:rounded-[3rem] shadow-xl shadow-slate-200/50 border border-slate-100 relative">
                 {/* Fechar Modal Login */}
                 <button
                     onClick={() => navigate('/')}
-                    className="absolute top-6 right-6 p-2 bg-slate-50 text-slate-400 rounded-full hover:bg-slate-100 hover:text-slate-600 transition-all active:scale-95"
+                    className="absolute top-4 right-4 md:top-6 md:right-6 p-2 bg-slate-50 text-slate-400 rounded-full hover:bg-slate-100 hover:text-slate-600 transition-all active:scale-95"
                     title="Voltar"
                 >
                     <Icons.X className="w-5 h-5" />

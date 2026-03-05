@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Order, OrderStatus, OrderStatusLabels, SaleType, Product, User } from '../types';
+import { Order, OrderStatus, OrderStatusLabels, SaleType, Product, User, BusinessSettings } from '../types';
 import { QRCodeCanvas } from 'qrcode.react';
-import { db, BusinessSettings } from '../services/db';
+import { db } from '../services/db';
 import { Icons } from '../constants';
 import CustomAlert from '../components/CustomAlert';
 

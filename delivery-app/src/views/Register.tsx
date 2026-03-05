@@ -147,16 +147,18 @@ const Register: React.FC = () => {
             <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob"></div>
             <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-rose-500 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-2000"></div>
 
-            <button
-                onClick={() => navigate('/')}
-                className="absolute top-6 right-6 lg:top-8 lg:right-8 w-12 h-12 bg-white rounded-full flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all shadow-sm z-20 border border-slate-100"
-            >
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-            </button>
+            <div className="w-full max-w-xl bg-white/80 backdrop-blur-xl rounded-[2.5rem] shadow-2xl shadow-slate-200/50 p-6 md:p-8 lg:p-12 border border-white relative z-10 my-4 md:my-8">
+                {/* Fechar Modal Register */}
+                <button
+                    onClick={() => navigate('/')}
+                    className="absolute top-4 right-4 md:top-6 md:right-6 p-2 bg-slate-50 text-slate-400 rounded-full hover:bg-slate-100 hover:text-slate-600 transition-all active:scale-95 shadow-sm z-20 border border-slate-100"
+                    title="Voltar"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
 
-            <div className="w-full max-w-xl bg-white/80 backdrop-blur-xl rounded-[2.5rem] shadow-2xl shadow-slate-200/50 p-8 lg:p-12 border border-white relative z-10 my-8">
                 <div className="flex flex-col items-center mb-10 text-center">
                     <h1 className="text-3xl lg:text-4xl font-black text-slate-800 tracking-tighter uppercase mb-2">Criar Conta</h1>
                     <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest">Faça parte do Delivery Fast</p>
