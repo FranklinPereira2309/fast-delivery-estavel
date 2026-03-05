@@ -128,7 +128,7 @@ const Checkout: React.FC = () => {
 
         showAlert(
             'Finalizar Pedido',
-            `Deseja enviar seu pedido no valor de R$ ${finalTotal.toFixed(2)} para a cozinha?`,
+            `Deseja enviar seu pedido no valor de R$ ${finalTotal.toFixed(2)}?`,
             'SUCCESS',
             async () => {
                 setIsLoading(true);
@@ -165,8 +165,7 @@ const Checkout: React.FC = () => {
                 } finally {
                     setIsLoading(false);
                 }
-            },
-            () => setAlertState(prev => ({ ...prev, isOpen: false }))
+            }
         );
     };
 
