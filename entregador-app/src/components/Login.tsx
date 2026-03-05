@@ -208,29 +208,52 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                         </form>
                     )}
 
-                    {view === 'SHOW_CODE' && loggedInUser && (
+                    {view === 'SHOW_CODE' && (
                         <div className="space-y-8 animate-in zoom-in duration-500">
-                            <div className="text-center">
-                                <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <Icons.Key className="w-8 h-8" />
-                                </div>
-                                <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Segurança Concluída!</h3>
-                                <p className="text-[10px] text-slate-400 font-bold mt-2 leading-relaxed uppercase">
-                                    Guarde seu código de recuperação em um local seguro. Você precisará dele se esquecer sua senha futuramente.
-                                </p>
-                            </div>
+                            {loggedInUser ? (
+                                <>
+                                    <div className="text-center">
+                                        <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                                            <Icons.Key className="w-8 h-8" />
+                                        </div>
+                                        <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Segurança Concluída!</h3>
+                                        <p className="text-[10px] text-slate-400 font-bold mt-2 leading-relaxed uppercase">
+                                            Guarde seu código de recuperação em um local seguro. Você precisará dele se esquecer sua senha futuramente.
+                                        </p>
+                                    </div>
 
-                            <div className="p-8 bg-slate-50 rounded-[2rem] border-2 border-dashed border-slate-200 flex flex-col items-center">
-                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] mb-4">Seu Código Pessoal:</span>
-                                <span className="text-4xl font-black text-slate-900 tracking-[0.2em] italic">{loggedInUser.recoveryCode}</span>
-                            </div>
+                                    <div className="p-8 bg-slate-50 rounded-[2rem] border-2 border-dashed border-slate-200 flex flex-col items-center">
+                                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] mb-4">Seu Código Pessoal:</span>
+                                        <span className="text-4xl font-black text-slate-900 tracking-[0.2em] italic">{loggedInUser.recoveryCode}</span>
+                                    </div>
 
-                            <button
-                                onClick={() => onLoginSuccess(loggedInUser)}
-                                className="w-full py-5 bg-slate-900 text-white rounded-[2rem] font-black uppercase text-[11px] tracking-[0.2em] shadow-2xl active:scale-[0.98] transition-all"
-                            >
-                                Entrar no Painel
-                            </button>
+                                    <button
+                                        onClick={() => onLoginSuccess(loggedInUser)}
+                                        className="w-full py-5 bg-slate-900 text-white rounded-[2rem] font-black uppercase text-[11px] tracking-[0.2em] shadow-2xl active:scale-[0.98] transition-all"
+                                    >
+                                        Entrar no Painel
+                                    </button>
+                                </>
+                            ) : (
+                                <>
+                                    <div className="text-center">
+                                        <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                                            <Icons.Key className="w-8 h-8" />
+                                        </div>
+                                        <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Senha Alterada!</h3>
+                                        <p className="text-[10px] text-slate-400 font-bold mt-2 leading-relaxed uppercase">
+                                            Sua senha foi redefinida com sucesso. Por favor, faça login agora com sua nova senha corporativa.
+                                        </p>
+                                    </div>
+
+                                    <button
+                                        onClick={() => setView('LOGIN')}
+                                        className="w-full py-5 bg-slate-900 text-white rounded-[2rem] font-black uppercase text-[11px] tracking-[0.2em] shadow-2xl active:scale-[0.98] transition-all"
+                                    >
+                                        Ir para o Login
+                                    </button>
+                                </>
+                            )}
                         </div>
                     )}
                 </div>
