@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
+import { socket } from '../services/socket';
 import type { Order } from '../types';
 import { Icons } from '../constants';
 
@@ -34,6 +35,20 @@ const OrderHistory: React.FC = () => {
             }
         };
         fetchData();
+
+        const handleOrderUpdate = () => {
+            fetchData();
+        };
+
+        socket.on('orderUpdated', handleOrderUpdate);
+        socket.on('statusUpdated', handleOrderUpdate);
+        socket.on('newOrder', handleOrderUpdate);
+
+        return () => {
+            socket.off('orderUpdated', handleOrderUpdate);
+            socket.off('statusUpdated', handleOrderUpdate);
+            socket.off('newOrder', handleOrderUpdate);
+        };
     }, []);
 
     const getStatusStyle = (status: string) => {
