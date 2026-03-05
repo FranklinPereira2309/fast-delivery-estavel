@@ -153,6 +153,14 @@ model RecipeItem {
   wasteFactor     Float
 }
 
+model SupportMessage {
+  id        String   @id @default(uuid())
+  userName  String?
+  message   String
+  createdAt DateTime @default(now())
+  isRead    Boolean  @default(false)
+}
+
 model Order {
   id                  String           @id @default(uuid())
   clientId            String

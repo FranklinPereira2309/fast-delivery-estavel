@@ -18,6 +18,7 @@ const Home: React.FC = () => {
     const [clientName, setClientName] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
 
+
     useEffect(() => {
         const clientStr = localStorage.getItem('delivery_app_client');
         setIsLoggedIn(!!clientStr);
@@ -123,9 +124,6 @@ const Home: React.FC = () => {
                                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Olá,</span>
                                 <span className="text-xs font-bold text-slate-700 max-w-[100px] truncate">{clientName.split(' ')[0]}</span>
                             </div>
-                            <Link to="/history" className="w-11 h-11 bg-white rounded-2xl flex items-center justify-center text-slate-500 hover:text-indigo-600 hover:bg-slate-50 transition-all shadow-sm border border-slate-100 active:scale-95">
-                                <Icons.Clipboard className="w-5 h-5" />
-                            </Link>
                             <Link to="/profile" className="w-11 h-11 bg-white rounded-2xl flex items-center justify-center text-slate-500 hover:text-indigo-600 hover:bg-slate-50 transition-all shadow-sm border border-slate-100 active:scale-95">
                                 <Icons.User className="w-5 h-5" />
                             </Link>

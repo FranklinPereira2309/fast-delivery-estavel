@@ -19,8 +19,9 @@ export const openCashSession = async (req: Request, res: Response) => {
         return res.status(400).json({ message: 'Já existe um caixa aberto.' });
     }
 
-    // Clear all customer feedbacks/messages when opening the daily cash session
+    // Clear all customer feedbacks/messages/support when opening the daily cash session
     await prisma.feedback.deleteMany();
+    await prisma.supportMessage.deleteMany();
 
     const session = await prisma.cashSession.create({
         data: {

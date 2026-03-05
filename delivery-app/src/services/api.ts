@@ -96,6 +96,13 @@ class DeliveryApiService {
         });
     }
 
+    async sendSupportMessage(userName: string | null, message: string) {
+        return this.request('/support', {
+            method: 'POST',
+            body: JSON.stringify({ userName, message }),
+        });
+    }
+
     logout() {
         localStorage.removeItem('delivery_app_token');
         localStorage.removeItem('delivery_app_client');

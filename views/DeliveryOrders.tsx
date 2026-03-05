@@ -18,6 +18,7 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
     const [activeTab, setActiveTab] = useState<'active' | 'history'>('active');
     const [businessSettings, setBusinessSettings] = useState<any>(null);
     const [printingOrder, setPrintingOrder] = useState<Order | null>(null);
+    const [supportMessages, setSupportMessages] = useState<any[]>([]);
     const [alertConfig, setAlertConfig] = useState<{
         isOpen: boolean;
         title: string;
@@ -68,8 +69,18 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
         setIsLoading(false);
     };
 
+    const fetchSupportMessages = async () => {
+        try {
+            const msgs = await db.getSupportMessages();
+            setSupportMessages(msgs);
+        } catch (e) {
+            console.error("Error fetching support messages", e);
+        }
+    };
+
     useEffect(() => {
         fetchOrders();
+        fetchSupportMessages();
     }, [activeTab]);
 
     useEffect(() => {
@@ -84,14 +95,25 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
             }
         };
 
+        const handleOrderChange = () => {
+            fetchOrders();
+        };
+
+        const handleNewSupportMessage = (msg: any) => {
+            setSupportMessages(prev => [...prev.filter(m => m.id !== msg.id), msg]);
+            audioAlert.play();
+        };
+
         socket.on('ordersUpdated', handleOrdersUpdate);
         socket.on('newOrder', handleNewOrder);
         socket.on('orderStatusChanged', handleOrdersUpdate);
+        socket.on('new_support_message', handleNewSupportMessage);
 
         return () => {
             socket.off('ordersUpdated', handleOrdersUpdate);
             socket.off('newOrder', handleNewOrder);
             socket.off('orderStatusChanged', handleOrdersUpdate);
+            socket.off('new_support_message', handleNewSupportMessage);
         };
     }, []);
 
@@ -151,97 +173,139 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 flex-1 overflow-y-auto pr-2 pb-20 no-print">
-                {orders.length === 0 ? (
-                    <div className="col-span-full h-64 flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-3xl bg-white">
-                        <Icons.Smartphone className="w-12 h-12 text-slate-300 mb-4" />
-                        <p className="text-slate-500 font-medium">Nenhum pedido pendente do App Delivery.</p>
-                    </div>
-                ) : (
-                    orders.map(order => (
-                        <div key={order.id} className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 flex flex-col hover:shadow-xl hover:shadow-indigo-100/20 transition-all relative h-fit group">
-                            <div className="flex flex-wrap justify-between items-start mb-2 gap-y-3">
-                                <div className="flex flex-wrap items-center gap-3">
-                                    <h3 className="font-black text-2xl text-slate-800 tracking-tighter">#{order.id.slice(-4).toUpperCase()}</h3>
-                                </div>
-                                <div className="text-left sm:text-right w-full sm:w-auto mt-2 sm:mt-0">
-                                    <p className="text-xl font-black text-slate-800 tracking-tighter">R$ {order.total.toFixed(2)}</p>
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest break-words">{paymentLabels[order.paymentMethod || ''] || order.paymentMethod || 'Não Informado'}</p>
-                                </div>
+            <div className="flex flex-1 gap-6 overflow-hidden mt-6">
+                <div className="flex-1 overflow-y-auto pr-2 pb-20 no-print">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                        {orders.length === 0 ? (
+                            <div className="col-span-full h-64 flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-3xl bg-white">
+                                <Icons.Smartphone className="w-12 h-12 text-slate-300 mb-4" />
+                                <p className="text-slate-500 font-medium">Nenhum pedido pendente do App Delivery.</p>
                             </div>
-
-                            <div className="mb-6">
-                                <div className={`text-[10px] font-black px-3 py-1 rounded-full w-fit uppercase tracking-widest ${order.status === 'PENDING' ? 'bg-amber-100 text-amber-600' :
-                                    order.status === 'CANCELLED' ? 'bg-rose-100 text-rose-600' : 'bg-green-100 text-green-600'
-                                    }`}>
-                                    {OrderStatusLabels[order.status] || order.status}
-                                </div>
-                            </div>
-
-                            <div className="space-y-4 mb-6">
-                                <div>
-                                    <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-1">Cliente</p>
-                                    <p className="font-bold text-slate-700 leading-tight break-words">{order.clientName}</p>
-                                    {order.clientPhone && <p className="text-xs font-bold text-slate-400 mt-0.5">{order.clientPhone}</p>}
-                                </div>
-                                {order.clientAddress && (
-                                    <div>
-                                        <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-1">Endereço</p>
-                                        <p className="text-xs font-bold text-slate-500 leading-relaxed break-words">{order.clientAddress}</p>
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="bg-slate-50 rounded-[2rem] p-5 mb-6 flex-1 min-h-[100px]">
-                                <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-3">Itens</p>
-                                <div className="space-y-2 max-h-40 overflow-y-auto pr-1 custom-scrollbar">
-                                    {(order.items || []).map((item, idx) => (
-                                        <div key={idx} className="flex gap-2 text-sm">
-                                            <span className="text-indigo-600 font-black">{item.quantity}x</span>
-                                            <span className="font-bold text-slate-600 leading-tight">
-                                                {item.product?.name || allProducts.find(p => p.id === item.productId)?.name || 'Produto'}
-                                            </span>
+                        ) : (
+                            orders.map(order => (
+                                <div key={order.id} className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 flex flex-col hover:shadow-xl hover:shadow-indigo-100/20 transition-all relative h-fit group">
+                                    <div className="flex flex-wrap justify-between items-start mb-2 gap-y-3">
+                                        <div className="flex flex-wrap items-center gap-3">
+                                            <h3 className="font-black text-2xl text-slate-800 tracking-tighter">#{order.id.slice(-4).toUpperCase()}</h3>
                                         </div>
-                                    ))}
-                                    {(!order.items || order.items.length === 0) && (
-                                        <p className="text-[10px] text-slate-400 italic">Nenhum item</p>
-                                    )}
-                                </div>
-                            </div>
+                                        <div className="text-left sm:text-right w-full sm:w-auto mt-2 sm:mt-0">
+                                            <p className="text-xl font-black text-slate-800 tracking-tighter">R$ {order.total.toFixed(2)}</p>
+                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest break-words">{paymentLabels[order.paymentMethod || ''] || order.paymentMethod || 'Não Informado'}</p>
+                                        </div>
+                                    </div>
 
-                            <div className="flex gap-3 mt-auto pt-4 border-t border-slate-50">
-                                {order.status === 'PENDING' ? (
-                                    <>
-                                        <button onClick={() => approveOrder(order.id)} className="flex-1 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest transition-all shadow-lg shadow-indigo-100 flex justify-center items-center gap-2">
-                                            Aceitar
-                                        </button>
-                                        <button onClick={() => handlePrint(order)} className="w-12 h-12 bg-white border border-slate-200 text-slate-400 hover:text-indigo-600 rounded-2xl flex items-center justify-center transition-all shadow-sm">
-                                            <Icons.Print className="w-5 h-5" />
-                                        </button>
-                                        <button onClick={() => setEditingOrder(order)} className="w-12 h-12 bg-white border border-slate-200 text-slate-400 hover:text-indigo-600 rounded-2xl flex items-center justify-center transition-all">
-                                            <Icons.Edit className="w-5 h-5" />
-                                        </button>
-                                        <button onClick={() => rejectOrder(order.id)} className="w-12 h-12 bg-white border border-slate-200 text-rose-400 hover:bg-rose-50 rounded-2xl flex items-center justify-center transition-all">
-                                            <Icons.Delete className="w-5 h-5" />
-                                        </button>
-                                    </>
-                                ) : (
-                                    <>
-                                        <div className="flex-1 py-4 bg-slate-50 text-slate-400 rounded-2xl font-black uppercase text-[10px] tracking-widest flex items-center justify-center">
+                                    <div className="mb-6">
+                                        <div className={`text-[10px] font-black px-3 py-1 rounded-full w-fit uppercase tracking-widest ${order.status === 'PENDING' ? 'bg-amber-100 text-amber-600' :
+                                            order.status === 'CANCELLED' ? 'bg-rose-100 text-rose-600' : 'bg-green-100 text-green-600'
+                                            }`}>
                                             {OrderStatusLabels[order.status] || order.status}
                                         </div>
-                                        <button
-                                            onClick={() => handlePrint(order)}
-                                            className="flex-1 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest transition-all shadow-lg shadow-indigo-100 flex items-center justify-center gap-2"
-                                        >
-                                            <Icons.Print className="w-4 h-4" /> Cupom
-                                        </button>
-                                    </>
-                                )}
+                                    </div>
+
+                                    <div className="space-y-4 mb-6">
+                                        <div>
+                                            <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-1">Cliente</p>
+                                            <p className="font-bold text-slate-700 leading-tight break-words">{order.clientName}</p>
+                                            {order.clientPhone && <p className="text-xs font-bold text-slate-400 mt-0.5">{order.clientPhone}</p>}
+                                        </div>
+                                        {order.clientAddress && (
+                                            <div>
+                                                <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-1">Endereço</p>
+                                                <p className="text-xs font-bold text-slate-500 leading-relaxed break-words">{order.clientAddress}</p>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div className="bg-slate-50 rounded-[2rem] p-5 mb-6 flex-1 min-h-[100px]">
+                                        <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-3">Itens</p>
+                                        <div className="space-y-2 max-h-40 overflow-y-auto pr-1 custom-scrollbar">
+                                            {(order.items || []).map((item, idx) => (
+                                                <div key={idx} className="flex gap-2 text-sm">
+                                                    <span className="text-indigo-600 font-black">{item.quantity}x</span>
+                                                    <span className="font-bold text-slate-600 leading-tight">
+                                                        {item.product?.name || allProducts.find(p => p.id === item.productId)?.name || 'Produto'}
+                                                    </span>
+                                                </div>
+                                            ))}
+                                            {(!order.items || order.items.length === 0) && (
+                                                <p className="text-[10px] text-slate-400 italic">Nenhum item</p>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <div className="flex gap-3 mt-auto pt-4 border-t border-slate-50">
+                                        {order.status === 'PENDING' ? (
+                                            <>
+                                                <button onClick={() => approveOrder(order.id)} className="flex-1 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest transition-all shadow-lg shadow-indigo-100 flex justify-center items-center gap-2">
+                                                    Aceitar
+                                                </button>
+                                                <button onClick={() => handlePrint(order)} className="w-12 h-12 bg-white border border-slate-200 text-slate-400 hover:text-indigo-600 rounded-2xl flex items-center justify-center transition-all shadow-sm">
+                                                    <Icons.Print className="w-5 h-5" />
+                                                </button>
+                                                <button onClick={() => setEditingOrder(order)} className="w-12 h-12 bg-white border border-slate-200 text-slate-400 hover:text-indigo-600 rounded-2xl flex items-center justify-center transition-all">
+                                                    <Icons.Edit className="w-5 h-5" />
+                                                </button>
+                                                <button onClick={() => rejectOrder(order.id)} className="w-12 h-12 bg-white border border-slate-200 text-rose-400 hover:bg-rose-50 rounded-2xl flex items-center justify-center transition-all">
+                                                    <Icons.Delete className="w-5 h-5" />
+                                                </button>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <div className="flex-1 py-4 bg-slate-50 text-slate-400 rounded-2xl font-black uppercase text-[10px] tracking-widest flex items-center justify-center">
+                                                    {OrderStatusLabels[order.status] || order.status}
+                                                </div>
+                                                <button
+                                                    onClick={() => handlePrint(order)}
+                                                    className="flex-1 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest transition-all shadow-lg shadow-indigo-100 flex items-center justify-center gap-2"
+                                                >
+                                                    <Icons.Print className="w-4 h-4" /> Cupom
+                                                </button>
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
+                            ))
+                        )}
+                    </div>
+                </div>
+
+                {/* Messages Panel */}
+                <div className="w-96 bg-white rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col overflow-hidden no-print">
+                    <div className="p-6 border-b border-slate-50 bg-slate-50/50">
+                        <h2 className="font-black text-slate-800 uppercase tracking-tighter flex items-center gap-2">
+                            <Icons.MessageSquare className="w-5 h-5 text-indigo-500" />
+                            Mensagens de Clientes
+                        </h2>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Chat do App Delivery</p>
+                    </div>
+                    <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
+                        {supportMessages.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center h-full text-center p-8">
+                                <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-300 mb-4 transform rotate-12">
+                                    <Icons.MessageSquare className="w-8 h-8" />
+                                </div>
+                                <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Nenhuma mensagem no momento.</p>
                             </div>
-                        </div>
-                    ))
-                )}
+                        ) : (
+                            supportMessages.map(msg => (
+                                <div key={msg.id} className="bg-slate-50 rounded-3xl p-5 border border-slate-100 animate-in slide-in-from-right duration-300">
+                                    <div className="flex justify-between items-start mb-2">
+                                        <span className="text-[10px] font-black text-indigo-500 uppercase tracking-widest bg-indigo-50 px-2 py-0.5 rounded-md">
+                                            {msg.userName || 'Anônimo'}
+                                        </span>
+                                        <span className="text-[9px] font-bold text-slate-400">
+                                            {new Date(msg.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                                        </span>
+                                    </div>
+                                    <p className="text-sm font-bold text-slate-700 leading-relaxed break-words">{msg.message}</p>
+                                </div>
+                            ))
+                        )}
+                    </div>
+                    <div className="p-4 bg-slate-50 border-t border-slate-100">
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">As mensagens são limpas diariamente na abertura do caixa.</p>
+                    </div>
+                </div>
             </div>
 
             {printingOrder && businessSettings && (

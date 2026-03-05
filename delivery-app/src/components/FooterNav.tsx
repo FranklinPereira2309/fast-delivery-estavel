@@ -1,0 +1,46 @@
+import React from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { Icons } from '../constants';
+
+interface FooterNavProps {
+    onOpenChat: () => void;
+}
+
+const FooterNav: React.FC<FooterNavProps> = ({ onOpenChat }) => {
+    const navigate = useNavigate();
+    const location = useLocation();
+
+    const isActive = (path: string) => location.pathname === path;
+
+    return (
+        <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-slate-100 px-6 py-4 flex justify-between items-center z-50 rounded-t-[2.5rem] shadow-[0_-10px_25px_-5px_rgba(0,0,0,0.05)]">
+            <button
+                onClick={() => navigate('/')}
+                className={`flex flex-col items-center gap-1 transition-all ${isActive('/') ? 'text-indigo-600 scale-110' : 'text-slate-400'}`}
+            >
+                <Icons.Home className="w-6 h-6" />
+                <span className="text-[10px] font-black uppercase tracking-widest">Início</span>
+            </button>
+
+            <button
+                onClick={onOpenChat}
+                className="flex flex-col items-center gap-1 text-slate-400 hover:text-indigo-600 transition-all active:scale-95"
+            >
+                <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-200 -mt-8 border-4 border-white">
+                    <Icons.MessageSquare className="w-6 h-6" />
+                </div>
+                <span className="text-[10px] font-black uppercase tracking-widest mt-1">Mensagem</span>
+            </button>
+
+            <button
+                onClick={() => navigate('/history')}
+                className={`flex flex-col items-center gap-1 transition-all ${isActive('/history') ? 'text-indigo-600 scale-110' : 'text-slate-400'}`}
+            >
+                <Icons.Clipboard className="w-6 h-6" />
+                <span className="text-[10px] font-black uppercase tracking-widest">Pedidos</span>
+            </button>
+        </div>
+    );
+};
+
+export default FooterNav;
