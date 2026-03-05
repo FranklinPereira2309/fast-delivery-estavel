@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import prisma from '../prisma';
+import bcrypt from 'bcryptjs';
 
 export const getDrivers = async (req: Request, res: Response) => {
     const drivers = await prisma.deliveryDriver.findMany();
@@ -69,4 +70,54 @@ export const deleteDriver = async (req: Request, res: Response) => {
 export const getRejections = async (req: Request, res: Response) => {
     const rejections = await prisma.orderRejection.findMany();
     res.json(rejections);
+};
+
+export const toggleDriverStatus = async (req: Request, res: Response) => {
+    const { id, active } = req.body;
+    try {
+        await prisma.deliveryDriver.update({
+            where: { id },
+            data: { active }
+        });
+        res.json({ message: 'Status alterado' });
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+export const resetDriver = async (req: Request, res: Response) => {
+    const { id } = req.body;
+    try {
+        const driver = await prisma.deliveryDriver.findUnique({ where: { id } });
+        if (!driver || !driver.email) {
+            return res.status(404).json({ error: 'Entregador ou e-mail não encontrado' });
+        }
+
+        // Find associated user
+        const user = await prisma.user.findFirst({
+            where: {
+                email: {
+                    equals: driver.email.toLowerCase(),
+                    mode: 'insensitive'
+                }
+            }
+        });
+
+        if (user) {
+            const hashedPassword = await bcrypt.hash('123', 10);
+            await prisma.user.update({
+                where: { id: user.id },
+                data: {
+                    password: hashedPassword,
+                    mustChangePassword: true,
+                    recoveryCode: Math.random().toString(36).substring(2, 8).toUpperCase()
+                }
+            });
+            res.json({ message: 'Segurança resetada' });
+        } else {
+            res.status(404).json({ error: 'Conta de usuário não vinculada ao e-mail do entregador' });
+        }
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
 };

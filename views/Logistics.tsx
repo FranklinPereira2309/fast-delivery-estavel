@@ -108,16 +108,30 @@ const FleetManagement: React.FC<{ refreshLogistics: () => void }> = ({ refreshLo
     setIsModalOpen(false);
   };
 
-  const deleteDriver = async (id: string) => {
+  const handleToggleStatus = async (driver: DeliveryDriver) => {
+    const action = driver.active ? 'inativar' : 'ativar';
     setAlertConfig({
       isOpen: true,
-      title: 'REMOVER ENTREGADOR',
-      message: 'Deseja remover este entregador da frota ativa? Esta ação não pode ser desfeita.',
-      type: 'DANGER',
+      title: `${action.toUpperCase()} ENTREGADOR`,
+      message: `Tem certeza que deseja ${action} o acesso de ${driver.name}?`,
+      type: driver.active ? 'DANGER' : 'INFO',
       onConfirm: async () => {
-        await db.deleteDriver(id);
+        await db.toggleDriverStatus(driver.id, !driver.active);
         refresh();
         refreshLogistics();
+        setAlertConfig(prev => ({ ...prev, isOpen: false }));
+      }
+    });
+  };
+
+  const handleResetDriver = async (driver: DeliveryDriver) => {
+    setAlertConfig({
+      isOpen: true,
+      title: 'RESET DE SEGURANÇA',
+      message: `A senha de ${driver.name} será resetada para '123' e um novo código de recuperação será gerado. Prosseguir?`,
+      type: 'DANGER',
+      onConfirm: async () => {
+        await db.resetDriver(driver.id);
         setAlertConfig(prev => ({ ...prev, isOpen: false }));
       }
     });
@@ -142,22 +156,47 @@ const FleetManagement: React.FC<{ refreshLogistics: () => void }> = ({ refreshLo
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {drivers.map(driver => (
-          <div key={driver.id} className="bg-white p-6 rounded-[2rem] border border-slate-100 group hover:shadow-xl transition-all relative overflow-hidden">
+          <div key={driver.id} className={`bg-white p-6 rounded-[2.5rem] border border-slate-100 flex flex-col group hover:shadow-xl transition-all relative overflow-hidden ${!driver.active ? 'opacity-50 grayscale' : ''}`}>
             <div className="flex items-center gap-4 mb-4">
-              <div className="w-12 h-12 bg-slate-900 text-white rounded-2xl flex items-center justify-center font-black uppercase tracking-widest text-sm">{driver.name.substring(0, 2)}</div>
+              <div className="w-12 h-12 bg-slate-900 text-white rounded-2xl flex items-center justify-center font-black uppercase tracking-widest text-sm relative">
+                {driver.name.substring(0, 2)}
+                {!driver.active && <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-white"></div>}
+              </div>
               <div className="flex-1 min-w-0">
-                <p className="font-black text-slate-800 uppercase text-xs truncate">{driver.name} {driver.vehicleType === 'Bicicleta' && '🚲'}</p>
-                <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">{driver.vehicleBrand} {driver.vehicleModel}</p>
+                <div className="flex items-center gap-2">
+                  <p className="font-black text-slate-800 uppercase text-xs truncate">{driver.name} {driver.vehicleType === 'Bicicleta' && '🚲'}</p>
+                  {!driver.active && <span className="text-[7px] bg-red-100 text-red-600 font-black px-1.5 py-0.5 rounded-full uppercase tracking-widest shrink-0">Inativo</span>}
+                </div>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{driver.vehicleBrand} {driver.vehicleModel}</p>
               </div>
             </div>
             <div className="flex justify-between items-center pt-4 border-t border-slate-50">
               <div className="flex flex-col">
-                <span className="text-[8px] font-black text-slate-300 uppercase tracking-[0.2em] mb-1">Identificação / Placa</span>
-                <span className="font-mono text-[10px] font-black text-slate-600 uppercase">{driver.vehiclePlate || 'N/A'}</span>
+                <span className="text-[8px] font-black text-slate-300 uppercase tracking-[0.2em] mb-1">Placa / Whats</span>
+                <span className="font-mono text-[10px] font-black text-slate-600 uppercase">{driver.vehiclePlate === 'N/A' ? driver.phone : driver.vehiclePlate}</span>
               </div>
-              <div className="flex gap-1">
-                <button onClick={() => openModal(driver)} className="p-2 text-slate-200 hover:text-blue-500 transition-all"><Icons.Edit /></button>
-                <button onClick={() => deleteDriver(driver.id)} className="p-2 text-slate-200 hover:text-red-500 transition-all"><Icons.Delete /></button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => handleResetDriver(driver)}
+                  title="Resetar Segurança"
+                  className="p-3 bg-amber-50 text-amber-600 rounded-xl hover:bg-amber-600 hover:text-white transition-all outline-none"
+                >
+                  <Icons.Clock size={16} />
+                </button>
+                <button
+                  onClick={() => openModal(driver)}
+                  title="Editar Dados"
+                  className="p-3 bg-slate-50 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition-all outline-none"
+                >
+                  <Icons.Edit size={16} />
+                </button>
+                <button
+                  onClick={() => handleToggleStatus(driver)}
+                  title={driver.active ? 'Inativar Entregador' : 'Ativar Entregador'}
+                  className={`p-3 rounded-xl transition-all outline-none ${driver.active ? 'bg-red-50 text-red-600 hover:bg-red-600 hover:text-white' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white'}`}
+                >
+                  {driver.active ? <Icons.Delete size={16} /> : <Icons.User size={16} />}
+                </button>
               </div>
             </div>
           </div>
@@ -172,9 +211,14 @@ const FleetManagement: React.FC<{ refreshLogistics: () => void }> = ({ refreshLo
       {isModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
           <div className="bg-white rounded-[3rem] shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in duration-200">
-            <div className="p-8 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
-              <h3 className="text-2xl font-black text-slate-800 uppercase tracking-tighter">{editingDriver ? 'Editar Entregador' : 'Novo Entregador'}</h3>
-              <button onClick={() => setIsModalOpen(false)} className="p-3 text-slate-400 hover:text-slate-600 transition-all"><Icons.Delete /></button>
+            <div className="p-10 pb-0 flex justify-between items-start">
+              <div>
+                <h3 className="text-2xl font-black text-slate-800 uppercase tracking-tighter mb-1">{editingDriver ? 'Editar Entregador' : 'Novo Entregador'}</h3>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Base de entregadores cadastrados no sistema</p>
+              </div>
+              <button onClick={() => setIsModalOpen(false)} className="p-3 bg-slate-50 text-slate-400 rounded-2xl hover:text-red-500 transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+              </button>
             </div>
             <form onSubmit={saveDriver} className="p-10 space-y-8">
               <div className="grid grid-cols-2 gap-6">

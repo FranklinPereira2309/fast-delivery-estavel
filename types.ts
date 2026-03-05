@@ -217,6 +217,7 @@ export interface DeliveryDriver {
   vehicleBrand: string;
   vehicleType: 'Moto' | 'Carro' | 'Bicicleta';
   status: 'AVAILABLE' | 'BUSY' | 'OFFLINE';
+  active: boolean;
 }
 
 export interface InventoryMovement {

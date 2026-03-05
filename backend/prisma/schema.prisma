@@ -273,6 +273,7 @@ model DeliveryDriver {
   vehicleBrand String
   vehicleType  VehicleType
   status       DriverStatus     @default(AVAILABLE)
+  active       Boolean          @default(true)
   orders       Order[]
   rejections   OrderRejection[]
 }

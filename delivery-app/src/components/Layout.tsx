@@ -176,7 +176,6 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                     title={chatAlert.title}
                     message={chatAlert.message}
                     onConfirm={() => setChatAlert(null)}
-                    onCancel={() => setChatAlert(null)}
                 />
             )}
         </div>

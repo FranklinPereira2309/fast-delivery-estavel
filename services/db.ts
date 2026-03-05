@@ -175,6 +175,14 @@ class APIDBService {
     await this.logAction(this.getCurrentSession()?.user || null, 'SYSTEM_DELETE', `Driver deletado: ${id}`);
     return resp;
   }
+  public async toggleDriverStatus(id: string, active: boolean) {
+    await this.request('/drivers/toggle-status', { method: 'POST', body: JSON.stringify({ id, active }) });
+    await this.logAction(this.getCurrentSession()?.user || null, 'SYSTEM_UPDATE', `Status do entregador ${id} alterado para ${active ? 'Ativo' : 'Inativo'}.`);
+  }
+  public async resetDriver(id: string) {
+    await this.request('/drivers/reset', { method: 'POST', body: JSON.stringify({ id }) });
+    await this.logAction(this.getCurrentSession()?.user || null, 'SYSTEM_UPDATE', `Segurança do entregador ${id} resetada.`);
+  }
 
   // Inventory
   public async getInventory(): Promise<InventoryItem[]> { return this.request<InventoryItem[]>('/inventory'); }
