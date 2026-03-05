@@ -13,7 +13,6 @@ const Home: React.FC = () => {
     const [selectedCategory, setSelectedCategory] = useState('Todos');
     const [settings, setSettings] = useState<BusinessSettings | null>(null);
     const [isLoading, setIsLoading] = useState(true);
-    const [isClosingSoon, setIsClosingSoon] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [clientName, setClientName] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
@@ -40,29 +39,6 @@ const Home: React.FC = () => {
                 const cats = Array.from(new Set(p.map((prod: Product) => prod.category)));
                 setCategories(['Todos', ...cats]);
                 setSettings(s as any);
-
-                // Check if closing soon (within 30 mins)
-                if (s.operatingHours && !s.isManuallyClosed) {
-                    try {
-                        const hours = JSON.parse(s.operatingHours);
-                        const now = new Date();
-                        const day = now.getDay();
-                        const config = hours.find((h: any) => h.dayOfWeek === day);
-
-                        if (config && config.isOpen) {
-                            const [closeH, closeM] = config.closeTime.split(':').map(Number);
-                            const closeDate = new Date();
-                            closeDate.setHours(closeH, closeM, 0);
-
-                            const diffMs = closeDate.getTime() - now.getTime();
-                            const diffMins = diffMs / (1000 * 60);
-
-                            setIsClosingSoon(diffMins > 0 && diffMins <= 30);
-                        }
-                    } catch (e) {
-                        console.error("Error parsing operating hours:", e);
-                    }
-                }
             } catch (e) {
                 console.error(e);
             } finally {
@@ -159,15 +135,6 @@ const Home: React.FC = () => {
                 </div>
             </div>
 
-            {/* Banner de Status da Loja (Fixado ao topo no scroll) */}
-            {(settings?.isManuallyClosed || isClosingSoon) && (
-                <div className={`text-center py-2 text-[10px] font-black uppercase tracking-widest text-white px-4 sticky top-0 z-50 animate-in slide-in-from-top duration-300 ${settings?.isManuallyClosed ? 'bg-rose-600/90 backdrop-blur-md' : 'bg-orange-500/90 backdrop-blur-md'}`}>
-                    {settings?.isManuallyClosed
-                        ? 'Estamos fechados no momento. Retornaremos em breve!'
-                        : 'Atenção: A loja fechará em menos de 30 minutos!'
-                    }
-                </div>
-            )}
 
             {/* Categories */}
             <div className="flex gap-3 overflow-x-auto p-6 no-scrollbar -mt-4">

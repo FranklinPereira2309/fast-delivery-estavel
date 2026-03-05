@@ -16,6 +16,62 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [isSendingSupport, setIsSendingSupport] = useState(false);
     const [chatAlert, setChatAlert] = useState<{ type: 'SUCCESS' | 'DANGER' | 'INFO', title: string, message: string } | null>(null);
 
+    // Business Status & Countdown
+    const [isClosingSoon, setIsClosingSoon] = useState(false);
+    const [countdown, setCountdown] = useState<string>('');
+    const [settings, setSettings] = useState<any>(null);
+
+    React.useEffect(() => {
+        const updateCountdown = (s: any) => {
+            if (s.operatingHours && !s.isManuallyClosed) {
+                try {
+                    const hours = JSON.parse(s.operatingHours);
+                    const now = new Date();
+                    const day = now.getDay();
+                    const config = hours.find((h: any) => h.dayOfWeek === day);
+
+                    if (config && config.isOpen) {
+                        const [closeH, closeM] = config.closeTime.split(':').map(Number);
+                        const closeDate = new Date();
+                        closeDate.setHours(closeH, closeM, 0);
+
+                        const diffMs = closeDate.getTime() - now.getTime();
+                        if (diffMs > 0 && diffMs <= 30 * 60 * 1000) {
+                            setIsClosingSoon(true);
+                            const mins = Math.floor(diffMs / 60000);
+                            const secs = Math.floor((diffMs % 60000) / 1000);
+                            setCountdown(`${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`);
+                        } else {
+                            setIsClosingSoon(false);
+                        }
+                    } else {
+                        setIsClosingSoon(false);
+                    }
+                } catch (e) {
+                    console.error("Error parsing operating hours:", e);
+                }
+            }
+        };
+
+        let interval: any;
+
+        const fetchSettings = async () => {
+            try {
+                const s = await api.getSettings();
+                setSettings(s);
+                updateCountdown(s);
+                interval = setInterval(() => updateCountdown(s), 1000);
+            } catch (err) {
+                console.error("Error fetching settings in Layout:", err);
+            }
+        };
+        fetchSettings();
+
+        return () => {
+            if (interval) clearInterval(interval);
+        };
+    }, []);
+
     const handleSendSupport = async () => {
         if (!supportMsg.trim()) {
             setChatAlert({ type: 'INFO', title: 'Atenção', message: 'Por favor, preencha sua solicitação.' });
@@ -39,6 +95,16 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
     return (
         <div className={`min-h-screen bg-slate-50 ${shouldShowFooter ? 'pb-28' : ''}`}>
+            {/* Banner de Status da Loja (Global) */}
+            {(settings?.isManuallyClosed || isClosingSoon) && (
+                <div className={`text-center py-2 text-[10px] font-black uppercase tracking-widest text-white px-4 sticky top-0 z-[60] animate-in slide-in-from-top duration-300 ${settings?.isManuallyClosed ? 'bg-rose-600/90 backdrop-blur-md' : 'bg-orange-500/90 backdrop-blur-md'}`}>
+                    {settings?.isManuallyClosed
+                        ? 'Estamos fechados no momento. Retornaremos em breve!'
+                        : `Atenção: A loja fechará em ${countdown} minutos!`
+                    }
+                </div>
+            )}
+
             {children}
 
             {shouldShowFooter && (
