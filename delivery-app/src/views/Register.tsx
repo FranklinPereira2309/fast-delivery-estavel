@@ -132,7 +132,8 @@ const Register: React.FC = () => {
                 title: 'Sucesso!',
                 message: 'Cadastro realizado com sucesso! Favor realizar o login.',
                 type: 'SUCCESS',
-                onConfirm: () => navigate('/login')
+                onConfirm: () => navigate('/login'),
+                onCancel: undefined
             });
         } catch (err: any) {
             const errorMessage = err.message || 'Erro ao realizar cadastro';
@@ -142,7 +143,8 @@ const Register: React.FC = () => {
                 title: 'Atenção',
                 message: errorMessage,
                 type: 'DANGER',
-                onConfirm: () => setAlertState(prev => ({ ...prev, isOpen: false }))
+                onConfirm: () => setAlertState(prev => ({ ...prev, isOpen: false })),
+                onCancel: undefined
             });
         }
     };

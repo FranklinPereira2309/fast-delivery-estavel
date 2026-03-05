@@ -62,7 +62,8 @@ const RecoverPassword: React.FC = () => {
                 title: 'Sucesso',
                 message: 'Senha recuperada e atualizada com sucesso! Você já pode fazer login com a nova senha.',
                 type: 'SUCCESS',
-                onConfirm: () => navigate('/login')
+                onConfirm: () => navigate('/login'),
+                onCancel: undefined
             });
         } catch (err: any) {
             setAlertState({
