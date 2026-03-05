@@ -162,23 +162,23 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
     };
     joinAllRooms();
 
-    useEffect(() => {
-      const handleNewSupport = () => {
-        if (activeTab !== 'delivery-orders') {
-          setShouldBlinkDeliveryApp(true);
-        }
-      };
-
-      socket.on('new_support_message', handleNewSupport);
-
-      return () => {
-        socket.off('new_support_message', handleNewSupport);
-      };
-    }, [activeTab]);
-
     return () => {
       clearInterval(interval);
       unsubscribe();
+    };
+  }, [activeTab]);
+
+  useEffect(() => {
+    const handleNewSupport = () => {
+      if (activeTab !== 'delivery-orders') {
+        setShouldBlinkDeliveryApp(true);
+      }
+    };
+
+    socket.on('new_support_message', handleNewSupport);
+
+    return () => {
+      socket.off('new_support_message', handleNewSupport);
     };
   }, [activeTab]);
 
