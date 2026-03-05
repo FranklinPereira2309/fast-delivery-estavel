@@ -163,14 +163,6 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
                             <div className="flex flex-wrap justify-between items-start mb-2 gap-y-3">
                                 <div className="flex flex-wrap items-center gap-3">
                                     <h3 className="font-black text-2xl text-slate-800 tracking-tighter">#{order.id.slice(-4).toUpperCase()}</h3>
-                                    {activeTab === 'history' && (
-                                        <button
-                                            onClick={() => handlePrint(order)}
-                                            className="flex items-center gap-1.5 px-3 py-1 bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white rounded-full text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer shadow-sm"
-                                        >
-                                            <Icons.Print className="w-3.5 h-3.5" /> Cupom
-                                        </button>
-                                    )}
                                 </div>
                                 <div className="text-left sm:text-right w-full sm:w-auto mt-2 sm:mt-0">
                                     <p className="text-xl font-black text-slate-800 tracking-tighter">R$ {order.total.toFixed(2)}</p>
