@@ -526,7 +526,7 @@ const App: React.FC = () => {
                           ) : (
                             <div className="flex flex-col items-end mb-1">
                               <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest mr-1">Pagamento Definido:</span>
-                              <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">{order.paymentMethod}</span>
+                              <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">{(paymentLabels[(order.paymentMethod || '').toUpperCase()] || order.paymentMethod || 'Não Informado').toUpperCase()}</span>
                             </div>
                           )}
 
