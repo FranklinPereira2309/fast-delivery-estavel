@@ -393,11 +393,35 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
                     order={editingOrder}
                     allProducts={allProducts}
                     onClose={() => setEditingOrder(null)}
+                    onError={(msg) => setAlertConfig({
+                        isOpen: true,
+                        title: 'ERRO',
+                        message: msg,
+                        type: 'DANGER',
+                        onConfirm: () => setAlertConfig(prev => ({ ...prev, isOpen: false }))
+                    })}
                     onSave={async (updatedItems, paymentMethod) => {
-                        await db.updateOrderItems(editingOrder.id, updatedItems, currentUser);
-                        await db.updateOrderPaymentMethod(editingOrder.id, paymentMethod, currentUser);
-                        setEditingOrder(null);
-                        await fetchOrders();
+                        try {
+                            await db.updateOrderItems(editingOrder.id, updatedItems, currentUser);
+                            await db.updateOrderPaymentMethod(editingOrder.id, paymentMethod, currentUser);
+                            setEditingOrder(null);
+                            await fetchOrders();
+                            setAlertConfig({
+                                isOpen: true,
+                                title: 'SUCESSO',
+                                message: 'Pedido atualizado com sucesso!',
+                                type: 'SUCCESS',
+                                onConfirm: () => setAlertConfig(prev => ({ ...prev, isOpen: false }))
+                            });
+                        } catch (error) {
+                            setAlertConfig({
+                                isOpen: true,
+                                title: 'ERRO',
+                                message: 'Não foi possível salvar as alterações do pedido.',
+                                type: 'DANGER',
+                                onConfirm: () => setAlertConfig(prev => ({ ...prev, isOpen: false }))
+                            });
+                        }
                     }}
                 />
             )}
@@ -418,8 +442,9 @@ const OrderEditModal: React.FC<{
     order: Order,
     allProducts: any[],
     onClose: () => void,
-    onSave: (items: any[], payment: string) => Promise<void>
-}> = ({ order, allProducts, onClose, onSave }) => {
+    onSave: (items: any[], payment: string) => Promise<void>,
+    onError: (msg: string) => void
+}> = ({ order, allProducts, onClose, onSave, onError }) => {
     const [items, setItems] = useState([...order.items]);
     const [paymentMethod, setPaymentMethod] = useState(order.paymentMethod);
     const [isSaving, setIsSaving] = useState(false);
@@ -449,7 +474,7 @@ const OrderEditModal: React.FC<{
             }));
             await onSave(formattedItems, paymentMethod);
         } catch (e) {
-            alert("Erro ao salvar alterações");
+            onError("Erro ao salvar alterações");
         } finally {
             setIsSaving(false);
         }
