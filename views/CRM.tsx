@@ -69,7 +69,7 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
 
     try {
       const data = await db.resetClientPin(clientId, currentUser);
-      showAlert('Sucesso', 'PIN resetado com sucesso! Novo PIN gerado: ' + data.pin, 'SUCCESS');
+      showAlert('Sucesso', 'O PIN de acesso deste cliente foi regerado com sucesso.', 'SUCCESS');
       refreshClients();
     } catch (error: any) {
       console.error(error);
