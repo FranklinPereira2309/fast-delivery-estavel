@@ -38,7 +38,8 @@ const RecoverPassword: React.FC = () => {
                 title: 'Atenção',
                 message: 'Por favor, insira um WhatsApp válido com 11 dígitos.',
                 type: 'INFO',
-                onConfirm: () => setAlertState(prev => ({ ...prev, isOpen: false }))
+                onConfirm: () => setAlertState(prev => ({ ...prev, isOpen: false })),
+                onCancel: undefined
             });
             return;
         }
@@ -49,7 +50,8 @@ const RecoverPassword: React.FC = () => {
                 title: 'Atenção',
                 message: 'A nova senha deve possuir pelo menos 6 caracteres.',
                 type: 'INFO',
-                onConfirm: () => setAlertState(prev => ({ ...prev, isOpen: false }))
+                onConfirm: () => setAlertState(prev => ({ ...prev, isOpen: false })),
+                onCancel: undefined
             });
             return;
         }
@@ -71,7 +73,8 @@ const RecoverPassword: React.FC = () => {
                 title: 'Recuperação Inválida',
                 message: err.message || 'Verifique se o e-mail e o número de telefone estão corretos e correspondem juntos a sua conta.',
                 type: 'DANGER',
-                onConfirm: () => setAlertState(prev => ({ ...prev, isOpen: false }))
+                onConfirm: () => setAlertState(prev => ({ ...prev, isOpen: false })),
+                onCancel: undefined
             });
         } finally {
             setIsLoading(false);

@@ -37,7 +37,8 @@ const Login: React.FC = () => {
                 title: 'Atenção',
                 message: 'Por favor, insira um WhatsApp válido com 11 dígitos.',
                 type: 'INFO',
-                onConfirm: () => setAlertState(prev => ({ ...prev, isOpen: false }))
+                onConfirm: () => setAlertState(prev => ({ ...prev, isOpen: false })),
+                onCancel: undefined
             });
             return;
         }
@@ -52,7 +53,8 @@ const Login: React.FC = () => {
                 title: 'Erro no Login',
                 message: err.message || 'Verifique suas credenciais e tente novamente.',
                 type: 'DANGER',
-                onConfirm: () => setAlertState(prev => ({ ...prev, isOpen: false }))
+                onConfirm: () => setAlertState(prev => ({ ...prev, isOpen: false })),
+                onCancel: undefined
             });
         } finally {
             setIsLoading(false);
