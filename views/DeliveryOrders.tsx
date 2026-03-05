@@ -403,18 +403,18 @@ const OrderEditModal: React.FC<{
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in">
-            <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in">
+            <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in">
                 <div className="p-8 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
                     <div>
                         <h4 className="text-xl font-black text-slate-800 uppercase tracking-tighter">Editar Pedido #{order.id.slice(-4)}</h4>
-                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Ajuste itens, quantidades e pagamento</p>
+                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Mude itens, avalie o resumo e atualize as opções de pagamento</p>
                     </div>
-                    <button onClick={onClose} className="p-3 bg-white text-slate-400 rounded-2xl hover:text-rose-500 transition-all shadow-sm">
-                        <Icons.Delete className="w-5 h-5" />
+                    <button onClick={onClose} className="p-3 bg-white text-slate-400 rounded-2xl hover:bg-slate-100 hover:text-rose-500 transition-all shadow-sm">
+                        <Icons.X className="w-5 h-5" />
                     </button>
                 </div>
 
-                <div className="flex-1 overflow-hidden flex gap-8 p-8">
+                <div className="flex-1 overflow-hidden flex flex-col md:flex-row gap-6 p-6 md:p-8">
                     {/* Items List */}
                     <div className="flex-1 flex flex-col gap-4 overflow-y-auto pr-4 custom-scrollbar">
                         <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Itens do Pedido</h5>
@@ -439,8 +439,8 @@ const OrderEditModal: React.FC<{
                     </div>
 
                     {/* Menu & Summary */}
-                    <div className="w-80 flex flex-col gap-6">
-                        <div className="flex-1 bg-slate-50 rounded-[2rem] p-6 flex flex-col overflow-hidden">
+                    <div className="w-full md:w-72 flex flex-col gap-6 shrink-0 border-t md:border-t-0 md:border-l border-slate-100 pt-6 md:pt-0 md:pl-6">
+                        <div className="flex-1 bg-slate-50 rounded-3xl p-5 flex flex-col overflow-hidden border border-slate-100 h-64 md:h-auto">
                             <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Adicionar Item</h5>
                             <div className="flex-1 overflow-y-auto space-y-2 pr-2 custom-scrollbar text-xs">
                                 {allProducts.map(p => (
