@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import prisma from '../prisma';
+import bcrypt from 'bcryptjs';
 
 export const resetSystem = async (req: Request, res: Response) => {
     try {
@@ -55,11 +56,12 @@ export const resetSystem = async (req: Request, res: Response) => {
             });
 
             // Create default Admin Master user
+            const hashedPassword = await bcrypt.hash('admin123', 10);
             await tx.user.create({
                 data: {
                     email: 'admin@admin.com',
                     name: 'Administrador Master',
-                    password: 'admin',
+                    password: hashedPassword,
                     recoveryCode: 'ADMIN1',
                     mustChangePassword: true,
                     permissions: [
@@ -74,7 +76,8 @@ export const resetSystem = async (req: Request, res: Response) => {
                         'qrcodes',
                         'settings',
                         'receivables',
-                        'reports'
+                        'reports',
+                        'delivery-orders'
                     ]
                 }
             });

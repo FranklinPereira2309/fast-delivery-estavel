@@ -1,13 +1,17 @@
 import 'dotenv/config'
 import { PrismaClient } from '@prisma/client'
+import bcrypt from 'bcryptjs'
 const prisma = new PrismaClient()
 
 async function main() {
   const adminEmail = 'admin@admin.com'
 
+  const hashedPassword = await bcrypt.hash('admin123', 10)
+
   const admin = await prisma.user.upsert({
     where: { email: adminEmail },
     update: {
+      password: hashedPassword,
       permissions: [
         'dashboard',
         'pos',
@@ -18,13 +22,16 @@ async function main() {
         'inventory',
         'logistics',
         'qrcodes',
-        'settings'
+        'settings',
+        'delivery-orders',
+        'receivables',
+        'reports'
       ]
     },
     create: {
       email: adminEmail,
       name: 'Administrador Master',
-      password: 'admin', // Altere após o primeiro acesso
+      password: hashedPassword,
       recoveryCode: 'ADMIN1',
       mustChangePassword: true,
       permissions: [
@@ -37,7 +44,10 @@ async function main() {
         'inventory',
         'logistics',
         'qrcodes',
-        'settings'
+        'settings',
+        'delivery-orders',
+        'receivables',
+        'reports'
       ]
     },
   })
