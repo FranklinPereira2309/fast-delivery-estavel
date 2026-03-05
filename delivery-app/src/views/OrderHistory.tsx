@@ -20,6 +20,13 @@ const OrderHistory: React.FC = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
+        const clientStr = localStorage.getItem('delivery_app_client');
+        const client = clientStr ? JSON.parse(clientStr) : null;
+
+        if (client && client.id) {
+            socket.emit('join_client', client.id);
+        }
+
         const fetchData = async () => {
             try {
                 const [ordersData, settingsData] = await Promise.all([
@@ -36,7 +43,8 @@ const OrderHistory: React.FC = () => {
         };
         fetchData();
 
-        const handleOrderUpdate = () => {
+        const handleOrderUpdate = (data?: any) => {
+            console.log('Real-time order update received:', data);
             fetchData();
         };
 

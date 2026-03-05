@@ -430,8 +430,14 @@ export const saveOrder = async (req: Request, res: Response) => {
             try {
                 const tableNumIdx = order.tableNumber ? parseInt(order.tableNumber as string) : null;
                 getIO().emit('newOrder', { action: 'refresh', id: order.id, type: order.type, tableNumber: tableNumIdx });
+
+                // Also notify the specific client room if applicable
+                const clientId = order.clientId || result.clientId;
+                if (clientId && clientId !== 'ANONYMOUS') {
+                    getIO().to(`client_${clientId}`).emit('orderUpdated', { id: result.id, action: 'create' });
+                }
             } catch (e) {
-                console.error('Socket error emitting newOrder:', e);
+                console.error('Socket error emitting newOrder/orderUpdated:', e);
             }
         }
 
@@ -700,6 +706,11 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
 
         try {
             getIO().emit('orderStatusChanged', { action: 'statusUpdate', id, status });
+
+            // Notify the specific client room for the delivery app
+            if (result.clientId && result.clientId !== 'ANONYMOUS') {
+                getIO().to(`client_${result.clientId}`).emit('statusUpdated', { id, status });
+            }
 
             // Notificar o cardápio digital se o pedido for de mesa e estiver pronto/parcialmente pronto
             if (result.type === 'TABLE' && result.tableNumber && (status === 'READY' || status === 'PARTIALLY_READY')) {
