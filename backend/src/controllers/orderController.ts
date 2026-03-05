@@ -88,12 +88,16 @@ const syncClientStats = async (tx: any, order: any, oldStatus?: string) => {
 
     // 3. Decrement on Reversion (Reopen)
     if (isReverting && finalClientId && finalClientId !== 'ANONYMOUS') {
-        await tx.client.update({
-            where: { id: finalClientId },
-            data: {
-                totalOrders: { decrement: 1 }
-            }
-        });
+        try {
+            await tx.client.update({
+                where: { id: finalClientId },
+                data: {
+                    totalOrders: { decrement: 1 }
+                }
+            });
+        } catch (e) {
+            console.error('Erro ao decrementar estatísticas do cliente (reversão):', e);
+        }
     }
 
     return finalClientId;
@@ -561,6 +565,11 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
                 where: { id: id as string },
                 include: { items: { include: { product: true } } }
             });
+
+            if (!oldOrder) {
+                console.warn(`[updateOrderStatus] Order not found: ${id}`);
+                throw new Error('Pedido não encontrado');
+            }
 
             const oldStatus = oldOrder?.status;
             const newStatus = status;
