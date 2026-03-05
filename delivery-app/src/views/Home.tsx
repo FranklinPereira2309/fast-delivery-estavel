@@ -144,20 +144,6 @@ const Home: React.FC = () => {
                     )}
                 </div>
 
-                {settings?.isManuallyClosed && (
-                    <div className="bg-rose-50 border border-rose-100 p-4 rounded-2xl mb-6 flex items-start gap-3 relative z-10">
-                        <div className="shrink-0 text-xl font-bold bg-white text-rose-500 w-8 h-8 rounded-xl shadow-sm flex items-center justify-center">🚫</div>
-                        <p className="text-[10px] font-black uppercase tracking-widest leading-relaxed text-rose-600 mt-1">Estamos fechados no momento. Retornaremos em breve!</p>
-                    </div>
-                )}
-
-                {isClosingSoon && !settings?.isManuallyClosed && (
-                    <div className="bg-amber-50 border border-amber-100 p-4 rounded-2xl mb-6 flex items-start gap-3 relative z-10">
-                        <div className="shrink-0 text-xl bg-white text-amber-500 w-8 h-8 rounded-xl shadow-sm flex items-center justify-center">🕒</div>
-                        <p className="text-[10px] font-black uppercase tracking-widest leading-relaxed text-amber-600 mt-1">Atenção: A loja fechará em menos de 30 minutos.</p>
-                    </div>
-                )}
-
                 {/* Search */}
                 <div className="relative z-10 mt-2">
                     <input
@@ -172,6 +158,16 @@ const Home: React.FC = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Banner de Status da Loja (Fixado ao topo no scroll) */}
+            {(settings?.isManuallyClosed || isClosingSoon) && (
+                <div className={`text-center py-2 text-[10px] font-black uppercase tracking-widest text-white px-4 sticky top-0 z-50 animate-in slide-in-from-top duration-300 ${settings?.isManuallyClosed ? 'bg-rose-600/90 backdrop-blur-md' : 'bg-orange-500/90 backdrop-blur-md'}`}>
+                    {settings?.isManuallyClosed
+                        ? 'Estamos fechados no momento. Retornaremos em breve!'
+                        : 'Atenção: A loja fechará em menos de 30 minutos!'
+                    }
+                </div>
+            )}
 
             {/* Categories */}
             <div className="flex gap-3 overflow-x-auto p-6 no-scrollbar -mt-4">

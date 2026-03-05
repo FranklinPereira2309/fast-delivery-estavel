@@ -30,6 +30,8 @@ const Checkout: React.FC = () => {
     const [deliveryFee, setDeliveryFee] = useState(0);
     const [isLoading, setIsLoading] = useState(false);
     const [isFetchingCep, setIsFetchingCep] = useState(false);
+    const [isClosingSoon, setIsClosingSoon] = useState(false);
+    const [settings, setSettings] = useState<any>(null);
 
     const [alertState, setAlertState] = useState<AlertState>({
         isOpen: false, title: '', message: '', type: 'INFO', onConfirm: () => { }, onCancel: () => setAlertState(prev => ({ ...prev, isOpen: false }))
@@ -60,9 +62,33 @@ const Checkout: React.FC = () => {
                 }
 
                 // Fetch Settings
-                const settings = await api.getSettings();
-                const fee = parseFloat(settings.deliveryFee.replace('R$', '').replace(',', '.').trim()) || 0;
+                const s = await api.getSettings();
+                setSettings(s as any);
+                const fee = parseFloat(s.deliveryFee.replace('R$', '').replace(',', '.').trim()) || 0;
                 setDeliveryFee(fee);
+
+                // Check if closing soon (within 30 mins)
+                if (s.operatingHours && !s.isManuallyClosed) {
+                    try {
+                        const hours = JSON.parse(s.operatingHours);
+                        const now = new Date();
+                        const day = now.getDay();
+                        const config = hours.find((h: any) => h.dayOfWeek === day);
+
+                        if (config && config.isOpen) {
+                            const [closeH, closeM] = config.closeTime.split(':').map(Number);
+                            const closeDate = new Date();
+                            closeDate.setHours(closeH, closeM, 0);
+
+                            const diffMs = closeDate.getTime() - now.getTime();
+                            const diffMins = diffMs / (1000 * 60);
+
+                            setIsClosingSoon(diffMins > 0 && diffMins <= 30);
+                        }
+                    } catch (e) {
+                        console.error("Error parsing operating hours:", e);
+                    }
+                }
             } catch (err) {
                 console.error('Error fetching settings or client:', err);
             }
@@ -180,6 +206,16 @@ const Checkout: React.FC = () => {
                 onConfirm={alertState.onConfirm}
                 onCancel={() => setAlertState(prev => ({ ...prev, isOpen: false }))}
             />
+
+            {/* Banner de Status da Loja (Fixado ao topo no scroll) */}
+            {(settings?.isManuallyClosed || isClosingSoon) && (
+                <div className={`text-center py-2 text-[10px] font-black uppercase tracking-widest text-white px-4 sticky top-0 z-50 animate-in slide-in-from-top duration-300 ${settings?.isManuallyClosed ? 'bg-rose-600/90 backdrop-blur-md' : 'bg-orange-500/90 backdrop-blur-md'}`}>
+                    {settings?.isManuallyClosed
+                        ? 'Estamos fechados no momento. Retornaremos em breve!'
+                        : 'Atenção: A loja fechará em menos de 30 minutos!'
+                    }
+                </div>
+            )}
 
             {/* Header Soft Clean */}
             <div className="bg-white text-slate-800 p-6 pb-8 rounded-b-[3rem] shadow-sm border-b border-slate-100 flex items-center gap-4 relative overflow-hidden">
