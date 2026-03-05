@@ -160,8 +160,8 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
                 ) : (
                     orders.map(order => (
                         <div key={order.id} className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 flex flex-col hover:shadow-xl hover:shadow-indigo-100/20 transition-all relative overflow-hidden group">
-                            <div className="flex justify-between items-start mb-2">
-                                <div className="flex items-center gap-3">
+                            <div className="flex flex-wrap justify-between items-start mb-2 gap-y-3">
+                                <div className="flex flex-wrap items-center gap-3">
                                     <h3 className="font-black text-2xl text-slate-800 tracking-tighter">#{order.id.slice(-4).toUpperCase()}</h3>
                                     {activeTab === 'history' && (
                                         <button
@@ -172,9 +172,9 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
                                         </button>
                                     )}
                                 </div>
-                                <div className="text-right">
+                                <div className="text-left sm:text-right w-full sm:w-auto mt-2 sm:mt-0">
                                     <p className="text-xl font-black text-slate-800 tracking-tighter">R$ {order.total.toFixed(2)}</p>
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{paymentLabels[order.paymentMethod || ''] || order.paymentMethod || 'Não Informado'}</p>
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest break-words">{paymentLabels[order.paymentMethod || ''] || order.paymentMethod || 'Não Informado'}</p>
                                 </div>
                             </div>
 
@@ -189,13 +189,13 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
                             <div className="space-y-4 mb-6">
                                 <div>
                                     <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-1">Cliente</p>
-                                    <p className="font-bold text-slate-700 leading-tight">{order.clientName}</p>
+                                    <p className="font-bold text-slate-700 leading-tight break-words">{order.clientName}</p>
                                     {order.clientPhone && <p className="text-xs font-bold text-slate-400 mt-0.5">{order.clientPhone}</p>}
                                 </div>
                                 {order.clientAddress && (
                                     <div>
                                         <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-1">Endereço</p>
-                                        <p className="text-xs font-bold text-slate-500 leading-relaxed">{order.clientAddress}</p>
+                                        <p className="text-xs font-bold text-slate-500 leading-relaxed break-words">{order.clientAddress}</p>
                                     </div>
                                 )}
                             </div>
