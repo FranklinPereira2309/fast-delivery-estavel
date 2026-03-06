@@ -157,7 +157,6 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
 
     const handlePrint = (order: Order) => {
         setPrintingOrder(order);
-        setTimeout(() => window.print(), 500);
     };
 
     const activeOrders = orders.filter(o => !['DELIVERED', 'CANCELLED'].includes(o.status));
@@ -357,8 +356,8 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
             />
 
             {printingOrder && businessSettings && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md no-print">
-                    <div className="relative w-full max-w-[80mm] bg-white p-8 border border-dashed shadow-2xl font-receipt text-[11px] text-black">
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
+                    <div className="relative w-full max-w-[80mm] bg-white p-8 border border-dashed shadow-2xl font-receipt text-[11px] text-black print-container is-receipt animate-in zoom-in duration-200">
                         <div className="text-center mb-6 border-b border-dashed pb-4">
                             <h2 className="font-black text-sm uppercase tracking-tighter">{businessSettings.name}</h2>
                             <p className="text-[9px] font-bold mt-1 uppercase">Comprovante de Pedido</p>
@@ -387,18 +386,18 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
                             <span className="text-2xl font-black">R$ {printingOrder.total.toFixed(2)}</span>
                         </div>
 
-                        <div className="flex gap-4">
+                        <div className="grid grid-cols-2 gap-4 no-print mt-6">
                             <button
                                 onClick={() => window.print()}
-                                className="flex-1 bg-slate-900 text-white py-4 rounded-2xl font-black uppercase text-[10px] shadow-xl hover:bg-black transition-all"
+                                className="bg-slate-900 text-white py-4 rounded-full font-black uppercase text-[11px] shadow-xl hover:bg-black active:scale-95 transition-all flex items-center justify-center"
                             >
-                                Imprimir
+                                IMPRIMIR
                             </button>
                             <button
                                 onClick={() => setPrintingOrder(null)}
-                                className="flex-1 bg-slate-100 text-slate-500 py-4 rounded-2xl font-black uppercase text-[10px] hover:bg-slate-200 transition-all"
+                                className="bg-slate-50 text-slate-400 py-4 rounded-full font-black uppercase text-[11px] hover:bg-slate-100 active:scale-95 transition-all flex items-center justify-center"
                             >
-                                Fechar
+                                FECHAR
                             </button>
                         </div>
                     </div>
