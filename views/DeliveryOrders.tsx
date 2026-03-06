@@ -4,7 +4,6 @@ import { socket } from '../services/socket';
 import { Order, User, OrderStatusLabels, DeliveryDriver, Product, SaleType, BusinessSettings } from '../types';
 import { Icons } from '../constants';
 import CustomAlert from '../components/CustomAlert';
-import { getInitials } from '../services/utils';
 
 interface DeliveryOrdersProps {
     currentUser: User;
@@ -20,7 +19,6 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
     const [products, setProducts] = useState<Product[]>([]);
     const [businessSettings, setBusinessSettings] = useState<BusinessSettings | null>(null);
     const [activeTab, setActiveTab] = useState<'active' | 'history' | 'chat'>('active');
-    const [businessSettings, setBusinessSettings] = useState<any>(null);
     const [printingOrder, setPrintingOrder] = useState<Order | null>(null);
 
     const [selectedOrderChat, setSelectedOrderChat] = useState<Order | null>(null);
@@ -51,6 +49,11 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
         'dinheiro': 'Dinheiro', 'CASH': 'Dinheiro'
     };
 
+    const getInitials = (name: any) => {
+        if (!name || typeof name !== 'string') return '??';
+        return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    };
+
     const getDriverName = (driverId?: string) => {
         if (!driverId) return 'Desconhecido';
         return drivers.find(d => d.id === driverId)?.name || 'Removido';
@@ -65,10 +68,10 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
                 db.getProducts(),
                 db.getSettings()
             ]);
-            setOrders(allOrders.filter(o => o.type === SaleType.APP_DELIVERY || o.type === SaleType.OWN_DELIVERY));
+            setOrders(allOrders.filter(o => o.isOriginDeliveryApp || o.type === SaleType.OWN_DELIVERY));
             setDrivers(allDrivers);
             setProducts(allProducts);
-            setBusinessSettings(settings);
+            setBusinessSettings(settings as BusinessSettings);
         } catch (error) {
             console.error('Error fetching orders:', error);
         } finally {
