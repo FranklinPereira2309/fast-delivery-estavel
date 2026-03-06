@@ -5,7 +5,7 @@ import { db } from '../services/db';
 import { User, Order, OrderStatus, TableSession, SaleType } from '../types';
 import { useDigitalAlert } from '../hooks/useDigitalAlert';
 import { audioAlert } from '../services/audioAlert';
-import { socket, chatUnreadManager } from '../services/socket';
+import { socket, chatUnreadManager, clientChatUnreadManager } from '../services/socket';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -23,13 +23,14 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
   const [shouldBlinkTables, setShouldBlinkTables] = useState(false);
   const [shouldBlinkDeliveryApp, setShouldBlinkDeliveryApp] = useState(false);
   const [shouldBlinkLogisticsChat, setShouldBlinkLogisticsChat] = useState(false);
+  const [shouldBlinkDeliveryAppChat, setShouldBlinkDeliveryAppChat] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
   const [settings, setSettings] = useState<any>(null);
   const { isAlerting } = useDigitalAlert();
   const lastOrdersMap = useRef<Record<string, { status: OrderStatus, itemCount: number }>>({});
   const isFirstRun = useRef(true);
   const isDataInitialized = useRef(false);
-  const prevAlertStates = useRef({ kitchen: false, tables: false, logistics: false });
+  const prevAlertStates = useRef({ kitchen: false, tables: false, logistics: false, deliveryApp: false });
 
   const allNavItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Icons.Dashboard },
@@ -42,7 +43,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
     { id: 'delivery-orders', label: 'App Delivery (Pedidos)', icon: Icons.Smartphone },
     { id: 'logistics', label: 'Logística', icon: Icons.Logistics },
     { id: 'receivables', label: 'Recebimentos (Fiado)', icon: Icons.Receivables },
-    { id: 'qrcodes', label: 'QR Codes das Mesas', icon: Icons.Dashboard }, // Consider adding a specific icon later if needed
+    { id: 'qrcodes', label: 'QR Codes das Mesas', icon: Icons.Dashboard },
     { id: 'reports', label: 'Relatórios', icon: Icons.Print },
     { id: 'settings', label: 'Configurações', icon: Icons.Settings },
   ];
@@ -124,6 +125,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
 
       // Sincroniza estados anteriores para o próximo loop
       prevAlertStates.current = {
+        ...prevAlertStates.current,
         kitchen: hasNewOrder,
         tables: hasPendingDigital,
         logistics: hasReadyDelivery,
@@ -144,17 +146,24 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
 
     const interval = setInterval(() => monitorSystem(false), 3000);
 
-    // Chat Monitoring for Module Level Blink via Global Manager
-    const unsubscribe = chatUnreadManager.subscribe((unreads) => {
-      if (activeTab !== 'logistics') {
-        setShouldBlinkLogisticsChat(unreads.size > 0);
-      }
+    return () => clearInterval(interval);
+  }, [activeTab]);
+
+  useEffect(() => {
+    // Chat Monitoring for Module Level Blink via Global Managers
+    const unsubscribeDrivers = chatUnreadManager.subscribe((unreads) => {
+      // Only blink if we are NOT inside Logistics, or if we ARE inside Logistics but NOT on the chat tab.
+      // We will handle the exact clearing logic inside Logistics itself.
+      setShouldBlinkLogisticsChat(unreads.size > 0);
+    });
+
+    const unsubscribeClients = clientChatUnreadManager.subscribe((unreads) => {
+      setShouldBlinkDeliveryAppChat(unreads.size > 0);
     });
 
     // Initial check
-    if (activeTab !== 'logistics') {
-      setShouldBlinkLogisticsChat(chatUnreadManager.getUnreads().size > 0);
-    }
+    setShouldBlinkLogisticsChat(chatUnreadManager.getUnreads().size > 0);
+    setShouldBlinkDeliveryAppChat(clientChatUnreadManager.getUnreads().size > 0);
 
     const joinAllRooms = async () => {
       const drivers = await db.getDrivers();
@@ -163,31 +172,10 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
     joinAllRooms();
 
     return () => {
-      clearInterval(interval);
-      unsubscribe();
+      unsubscribeDrivers();
+      unsubscribeClients();
     };
-  }, [activeTab]);
-
-  useEffect(() => {
-    const handleNewSupport = (msg: any) => {
-      if (activeTab !== 'delivery-orders') {
-        setShouldBlinkDeliveryApp(true);
-      }
-    };
-
-    socket.on('new_support_message', handleNewSupport);
-    socket.on('new_message', (msg: any) => {
-      // If it's a message for an order (client chat)
-      if (msg.orderId && activeTab !== 'delivery-orders') {
-        setShouldBlinkDeliveryApp(true);
-      }
-    });
-
-    return () => {
-      socket.off('new_support_message', handleNewSupport);
-      socket.off('new_message');
-    };
-  }, [activeTab]);
+  }, []); // Run once to subscribe to global managers
 
 
   useEffect(() => {
@@ -195,12 +183,12 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
     if (activeTab === 'sales-monitor') setShouldBlinkMonitor(false);
     if (activeTab === 'logistics') {
       setShouldBlinkLogistics(false);
-      setShouldBlinkLogisticsChat(false);
     }
-    if (activeTab === 'delivery-orders') setShouldBlinkDeliveryApp(false);
+    if (activeTab === 'delivery-orders') {
+      setShouldBlinkDeliveryApp(false);
+    }
     if (activeTab === 'tables') setShouldBlinkTables(false);
   }, [activeTab]);
-
   const navItems = allNavItems.filter(item => {
     const hasPermission = currentUser.permissions.includes(item.id);
     if (!hasPermission) return false;

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { db } from '../services/db';
-import { socket } from '../services/socket';
+import { socket, clientChatUnreadManager } from '../services/socket';
 import { Order, User, OrderStatusLabels, DeliveryDriver, Product, SaleType, BusinessSettings } from '../types';
 import { Icons } from '../constants';
 import CustomAlert from '../components/CustomAlert';
@@ -22,7 +22,7 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
     const [printingOrder, setPrintingOrder] = useState<Order | null>(null);
 
     const [selectedOrderChat, setSelectedOrderChat] = useState<Order | null>(null);
-    const [unreadClients, setUnreadClients] = useState<Set<string>>(new Set());
+    const [globalUnreads, setGlobalUnreads] = useState<Set<string>>(new Set());
     const [messages, setMessages] = useState<any[]>([]);
     const [newMessage, setNewMessage] = useState('');
     const [isSending, setIsSending] = useState(false);
@@ -85,6 +85,14 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
         return () => clearInterval(interval);
     }, []);
 
+    useEffect(() => {
+        const unsubscribe = clientChatUnreadManager.subscribe((unreads) => {
+            setGlobalUnreads(new Set(unreads));
+        });
+        setGlobalUnreads(clientChatUnreadManager.getUnreads());
+        return () => unsubscribe();
+    }, []);
+
     const loadChatHistory = async (orderId?: string, clientId?: string) => {
         let history: any[] = [];
         if (orderId) {
@@ -109,6 +117,8 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
     useEffect(() => {
         if (selectedOrderChat) {
             loadChatHistory(selectedOrderChat.id, selectedOrderChat.clientId);
+            // Assuming chat view is open, remove from unreads
+            clientChatUnreadManager.removeUnread(selectedOrderChat.clientId || selectedOrderChat.id);
         }
     }, [selectedOrderChat]);
 
@@ -191,8 +201,8 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
                         className={`px-8 py-3.5 rounded-full text-[11px] font-black uppercase tracking-widest transition-all relative ${activeTab === 'chat' ? 'bg-slate-900 text-white shadow-xl' : 'text-slate-400 hover:bg-slate-50'}`}
                     >
                         Chat Clientes
-                        {unreadClients.size > 0 && (
-                            <span className="absolute -top-1 -right-1 w-3 h-3 bg-indigo-500 rounded-full border-2 border-white animate-pulse shadow-sm" />
+                        {globalUnreads.size > 0 && (
+                            <span className="absolute -top-1 -right-1 w-3 h-3 bg-rose-500 rounded-full border-2 border-white animate-pulse shadow-sm" />
                         )}
                     </button>
                 </div>
@@ -301,19 +311,26 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
                                 <h3 className="text-[10px] font-black uppercase tracking-widest text-indigo-600">Atendimentos</h3>
                             </div>
                             <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-2 custom-scrollbar">
-                                {Array.from(chatClients.values()).map(client => (
-                                    <button
-                                        key={client.id}
-                                        onClick={() => setSelectedOrderChat(client as any)}
-                                        className={`flex items-center gap-3 p-4 rounded-3xl transition-all font-black uppercase ${selectedOrderChat?.id === client.id ? 'bg-indigo-50 border border-indigo-100 text-indigo-600' : 'hover:bg-slate-50 text-slate-600'}`}
-                                    >
-                                        <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-white ${selectedOrderChat?.id === client.id ? 'bg-indigo-600' : 'bg-slate-300'} text-xs`}>{getInitials(client.name)}</div>
-                                        <div className="flex-1 text-left min-w-0">
-                                            <p className="text-[11px] truncate">{client.name}</p>
-                                            <p className="text-[8px] opacity-40">#{client.id.slice(-4).toUpperCase()}</p>
-                                        </div>
-                                    </button>
-                                ))}
+                                {Array.from(chatClients.values()).map(client => {
+                                    const hasUnread = globalUnreads.has(client.clientId) || globalUnreads.has(client.orderId);
+                                    return (
+                                        <button
+                                            key={client.id}
+                                            onClick={() => {
+                                                setSelectedOrderChat(client as any);
+                                                clientChatUnreadManager.removeUnread(client.clientId || client.orderId);
+                                            }}
+                                            className={`flex items-center gap-3 p-4 rounded-3xl transition-all font-black uppercase relative ${selectedOrderChat?.id === client.id ? 'bg-indigo-50 border border-indigo-100 text-indigo-600' : 'hover:bg-slate-50 text-slate-600'}`}
+                                        >
+                                            {hasUnread && <span className="absolute top-3 right-3 w-3 h-3 bg-rose-500 rounded-full animate-pulse border-2 border-white shadow-sm" />}
+                                            <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-white ${selectedOrderChat?.id === client.id ? 'bg-indigo-600' : 'bg-slate-300'} text-xs shrink-0`}>{getInitials(client.name)}</div>
+                                            <div className="flex-1 text-left min-w-0 pr-4">
+                                                <p className="text-[11px] truncate">{client.name}</p>
+                                                <p className="text-[8px] opacity-40">#{client.id.slice(-4).toUpperCase()}</p>
+                                            </div>
+                                        </button>
+                                    )
+                                })}
                             </div>
                         </div>
 

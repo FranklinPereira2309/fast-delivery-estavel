@@ -306,8 +306,6 @@ const Logistics: React.FC = () => {
     const handleNewMessage = (msg: any) => {
       if (activeTab === 'CHAT' && selectedDriver?.id === msg.driverId) {
         setChatMessages(prev => [...prev.filter(m => m.id !== msg.id), msg]);
-      } else {
-        setUnreadDrivers(new Set(chatUnreadManager.getUnreads()));
       }
     };
 
@@ -322,6 +320,14 @@ const Logistics: React.FC = () => {
       socket.off('new_message', handleNewMessage);
     };
   }, [activeTab, selectedDriver]);
+
+  useEffect(() => {
+    const unsubscribe = chatUnreadManager.subscribe((unreads) => {
+      setUnreadDrivers(new Set(unreads));
+    });
+    setUnreadDrivers(new Set(chatUnreadManager.getUnreads()));
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     if (selectedDriver) {
@@ -438,10 +444,10 @@ const Logistics: React.FC = () => {
         </button>
         <button
           onClick={() => setActiveTab('CHAT')}
-          className={`px-6 py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all relative ${activeTab === 'CHAT' ? 'bg-slate-900 text-white shadow-xl' : 'text-slate-400 hover:bg-slate-50'} ${unreadDrivers.size > 0 ? 'animate-notify-turquoise' : ''}`}
+          className={`px-6 py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all relative ${activeTab === 'CHAT' ? 'bg-slate-900 text-white shadow-xl' : 'text-slate-400 hover:bg-slate-50'}`}
         >
           Chat Entregadores
-          {unreadDrivers.size > 0 && <span className="absolute -top-1 -right-1 w-3 h-3 bg-indigo-500 rounded-full animate-blink shadow-sm border border-white" />}
+          {unreadDrivers.size > 0 && <span className="absolute -top-1 -right-1 w-3 h-3 bg-rose-500 rounded-full animate-pulse shadow-sm border-2 border-white" />}
         </button>
       </div>
 
@@ -554,12 +560,13 @@ const Logistics: React.FC = () => {
                 <button
                   key={driver.id}
                   onClick={() => setSelectedDriver(driver)}
-                  className={`flex items-center gap-3 p-4 rounded-3xl transition-all ${selectedDriver?.id === driver.id ? 'bg-white shadow-md border border-slate-100 scale-[1.02]' : 'hover:bg-white/50'} ${unreadDrivers.has(driver.id) ? 'animate-notify-turquoise border-indigo-200 bg-indigo-50/50' : ''}`}
+                  className={`flex items-center gap-3 p-4 rounded-3xl transition-all relative ${selectedDriver?.id === driver.id ? 'bg-white shadow-md border border-slate-100 scale-[1.02]' : 'hover:bg-white/50'}`}
                 >
-                  <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-white font-black uppercase text-sm ${selectedDriver?.id === driver.id ? 'bg-slate-900 shadow-lg shadow-slate-500/20' : 'bg-slate-300'}`}>
+                  {unreadDrivers.has(driver.id) && <span className="absolute top-3 right-3 w-3 h-3 bg-rose-500 rounded-full animate-pulse border-2 border-white shadow-sm" />}
+                  <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-white font-black uppercase text-sm ${selectedDriver?.id === driver.id ? 'bg-slate-900 shadow-lg shadow-slate-500/20' : 'bg-slate-300'} shrink-0`}>
                     {driver.name.charAt(0)}
                   </div>
-                  <div className="flex-1 text-left min-w-0">
+                  <div className="flex-1 text-left min-w-0 pr-4">
                     <p className="text-sm font-black text-slate-800 truncate">{driver.name}</p>
                     <div className="flex items-center gap-1.5 mt-0.5">
                       <div className={`w-1.5 h-1.5 rounded-full ${driver.active ? 'bg-emerald-500' : 'bg-slate-300'}`} />

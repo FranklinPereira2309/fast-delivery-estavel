@@ -23,7 +23,7 @@ socket.on('disconnect', () => {
     console.log('Frontend PDV desconectado do Socket.io.');
 });
 
-// Global Unread State Management
+// Global Unread State Management - Drivers (Logistics)
 const unreadDrivers = new Set<string>();
 const unreadSubscribers = new Set<(unreads: Set<string>) => void>();
 
@@ -47,9 +47,49 @@ export const chatUnreadManager = {
     }
 };
 
+// Global Unread State Management - Clients (App Delivery / Delivery Orders)
+const unreadClients = new Set<string>();
+const unreadClientSubscribers = new Set<(unreads: Set<string>) => void>();
+
+export const clientChatUnreadManager = {
+    getUnreads: () => new Set(unreadClients),
+    addUnread: (clientIdOrOrderId: string) => {
+        unreadClients.add(clientIdOrOrderId);
+        unreadClientSubscribers.forEach(cb => cb(new Set(unreadClients)));
+    },
+    removeUnread: (clientIdOrOrderId: string) => {
+        unreadClients.delete(clientIdOrOrderId);
+        unreadClientSubscribers.forEach(cb => cb(new Set(unreadClients)));
+    },
+    clearUnreads: () => {
+        unreadClients.clear();
+        unreadClientSubscribers.forEach(cb => cb(new Set(unreadClients)));
+    },
+    subscribe: (callback: (unreads: Set<string>) => void) => {
+        unreadClientSubscribers.add(callback);
+        return () => unreadClientSubscribers.delete(callback);
+    }
+};
+
+
 // Initial listener for global unreads
 socket.on('new_message', (msg: any) => {
-    if (msg.isFromDriver) {
+    // Check for Driver message
+    if (msg.isFromDriver && msg.driverId) {
         chatUnreadManager.addUnread(msg.driverId);
+    }
+    // Check for Client message
+    if (msg.isFromClient) {
+        // Support message has clientId, Chat message has orderId
+        const id = msg.clientId || msg.orderId;
+        if (id) {
+            clientChatUnreadManager.addUnread(id);
+        }
+    }
+});
+
+socket.on('new_support_message', (msg: any) => {
+    if (msg.isFromClient && msg.clientId) {
+        clientChatUnreadManager.addUnread(msg.clientId);
     }
 });
