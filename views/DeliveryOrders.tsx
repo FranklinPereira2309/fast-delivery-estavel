@@ -396,18 +396,18 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
                                 ...orders.map(o => [o.id, {
                                     id: o.id,
                                     clientId: o.clientId,
-                                    name: o.clientName,
+                                    name: o.clientName || 'Cliente',
                                     orderId: o.id
                                 }] as [string, { id: string, clientId?: string, name: string, orderId?: string }]),
                                 // 2. Add clients from unread set if not already present
                                 ...Array.from(unreadClients).map(id => {
                                     const order = orders.find(o => o.id === id);
-                                    if (order) return [order.id, { id: order.id, clientId: order.clientId, name: order.clientName, orderId: order.id }] as [string, { id: string, clientId?: string, name: string, orderId?: string }];
+                                    if (order) return [order.id, { id: order.id, clientId: order.clientId, name: order.clientName || 'Cliente', orderId: order.id }] as [string, { id: string, clientId?: string, name: string, orderId?: string }];
 
                                     const client = clients.find(c => c.id === id);
-                                    if (client) return [id, { id: id, clientId: id, name: client.name }] as [string, { id: string, clientId?: string, name: string, orderId?: string }];
+                                    if (client) return [id, { id: id, clientId: id, name: client.name || 'Cliente' }] as [string, { id: string, clientId?: string, name: string, orderId?: string }];
 
-                                    return [id, { id: id, clientId: id, name: `Cliente ${id.slice(-4)}` }] as [string, { id: string, clientId?: string, name: string, orderId?: string }];
+                                    return [id, { id: id, clientId: id, name: `Cliente ${(id as string).slice(-4)}` }] as [string, { id: string, clientId?: string, name: string, orderId?: string }];
                                 })
                             ]).values()).map(chatItem => (
                                 <button
@@ -417,17 +417,17 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
                                 >
                                     <div className="relative shrink-0">
                                         <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-white font-black uppercase text-sm ${selectedOrderChat?.id === chatItem.id ? 'bg-indigo-600 shadow-lg shadow-indigo-500/20' : 'bg-slate-300'}`}>
-                                            {chatItem.name.charAt(0)}
+                                            {(chatItem.name || 'C').charAt(0)}
                                         </div>
                                         {unreadClients.has(chatItem.clientId || chatItem.id) && (
                                             <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-white animate-pulse shadow-sm z-10"></span>
                                         )}
                                     </div>
                                     <div className="flex-1 text-left min-w-0">
-                                        <p className="text-sm font-black text-slate-800 truncate">{chatItem.name}</p>
+                                        <p className="text-sm font-black text-slate-800 truncate">{chatItem.name || 'Cliente'}</p>
                                         <div className="flex items-center gap-1.5 mt-0.5">
                                             <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">
-                                                {chatItem.orderId ? `Pedido #${chatItem.orderId.slice(-4).toUpperCase()}` : 'Atendimento Direto'}
+                                                {chatItem.orderId ? `Pedido #${(chatItem.orderId as string).slice(-4).toUpperCase()}` : 'Atendimento Direto'}
                                             </span>
                                         </div>
                                     </div>
