@@ -22,46 +22,62 @@ const OrderHistory: React.FC = () => {
     useEffect(() => {
         const clientStr = localStorage.getItem('delivery_app_client');
         const client = clientStr ? JSON.parse(clientStr) : null;
+        let isMounted = true;
+        let timeoutId: any;
 
         const joinRoom = () => {
             if (client && client.id) {
+                console.log(`[Socket] Joining client room: client_${client.id}`);
                 socket.emit('join_client', client.id);
             }
         };
 
-        joinRoom();
-
         const fetchData = async () => {
+            if (!isMounted) return;
             try {
+                console.log('[Polling] Fetching fresh data...');
                 const [ordersData, settingsData] = await Promise.all([
                     api.getMyOrders(),
                     api.getSettings().catch(() => null)
                 ]);
-                setOrders(ordersData);
-                setBusinessSettings(settingsData);
+
+                if (isMounted) {
+                    setOrders(ordersData);
+                    setBusinessSettings(settingsData);
+                    console.log(`[Polling] Success: ${ordersData.length} orders found.`);
+                }
             } catch (err) {
-                console.error(err);
+                console.error('[Polling] Error fetching data:', err);
             } finally {
-                setIsLoading(false);
+                if (isMounted) {
+                    setIsLoading(false);
+                    // Agendar próxima busca apenas após a atual terminar
+                    timeoutId = setTimeout(fetchData, 8000);
+                }
             }
         };
 
-        fetchData();
-        const interval = setInterval(fetchData, 5000);
-
         const handleOrderUpdate = (data?: any) => {
-            console.log('Real-time order update received:', data);
+            console.log('[Socket] sinal de atualização em tempo real recebido:', data);
             fetchData();
         };
 
-        socket.on('connect', joinRoom);
+        joinRoom();
+        fetchData();
+
+        socket.on('connect', () => {
+            console.log('[Socket] Conectado, reentrando na sala...');
+            joinRoom();
+        });
+
         socket.on('orderUpdated', handleOrderUpdate);
         socket.on('statusUpdated', handleOrderUpdate);
         socket.on('newOrder', handleOrderUpdate);
 
         return () => {
-            clearInterval(interval);
-            socket.off('connect', joinRoom);
+            isMounted = false;
+            if (timeoutId) clearTimeout(timeoutId);
+            socket.off('connect');
             socket.off('orderUpdated', handleOrderUpdate);
             socket.off('statusUpdated', handleOrderUpdate);
             socket.off('newOrder', handleOrderUpdate);

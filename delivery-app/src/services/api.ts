@@ -63,11 +63,11 @@ class DeliveryApiService {
     // Store Status
     // Settings
     async getSettings() {
-        return this.request<BusinessSettings>('/settings');
+        return this.request<BusinessSettings>(`/settings?t=${Date.now()}`);
     }
 
     async getStoreStatus() {
-        return this.request<{ status: string, is_manually_closed: boolean }>('/maintenance/status');
+        return this.request<{ status: string, is_manually_closed: boolean }>(`/maintenance/status?t=${Date.now()}`);
     }
 
     // Orders
@@ -86,7 +86,7 @@ class DeliveryApiService {
 
     async getMyOrders() {
         const client = JSON.parse(localStorage.getItem('delivery_app_client') || '{}');
-        return this.request<any[]>(`/orders/client/my-orders?clientId=${client.id}`);
+        return this.request<any[]>(`/orders/client/my-orders?clientId=${client.id}&t=${Date.now()}`);
     }
 
     async updateClient(clientId: string, data: any) {
