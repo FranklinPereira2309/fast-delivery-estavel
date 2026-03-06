@@ -90,59 +90,61 @@ const Home: React.FC<HomeProps> = ({ cart, addToCart, updateQuantity }) => {
                 {filteredProducts.length === 0 ? (
                     <p className="text-center text-slate-400 font-bold py-8">Nenhum produto encontrado.</p>
                 ) : (
-                    filteredProducts.map(product => {
-                        const cartItem = cart.find(i => i.id === product.id);
-                        const quantity = cartItem?.quantity || 0;
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {filteredProducts.map(product => {
+                            const cartItem = cart.find(i => i.id === product.id);
+                            const quantity = cartItem?.quantity || 0;
 
-                        return (
-                            <div key={product.id} className="bg-white p-3 sm:p-4 rounded-3xl border border-slate-100 shadow-sm flex gap-3 sm:gap-4 overflow-hidden relative group">
-                                {/* Imagem */}
-                                <div className="w-24 h-24 sm:w-28 sm:h-28 shrink-0 rounded-2xl overflow-hidden bg-slate-50 group-hover:shadow-inner transition-all">
-                                    <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
-                                </div>
-
-                                {/* Info */}
-                                <div className="flex-1 flex flex-col justify-between py-0.5">
-                                    <div>
-                                        <h3 className="text-xs sm:text-sm font-black text-slate-800 leading-tight uppercase tracking-tighter line-clamp-2">{product.name}</h3>
-                                        <p className="text-[9px] sm:text-[10px] font-bold text-slate-400 mt-1 line-clamp-2 leading-snug">{product.description}</p>
+                            return (
+                                <div key={product.id} className="bg-white p-3 sm:p-4 rounded-3xl border border-slate-100 shadow-sm flex gap-3 sm:gap-4 overflow-hidden relative group h-full">
+                                    {/* Imagem */}
+                                    <div className="w-24 h-24 sm:w-28 sm:h-28 shrink-0 rounded-2xl overflow-hidden bg-slate-50 group-hover:shadow-inner transition-all">
+                                        <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
                                     </div>
 
-                                    <div className="flex items-center justify-between mt-1 sm:mt-2">
-                                        <span className="text-base sm:text-lg font-black text-blue-600 tracking-tighter">
-                                            R$ {product.price.toFixed(2)}
-                                        </span>
+                                    {/* Info */}
+                                    <div className="flex-1 flex flex-col justify-between py-0.5 min-w-0">
+                                        <div className="min-w-0">
+                                            <h3 className="text-xs sm:text-sm font-black text-slate-800 leading-tight uppercase tracking-tighter line-clamp-2 break-words">{product.name}</h3>
+                                            <p className="text-[9px] sm:text-[10px] font-bold text-slate-400 mt-1 line-clamp-2 leading-snug break-words">{product.description}</p>
+                                        </div>
 
-                                        {/* Controles de Quantidade */}
-                                        {quantity > 0 ? (
-                                            <div className="flex items-center bg-slate-100 rounded-xl p-0.5 sm:p-1 gap-1.5 sm:gap-2 shadow-inner">
+                                        <div className="flex items-center justify-between mt-1 sm:mt-2">
+                                            <span className="text-base sm:text-lg font-black text-blue-600 tracking-tighter shrink-0">
+                                                R$ {product.price.toFixed(2)}
+                                            </span>
+
+                                            {/* Controles de Quantidade */}
+                                            {quantity > 0 ? (
+                                                <div className="flex items-center bg-slate-100 rounded-xl p-0.5 sm:p-1 gap-1.5 sm:gap-2 shadow-inner shrink-0">
+                                                    <button
+                                                        onClick={() => updateQuantity(product.id, quantity - 1)}
+                                                        className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-white shadow-sm flex items-center justify-center font-black text-slate-500 active:scale-90 transition-transform"
+                                                    >
+                                                        -
+                                                    </button>
+                                                    <span className="w-5 text-center font-black text-xs sm:text-sm">{quantity}</span>
+                                                    <button
+                                                        onClick={() => updateQuantity(product.id, quantity + 1)}
+                                                        className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-blue-600 shadow-sm shadow-blue-500/50 flex items-center justify-center font-black text-white active:scale-90 transition-transform"
+                                                    >
+                                                        +
+                                                    </button>
+                                                </div>
+                                            ) : (
                                                 <button
-                                                    onClick={() => updateQuantity(product.id, quantity - 1)}
-                                                    className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-white shadow-sm flex items-center justify-center font-black text-slate-500 active:scale-90 transition-transform"
+                                                    onClick={() => addToCart({ ...product, quantity: 1 })}
+                                                    className="px-3 sm:px-4 py-1.5 sm:py-2 bg-slate-900 text-white rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest shadow-lg active:scale-95 transition-all shrink-0"
                                                 >
-                                                    -
+                                                    Pedir
                                                 </button>
-                                                <span className="w-5 text-center font-black text-xs sm:text-sm">{quantity}</span>
-                                                <button
-                                                    onClick={() => updateQuantity(product.id, quantity + 1)}
-                                                    className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-blue-600 shadow-sm shadow-blue-500/50 flex items-center justify-center font-black text-white active:scale-90 transition-transform"
-                                                >
-                                                    +
-                                                </button>
-                                            </div>
-                                        ) : (
-                                            <button
-                                                onClick={() => addToCart({ ...product, quantity: 1 })}
-                                                className="px-3 sm:px-4 py-1.5 sm:py-2 bg-slate-900 text-white rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest shadow-lg active:scale-95 transition-all"
-                                            >
-                                                Pedir
-                                            </button>
-                                        )}
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        );
-                    })
+                            );
+                        })}
+                    </div>
                 )}
             </div>
         </div>

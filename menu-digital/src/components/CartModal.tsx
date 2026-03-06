@@ -106,7 +106,7 @@ const CartModal: React.FC<CartModalProps> = ({ isOpen, onClose, cart, tableNumbe
             {/* Background click to close */}
             <div className="absolute inset-0" onClick={onClose} />
 
-            <div className="bg-white rounded-t-[2rem] w-full max-w-md mx-auto relative flex flex-col max-h-[90vh] shadow-2xl animate-slide-up">
+            <div className="bg-white rounded-t-[2rem] w-full max-w-2xl mx-auto relative flex flex-col max-h-[90vh] shadow-2xl animate-slide-up">
                 {/* Header */}
                 <div className="p-6 pb-4 border-b border-slate-100 flex justify-between items-center shrink-0">
                     <div>

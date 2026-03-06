@@ -53,7 +53,7 @@ const FooterNav: React.FC<FooterNavProps> = ({ tableNumber, isOwner, pin }) => {
     return (
         <>
             {/* Nav Bar Fixo no Fundo */}
-            <nav className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-slate-100 px-6 py-3 pb-8 z-50 flex justify-between items-center w-full sm:max-w-md sm:mx-auto shadow-[0_-10px_30px_-15px_rgba(0,0,0,0.1)]">
+            <nav className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-slate-100 px-6 py-3 pb-8 z-50 flex justify-between items-center w-full max-w-6xl mx-auto shadow-[0_-10px_30px_-15px_rgba(0,0,0,0.1)]">
                 {/* Botão Extrato */}
                 <button
                     onClick={handleOpenConsumption}
@@ -99,7 +99,7 @@ const FooterNav: React.FC<FooterNavProps> = ({ tableNumber, isOwner, pin }) => {
                 <div className="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-md flex items-end justify-center">
                     <div className="absolute inset-0" onClick={() => setActiveModal(null)} />
 
-                    <div className="bg-white rounded-t-[2.5rem] w-full max-w-md p-8 relative animate-slide-up max-h-[80vh] overflow-y-auto">
+                    <div className="bg-white rounded-t-[2.5rem] w-full max-w-2xl p-8 relative animate-slide-up max-h-[80vh] overflow-y-auto">
                         <button onClick={() => setActiveModal(null)} className="absolute top-6 right-6 w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center text-slate-500">✕</button>
 
                         {activeModal === 'pin' && (
