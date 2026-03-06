@@ -58,6 +58,11 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
         'DINHEIRO': 'Dinheiro'
     };
 
+    const getInitials = (name: any) => {
+        if (!name || typeof name !== 'string') return 'C';
+        return name.charAt(0) || 'C';
+    };
+
     const fetchOrders = async (silent = false) => {
         if (!silent) setIsLoading(true);
         try {
