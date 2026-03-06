@@ -5,6 +5,7 @@ import { Order, OrderStatus, User, OrderStatusLabels } from '../types';
 import { Icons, formatImageUrl } from '../constants';
 import { audioAlert } from '../services/audioAlert';
 import CustomAlert from '../components/CustomAlert';
+import { chatUnreadManager } from '../services/socket';
 
 interface DeliveryOrdersProps {
     currentUser: User;
@@ -18,8 +19,19 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
     const [activeTab, setActiveTab] = useState<'active' | 'history' | 'chat'>('active');
     const [businessSettings, setBusinessSettings] = useState<any>(null);
     const [printingOrder, setPrintingOrder] = useState<Order | null>(null);
+
+    // Chat States
+    const [chatType, setChatType] = useState<'DRIVER' | 'CLIENT'>('CLIENT');
+    const [drivers, setDrivers] = useState<any[]>([]);
+    const [selectedDriver, setSelectedDriver] = useState<any>(null);
+    const [selectedOrderChat, setSelectedOrderChat] = useState<Order | null>(null);
+    const [unreadDrivers, setUnreadDrivers] = useState<Set<string>>(chatUnreadManager.getUnreads());
+    const [unreadClients, setUnreadClients] = useState<Set<string>>(new Set());
+    const [messages, setMessages] = useState<any[]>([]);
+    const [newMessage, setNewMessage] = useState('');
     const [supportMessages, setSupportMessages] = useState<any[]>([]);
-    const [hasUnreadSupport, setHasUnreadSupport] = useState(false);
+    const chatEndRef = React.useRef<HTMLDivElement>(null);
+
     const [alertConfig, setAlertConfig] = useState<{
         isOpen: boolean;
         title: string;
@@ -65,13 +77,55 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
 
             if (activeTab === 'active') {
                 setOrders(appOrders.filter(o => !['DELIVERED', 'CANCELLED'].includes(o.status)));
-            } else {
+            } else if (activeTab === 'history') {
                 setOrders(appOrders.filter(o => ['DELIVERED', 'CANCELLED'].includes(o.status)));
+            } else {
+                // Para o CHAT, mostramos TODOS os pedidos da App Delivery
+                setOrders(appOrders);
             }
+
+            const allDrivers = await db.getDrivers();
+            setDrivers(allDrivers);
         } catch (error) {
             console.error("Error fetching orders:", error);
         } finally {
             if (!silent) setIsLoading(false);
+        }
+    };
+
+    const loadChatHistory = async (id: string) => {
+        let history = [];
+        if (chatType === 'DRIVER') {
+            history = await db.getChatHistory(id);
+        } else {
+            history = await db.getClientChatHistory(id);
+        }
+        setMessages(history);
+    };
+
+    const handleSendMessage = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!newMessage.trim() || !currentUser) return;
+
+        try {
+            if (chatType === 'DRIVER' && selectedDriver) {
+                const msgData = {
+                    driverId: selectedDriver.id,
+                    content: newMessage,
+                    senderName: 'Atendimento',
+                    isFromDriver: false
+                };
+                const savedMsg = await db.sendChatMessage(msgData);
+                socket.emit('send_message', savedMsg);
+            } else if (chatType === 'CLIENT' && selectedOrderChat) {
+                const savedMsg = await db.sendClientChatMessage(selectedOrderChat.id, newMessage, 'Atendimento', false);
+                socket.emit('send_message', { ...(savedMsg as any), orderId: selectedOrderChat.id });
+            }
+            setNewMessage('');
+            if (chatType === 'DRIVER' && selectedDriver) loadChatHistory(selectedDriver.id);
+            else if (chatType === 'CLIENT' && selectedOrderChat) loadChatHistory(selectedOrderChat.id);
+        } catch (e) {
+            console.error("Erro ao enviar mensagem:", e);
         }
     };
 
@@ -86,8 +140,25 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
 
     useEffect(() => {
         fetchOrders();
-        fetchSupportMessages();
     }, [activeTab]);
+
+    useEffect(() => {
+        if (chatType === 'DRIVER' && selectedDriver) {
+            loadChatHistory(selectedDriver.id);
+            chatUnreadManager.removeUnread(selectedDriver.id);
+        } else if (chatType === 'CLIENT' && selectedOrderChat) {
+            loadChatHistory(selectedOrderChat.id);
+            setUnreadClients(prev => {
+                const next = new Set(prev);
+                next.delete(selectedOrderChat.id);
+                return next;
+            });
+        }
+    }, [selectedDriver, selectedOrderChat, chatType]);
+
+    useEffect(() => {
+        chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [messages]);
 
     useEffect(() => {
         let isMounted = true;
@@ -113,17 +184,36 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
         };
 
         const handleNewSupportMessage = (msg: any) => {
-            setSupportMessages(prev => [...prev.filter(m => m.id !== msg.id), msg]);
-            if (activeTab !== 'chat') {
-                setHasUnreadSupport(true);
+            if (msg.orderId) {
+                // Mensagem de Chat de Pedido
+                if (activeTab === 'chat' && selectedOrderChat?.id === msg.orderId) {
+                    setMessages(prev => [...prev.filter(m => m.id !== msg.id), msg]);
+                } else {
+                    setUnreadClients(prev => new Set(prev).add(msg.orderId));
+                    audioAlert.play();
+                }
+            } else {
+                // Mensagem legada/global (se ainda existir)
+                audioAlert.play();
             }
-            audioAlert.play();
+        };
+
+        const handleNewDriverMessage = (msg: any) => {
+            if (activeTab === 'chat' && chatType === 'DRIVER' && selectedDriver?.id === msg.driverId) {
+                setMessages(prev => [...prev.filter(m => m.id !== msg.id), msg]);
+            } else {
+                // chatUnreadManager já lida com o estado global de drivers
+                audioAlert.play();
+            }
         };
 
         socket.on('ordersUpdated', handleOrdersUpdate);
         socket.on('newOrder', handleNewOrder);
         socket.on('orderStatusChanged', handleOrdersUpdate);
         socket.on('new_support_message', handleNewSupportMessage);
+        socket.on('new_message', handleNewDriverMessage);
+
+        const unsubscribeUnreads = chatUnreadManager.subscribe(setUnreadDrivers);
 
         timeoutId = setTimeout(pollData, 10000);
 
@@ -134,8 +224,10 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
             socket.off('newOrder', handleNewOrder);
             socket.off('orderStatusChanged', handleOrdersUpdate);
             socket.off('new_support_message', handleNewSupportMessage);
+            socket.off('new_message', handleNewDriverMessage);
+            unsubscribeUnreads();
         };
-    }, [activeTab]);
+    }, [activeTab, selectedOrderChat, selectedDriver, chatType]);
 
     const approveOrder = async (orderId: string) => {
         await db.updateOrderStatus(orderId, 'PREPARING', currentUser);
@@ -200,11 +292,10 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
                     <button
                         onClick={() => {
                             setActiveTab('chat');
-                            setHasUnreadSupport(false);
                         }}
-                        className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all relative ${activeTab === 'chat' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' : 'text-slate-400 hover:bg-slate-50'} ${hasUnreadSupport ? 'animate-notify-turquoise' : ''}`}
+                        className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all relative ${activeTab === 'chat' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' : 'text-slate-400 hover:bg-slate-50'} ${(unreadClients.size > 0 || unreadDrivers.size > 0) ? 'animate-notify-turquoise' : ''}`}
                     >
-                        Chat {hasUnreadSupport && <span className="absolute -top-1 -right-1 w-3 h-3 bg-rose-500 rounded-full border-2 border-white animate-pulse"></span>}
+                        Chat {(unreadClients.size > 0 || unreadDrivers.size > 0) && <span className="absolute -top-1 -right-1 w-3 h-3 bg-rose-500 rounded-full border-2 border-white animate-pulse"></span>}
                     </button>
                 </div>
             </div>
@@ -306,40 +397,132 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
                 </div>
 
                 {/* Messages Panel */}
-                <div className={`${activeTab === 'chat' ? 'flex-1 flex' : 'hidden'} bg-white rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col overflow-hidden no-print animate-in slide-in-from-right duration-500`}>
-                    <div className="p-6 border-b border-slate-50 bg-slate-50/50">
-                        <h2 className="font-black text-slate-800 uppercase tracking-tighter flex items-center gap-2">
-                            <Icons.Message className="w-5 h-5 text-indigo-500" />
-                            Mensagens de Clientes
-                        </h2>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Chat do App Delivery</p>
+                <div className={`${activeTab === 'chat' ? 'flex-1 flex' : 'hidden'} bg-white rounded-[2.5rem] border border-slate-100 shadow-sm flex overflow-hidden no-print animate-in slide-in-from-right duration-500`}>
+                    {/* Sidebar de Chats */}
+                    <div className="w-80 border-r border-slate-50 flex flex-col bg-slate-50/30">
+                        <div className="p-4 border-b border-slate-100 flex gap-2">
+                            <button
+                                onClick={() => { setChatType('DRIVER'); setSelectedDriver(null); setSelectedOrderChat(null); }}
+                                className={`flex-1 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${chatType === 'DRIVER' ? 'bg-slate-900 text-white shadow-md' : 'bg-slate-200 text-slate-500'}`}
+                            >
+                                Entregadores
+                            </button>
+                            <button
+                                onClick={() => { setChatType('CLIENT'); setSelectedDriver(null); setSelectedOrderChat(null); }}
+                                className={`flex-1 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${chatType === 'CLIENT' ? 'bg-slate-900 text-white shadow-md' : 'bg-slate-200 text-slate-500'}`}
+                            >
+                                App Clientes
+                            </button>
+                        </div>
+                        <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-2 custom-scrollbar">
+                            {chatType === 'DRIVER' ? (
+                                drivers.map(driver => (
+                                    <button
+                                        key={driver.id}
+                                        onClick={() => setSelectedDriver(driver)}
+                                        className={`flex items-center gap-3 p-4 rounded-3xl transition-all ${selectedDriver?.id === driver.id ? 'bg-white shadow-md border border-slate-100 scale-[1.02]' : 'hover:bg-white/50'} ${unreadDrivers.has(driver.id) ? 'animate-notify-turquoise border-indigo-200 bg-indigo-50/50' : ''}`}
+                                    >
+                                        <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-white font-black uppercase text-sm ${selectedDriver?.id === driver.id ? 'bg-indigo-600 shadow-lg shadow-indigo-500/20' : 'bg-slate-300'}`}>
+                                            {driver.name.charAt(0)}
+                                        </div>
+                                        <div className="flex-1 text-left min-w-0">
+                                            <p className="text-sm font-black text-slate-800 truncate">{driver.name}</p>
+                                            <div className="flex items-center gap-1.5 mt-0.5">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Conectado / {driver.vehiclePlate}</span>
+                                            </div>
+                                        </div>
+                                    </button>
+                                ))
+                            ) : (
+                                orders
+                                    .filter(o => o.isOriginDeliveryApp)
+                                    .map(order => (
+                                        <button
+                                            key={order.id}
+                                            onClick={() => setSelectedOrderChat(order)}
+                                            className={`flex items-center gap-3 p-4 rounded-3xl transition-all ${selectedOrderChat?.id === order.id ? 'bg-white shadow-md border border-slate-100 scale-[1.02]' : 'hover:bg-white/50'} ${unreadClients.has(order.id) ? 'animate-notify-turquoise border-indigo-200 bg-indigo-50/50' : ''}`}
+                                        >
+                                            <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-white font-black uppercase text-sm ${selectedOrderChat?.id === order.id ? 'bg-indigo-600 shadow-lg shadow-indigo-500/20' : 'bg-slate-300'}`}>
+                                                {order.clientName.charAt(0)}
+                                            </div>
+                                            <div className="flex-1 text-left min-w-0">
+                                                <p className="text-sm font-black text-slate-800 truncate">{order.clientName}</p>
+                                                <div className="flex items-center gap-1.5 mt-0.5">
+                                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Pedido #{order.id.slice(-4).toUpperCase()}</span>
+                                                </div>
+                                            </div>
+                                        </button>
+                                    ))
+                            )}
+                        </div>
                     </div>
-                    <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
-                        {supportMessages.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center h-full text-center p-8">
-                                <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-300 mb-4 transform rotate-12">
-                                    <Icons.Message className="w-8 h-8" />
-                                </div>
-                                <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Nenhuma mensagem no momento.</p>
-                            </div>
-                        ) : (
-                            supportMessages.map(msg => (
-                                <div key={msg.id} className="bg-slate-50 rounded-3xl p-5 border border-slate-100 animate-in slide-in-from-right duration-300">
-                                    <div className="flex justify-between items-start mb-2">
-                                        <span className="text-[10px] font-black text-indigo-500 uppercase tracking-widest bg-indigo-50 px-2 py-0.5 rounded-md">
-                                            {msg.userName || 'Anônimo'}
-                                        </span>
-                                        <span className="text-[9px] font-bold text-slate-400">
-                                            {new Date(msg.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                                        </span>
+
+                    {/* Área de Chat */}
+                    <div className="flex-1 flex flex-col bg-white">
+                        {(selectedDriver || selectedOrderChat) ? (
+                            <>
+                                <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/10">
+                                    <div className="flex items-center gap-3">
+                                        <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-white font-black uppercase text-sm shadow-xl bg-indigo-600 shadow-indigo-500/10`}>
+                                            {chatType === 'DRIVER' ? selectedDriver?.name.charAt(0) : selectedOrderChat?.clientName.charAt(0)}
+                                        </div>
+                                        <div>
+                                            <h4 className="text-sm font-black text-slate-800">{chatType === 'DRIVER' ? selectedDriver?.name : selectedOrderChat?.clientName}</h4>
+                                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                                                {chatType === 'DRIVER' ? 'Conversa com Entregador' : `Pedido #${selectedOrderChat?.id.slice(-4).toUpperCase()}`}
+                                            </p>
+                                        </div>
                                     </div>
-                                    <p className="text-sm font-bold text-slate-700 leading-relaxed break-words">{msg.message}</p>
                                 </div>
-                            ))
+
+                                <div className="flex-1 overflow-y-auto p-8 flex flex-col gap-4 custom-scrollbar bg-slate-50/20">
+                                    {messages.length === 0 && (
+                                        <div className="flex flex-col items-center justify-center h-full opacity-20 py-20 grayscale">
+                                            <Icons.Message className="w-16 h-16 mb-4" />
+                                            <p className="text-xs font-black uppercase tracking-widest">Nenhuma mensagem neste chat</p>
+                                        </div>
+                                    )}
+                                    {messages.map((msg, i) => (
+                                        <div key={msg.id || i} className={`flex ${(msg.isFromDriver || msg.isFromClient) ? 'justify-start' : 'justify-end'}`}>
+                                            <div className={`max-w-[70%] p-5 rounded-[2rem] shadow-sm text-sm ${(msg.isFromDriver || msg.isFromClient) ? 'bg-white border border-slate-100 text-slate-800 rounded-tl-none' : 'bg-slate-900 text-white rounded-tr-none'}`}>
+                                                <div className="flex justify-between items-center mb-1 gap-4">
+                                                    <span className="text-[8px] font-black uppercase tracking-widest opacity-50">
+                                                        {(msg.isFromDriver || msg.isFromClient) ? (msg.senderName || 'Remetente') : 'Você'}
+                                                    </span>
+                                                    <span className="text-[8px] font-black opacity-30 uppercase tracking-tighter">
+                                                        {new Date(msg.createdAt || msg.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                                                    </span>
+                                                </div>
+                                                <p className="font-bold leading-relaxed">{msg.content || msg.message}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    <div ref={chatEndRef} />
+                                </div>
+
+                                <form onSubmit={handleSendMessage} className="p-6 bg-white border-t border-slate-100 flex gap-4">
+                                    <input
+                                        type="text"
+                                        value={newMessage}
+                                        onChange={e => setNewMessage(e.target.value)}
+                                        placeholder="Digite sua mensagem..."
+                                        className="flex-1 bg-slate-50 border-none rounded-2xl px-6 text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none"
+                                    />
+                                    <button type="submit" className="px-8 bg-indigo-600 text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl shadow-indigo-500/20 active:scale-95 transition-all">
+                                        Enviar
+                                    </button>
+                                </form>
+                            </>
+                        ) : (
+                            <div className="flex-1 flex flex-col items-center justify-center text-slate-300 p-12 text-center">
+                                <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mb-6 transform rotate-12">
+                                    <Icons.Message className="w-12 h-12 text-slate-200" />
+                                </div>
+                                <h3 className="text-lg font-black text-slate-800 uppercase tracking-tighter mb-2">Central de Atendimento</h3>
+                                <p className="text-xs font-bold text-slate-400 max-w-xs leading-relaxed uppercase">Selecione uma conversa ao lado para responder aos seus clientes ou entregadores.</p>
+                            </div>
                         )}
-                    </div>
-                    <div className="p-4 bg-slate-50 border-t border-slate-100">
-                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">As mensagens são limpas diariamente na abertura do caixa.</p>
                     </div>
                 </div>
             </div>

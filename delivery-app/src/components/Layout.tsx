@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import FooterNav from './FooterNav';
 import { Icons } from '../constants';
 import { api } from '../services/api';
+import { socket } from '../services/socket';
 import CustomAlert from './CustomAlert';
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -11,6 +12,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const shouldShowFooter = !hideFooterPaths.includes(location.pathname);
 
     const [isChatOpen, setIsChatOpen] = useState(false);
+    const [hasUnread, setHasUnread] = useState(false);
     const [supportName, setSupportName] = useState('');
     const [supportMsg, setSupportMsg] = useState('');
     const [isSendingSupport, setIsSendingSupport] = useState(false);
@@ -79,7 +81,29 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             if (interval) clearInterval(interval);
             if (settingsInterval) clearInterval(settingsInterval);
         };
-    }, []);
+    }, [settings]);
+
+    React.useEffect(() => {
+        const handleNewMessage = () => {
+            if (!isChatOpen) {
+                setHasUnread(true);
+            }
+        };
+
+        socket.on('new_message', handleNewMessage);
+        socket.on('new_support_message', handleNewMessage);
+
+        return () => {
+            socket.off('new_message', handleNewMessage);
+            socket.off('new_support_message', handleNewMessage);
+        };
+    }, [isChatOpen]);
+
+    React.useEffect(() => {
+        if (isChatOpen) {
+            setHasUnread(false);
+        }
+    }, [isChatOpen]);
 
     const handleSendSupport = async () => {
         if (!supportMsg.trim()) {
@@ -117,7 +141,10 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             {children}
 
             {shouldShowFooter && (
-                <FooterNav onOpenChat={() => setIsChatOpen(true)} />
+                <FooterNav
+                    onOpenChat={() => setIsChatOpen(true)}
+                    hasUnread={hasUnread}
+                />
             )}
 
             {/* Chat Modal */}

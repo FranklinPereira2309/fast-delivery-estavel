@@ -4,9 +4,10 @@ import { Icons } from '../constants';
 
 interface FooterNavProps {
     onOpenChat: () => void;
+    hasUnread?: boolean;
 }
 
-const FooterNav: React.FC<FooterNavProps> = ({ onOpenChat }) => {
+const FooterNav: React.FC<FooterNavProps> = ({ onOpenChat, hasUnread }) => {
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -14,6 +15,16 @@ const FooterNav: React.FC<FooterNavProps> = ({ onOpenChat }) => {
 
     return (
         <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-slate-100 px-6 py-4 flex justify-between items-center z-50 rounded-t-[2.5rem] shadow-[0_-10px_25px_-5px_rgba(0,0,0,0.05)]">
+            <style>{`
+                @keyframes blink-blue {
+                    0% { opacity: 1; transform: scale(1); }
+                    50% { opacity: 0.7; transform: scale(1.05); }
+                    100% { opacity: 1; transform: scale(1); }
+                }
+                .animate-blink-blue {
+                    animation: blink-blue 1s infinite;
+                }
+            `}</style>
             <button
                 onClick={() => navigate('/')}
                 className={`flex flex-col items-center gap-1 transition-all ${isActive('/') ? 'text-indigo-600 scale-110' : 'text-slate-400'}`}
@@ -26,7 +37,7 @@ const FooterNav: React.FC<FooterNavProps> = ({ onOpenChat }) => {
                 onClick={onOpenChat}
                 className="flex flex-col items-center gap-1 text-slate-400 hover:text-indigo-600 transition-all active:scale-95"
             >
-                <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-200 -mt-8 border-4 border-white">
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-lg -mt-8 border-4 border-white ${hasUnread ? 'bg-indigo-600 shadow-indigo-200 animate-blink-blue' : 'bg-slate-400 shadow-slate-200'}`}>
                     <Icons.MessageSquare className="w-6 h-6" />
                 </div>
                 <span className="text-[10px] font-black uppercase tracking-widest mt-1">Mensagem</span>

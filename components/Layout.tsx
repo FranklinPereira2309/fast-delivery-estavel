@@ -169,16 +169,23 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
   }, [activeTab]);
 
   useEffect(() => {
-    const handleNewSupport = () => {
+    const handleNewSupport = (msg: any) => {
       if (activeTab !== 'delivery-orders') {
         setShouldBlinkDeliveryApp(true);
       }
     };
 
     socket.on('new_support_message', handleNewSupport);
+    socket.on('new_message', (msg: any) => {
+      // If it's a message for an order (client chat)
+      if (msg.orderId && activeTab !== 'delivery-orders') {
+        setShouldBlinkDeliveryApp(true);
+      }
+    });
 
     return () => {
       socket.off('new_support_message', handleNewSupport);
+      socket.off('new_message');
     };
   }, [activeTab]);
 
