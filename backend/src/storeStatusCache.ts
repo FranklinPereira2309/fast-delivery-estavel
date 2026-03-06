@@ -82,13 +82,9 @@ const calculateCurrentStoreStatus = (): StoreStatus => {
 
         const currentTimeInt = hour * 60 + minute;
 
-        // Log para depuração (apenas console do servidor)
-        console.log(`[DEBUG StoreStatus] Dia: ${currentDayNum}, Hora SP: ${hour}:${minute}, TotalMin: ${currentTimeInt}`);
-
         const todayConfig = hours.find((h: any) => h.dayOfWeek === currentDayNum);
 
         if (!todayConfig || !todayConfig.isOpen) {
-            console.log(`[DEBUG StoreStatus] Loja fechada hoje (config ou isOpen=false)`);
             return { status: 'offline', is_manually_closed: false, next_status_change: getNextOpenTime(hours, new Date()) };
         }
 
@@ -113,7 +109,6 @@ const calculateCurrentStoreStatus = (): StoreStatus => {
 
         if (isOpenNow) {
             // It's open! Calculate next_status_change (closing time)
-            console.log(`[DEBUG StoreStatus] Loja ABERTA. Próximo fechamento: ${todayConfig.closeTime}`);
 
             // Get SP date parts to construct a specialized ISO string
             const spDateParts = new Intl.DateTimeFormat('en-US', {
@@ -143,7 +138,6 @@ const calculateCurrentStoreStatus = (): StoreStatus => {
             return { status: 'online', is_manually_closed: false, next_status_change: nextChangeDate.toISOString() };
         } else {
             // It's closed.
-            console.log(`[DEBUG StoreStatus] Loja fechada (fora do horário). Próxima abertura: ${todayConfig.openTime}`);
             const nextOpen = getNextOpenTime(hours, new Date());
             return { status: 'offline', is_manually_closed: false, next_status_change: nextOpen };
         }

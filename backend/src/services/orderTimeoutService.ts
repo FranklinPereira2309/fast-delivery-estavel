@@ -1,24 +1,9 @@
 
 import prisma from '../prisma';
 import { getIO } from '../socket';
-import fs from 'fs';
-import path from 'path';
-
-const LOG_FILE = path.join(process.cwd(), 'logs', 'timeout_service.log');
-
-const logToFile = (message: string) => {
-    const timestamp = new Date().toISOString();
-    const formattedMessage = `[${timestamp}] ${message}\n`;
-    try {
-        fs.appendFileSync(LOG_FILE, formattedMessage);
-    } catch (e) {
-        console.error('Failed to write to log file:', e);
-    }
-};
 
 export const startOrderTimeoutService = () => {
-    logToFile('Order Timeout Service initialized.');
-    console.log('Starting Order Timeout Service...');
+    console.log('Order Timeout Service initialized.');
 
     setInterval(async () => {
         try {
@@ -38,8 +23,6 @@ export const startOrderTimeoutService = () => {
             const timeoutMs = timeoutMinutes * 60 * 1000;
             const limitTime = new Date(now.getTime() - timeoutMs);
 
-            logToFile(`Checking for timed out orders. Timeout: ${timeoutMinutes} min. Now: ${now.toISOString()}, Limit: ${limitTime.toISOString()}`);
-
             // 1. Reliability check: Assigned but no timestamp
             const missingTimestampOrders = await (prisma.order as any).findMany({
                 where: {
@@ -50,7 +33,6 @@ export const startOrderTimeoutService = () => {
             });
 
             if (missingTimestampOrders.length > 0) {
-                logToFile(`Found ${missingTimestampOrders.length} orders missing assignedAt. Fixing...`);
                 for (const order of missingTimestampOrders) {
                     await (prisma.order as any).update({
                         where: { id: order.id },
@@ -69,12 +51,10 @@ export const startOrderTimeoutService = () => {
             });
 
             if (timedOutOrders.length > 0) {
-                logToFile(`Found ${timedOutOrders.length} timed out orders. IDs: ${timedOutOrders.map((o: any) => o.id).join(', ')}`);
+                console.log(`[TIMEOUT] Found ${timedOutOrders.length} timed out orders.`);
 
                 for (const order of timedOutOrders) {
                     const oldDriverId = order.driverId;
-                    logToFile(`Processing timeout for Order ${order.id} (Driver ${oldDriverId})...`);
-
                     try {
                         await prisma.$transaction(async (tx) => {
                             // Revert order assignment
@@ -99,9 +79,9 @@ export const startOrderTimeoutService = () => {
                             await tx.auditLog.create({
                                 data: {
                                     action: 'AUTO_REJECTION',
-                                    userId: systemUser?.id || 'SYSTEM', // Fallback to SYSTEM if no user, but constraint might still fail
+                                    userId: systemUser?.id || 'SYSTEM',
                                     userName: 'Sistema',
-                                    details: `Pedido ${order.id} inativado por falta de interação do entregador ${oldDriverId}. (Vínculo removido e motorista liberado)`
+                                    details: `Pedido ${order.id} inativado por falta de interação do entregador ${oldDriverId}.`
                                 }
                             });
 
@@ -137,15 +117,14 @@ export const startOrderTimeoutService = () => {
                         getIO().emit('orderStatusChanged', { action: 'statusUpdate', id: order.id, status: 'READY' });
                         getIO().emit('drivers_updated');
 
-                        logToFile(`Order ${order.id} successfully timed out and released.`);
+                        console.log(`[TIMEOUT] Order ${order.id} released.`);
                     } catch (innerError: any) {
-                        logToFile(`FAILED to process timeout for order ${order.id}: ${innerError.message}`);
+                        console.error(`[TIMEOUT] FAILED for order ${order.id}:`, innerError.message);
                     }
                 }
             }
         } catch (error: any) {
-            logToFile(`CRITICAL Error in Order Timeout Service: ${error.message}`);
-            console.error('Error in Order Timeout Service:', error);
+            console.error('CRITICAL Error in Order Timeout Service:', error.message);
         }
-    }, 15000); // Check every 15 seconds for more responsiveness
+    }, 15000);
 };

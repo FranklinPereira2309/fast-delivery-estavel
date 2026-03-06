@@ -16,13 +16,20 @@ const mapOrderResponse = (order: any) => {
 };
 
 export const getAllOrders = async (req: Request, res: Response) => {
+    const fortyEightHoursAgo = new Date(Date.now() - 48 * 60 * 60 * 1000);
+
     const orders = await prisma.order.findMany({
+        where: {
+            OR: [
+                { status: { notIn: ['DELIVERED', 'CANCELLED'] } },
+                { createdAt: { gte: fortyEightHoursAgo.toISOString() } }
+            ]
+        },
         include: {
             items: { include: { product: true } },
             waiter: true
         }
     });
-    console.log(`Fetching ${orders.length} orders for Kitchen`);
     res.json(orders.map(mapOrderResponse));
 };
 
@@ -923,7 +930,8 @@ export const getClientOrders = async (req: Request, res: Response) => {
         const orders = await prisma.order.findMany({
             where: { clientId: String(clientId) },
             include: { items: { include: { product: true } } },
-            orderBy: { createdAt: 'desc' }
+            orderBy: { createdAt: 'desc' },
+            take: 50 // Optimization: don't load thousands of orders for a single client in the app
         });
         res.json(orders.map(mapOrderResponse));
     } catch (error: any) {
