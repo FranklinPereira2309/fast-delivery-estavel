@@ -52,7 +52,7 @@ const Login: React.FC = () => {
             setAlertState({
                 isOpen: true,
                 title: 'Erro no Login',
-                message: err.message || 'Verifique suas credenciais e tente novamente.',
+                message: 'Dados incorretos, verifique o telefone e/ou senha',
                 type: 'DANGER',
                 onConfirm: () => setAlertState(prev => ({ ...prev, isOpen: false })),
                 onCancel: undefined
