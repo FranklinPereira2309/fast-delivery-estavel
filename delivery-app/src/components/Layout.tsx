@@ -60,15 +60,24 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                 const s = await api.getSettings();
                 setSettings(s);
                 updateCountdown(s);
-                interval = setInterval(() => updateCountdown(s), 1000);
             } catch (err) {
                 console.error("Error fetching settings in Layout:", err);
             }
         };
+
         fetchSettings();
+
+        // Update countdown every second for accuracy
+        interval = setInterval(() => {
+            if (settings) updateCountdown(settings);
+        }, 1000);
+
+        // Fetch fresh settings every 15 seconds to sync status/banner
+        const settingsInterval = setInterval(fetchSettings, 15000);
 
         return () => {
             if (interval) clearInterval(interval);
+            if (settingsInterval) clearInterval(settingsInterval);
         };
     }, []);
 

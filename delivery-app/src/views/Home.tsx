@@ -31,7 +31,8 @@ const Home: React.FC = () => {
                 console.error("Error parsing client data", e);
             }
         }
-        const init = async () => {
+
+        const fetchInitialData = async () => {
             try {
                 const [p, s] = await Promise.all([
                     api.getProducts(),
@@ -47,7 +48,20 @@ const Home: React.FC = () => {
                 setIsLoading(false);
             }
         };
-        init();
+
+        fetchInitialData();
+
+        // Polling settings every 15s to update Delivery ON/OFF status
+        const interval = setInterval(async () => {
+            try {
+                const s = await api.getSettings();
+                setSettings(s as any);
+            } catch (e) {
+                console.error("Error polling settings", e);
+            }
+        }, 15000);
+
+        return () => clearInterval(interval);
     }, []);
 
     const filteredProducts = products.filter(p => {
@@ -179,7 +193,7 @@ const Home: React.FC = () => {
 
             {/* Floating Cart Button */}
             {items.length > 0 && (
-                <div className="fixed bottom-6 left-6 right-6 animate-in slide-in-from-bottom duration-300">
+                <div className="fixed bottom-32 left-6 right-6 animate-in slide-in-from-bottom duration-300 z-40">
                     <button
                         onClick={() => navigate('/checkout')}
                         className="w-full bg-indigo-600 text-white p-5 rounded-3xl font-black uppercase text-[10px] tracking-widest shadow-2xl shadow-indigo-200 flex justify-between items-center active:scale-95 transition-transform"
