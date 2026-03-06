@@ -100,7 +100,8 @@ const FleetManagement: React.FC<{ refreshLogistics: () => void }> = ({ refreshLo
       name: formData.name, phone: formData.phone, email: formData.email, address: formData.address,
       vehiclePlate: formData.type === 'Bicicleta' ? 'N/A' : (formData.plate || '---'),
       vehicleModel: formData.model, vehicleBrand: formData.brand, vehicleType: formData.type,
-      status: editingDriver?.status || 'AVAILABLE'
+      status: editingDriver?.status || 'AVAILABLE',
+      active: editingDriver?.active ?? true
     };
     await db.saveDriver(driver);
     refresh();
@@ -279,6 +280,7 @@ const Logistics: React.FC = () => {
   const [businessSettings, setBusinessSettings] = useState<BusinessSettings | null>(null);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [printingOrder, setPrintingOrder] = useState<Order | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const [activeTab, setActiveTab] = useState<'PENDING' | 'HISTORY' | 'CHAT' | 'FROTA'>('PENDING');
   const [chatType, setChatType] = useState<'DRIVER' | 'CLIENT'>('DRIVER');
@@ -383,20 +385,27 @@ const Logistics: React.FC = () => {
   };
 
   const refreshData = async () => {
-    const [allDrivers, allOrders, allProds, settings] = await Promise.all([
-      db.getDrivers(),
-      db.getOrders(),
-      db.getProducts(),
-      db.getSettings()
-    ]);
-    setDrivers(allDrivers);
-    setProducts(allProds);
-    setBusinessSettings(settings);
-    setReadyOrders(allOrders.filter(o =>
-      o.type === SaleType.OWN_DELIVERY &&
-      ([OrderStatus.READY, OrderStatus.OUT_FOR_DELIVERY, OrderStatus.DELIVERED] as OrderStatus[]).includes(o.status)
-    ).sort((a, b) => b.createdAt.localeCompare(a.createdAt)));
-    setHistoryOrders(allOrders.filter(o => o.type === SaleType.OWN_DELIVERY && o.status === OrderStatus.DELIVERED));
+    setIsLoading(true);
+    try {
+      const [allDrivers, allOrders, allProds, settings] = await Promise.all([
+        db.getDrivers(),
+        db.getOrders(),
+        db.getProducts(),
+        db.getSettings()
+      ]);
+      setDrivers(allDrivers);
+      setProducts(allProds);
+      setBusinessSettings(settings);
+      setReadyOrders(allOrders.filter(o =>
+        o.type === SaleType.OWN_DELIVERY &&
+        ([OrderStatus.READY, OrderStatus.OUT_FOR_DELIVERY, OrderStatus.DELIVERED] as OrderStatus[]).includes(o.status)
+      ).sort((a, b) => b.createdAt.localeCompare(a.createdAt)));
+      setHistoryOrders(allOrders.filter(o => o.type === SaleType.OWN_DELIVERY && o.status === OrderStatus.DELIVERED));
+    } catch (error) {
+      console.error("Error refreshing Logistics data:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const assignDriver = async (orderId: string, driverId: string) => {
@@ -436,8 +445,19 @@ const Logistics: React.FC = () => {
   }, [printingOrder, products]);
 
   return (
-    <div className="flex flex-col h-full gap-6">
+    <div className="flex flex-col h-full gap-6 relative">
       <BlinkCSS />
+      {isLoading && (
+        <div className="absolute top-0 left-0 w-full h-1 bg-indigo-100 overflow-hidden z-50">
+          <div className="h-full bg-indigo-600 animate-[loading_2s_infinite]"></div>
+        </div>
+      )}
+      <style>{`
+        @keyframes loading {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
+        }
+      `}</style>
       <div className="flex items-center gap-4 bg-white p-2 rounded-3xl w-max shadow-sm border border-slate-100 flex-shrink-0">
         <button
           onClick={() => setActiveTab('PENDING')}

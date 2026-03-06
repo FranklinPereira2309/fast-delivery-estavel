@@ -14,6 +14,7 @@ const Kitchen: React.FC = () => {
   const [waiters, setWaiters] = useState<Waiter[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [viewTab, setViewTab] = useState<'FILA' | 'HISTORICO'>('FILA');
+  const [isLoading, setIsLoading] = useState(false);
 
   // Controle de seleção local por pedido: { orderId: [uids selecionados] }
   const [selectedItems, setSelectedItems] = useState<Record<string, string[]>>({});
@@ -40,51 +41,56 @@ const Kitchen: React.FC = () => {
   }, [viewTab]);
 
   const refreshData = async (isFirstLoad: boolean) => {
-    const allOrders = await db.getOrders();
-    const allProducts = await db.getProducts();
-    const allInventory = await db.getInventory();
-    const allWaiters = await db.getWaiters();
+    if (isFirstLoad) setIsLoading(true);
+    try {
+      const allOrders = await db.getOrders();
+      const allProducts = await db.getProducts();
+      const allInventory = await db.getInventory();
+      const allWaiters = await db.getWaiters();
 
-    // Filtro inteligente: Pedidos ativos (não finalizados ou cancelados) QUE POSSUEM itens em preparo
-    // Modificação: Foi removido o filtro 'o.items.some(it => !it.isReady)' pois a cozinha reclamou que os
-    // pedidos desapareciam precipitadamente da Fila de Produção ao concluí-los, ao invés de aguardar o fechamento da mesa.
-    const activeOrders = allOrders.filter(o =>
-      o.status !== OrderStatus.CANCELLED &&
-      o.status !== OrderStatus.DELIVERED &&
-      o.items.length > 0 &&
-      !(o.isOriginDeliveryApp && o.status === OrderStatus.PENDING)
-    );
+      // Filtro inteligente: Pedidos ativos (não finalizados ou cancelados) QUE POSSUEM itens em preparo
+      const activeOrders = allOrders.filter(o =>
+        o.status !== OrderStatus.CANCELLED &&
+        o.status !== OrderStatus.DELIVERED &&
+        o.items.length > 0 &&
+        !(o.isOriginDeliveryApp && o.status === OrderStatus.PENDING)
+      );
 
-    // Detectar novos itens em pedidos existentes para resetar o blink
-    activeOrders.forEach(order => {
-      const currentCount = order.items.length;
-      const prevCount = prevItemCounts.current[order.id] || 0;
+      // Detectar novos itens em pedidos existentes para resetar o blink
+      activeOrders.forEach(order => {
+        const currentCount = order.items.length;
+        const prevCount = prevItemCounts.current[order.id] || 0;
 
-      if (currentCount > prevCount && !isFirstLoad) {
-        // Se aumentou o número de itens, remove do acknowledged para voltar a piscar
-        setAcknowledgedOrders(prev => {
-          const next = new Set(prev);
-          next.delete(order.id);
-          return next;
-        });
+        if (currentCount > prevCount && !isFirstLoad) {
+          // Se aumentou o número de itens, remove do acknowledged para voltar a piscar
+          setAcknowledgedOrders(prev => {
+            const next = new Set(prev);
+            next.delete(order.id);
+            return next;
+          });
+        }
+        prevItemCounts.current[order.id] = currentCount;
+      });
+
+      lastOrdersCount.current = activeOrders.length;
+
+      if (viewTab === 'FILA') {
+        setOrders(activeOrders.sort((a, b) => a.createdAt.localeCompare(b.createdAt)));
+      } else {
+        // Histórico mostra pedidos que tem itens prontos
+        const finished = allOrders.filter(o => o.items.some(it => it.isReady))
+          .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+        setOrders(finished);
       }
-      prevItemCounts.current[order.id] = currentCount;
-    });
 
-    lastOrdersCount.current = activeOrders.length;
-
-    if (viewTab === 'FILA') {
-      setOrders(activeOrders.sort((a, b) => a.createdAt.localeCompare(b.createdAt)));
-    } else {
-      // Histórico mostra pedidos que tem itens prontos
-      const finished = allOrders.filter(o => o.items.some(it => it.isReady))
-        .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-      setOrders(finished);
+      setProducts(allProducts);
+      setInventory(allInventory);
+      setWaiters(allWaiters);
+    } catch (error) {
+      console.error("Error refreshing Kitchen data:", error);
+    } finally {
+      setIsLoading(false);
     }
-
-    setProducts(allProducts);
-    setInventory(allInventory);
-    setWaiters(allWaiters);
   };
 
   const toggleItemSelection = (orderId: string, itemUid: string) => {
@@ -164,7 +170,18 @@ const Kitchen: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 rounded-[2rem] p-2 transition-all duration-300" onClick={() => { if (isAlerting) dismissAlert(); }}>
+    <div className="space-y-6 rounded-[2rem] p-2 transition-all duration-300 relative" onClick={() => { if (isAlerting) dismissAlert(); }}>
+      {isLoading && (
+        <div className="absolute top-0 left-0 w-full h-1 bg-indigo-100 overflow-hidden z-50">
+          <div className="h-full bg-indigo-600 animate-[loading_2s_infinite]"></div>
+        </div>
+      )}
+      <style>{`
+        @keyframes loading {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
+        }
+      `}</style>
       <div className="flex gap-6 border-b pb-2">
         <button onClick={() => setViewTab('FILA')} className={`pb-4 text-xl font-black uppercase transition-all ${viewTab === 'FILA' ? 'text-blue-600 border-b-4 border-blue-600' : 'text-slate-400 hover:text-slate-600'}`}>Fila de Produção</button>
         <button onClick={() => setViewTab('HISTORICO')} className={`pb-4 text-xl font-black uppercase transition-all ${viewTab === 'HISTORICO' ? 'text-blue-600 border-b-4 border-blue-600' : 'text-slate-400 hover:text-slate-600'}`}>Histórico de Itens</button>

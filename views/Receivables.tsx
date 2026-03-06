@@ -20,6 +20,7 @@ const Receivables: React.FC<ReceivablesProps> = ({ currentUser, setActiveTab }) 
     const [editingItems, setEditingItems] = useState<any[]>([]);
     const [printingOrder, setPrintingOrder] = useState<Order | null>(null);
     const [businessSettings, setBusinessSettings] = useState<BusinessSettings | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
 
     const [alertConfig, setAlertConfig] = useState<{
         isOpen: boolean;
@@ -68,6 +69,7 @@ const Receivables: React.FC<ReceivablesProps> = ({ currentUser, setActiveTab }) 
     };
 
     const refreshData = async () => {
+        setIsLoading(true);
         try {
             const [recs, settings] = await Promise.all([
                 db.getReceivables(),
@@ -77,6 +79,8 @@ const Receivables: React.FC<ReceivablesProps> = ({ currentUser, setActiveTab }) 
             setBusinessSettings(settings);
         } catch (err) {
             console.error("Error fetching receivables", err);
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -213,7 +217,18 @@ const Receivables: React.FC<ReceivablesProps> = ({ currentUser, setActiveTab }) 
     );
 
     return (
-        <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 flex flex-col h-full overflow-hidden animate-in fade-in duration-500">
+        <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 flex flex-col h-full overflow-hidden animate-in fade-in duration-500 relative">
+            {isLoading && (
+                <div className="absolute top-0 left-0 w-full h-1 bg-indigo-100 overflow-hidden z-50">
+                    <div className="h-full bg-indigo-600 animate-[loading_2s_infinite]"></div>
+                </div>
+            )}
+            <style>{`
+                @keyframes loading {
+                    0% { transform: translateX(-100%); }
+                    100% { transform: translateX(100%); }
+                }
+            `}</style>
             <div className="p-8 border-b border-slate-50 bg-slate-50/50 flex flex-col md:flex-row justify-between items-center gap-6">
                 <div>
                     <h3 className="text-2xl font-black text-slate-800 uppercase tracking-tighter">Gestão de Recebimentos</h3>

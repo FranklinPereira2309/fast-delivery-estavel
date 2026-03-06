@@ -20,6 +20,7 @@ const SalesMonitor: React.FC = () => {
   const [newServiceFeeValue, setNewServiceFeeValue] = useState('0');
   const [isSavingServiceFee, setIsSavingServiceFee] = useState(false);
   const [changedOrderIds, setChangedOrderIds] = useState<Set<string>>(new Set());
+  const [isLoading, setIsLoading] = useState(false);
 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 15;
@@ -47,38 +48,42 @@ const SalesMonitor: React.FC = () => {
   }, []);
 
   const refreshData = async () => {
-    const [p, o, s] = await Promise.all([
-      db.getProducts(),
-      db.getOrders(),
-      db.getSettings(),
-    ]);
+    setIsLoading(true);
+    try {
+      const [p, o, s] = await Promise.all([
+        db.getProducts(),
+        db.getOrders(),
+        db.getSettings(),
+      ]);
 
-    setProducts(p);
-    const sortedOrders = o.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      setProducts(p);
+      const sortedOrders = o.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
-    const newChangedIds = new Set<string>();
-    sortedOrders.forEach(order => {
-      if (prevOrdersRef.current[order.id] && prevOrdersRef.current[order.id] !== order.status) {
-        newChangedIds.add(order.id);
-        setTimeout(() => {
-          setChangedOrderIds(prev => {
-            const next = new Set(prev);
-            next.delete(order.id);
-            return next;
-          });
-        }, 5000);
+      const newChangedIds = new Set<string>();
+      sortedOrders.forEach(order => {
+        if (prevOrdersRef.current[order.id] && prevOrdersRef.current[order.id] !== order.status) {
+          newChangedIds.add(order.id);
+          setTimeout(() => {
+            setChangedOrderIds(prev => {
+              const next = new Set(prev);
+              next.delete(order.id);
+              return next;
+            });
+          }, 5000);
+        }
+        prevOrdersRef.current[order.id] = order.status;
+      });
+
+      if (newChangedIds.size > 0) {
+        setChangedOrderIds(prev => new Set([...prev, ...newChangedIds]));
       }
-      prevOrdersRef.current[order.id] = order.status;
-    });
 
-    if (newChangedIds.size > 0) {
-      setChangedOrderIds(prev => new Set([...prev, ...newChangedIds]));
-    }
-
-    setOrders(sortedOrders);
-    setBusinessSettings(s);
-    if (sortedOrders.some(o => o.nfeStatus)) {
-      console.log('Fiscal orders found in Monitor:', sortedOrders.filter(o => o.nfeStatus));
+      setOrders(sortedOrders);
+      setBusinessSettings(s);
+    } catch (error) {
+      console.error("Error refreshing Sales Monitor data:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -189,7 +194,18 @@ const SalesMonitor: React.FC = () => {
   }, [printingOrder, products]);
 
   return (
-    <div className="flex flex-col h-full gap-6 animate-in fade-in duration-500">
+    <div className="flex flex-col h-full gap-6 animate-in fade-in duration-500 relative">
+      {isLoading && (
+        <div className="absolute top-0 left-0 w-full h-1 bg-indigo-100 overflow-hidden z-50">
+          <div className="h-full bg-indigo-600 animate-[loading_2s_infinite]"></div>
+        </div>
+      )}
+      <style>{`
+        @keyframes loading {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
+        }
+      `}</style>
       <div className="flex-1 bg-white rounded-[3rem] shadow-sm border border-slate-100 overflow-hidden flex flex-col">
         <div className="p-8 border-b border-slate-50 bg-slate-50 flex justify-between items-center">
           <div>

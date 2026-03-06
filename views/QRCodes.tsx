@@ -5,11 +5,19 @@ import { Icons } from '../constants';
 
 const QRCodes: React.FC = () => {
     const [settings, setSettings] = useState<BusinessSettings | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
         const init = async () => {
-            const s = await db.getSettings();
-            setSettings(s);
+            setIsLoading(true);
+            try {
+                const s = await db.getSettings();
+                setSettings(s);
+            } catch (error) {
+                console.error("Error fetching QR Code settings:", error);
+            } finally {
+                setIsLoading(false);
+            }
         };
         init();
     }, []);
@@ -22,7 +30,18 @@ const QRCodes: React.FC = () => {
     const tables = Array.from({ length: settings.tableCount }).map((_, i) => i + 1);
 
     return (
-        <div className="flex flex-col h-full gap-8">
+        <div className="flex flex-col h-full gap-8 relative">
+            {isLoading && (
+                <div className="absolute top-0 left-0 w-full h-1 bg-indigo-100 overflow-hidden z-50">
+                    <div className="h-full bg-indigo-600 animate-[loading_2s_infinite]"></div>
+                </div>
+            )}
+            <style>{`
+                @keyframes loading {
+                    0% { transform: translateX(-100%); }
+                    100% { transform: translateX(100%); }
+                }
+            `}</style>
             {/* Header (Oculto na impressão) */}
             <div className="flex justify-between items-center bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm print:hidden">
                 <div>
