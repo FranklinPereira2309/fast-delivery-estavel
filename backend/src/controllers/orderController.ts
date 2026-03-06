@@ -559,6 +559,8 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
     const id = req.params.id as string;
     const { status, driverId, user, paymentMethod } = req.body;
 
+    console.log(`[OrderController] updateOrderStatus initiated for order ${id}:`, { status, driverId, paymentMethod });
+
     try {
         const result = await prisma.$transaction(async (tx: any) => {
             const oldOrder = await tx.order.findUnique({
@@ -576,10 +578,12 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
 
             // 1. Inventory Sync
             if (newStatus === 'DELIVERED' && oldStatus !== 'DELIVERED') {
+                console.log(`[OrderController] Processing inventory impact (DECREMENT) for order ${id}`);
                 await handleInventoryImpact(tx, oldOrder.items, 'DECREMENT', id as string);
 
                 // Reset do PIN/Sessão se for Mesa
                 if (oldOrder.type === 'TABLE' && oldOrder.tableNumber) {
+                    console.log(`[OrderController] Clearing table session for table ${oldOrder.tableNumber}`);
                     const sessionToClear = await tx.tableSession.findUnique({ where: { tableNumber: oldOrder.tableNumber } });
                     const sessionToken = sessionToClear?.sessionToken || null;
 
@@ -605,17 +609,18 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
                     });
                 }
             } else if (newStatus !== 'DELIVERED' && oldStatus === 'DELIVERED') {
+                console.log(`[OrderController] Processing inventory impact (INCREMENT - Reversion) for order ${id}`);
                 await handleInventoryImpact(tx, oldOrder.items, 'INCREMENT', id as string);
             }
 
             // 2. Update status and driver
-            // Se driverId vier como '', seta explicitamente para null (desvincula)
             const resolvedDriverId = driverId === '' ? null : (driverId !== undefined ? driverId : undefined);
 
+            // Sanitize and validate inputs
             const updateData: any = {
-                status,
+                status: status || oldOrder.status,
                 driverId: resolvedDriverId,
-                paymentMethod: paymentMethod !== undefined ? paymentMethod : undefined
+                paymentMethod: paymentMethod ? paymentMethod.toString().toUpperCase() : undefined
             };
 
             // Preserve waiterId if it's not already in updateData and exists in oldOrder
@@ -630,7 +635,6 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
                 updateData.assignedAt = null;
                 console.log(`[OrderController] CLEARING assignedAt for order ${id}`);
 
-                // Track Manual Rejection if there was a driver assigned
                 if (oldOrder.driverId) {
                     await tx.orderRejection.create({
                         data: {
@@ -641,13 +645,12 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
                         }
                     });
                 }
-            } else {
-                console.log(`[OrderController] KEEPING assignedAt for order ${id} as ${oldOrder.assignedAt?.toISOString()}`);
             }
 
             // Restore Table Session if reopening
             if (oldStatus === 'DELIVERED' && newStatus !== 'DELIVERED' && oldOrder.type === 'TABLE' && oldOrder.tableNumber) {
                 if (oldOrder.digitalPin && oldOrder.digitalToken) {
+                    console.log(`[OrderController] Restoring table session for table ${oldOrder.tableNumber}`);
                     await tx.tableSession.upsert({
                         where: { tableNumber: oldOrder.tableNumber },
                         create: {
@@ -666,7 +669,6 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
                         }
                     }).catch((e: any) => console.error('Erro ao restaurar sessão de mesa:', e));
 
-                    // Notificar cardápio digital
                     getIO().emit('tableStatusChanged', {
                         tableNumber: oldOrder.tableNumber,
                         status: 'occupied',
@@ -675,6 +677,7 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
                 }
             }
 
+            console.log(`[OrderController] Applying final update to order ${id} with data:`, updateData);
             const order = await tx.order.update({
                 where: { id: id as string },
                 data: updateData,
@@ -682,27 +685,29 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
             });
 
             // 3. Client Sync and Stats
+            console.log(`[OrderController] Syncing client stats for order ${id}`);
             const finalClientId = await syncClientStats(tx, order, oldStatus);
 
-            if (finalClientId !== order.clientId) {
+            if (finalClientId && finalClientId !== order.clientId) {
                 await tx.order.update({ where: { id: order.id }, data: { clientId: finalClientId } });
             }
 
-            // 4. Receivable Fiado Processing for Status Changes (Delivery App Confirmation)
-            if (newStatus === 'DELIVERED' && (paymentMethod === 'FIADO' || oldOrder.paymentMethod === 'FIADO')) {
+            // 4. Receivable Fiado Processing
+            if (newStatus === 'DELIVERED' && (updateData.paymentMethod === 'FIADO' || oldOrder.paymentMethod === 'FIADO')) {
                 const realClientId = finalClientId || order.clientId;
                 if (realClientId && realClientId !== 'ANONYMOUS') {
+                    console.log(`[OrderController] Creating fiado receivable for order ${id}`);
                     const dueDate = new Date();
                     dueDate.setDate(dueDate.getDate() + 30);
 
                     await tx.receivable.upsert({
                         where: { id: `REC-${order.id}` },
-                        update: { amount: order.total },
+                        update: { amount: order.total || 0 },
                         create: {
                             id: `REC-${order.id}`,
                             clientId: realClientId,
                             orderId: order.id,
-                            amount: order.total,
+                            amount: order.total || 0,
                             dueDate: dueDate,
                             status: 'PENDING'
                         }
@@ -716,12 +721,10 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
         try {
             getIO().emit('orderStatusChanged', { action: 'statusUpdate', id, status });
 
-            // Notify the specific client room for the delivery app
             if (result.clientId && result.clientId !== 'ANONYMOUS') {
                 getIO().to(`client_${result.clientId}`).emit('statusUpdated', { id, status });
             }
 
-            // Notificar o cardápio digital se o pedido for de mesa e estiver pronto/parcialmente pronto
             if (result.type === 'TABLE' && result.tableNumber && (status === 'READY' || status === 'PARTIALLY_READY')) {
                 getIO().to(`table_${result.tableNumber}`).emit('orderStatusUpdated', {
                     tableNumber: result.tableNumber,
@@ -730,12 +733,14 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
                 });
             }
         } catch (e) {
-            console.error('Socket error emitting orderStatusChanged/orderStatusUpdated:', e);
+            console.error('[Socket] Error emitting in updateOrderStatus:', e);
         }
 
+        console.log(`[OrderController] updateOrderStatus SUCCESS for order ${id}`);
         res.json(mapOrderResponse(result));
     } catch (error: any) {
-        res.status(500).json({ error: error.message });
+        console.error(`[OrderController] updateOrderStatus ERROR for order ${id}:`, error);
+        res.status(500).json({ error: error.message || 'Erro interno ao atualizar status do pedido' });
     }
 };
 

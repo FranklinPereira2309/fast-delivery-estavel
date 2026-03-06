@@ -1,7 +1,5 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import prisma from '../prisma';
 
 // List all receivables, optionally filtered by status or clientId
 export const getReceivables = async (req: Request, res: Response) => {
