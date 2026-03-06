@@ -102,7 +102,7 @@ const OrderHistory: React.FC = () => {
             case 'PREPARING': return 'Em Preparo';
             case 'READY': return 'Pronto';
             case 'OUT_FOR_DELIVERY': return 'Em Rota';
-            case 'DELIVERED': return 'Finalizado';
+            case 'DELIVERED': return 'Entregue';
             case 'CANCELLED': return 'Cancelado';
             default: return status;
         }

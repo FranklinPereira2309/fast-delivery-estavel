@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
+import { OrderStatusLabels } from '../types';
 import type { Order } from '../types';
 import { Icons } from '../constants';
 
@@ -65,7 +66,9 @@ const OrderDetails: React.FC = () => {
                     <div className="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center mb-4">
                         <Icons.Smartphone className="w-10 h-10 text-indigo-600" />
                     </div>
-                    <h2 className="text-xl font-black text-slate-800 uppercase tracking-tighter">{order.status}</h2>
+                    <h2 className="text-xl font-black text-slate-800 uppercase tracking-tighter">
+                        {OrderStatusLabels[order.status as keyof typeof OrderStatusLabels] || order.status}
+                    </h2>
                     <p className="text-xs font-bold text-slate-400 mt-2">Seu pedido está sendo preparado com muito carinho!</p>
                 </div>
 
