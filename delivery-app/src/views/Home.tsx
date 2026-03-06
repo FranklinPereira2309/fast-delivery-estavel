@@ -193,7 +193,7 @@ const Home: React.FC = () => {
 
             {/* Floating Cart Button */}
             {items.length > 0 && (
-                <div className="fixed bottom-32 left-6 right-6 animate-in slide-in-from-bottom duration-300 z-40">
+                <div className="fixed bottom-32 left-6 right-6 animate-in slide-in-from-bottom duration-300 z-[60]">
                     <button
                         onClick={() => navigate('/checkout')}
                         className="w-full bg-indigo-600 text-white p-5 rounded-3xl font-black uppercase text-[10px] tracking-widest shadow-2xl shadow-indigo-200 flex justify-between items-center active:scale-95 transition-transform"
