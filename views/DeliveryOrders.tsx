@@ -59,7 +59,10 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
             setAllProducts(prods);
             setBusinessSettings(settings);
 
-            const appOrders = allOrders.filter(o => o.isOriginDeliveryApp);
+            const appOrders = allOrders
+                .filter(o => o.isOriginDeliveryApp)
+                .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+
             if (activeTab === 'active') {
                 setOrders(appOrders.filter(o => !['DELIVERED', 'CANCELLED'].includes(o.status)));
             } else {
