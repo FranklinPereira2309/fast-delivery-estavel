@@ -59,8 +59,8 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
         return drivers.find(d => d.id === driverId)?.name || 'Removido';
     };
 
-    const fetchOrders = async (silent = false) => {
-        if (!silent) setIsLoading(true);
+    const fetchOrders = async () => {
+        setIsLoading(true);
         try {
             const [allOrders, allDrivers, allProducts, settings] = await Promise.all([
                 db.getOrders(),
@@ -75,13 +75,13 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
         } catch (error) {
             console.error('Error fetching orders:', error);
         } finally {
-            if (!silent) setIsLoading(false);
+            setIsLoading(false);
         }
     };
 
     useEffect(() => {
         fetchOrders();
-        const interval = setInterval(() => fetchOrders(true), 15000);
+        const interval = setInterval(() => fetchOrders(), 15000);
         return () => clearInterval(interval);
     }, []);
 
@@ -200,7 +200,7 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
         chatClients.set(o.id, { id: o.id, clientId: o.clientId, name: o.clientName || 'Cliente', orderId: o.id });
     });
 
-    if (isLoading) return <div className="p-20 text-center font-black uppercase text-slate-400">Carregando...</div>;
+    if (isLoading && orders.length === 0) return <div className="p-20 text-center font-black uppercase text-slate-400 animate-pulse">Carregando Pedidos...</div>;
 
     return (
         <div className="p-6 h-full flex flex-col bg-slate-50 relative">
