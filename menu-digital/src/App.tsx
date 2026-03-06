@@ -729,9 +729,18 @@ function AppContent() {
           duration={15}
         />
       )}
-      {renderBanner()}
+      {/* Banner de Status da Loja */}
+      {(storeStatus.status === 'offline' || countdown !== null) && (
+        <div className={`text-center py-2 text-[10px] font-black uppercase tracking-widest text-white px-4 sticky top-0 z-50 animate-in slide-in-from-top duration-300 ${storeStatus.status === 'offline' ? 'bg-rose-600/90 backdrop-blur-md' : 'bg-orange-500/90 backdrop-blur-md'}`}>
+          {storeStatus.status === 'offline'
+            ? (storeStatus.is_manually_closed ? 'Fechado Temporariamente' : 'Não estamos aceitando pedidos')
+            : `Atenção: A loja fechará em ${countdown} minutos!`
+          }
+        </div>
+      )}
+
       {/* Header Fixo */}
-      <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-100 p-4 pt-6 flex justify-between items-center">
+      <header className={`sticky ${storeStatus.status === 'offline' || countdown !== null ? 'top-[30px]' : 'top-0'} z-40 bg-white/80 backdrop-blur-md border-b border-slate-100 p-4 pt-6 flex justify-between items-center`}>
         <div>
           <h1 className="text-xl font-black text-slate-900 tracking-tighter uppercase">Cardápio Digital</h1>
           <div className="flex flex-col gap-0.5 mt-0.5">
@@ -749,15 +758,6 @@ function AppContent() {
         </div>
       </header>
 
-      {/* Banner de Status da Loja */}
-      {(storeStatus.status === 'offline' || countdown !== null) && (
-        <div className={`text-center py-2 text-[10px] font-black uppercase tracking-widest text-white px-4 sticky top-[72px] z-30 animate-in slide-in-from-top duration-300 ${storeStatus.status === 'offline' ? 'bg-rose-600/90 backdrop-blur-md' : 'bg-orange-500/90 backdrop-blur-md'}`}>
-          {storeStatus.status === 'offline'
-            ? (storeStatus.is_manually_closed ? 'Fechado Temporariamente' : 'Não estamos aceitando pedidos')
-            : `Atenção: A loja fechará em ${countdown} minutos!`
-          }
-        </div>
-      )}
 
       <main className="h-[calc(100vh-80px)] overflow-y-auto hide-scrollbar">
         <Routes>
