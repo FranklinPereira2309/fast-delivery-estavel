@@ -417,7 +417,7 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
                                 >
                                     <div className="relative shrink-0">
                                         <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-white font-black uppercase text-sm ${selectedOrderChat?.id === chatItem.id ? 'bg-indigo-600 shadow-lg shadow-indigo-500/20' : 'bg-slate-300'}`}>
-                                            {(chatItem.name || 'C').charAt(0)}
+                                            {getInitials(chatItem.name)}
                                         </div>
                                         {unreadClients.has(chatItem.clientId || chatItem.id) && (
                                             <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-white animate-pulse shadow-sm z-10"></span>
@@ -443,12 +443,12 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
                                 <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/10">
                                     <div className="flex items-center gap-3">
                                         <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-white font-black uppercase text-sm shadow-xl bg-indigo-600 shadow-indigo-500/10`}>
-                                            {selectedOrderChat?.clientName.charAt(0)}
+                                            {getInitials((selectedOrderChat as any)?.name || (selectedOrderChat as any)?.clientName)}
                                         </div>
                                         <div>
-                                            <h4 className="text-sm font-black text-slate-800">{selectedOrderChat?.clientName}</h4>
+                                            <h4 className="text-sm font-black text-slate-800">{(selectedOrderChat as any)?.name || (selectedOrderChat as any)?.clientName || 'Cliente'}</h4>
                                             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                                                Pedido #{selectedOrderChat?.id.slice(-4).toUpperCase()}
+                                                {(selectedOrderChat as any)?.orderId || (selectedOrderChat as any)?.id ? `Pedido #${(String((selectedOrderChat as any)?.orderId || (selectedOrderChat as any)?.id)).slice(-4).toUpperCase()}` : 'Atendimento Direto'}
                                             </p>
                                         </div>
                                     </div>
