@@ -203,7 +203,18 @@ const SalesMonitor: React.FC = () => {
           </div>
         </div>
         <div className="flex-1 overflow-auto p-4 sm:p-8 bg-slate-50/30">
-          <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden min-w-[320px]">
+          <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 flex flex-col h-full overflow-hidden animate-in fade-in duration-500 relative">
+            {isLoading && (
+              <div className="absolute top-0 left-0 w-full h-1 bg-indigo-100 overflow-hidden z-50">
+                <div className="h-full bg-indigo-600 animate-[loading_2s_infinite]"></div>
+              </div>
+            )}
+            <style>{`
+                @keyframes loading {
+                    0% { transform: translateX(-100%); }
+                    100% { transform: translateX(100%); }
+                }
+            `}</style>
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse min-w-[700px] sm:min-w-0">
                 <thead>

@@ -204,6 +204,17 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
 
     return (
         <div className="p-6 h-full flex flex-col bg-slate-50 relative">
+            {isLoading && (
+                <div className="absolute top-0 left-0 w-full h-1 bg-indigo-100 overflow-hidden z-50">
+                    <div className="h-full bg-indigo-600 animate-[loading_2s_infinite]"></div>
+                </div>
+            )}
+            <style>{`
+                @keyframes loading {
+                    0% { transform: translateX(-100%); }
+                    100% { transform: translateX(100%); }
+                }
+            `}</style>
             {/* Header / Tabs */}
             <div className="flex items-center gap-6 mb-8 no-print shrink-0">
                 <div className="flex items-center gap-4 bg-white p-2 rounded-full w-max shadow-sm border border-slate-100 flex-shrink-0">
