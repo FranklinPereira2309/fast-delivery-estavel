@@ -81,6 +81,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
   const [isClosingModalOpen, setIsClosingModalOpen] = useState(false);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [isAdjustModalOpen, setIsAdjustModalOpen] = useState(false);
+  const [reviewSession, setReviewSession] = useState<CashSession | null>(null);
   const [closingMode, setClosingMode] = useState<'MANUAL' | 'SYSTEM'>('MANUAL');
   const [adminPassword, setAdminPassword] = useState('');
   const [userPassword, setUserPassword] = useState('');
