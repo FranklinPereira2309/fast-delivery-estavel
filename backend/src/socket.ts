@@ -15,9 +15,9 @@ export const initSocket = (server: http.Server) => {
             methods: ['GET', 'POST'],
             credentials: true
         },
-        pingInterval: 10000,
-        pingTimeout: 5000,
-        transports: ['polling', 'websocket'],
+        pingInterval: 25000, // Valores padrão mais relaxados para o Render
+        pingTimeout: 20000,
+        transports: ['websocket', 'polling'], // Prioriza websocket mas mantém polling
         allowEIO3: true
     });
 
