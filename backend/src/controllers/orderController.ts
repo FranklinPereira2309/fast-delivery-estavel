@@ -946,9 +946,17 @@ export const getOrderMessages = async (req: Request, res: Response) => {
 
 export const addOrderMessage = async (req: Request, res: Response) => {
     const { id } = req.params;
-    const { sender, text } = req.body;
+    const { sender, text, content, isFromClient } = req.body;
 
-    console.log(`[OrderController] Adding message to order ${id}:`, { sender, text });
+    // Support multiple field names for robustness/backward compatibility
+    const resolvedText = text || content;
+    const resolvedSender = sender || (isFromClient ? 'CLIENT' : 'STORE');
+
+    console.log(`[OrderController] Adding message to order ${id}:`, { sender: resolvedSender, text: resolvedText });
+
+    if (!resolvedText) {
+        return res.status(400).json({ error: 'Conteúdo da mensagem é obrigatório (text ou content)' });
+    }
 
     try {
         // Check if order exists first to avoid confusing 500 errors
@@ -959,7 +967,11 @@ export const addOrderMessage = async (req: Request, res: Response) => {
         }
 
         const message = await prisma.orderMessage.create({
-            data: { orderId: String(id), sender, text }
+            data: {
+                orderId: String(id),
+                sender: String(resolvedSender),
+                text: String(resolvedText)
+            }
         });
 
         getIO().emit('newOrderMessage', { orderId: id, message });

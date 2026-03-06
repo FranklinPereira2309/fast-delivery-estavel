@@ -398,10 +398,13 @@ class APIDBService {
     return this.request<any[]>(`/orders/${orderId}/messages`);
   }
 
-  public async sendClientChatMessage(orderId: string, content: string, senderName: string, isFromClient: boolean) {
+  public async sendClientChatMessage(orderId: string, text: string, sender: string, isFromClient: boolean) {
     return this.request(`/orders/${orderId}/messages`, {
       method: 'POST',
-      body: JSON.stringify({ content, senderName, isFromClient })
+      body: JSON.stringify({
+        text,
+        sender: isFromClient ? 'CLIENT' : 'STORE'
+      })
     });
   }
 
