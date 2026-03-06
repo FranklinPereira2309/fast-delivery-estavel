@@ -282,12 +282,19 @@ const Logistics: React.FC = () => {
   const [printingOrder, setPrintingOrder] = useState<Order | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<'PENDING' | 'HISTORY' | 'FROTA'>('PENDING');
+  const [activeTab, setActiveTab] = useState<'PENDING' | 'HISTORY' | 'FROTA' | 'CHAT'>('PENDING');
   const [historyOrders, setHistoryOrders] = useState<Order[]>([]);
   const [historyStartDate, setHistoryStartDate] = useState(getLocalIsoDate());
   const [historyEndDate, setHistoryEndDate] = useState(getLocalIsoDate());
   const [historyDriverId, setHistoryDriverId] = useState<string>('TODOS');
   const [printingHistoryOrder, setPrintingHistoryOrder] = useState<Order | null>(null);
+
+  // Chat States
+  const [selectedDriver, setSelectedDriver] = useState<DeliveryDriver | null>(null);
+  const [chatMessages, setChatMessages] = useState<any[]>([]);
+  const [newChatMessage, setNewChatMessage] = useState('');
+  const [unreadDrivers, setUnreadDrivers] = useState<Set<string>>(chatUnreadManager.getUnreads());
+  const chatEndRef = React.useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     refreshData();
@@ -296,22 +303,62 @@ const Logistics: React.FC = () => {
 
     const interval = setInterval(refreshData, 5000);
 
+    const handleNewMessage = (msg: any) => {
+      if (activeTab === 'CHAT' && selectedDriver?.id === msg.driverId) {
+        setChatMessages(prev => [...prev.filter(m => m.id !== msg.id), msg]);
+      } else {
+        setUnreadDrivers(new Set(chatUnreadManager.getUnreads()));
+      }
+    };
+
     socket.on('drivers_updated', refreshData);
     socket.on('order_auto_rejected_global', refreshData);
+    socket.on('new_message', handleNewMessage);
 
     return () => {
       clearInterval(interval);
       socket.off('drivers_updated');
       socket.off('order_auto_rejected_global');
+      socket.off('new_message', handleNewMessage);
     };
-  }, []);
+  }, [activeTab, selectedDriver]);
 
   useEffect(() => {
-    // Entrar em todas as salas de chat para receber notificações globais
-    drivers.forEach(d => {
-      socket.emit('join_chat', d.id);
-    });
-  }, [drivers]);
+    if (selectedDriver) {
+      loadChatHistory(selectedDriver.id);
+      chatUnreadManager.removeUnread(selectedDriver.id);
+      setUnreadDrivers(new Set(chatUnreadManager.getUnreads()));
+    }
+  }, [selectedDriver]);
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [chatMessages]);
+
+  const loadChatHistory = async (driverId: string) => {
+    const history = await db.getChatHistory(driverId);
+    setChatMessages(history);
+  };
+
+  const handleSendChatMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newChatMessage.trim() || !selectedDriver || !currentUser) return;
+
+    try {
+      const msgData = {
+        driverId: selectedDriver.id,
+        content: newChatMessage,
+        senderName: 'Atendimento',
+        isFromDriver: false
+      };
+      const savedMsg = await db.sendChatMessage(msgData);
+      socket.emit('send_message', savedMsg);
+      setNewChatMessage('');
+      loadChatHistory(selectedDriver.id);
+    } catch (e) {
+      console.error("Erro ao enviar mensagem para motorista:", e);
+    }
+  };
 
   const refreshData = async () => {
     setIsLoading(true);
@@ -400,6 +447,13 @@ const Logistics: React.FC = () => {
         >
           Frota
         </button>
+        <button
+          onClick={() => setActiveTab('CHAT')}
+          className={`px-6 py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all relative ${activeTab === 'CHAT' ? 'bg-slate-900 text-white shadow-xl' : 'text-slate-400 hover:bg-slate-50'} ${unreadDrivers.size > 0 ? 'animate-notify-turquoise' : ''}`}
+        >
+          Chat Entregadores
+          {unreadDrivers.size > 0 && <span className="absolute -top-1 -right-1 w-3 h-3 bg-indigo-500 rounded-full animate-blink shadow-sm border border-white" />}
+        </button>
       </div>
 
       {activeTab === 'PENDING' ? (
@@ -453,7 +507,6 @@ const Logistics: React.FC = () => {
                         <div className="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center text-white text-[10px] font-black">{driver.name.charAt(0)}</div>
                         <div className="flex-1 min-w-0">
                           <p className="text-[11px] font-black text-slate-800 truncate">{driver.name}</p>
-                          <p className="text-[9px] text-slate-400 uppercase font-bold">{driver.vehicle.model}</p>
                         </div>
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-slate-200 group-hover/btn:text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" /></svg>
                       </button>
@@ -500,6 +553,104 @@ const Logistics: React.FC = () => {
         </div>
       ) : activeTab === 'FROTA' ? (
         <FleetManagement refreshLogistics={refreshData} />
+      ) : activeTab === 'CHAT' ? (
+        <div className="flex-1 min-h-0 bg-white rounded-[2.5rem] border border-slate-100 shadow-sm flex overflow-hidden animate-in slide-in-from-right duration-500">
+          {/* Sidebar de Chats */}
+          <div className="w-80 border-r border-slate-50 flex flex-col bg-slate-50/30">
+            <div className="p-6 border-b border-slate-100">
+              <h3 className="text-xs font-black text-slate-800 uppercase tracking-widest">Chat Entregadores:</h3>
+            </div>
+            <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-2 custom-scrollbar">
+              {drivers.length > 0 ? drivers.map(driver => (
+                <button
+                  key={driver.id}
+                  onClick={() => setSelectedDriver(driver)}
+                  className={`flex items-center gap-3 p-4 rounded-3xl transition-all ${selectedDriver?.id === driver.id ? 'bg-white shadow-md border border-slate-100 scale-[1.02]' : 'hover:bg-white/50'} ${unreadDrivers.has(driver.id) ? 'animate-notify-turquoise border-indigo-200 bg-indigo-50/50' : ''}`}
+                >
+                  <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-white font-black uppercase text-sm ${selectedDriver?.id === driver.id ? 'bg-slate-900 shadow-lg shadow-slate-500/20' : 'bg-slate-300'}`}>
+                    {driver.name.charAt(0)}
+                  </div>
+                  <div className="flex-1 text-left min-w-0">
+                    <p className="text-sm font-black text-slate-800 truncate">{driver.name}</p>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <div className={`w-1.5 h-1.5 rounded-full ${driver.active ? 'bg-emerald-500' : 'bg-slate-300'}`} />
+                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">{driver.active ? 'Online' : 'Offline'} / {driver.vehiclePlate}</span>
+                    </div>
+                  </div>
+                </button>
+              )) : (
+                <p className="text-center text-[10px] font-bold text-slate-400 uppercase py-10 opacity-50">Nenhum entregador cadastrado</p>
+              )}
+            </div>
+          </div>
+
+          {/* Área de Chat */}
+          <div className="flex-1 flex flex-col bg-white">
+            {selectedDriver ? (
+              <>
+                <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/10">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-2xl flex items-center justify-center text-white font-black uppercase text-sm shadow-xl bg-slate-900 shadow-slate-500/10">
+                      {selectedDriver.name.charAt(0)}
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-black text-slate-800">{selectedDriver.name}</h4>
+                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                        Entregador / {selectedDriver.vehicleType}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex-1 overflow-y-auto p-8 flex flex-col gap-4 custom-scrollbar bg-slate-50/20">
+                  {chatMessages.length === 0 && (
+                    <div className="flex flex-col items-center justify-center h-full opacity-20 py-20 grayscale">
+                      <Icons.Message className="w-16 h-16 mb-4" />
+                      <p className="text-xs font-black uppercase tracking-widest">Nenhuma mensagem neste chat</p>
+                    </div>
+                  )}
+                  {chatMessages.map((msg, i) => (
+                    <div key={msg.id || i} className={`flex ${msg.isFromDriver ? 'justify-start' : 'justify-end'}`}>
+                      <div className={`max-w-[70%] p-5 rounded-[2rem] shadow-sm text-sm ${msg.isFromDriver ? 'bg-white border border-slate-100 text-slate-800 rounded-tl-none' : 'bg-slate-900 text-white rounded-tr-none'}`}>
+                        <div className="flex justify-between items-center mb-1 gap-4">
+                          <span className="text-[8px] font-black uppercase tracking-widest opacity-50">
+                            {msg.isFromDriver ? (msg.senderName || 'Entregador') : 'Você'}
+                          </span>
+                          <span className="text-[8px] font-black opacity-30 uppercase tracking-tighter">
+                            {new Date(msg.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </div>
+                        <p className="font-bold leading-relaxed">{msg.content}</p>
+                      </div>
+                    </div>
+                  ))}
+                  <div ref={chatEndRef} />
+                </div>
+
+                <form onSubmit={handleSendChatMessage} className="p-6 bg-white border-t border-slate-100 flex gap-4">
+                  <input
+                    type="text"
+                    value={newChatMessage}
+                    onChange={e => setNewChatMessage(e.target.value)}
+                    placeholder="Digite sua mensagem para o entregador..."
+                    className="flex-1 bg-slate-50 border-none rounded-2xl px-6 text-sm font-bold focus:ring-4 focus:ring-slate-500/10 transition-all outline-none"
+                  />
+                  <button type="submit" className="px-8 bg-slate-900 text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl shadow-slate-500/20 active:scale-95 transition-all">
+                    Enviar
+                  </button>
+                </form>
+              </>
+            ) : (
+              <div className="flex-1 flex flex-col items-center justify-center text-slate-300 p-12 text-center">
+                <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mb-6 transform rotate-12">
+                  <Icons.Message className="w-12 h-12 text-slate-200" />
+                </div>
+                <h3 className="text-lg font-black text-slate-800 uppercase tracking-tighter mb-2">Comunicação com Frota</h3>
+                <p className="text-xs font-bold text-slate-400 max-w-xs leading-relaxed uppercase">Selecione um entregador ao lado para enviar mensagens e coordenar entregas em tempo real.</p>
+              </div>
+            )}
+          </div>
+        </div>
       ) : (
         <div className="flex flex-col gap-6 h-full overflow-hidden">
           <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex gap-4 items-end flex-wrap">

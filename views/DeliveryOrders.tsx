@@ -12,6 +12,7 @@ interface DeliveryOrdersProps {
 }
 
 const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
+    // Chat States
     const [orders, setOrders] = useState<Order[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [editingOrder, setEditingOrder] = useState<Order | null>(null);
@@ -21,15 +22,10 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
     const [printingOrder, setPrintingOrder] = useState<Order | null>(null);
 
     // Chat States
-    const [chatType, setChatType] = useState<'DRIVER' | 'CLIENT'>('CLIENT');
-    const [drivers, setDrivers] = useState<any[]>([]);
-    const [selectedDriver, setSelectedDriver] = useState<any>(null);
     const [selectedOrderChat, setSelectedOrderChat] = useState<Order | null>(null);
-    const [unreadDrivers, setUnreadDrivers] = useState<Set<string>>(chatUnreadManager.getUnreads());
     const [unreadClients, setUnreadClients] = useState<Set<string>>(new Set());
     const [messages, setMessages] = useState<any[]>([]);
     const [newMessage, setNewMessage] = useState('');
-    const [supportMessages, setSupportMessages] = useState<any[]>([]);
     const chatEndRef = React.useRef<HTMLDivElement>(null);
 
     const [alertConfig, setAlertConfig] = useState<{
@@ -93,37 +89,20 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
         }
     };
 
-    const loadChatHistory = async (id: string) => {
-        let history = [];
-        if (chatType === 'DRIVER') {
-            history = await db.getChatHistory(id);
-        } else {
-            history = await db.getClientChatHistory(id);
-        }
+    const loadChatHistory = async (orderId: string) => {
+        const history = await db.getClientChatHistory(orderId);
         setMessages(history);
     };
 
     const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!newMessage.trim() || !currentUser) return;
+        if (!newMessage.trim() || !currentUser || !selectedOrderChat) return;
 
         try {
-            if (chatType === 'DRIVER' && selectedDriver) {
-                const msgData = {
-                    driverId: selectedDriver.id,
-                    content: newMessage,
-                    senderName: 'Atendimento',
-                    isFromDriver: false
-                };
-                const savedMsg = await db.sendChatMessage(msgData);
-                socket.emit('send_message', savedMsg);
-            } else if (chatType === 'CLIENT' && selectedOrderChat) {
-                const savedMsg = await db.sendClientChatMessage(selectedOrderChat.id, newMessage, 'Atendimento', false);
-                socket.emit('send_message', { ...(savedMsg as any), orderId: selectedOrderChat.id });
-            }
+            const savedMsg = await db.sendClientChatMessage(selectedOrderChat.id, newMessage, 'Atendimento', false);
+            socket.emit('send_message', { ...(savedMsg as any), orderId: selectedOrderChat.id });
             setNewMessage('');
-            if (chatType === 'DRIVER' && selectedDriver) loadChatHistory(selectedDriver.id);
-            else if (chatType === 'CLIENT' && selectedOrderChat) loadChatHistory(selectedOrderChat.id);
+            loadChatHistory(selectedOrderChat.id);
         } catch (e) {
             console.error("Erro ao enviar mensagem:", e);
         }
@@ -143,10 +122,7 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
     }, [activeTab]);
 
     useEffect(() => {
-        if (chatType === 'DRIVER' && selectedDriver) {
-            loadChatHistory(selectedDriver.id);
-            chatUnreadManager.removeUnread(selectedDriver.id);
-        } else if (chatType === 'CLIENT' && selectedOrderChat) {
+        if (selectedOrderChat) {
             loadChatHistory(selectedOrderChat.id);
             setUnreadClients(prev => {
                 const next = new Set(prev);
@@ -154,7 +130,7 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
                 return next;
             });
         }
-    }, [selectedDriver, selectedOrderChat, chatType]);
+    }, [selectedOrderChat]);
 
     useEffect(() => {
         chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -293,9 +269,9 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
                         onClick={() => {
                             setActiveTab('chat');
                         }}
-                        className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all relative ${activeTab === 'chat' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' : 'text-slate-400 hover:bg-slate-50'} ${(unreadClients.size > 0 || unreadDrivers.size > 0) ? 'animate-notify-turquoise' : ''}`}
+                        className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all relative ${activeTab === 'chat' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' : 'text-slate-400 hover:bg-slate-50'} ${unreadClients.size > 0 ? 'animate-notify-turquoise' : ''}`}
                     >
-                        Chat {(unreadClients.size > 0 || unreadDrivers.size > 0) && <span className="absolute -top-1 -right-1 w-3 h-3 bg-rose-500 rounded-full border-2 border-white animate-pulse"></span>}
+                        Chat {unreadClients.size > 0 && <span className="absolute -top-1 -right-1 w-3 h-3 bg-rose-500 rounded-full border-2 border-white animate-pulse"></span>}
                     </button>
                 </div>
             </div>
@@ -400,77 +376,46 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
                 <div className={`${activeTab === 'chat' ? 'flex-1 flex' : 'hidden'} bg-white rounded-[2.5rem] border border-slate-100 shadow-sm flex overflow-hidden no-print animate-in slide-in-from-right duration-500`}>
                     {/* Sidebar de Chats */}
                     <div className="w-80 border-r border-slate-50 flex flex-col bg-slate-50/30">
-                        <div className="p-4 border-b border-slate-100 flex gap-2">
-                            <button
-                                onClick={() => { setChatType('DRIVER'); setSelectedDriver(null); setSelectedOrderChat(null); }}
-                                className={`flex-1 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${chatType === 'DRIVER' ? 'bg-slate-900 text-white shadow-md' : 'bg-slate-200 text-slate-500'}`}
-                            >
-                                Entregadores
-                            </button>
-                            <button
-                                onClick={() => { setChatType('CLIENT'); setSelectedDriver(null); setSelectedOrderChat(null); }}
-                                className={`flex-1 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${chatType === 'CLIENT' ? 'bg-slate-900 text-white shadow-md' : 'bg-slate-200 text-slate-500'}`}
-                            >
-                                App Clientes
-                            </button>
+                        <div className="p-6 border-b border-slate-100">
+                            <h3 className="text-xs font-black text-slate-800 uppercase tracking-widest">APP Delivery Clientes:</h3>
                         </div>
                         <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-2 custom-scrollbar">
-                            {chatType === 'DRIVER' ? (
-                                drivers.map(driver => (
+                            {orders
+                                .filter(o => o.isOriginDeliveryApp)
+                                .map(order => (
                                     <button
-                                        key={driver.id}
-                                        onClick={() => setSelectedDriver(driver)}
-                                        className={`flex items-center gap-3 p-4 rounded-3xl transition-all ${selectedDriver?.id === driver.id ? 'bg-white shadow-md border border-slate-100 scale-[1.02]' : 'hover:bg-white/50'} ${unreadDrivers.has(driver.id) ? 'animate-notify-turquoise border-indigo-200 bg-indigo-50/50' : ''}`}
+                                        key={order.id}
+                                        onClick={() => setSelectedOrderChat(order)}
+                                        className={`flex items-center gap-3 p-4 rounded-3xl transition-all ${selectedOrderChat?.id === order.id ? 'bg-white shadow-md border border-slate-100 scale-[1.02]' : 'hover:bg-white/50'} ${unreadClients.has(order.id) ? 'animate-notify-turquoise border-indigo-200 bg-indigo-50/50' : ''}`}
                                     >
-                                        <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-white font-black uppercase text-sm ${selectedDriver?.id === driver.id ? 'bg-indigo-600 shadow-lg shadow-indigo-500/20' : 'bg-slate-300'}`}>
-                                            {driver.name.charAt(0)}
+                                        <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-white font-black uppercase text-sm ${selectedOrderChat?.id === order.id ? 'bg-indigo-600 shadow-lg shadow-indigo-500/20' : 'bg-slate-300'}`}>
+                                            {order.clientName.charAt(0)}
                                         </div>
                                         <div className="flex-1 text-left min-w-0">
-                                            <p className="text-sm font-black text-slate-800 truncate">{driver.name}</p>
+                                            <p className="text-sm font-black text-slate-800 truncate">{order.clientName}</p>
                                             <div className="flex items-center gap-1.5 mt-0.5">
-                                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Conectado / {driver.vehiclePlate}</span>
+                                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Pedido #{order.id.slice(-4).toUpperCase()}</span>
                                             </div>
                                         </div>
                                     </button>
                                 ))
-                            ) : (
-                                orders
-                                    .filter(o => o.isOriginDeliveryApp)
-                                    .map(order => (
-                                        <button
-                                            key={order.id}
-                                            onClick={() => setSelectedOrderChat(order)}
-                                            className={`flex items-center gap-3 p-4 rounded-3xl transition-all ${selectedOrderChat?.id === order.id ? 'bg-white shadow-md border border-slate-100 scale-[1.02]' : 'hover:bg-white/50'} ${unreadClients.has(order.id) ? 'animate-notify-turquoise border-indigo-200 bg-indigo-50/50' : ''}`}
-                                        >
-                                            <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-white font-black uppercase text-sm ${selectedOrderChat?.id === order.id ? 'bg-indigo-600 shadow-lg shadow-indigo-500/20' : 'bg-slate-300'}`}>
-                                                {order.clientName.charAt(0)}
-                                            </div>
-                                            <div className="flex-1 text-left min-w-0">
-                                                <p className="text-sm font-black text-slate-800 truncate">{order.clientName}</p>
-                                                <div className="flex items-center gap-1.5 mt-0.5">
-                                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Pedido #{order.id.slice(-4).toUpperCase()}</span>
-                                                </div>
-                                            </div>
-                                        </button>
-                                    ))
-                            )}
+                            }
                         </div>
                     </div>
 
                     {/* Área de Chat */}
                     <div className="flex-1 flex flex-col bg-white">
-                        {(selectedDriver || selectedOrderChat) ? (
+                        {selectedOrderChat ? (
                             <>
                                 <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/10">
                                     <div className="flex items-center gap-3">
                                         <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-white font-black uppercase text-sm shadow-xl bg-indigo-600 shadow-indigo-500/10`}>
-                                            {chatType === 'DRIVER' ? selectedDriver?.name.charAt(0) : selectedOrderChat?.clientName.charAt(0)}
+                                            {selectedOrderChat?.clientName.charAt(0)}
                                         </div>
                                         <div>
-                                            <h4 className="text-sm font-black text-slate-800">{chatType === 'DRIVER' ? selectedDriver?.name : selectedOrderChat?.clientName}</h4>
+                                            <h4 className="text-sm font-black text-slate-800">{selectedOrderChat?.clientName}</h4>
                                             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                                                {chatType === 'DRIVER' ? 'Conversa com Entregador' : `Pedido #${selectedOrderChat?.id.slice(-4).toUpperCase()}`}
+                                                Pedido #{selectedOrderChat?.id.slice(-4).toUpperCase()}
                                             </p>
                                         </div>
                                     </div>
@@ -484,17 +429,17 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
                                         </div>
                                     )}
                                     {messages.map((msg, i) => (
-                                        <div key={msg.id || i} className={`flex ${(msg.isFromDriver || msg.isFromClient) ? 'justify-start' : 'justify-end'}`}>
-                                            <div className={`max-w-[70%] p-5 rounded-[2rem] shadow-sm text-sm ${(msg.isFromDriver || msg.isFromClient) ? 'bg-white border border-slate-100 text-slate-800 rounded-tl-none' : 'bg-slate-900 text-white rounded-tr-none'}`}>
+                                        <div key={msg.id || i} className={`flex ${msg.isFromClient ? 'justify-start' : 'justify-end'}`}>
+                                            <div className={`max-w-[70%] p-5 rounded-[2rem] shadow-sm text-sm ${msg.isFromClient ? 'bg-white border border-slate-100 text-slate-800 rounded-tl-none' : 'bg-slate-900 text-white rounded-tr-none'}`}>
                                                 <div className="flex justify-between items-center mb-1 gap-4">
                                                     <span className="text-[8px] font-black uppercase tracking-widest opacity-50">
-                                                        {(msg.isFromDriver || msg.isFromClient) ? (msg.senderName || 'Remetente') : 'Você'}
+                                                        {msg.isFromClient ? (msg.senderName || 'Cliente') : 'Você'}
                                                     </span>
                                                     <span className="text-[8px] font-black opacity-30 uppercase tracking-tighter">
-                                                        {new Date(msg.createdAt || msg.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                                                        {new Date(msg.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                                                     </span>
                                                 </div>
-                                                <p className="font-bold leading-relaxed">{msg.content || msg.message}</p>
+                                                <p className="font-bold leading-relaxed">{msg.text}</p>
                                             </div>
                                         </div>
                                     ))}
@@ -519,8 +464,8 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
                                 <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mb-6 transform rotate-12">
                                     <Icons.Message className="w-12 h-12 text-slate-200" />
                                 </div>
-                                <h3 className="text-lg font-black text-slate-800 uppercase tracking-tighter mb-2">Central de Atendimento</h3>
-                                <p className="text-xs font-bold text-slate-400 max-w-xs leading-relaxed uppercase">Selecione uma conversa ao lado para responder aos seus clientes ou entregadores.</p>
+                                <h3 className="text-lg font-black text-slate-800 uppercase tracking-tighter mb-2">Atendimento Direto</h3>
+                                <p className="text-xs font-bold text-slate-400 max-w-xs leading-relaxed uppercase">Selecione um pedido ao lado para falar com o cliente em tempo real.</p>
                             </div>
                         )}
                     </div>

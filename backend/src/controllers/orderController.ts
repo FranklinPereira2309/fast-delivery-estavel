@@ -947,14 +947,32 @@ export const getOrderMessages = async (req: Request, res: Response) => {
 export const addOrderMessage = async (req: Request, res: Response) => {
     const { id } = req.params;
     const { sender, text } = req.body;
+
+    console.log(`[OrderController] Adding message to order ${id}:`, { sender, text });
+
     try {
+        // Check if order exists first to avoid confusing 500 errors
+        const order = await prisma.order.findUnique({ where: { id: String(id) } });
+        if (!order) {
+            console.warn(`[OrderController] addOrderMessage failed: Order ${id} not found.`);
+            return res.status(404).json({ error: 'Pedido não encontrado para vincular mensagem.' });
+        }
+
         const message = await prisma.orderMessage.create({
             data: { orderId: String(id), sender, text }
         });
+
         getIO().emit('newOrderMessage', { orderId: id, message });
+
+        // Also notify the specific client room
+        if (order.clientId && order.clientId !== 'ANONYMOUS') {
+            getIO().to(`client_${order.clientId}`).emit('new_message', { orderId: id, message });
+        }
+
         res.status(201).json(message);
     } catch (error: any) {
-        res.status(500).json({ error: error.message });
+        console.error(`[OrderController] Error in addOrderMessage for order ${id}:`, error);
+        res.status(500).json({ error: error.message || 'Erro interno ao salvar mensagem' });
     }
 };
 
