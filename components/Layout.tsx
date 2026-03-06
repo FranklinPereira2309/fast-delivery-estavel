@@ -60,6 +60,9 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
         const prev = lastOrdersMap.current[order.id];
         const currentItemCount = order.items?.length || 0;
 
+        // Delivery App flow exception:
+        const isDeliveryAppOrder = order.isOriginDeliveryApp;
+
         if (prev) {
           if (prev.status !== order.status) {
             hasOrderChange = true;
@@ -67,8 +70,19 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
           if (order.type === SaleType.TABLE && currentItemCount > prev.itemCount) {
             hasNewOrder = true;
           }
+          // If a Delivery App order changes from PENDING to PREPARING, it has been ACCEPTED.
+          // This should trigger the Kitchen alert because now it needs to be made.
+          if (isDeliveryAppOrder && prev.status === OrderStatus.PENDING && order.status === OrderStatus.PREPARING) {
+            hasNewOrder = true;
+          }
         } else {
-          hasNewOrder = true;
+          // Brand new order seen for the first time.
+          if (isDeliveryAppOrder && order.status === OrderStatus.PENDING) {
+            // Do NOT trigger Cozinha alert for new Pending delivery-app orders.
+            // They must be accepted first by the Delivery App module.
+          } else {
+            hasNewOrder = true;
+          }
         }
 
         lastOrdersMap.current[order.id] = {
