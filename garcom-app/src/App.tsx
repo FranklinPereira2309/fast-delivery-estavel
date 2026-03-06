@@ -246,8 +246,18 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col">
       {isLocked && <PrivacyScreen user={user as any} onUnlock={() => { setIsLocked(false); setLastActivity(Date.now()); }} />}
 
+      {/* Store Status Banner */}
+      {(storeStatus.status === 'offline' || countdown !== null) && (
+        <div className={`px-6 py-2 text-[10px] font-black uppercase tracking-widest text-white sticky top-0 z-[50] animate-in slide-in-from-top duration-300 text-center ${storeStatus.status === 'offline' ? 'bg-rose-600/90 backdrop-blur-md' : 'bg-orange-500/90 backdrop-blur-md'}`}>
+          {storeStatus.status === 'offline'
+            ? (storeStatus.is_manually_closed ? 'Loja Fechada Temporariamente' : 'Loja Fora do Horário de Funcionamento')
+            : `Atenção: A loja fechará em ${countdown} minutos!`
+          }
+        </div>
+      )}
+
       {/* Header */}
-      <header className="px-4 sm:px-6 pt-10 pb-4 bg-white sticky top-0 z-40 flex items-center justify-between gap-2 sm:gap-4 border-b border-slate-100 shadow-sm overflow-hidden">
+      <header className={`px-4 sm:px-6 pt-10 pb-4 bg-white sticky ${storeStatus.status === 'offline' || countdown !== null ? 'top-[30px]' : 'top-0'} z-40 flex items-center justify-between gap-2 sm:gap-4 border-b border-slate-100 shadow-sm overflow-hidden`}>
         <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
           <div
             className="w-9 h-9 sm:w-10 sm:h-10 shrink-0 overflow-hidden rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20 cursor-pointer active:scale-90 transition-transform"
@@ -304,15 +314,6 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
         </div>
       </header>
 
-      {/* Store Status Banner */}
-      {(storeStatus.status === 'offline' || countdown !== null) && (
-        <div className={`px-6 py-2 text-[10px] font-black uppercase tracking-widest text-white sticky top-[105px] z-[30] animate-in slide-in-from-top duration-300 text-center ${storeStatus.status === 'offline' ? 'bg-rose-600/90 backdrop-blur-md' : 'bg-orange-500/90 backdrop-blur-md'}`}>
-          {storeStatus.status === 'offline'
-            ? (storeStatus.is_manually_closed ? 'Loja Fechada Temporariamente' : 'Loja Fora do Horário de Funcionamento')
-            : `Atenção: A loja fechará em ${countdown} minutos!`
-          }
-        </div>
-      )}
 
       {/* Stats / Filter Bar */}
       <div className="px-6 pt-6 flex gap-2 overflow-x-auto hide-scrollbar">
@@ -458,36 +459,42 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
         </button>
       </footer>
 
-      {selectedTable && (
-        <TableDetails
-          table={selectedTable}
-          user={user}
-          onClose={() => setSelectedTable(null)}
-          onRefresh={fetchData}
-          storeStatus={storeStatus}
-          resolvedWaiterId={resolvedWaiterId}
-        />
-      )}
+      {
+        selectedTable && (
+          <TableDetails
+            table={selectedTable}
+            user={user}
+            onClose={() => setSelectedTable(null)}
+            onRefresh={fetchData}
+            storeStatus={storeStatus}
+            resolvedWaiterId={resolvedWaiterId}
+          />
+        )
+      }
 
-      {showDirectOrder && (
-        <DirectOrderModal
-          user={user}
-          onClose={() => setShowDirectOrder(false)}
-          onRefresh={fetchData}
-          storeStatus={storeStatus}
-          resolvedWaiterId={resolvedWaiterId}
-        />
-      )}
+      {
+        showDirectOrder && (
+          <DirectOrderModal
+            user={user}
+            onClose={() => setShowDirectOrder(false)}
+            onRefresh={fetchData}
+            storeStatus={storeStatus}
+            resolvedWaiterId={resolvedWaiterId}
+          />
+        )
+      }
 
-      {showHistory && (
-        <HistoryModal
-          user={user}
-          tables={tables}
-          settings={settings as any}
-          resolvedWaiterId={resolvedWaiterId || ''}
-          onClose={() => setShowHistory(false)}
-        />
-      )}
+      {
+        showHistory && (
+          <HistoryModal
+            user={user}
+            tables={tables}
+            settings={settings as any}
+            resolvedWaiterId={resolvedWaiterId || ''}
+            onClose={() => setShowHistory(false)}
+          />
+        )
+      }
 
       <Modal
         isOpen={showLogoutModal}
@@ -503,68 +510,70 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
       />
 
       {/* FEEDBACKS MODAL */}
-      {showFeedbacks && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="absolute inset-0" onClick={() => setShowFeedbacks(false)} />
-          <div className="relative w-full sm:w-[480px] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col max-h-[90vh] animate-in slide-in-from-bottom-full sm:slide-in-from-bottom-10 duration-300">
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-indigo-50/50 rounded-t-3xl sm:rounded-t-3xl">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600 shadow-inner">
-                  <MessageSquare size={20} />
+      {
+        showFeedbacks && (
+          <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="absolute inset-0" onClick={() => setShowFeedbacks(false)} />
+            <div className="relative w-full sm:w-[480px] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col max-h-[90vh] animate-in slide-in-from-bottom-full sm:slide-in-from-bottom-10 duration-300">
+              <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-indigo-50/50 rounded-t-3xl sm:rounded-t-3xl">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600 shadow-inner">
+                    <MessageSquare size={20} />
+                  </div>
+                  <div>
+                    <h3 className="font-black text-slate-900 tracking-tighter uppercase text-sm">Mensagens</h3>
+                    <p className="text-[9px] font-bold text-indigo-400 uppercase tracking-widest">Feedbacks e Sugestões</p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-black text-slate-900 tracking-tighter uppercase text-sm">Mensagens</h3>
-                  <p className="text-[9px] font-bold text-indigo-400 uppercase tracking-widest">Feedbacks e Sugestões</p>
-                </div>
+                <button
+                  onClick={() => setShowFeedbacks(false)}
+                  className="w-10 h-10 bg-white border border-slate-200 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors active:scale-95 shadow-sm"
+                >
+                  <X size={20} />
+                </button>
               </div>
-              <button
-                onClick={() => setShowFeedbacks(false)}
-                className="w-10 h-10 bg-white border border-slate-200 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors active:scale-95 shadow-sm"
-              >
-                <X size={20} />
-              </button>
-            </div>
 
-            <div className="p-6 overflow-y-auto flex-1 space-y-4 bg-slate-50/50">
-              {feedbacks.length > 0 ? (
-                feedbacks.map((fb, i) => (
-                  <div key={i} className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex gap-4 animate-in fade-in slide-in-from-bottom-4" style={{ animationDelay: `${i * 50}ms` }}>
-                    <div className="w-10 h-10 shrink-0 bg-amber-50 rounded-xl flex items-center justify-center text-amber-600 font-black italic shadow-inner border border-amber-100/50">
-                      {fb.tableNumber}
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
-                          {new Date(fb.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                        </span>
-                        {fb.name && <span className="text-[10px] font-bold text-slate-500">• {fb.name}</span>}
+              <div className="p-6 overflow-y-auto flex-1 space-y-4 bg-slate-50/50">
+                {feedbacks.length > 0 ? (
+                  feedbacks.map((fb, i) => (
+                    <div key={i} className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex gap-4 animate-in fade-in slide-in-from-bottom-4" style={{ animationDelay: `${i * 50}ms` }}>
+                      <div className="w-10 h-10 shrink-0 bg-amber-50 rounded-xl flex items-center justify-center text-amber-600 font-black italic shadow-inner border border-amber-100/50">
+                        {fb.tableNumber}
                       </div>
-                      <p className="text-sm font-medium text-slate-700 leading-relaxed">{fb.message}</p>
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                            {new Date(fb.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                          {fb.name && <span className="text-[10px] font-bold text-slate-500">• {fb.name}</span>}
+                        </div>
+                        <p className="text-sm font-medium text-slate-700 leading-relaxed">{fb.message}</p>
+                      </div>
                     </div>
+                  ))
+                ) : (
+                  <div className="py-12 flex flex-col items-center justify-center text-slate-400 gap-3">
+                    <div className="w-16 h-16 bg-slate-100 border-2 border-slate-200 border-dashed rounded-full flex items-center justify-center">
+                      <MessageSquare size={24} className="text-slate-300" />
+                    </div>
+                    <p className="text-xs font-black uppercase tracking-widest">Nenhuma Mensagem Hoje</p>
                   </div>
-                ))
-              ) : (
-                <div className="py-12 flex flex-col items-center justify-center text-slate-400 gap-3">
-                  <div className="w-16 h-16 bg-slate-100 border-2 border-slate-200 border-dashed rounded-full flex items-center justify-center">
-                    <MessageSquare size={24} className="text-slate-300" />
-                  </div>
-                  <p className="text-xs font-black uppercase tracking-widest">Nenhuma Mensagem Hoje</p>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
 
-            <div className="p-6 bg-white border-t border-slate-100 rounded-b-3xl sm:rounded-b-3xl">
-              <button
-                onClick={() => setShowFeedbacks(false)}
-                className="w-full py-4 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl font-black uppercase tracking-widest text-xs transition-all active:scale-95 flex items-center justify-center gap-2 shadow-xl shadow-slate-900/20"
-              >
-                Fechar Painel
-              </button>
+              <div className="p-6 bg-white border-t border-slate-100 rounded-b-3xl sm:rounded-b-3xl">
+                <button
+                  onClick={() => setShowFeedbacks(false)}
+                  className="w-full py-4 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl font-black uppercase tracking-widest text-xs transition-all active:scale-95 flex items-center justify-center gap-2 shadow-xl shadow-slate-900/20"
+                >
+                  Fechar Painel
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )
+      }
+    </div >
   );
 };
 
