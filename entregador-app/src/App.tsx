@@ -330,6 +330,16 @@ const App: React.FC = () => {
 
   return (
     <div className="flex flex-col h-[100dvh] bg-slate-50 overflow-hidden select-none">
+      {/* Store Status Banner */}
+      {(storeStatus.status === 'offline' || countdown !== null) && (
+        <div className={`px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white sticky top-0 z-[60] animate-in slide-in-from-top duration-300 text-center ${storeStatus.status === 'offline' ? 'bg-rose-600/90 backdrop-blur-md' : 'bg-orange-500/90 backdrop-blur-md'}`}>
+          {storeStatus.status === 'offline'
+            ? (storeStatus.is_manually_closed ? 'Loja Fechada Temporariamente' : 'Loja Fora do Horário de Funcionamento')
+            : `Atenção: A loja fechará em ${countdown} minutos!`
+          }
+        </div>
+      )}
+
       {/* NOVELTY ALERT */}
       {isAlertOpen && (
         <div className="fixed top-6 left-6 right-6 z-[100] bg-blue-600 text-white p-6 rounded-[2rem] shadow-2xl flex items-center gap-4 animate-in slide-in-from-top duration-500">
@@ -343,16 +353,6 @@ const App: React.FC = () => {
           <button onClick={() => { setIsAlertOpen(false); setCustomAlertMessage(null); }} className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
             <Icons.Check className="w-4 h-4" />
           </button>
-        </div>
-      )}
-
-      {/* Store Status Banner */}
-      {(storeStatus.status === 'offline' || countdown !== null) && (
-        <div className={`px-6 py-2 text-[10px] font-black uppercase tracking-widest text-white sticky top-[72px] z-[30] animate-in slide-in-from-top duration-300 text-center ${storeStatus.status === 'offline' ? 'bg-rose-600/90 backdrop-blur-md' : 'bg-orange-500/90 backdrop-blur-md'}`}>
-          {storeStatus.status === 'offline'
-            ? (storeStatus.is_manually_closed ? 'Loja Fechada Temporariamente' : 'Loja Fora do Horário de Funcionamento')
-            : `Atenção: A loja fechará em ${countdown} minutos!`
-          }
         </div>
       )}
 
