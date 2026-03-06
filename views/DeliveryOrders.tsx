@@ -261,17 +261,6 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
 
     return (
         <div className="p-6 h-full flex flex-col bg-slate-50 relative">
-            {isLoading && (
-                <div className="absolute top-0 left-0 w-full h-1 bg-indigo-100 overflow-hidden z-50">
-                    <div className="h-full bg-indigo-600 animate-[loading_2s_infinite]"></div>
-                </div>
-            )}
-            <style>{`
-                @keyframes loading {
-                    0% { transform: translateX(-100%); }
-                    100% { transform: translateX(100%); }
-                }
-            `}</style>
             <div className="flex items-center justify-between mb-6 no-print">
                 <div>
                     <h1 className="text-2xl font-black text-slate-800 uppercase tracking-tighter flex items-center gap-3">

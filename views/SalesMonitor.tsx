@@ -195,17 +195,6 @@ const SalesMonitor: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full gap-6 animate-in fade-in duration-500 relative">
-      {isLoading && (
-        <div className="absolute top-0 left-0 w-full h-1 bg-indigo-100 overflow-hidden z-50">
-          <div className="h-full bg-indigo-600 animate-[loading_2s_infinite]"></div>
-        </div>
-      )}
-      <style>{`
-        @keyframes loading {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(100%); }
-        }
-      `}</style>
       <div className="flex-1 bg-white rounded-[3rem] shadow-sm border border-slate-100 overflow-hidden flex flex-col">
         <div className="p-8 border-b border-slate-50 bg-slate-50 flex justify-between items-center">
           <div>

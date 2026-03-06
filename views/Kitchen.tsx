@@ -171,17 +171,6 @@ const Kitchen: React.FC = () => {
 
   return (
     <div className="space-y-6 rounded-[2rem] p-2 transition-all duration-300 relative" onClick={() => { if (isAlerting) dismissAlert(); }}>
-      {isLoading && (
-        <div className="absolute top-0 left-0 w-full h-1 bg-indigo-100 overflow-hidden z-50">
-          <div className="h-full bg-indigo-600 animate-[loading_2s_infinite]"></div>
-        </div>
-      )}
-      <style>{`
-        @keyframes loading {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(100%); }
-        }
-      `}</style>
       <div className="flex gap-6 border-b pb-2">
         <button onClick={() => setViewTab('FILA')} className={`pb-4 text-xl font-black uppercase transition-all ${viewTab === 'FILA' ? 'text-blue-600 border-b-4 border-blue-600' : 'text-slate-400 hover:text-slate-600'}`}>Fila de Produção</button>
         <button onClick={() => setViewTab('HISTORICO')} className={`pb-4 text-xl font-black uppercase transition-all ${viewTab === 'HISTORICO' ? 'text-blue-600 border-b-4 border-blue-600' : 'text-slate-400 hover:text-slate-600'}`}>Histórico de Itens</button>
