@@ -173,12 +173,28 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
     return (
         <div className="p-6 h-full flex flex-col bg-slate-50 relative">
             {/* Header / Tabs */}
-            <div className="flex items-center gap-6 mb-6 no-print">
-                <div className="flex bg-white/50 p-1 rounded-2xl border border-slate-200/50 shadow-sm w-fit">
-                    <button onClick={() => setActiveTab('active')} className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'active' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400'}`}>Pedidos Ativos</button>
-                    <button onClick={() => setActiveTab('history')} className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'history' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400'}`}>Histórico</button>
-                    <button onClick={() => setActiveTab('chat')} className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all relative ${activeTab === 'chat' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400'}`}>
-                        Chat {unreadClients.size > 0 && <span className="absolute -top-1 -right-1 w-3 h-3 bg-rose-500 rounded-full border-2 border-white animate-pulse"></span>}
+            <div className="flex items-center gap-6 mb-8 no-print shrink-0">
+                <div className="flex items-center gap-4 bg-white p-2 rounded-full w-max shadow-sm border border-slate-100 flex-shrink-0">
+                    <button
+                        onClick={() => setActiveTab('active')}
+                        className={`px-8 py-3.5 rounded-full text-[11px] font-black uppercase tracking-widest transition-all ${activeTab === 'active' ? 'bg-slate-900 text-white shadow-xl' : 'text-slate-400 hover:bg-slate-50'}`}
+                    >
+                        Entregas
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('history')}
+                        className={`px-8 py-3.5 rounded-full text-[11px] font-black uppercase tracking-widest transition-all ${activeTab === 'history' ? 'bg-slate-900 text-white shadow-xl' : 'text-slate-400 hover:bg-slate-50'}`}
+                    >
+                        Histórico
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('chat')}
+                        className={`px-8 py-3.5 rounded-full text-[11px] font-black uppercase tracking-widest transition-all relative ${activeTab === 'chat' ? 'bg-slate-900 text-white shadow-xl' : 'text-slate-400 hover:bg-slate-50'}`}
+                    >
+                        Chat Clientes
+                        {unreadClients.size > 0 && (
+                            <span className="absolute -top-1 -right-1 w-3 h-3 bg-indigo-500 rounded-full border-2 border-white animate-pulse shadow-sm" />
+                        )}
                     </button>
                 </div>
             </div>
