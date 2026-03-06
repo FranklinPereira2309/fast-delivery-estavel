@@ -132,16 +132,16 @@ const CartModal: React.FC<CartModalProps> = ({ isOpen, onClose, cart, tableNumbe
                 </div>
 
                 {/* Itens */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-3 hide-scrollbar">
+                <div className="flex-1 overflow-y-auto p-4 space-y-2.5 hide-scrollbar">
                     {cart.length === 0 ? (
-                        <p className="text-center text-slate-400 py-8 font-bold text-sm">Nenhum item adicionado.</p>
+                        <p className="text-center text-slate-400 py-8 font-bold text-sm uppercase tracking-widest">Seu carrinho está vazio</p>
                     ) : (
                         cart.map(item => (
-                            <div key={item.id} className="flex gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100 items-center">
-                                <img src={item.imageUrl} alt={item.name} className="w-16 h-16 rounded-xl object-cover" />
+                            <div key={item.id} className="flex gap-3 p-3 bg-slate-50 rounded-2xl border border-slate-100 items-center">
+                                <img src={item.imageUrl} alt={item.name} className="w-14 h-14 rounded-xl object-cover shadow-sm" />
                                 <div className="flex-1 min-w-0">
-                                    <h4 className="font-black text-slate-800 text-sm uppercase tracking-tighter truncate">{item.name}</h4>
-                                    <p className="text-blue-600 font-black text-sm">R$ {item.price.toFixed(2)}</p>
+                                    <h4 className="font-black text-slate-800 text-xs sm:text-sm uppercase tracking-tighter truncate">{item.name}</h4>
+                                    <p className="text-blue-600 font-black text-xs sm:text-sm">R$ {item.price.toFixed(2)}</p>
                                 </div>
                                 <div className="flex items-center bg-white rounded-xl p-1 gap-2 shadow-sm border border-slate-100 shrink-0">
                                     <button onClick={() => updateQuantity(item.id, item.quantity - 1)} className="w-8 h-8 rounded-lg flex items-center justify-center font-black text-slate-400 active:scale-90">-</button>

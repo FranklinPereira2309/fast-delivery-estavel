@@ -64,15 +64,15 @@ const Home: React.FC<HomeProps> = ({ cart, addToCart, updateQuantity }) => {
             </div>
 
             {/* Categorias */}
-            <div>
-                <h2 className="text-sm font-black text-slate-900 uppercase tracking-tighter mb-4">Categorias</h2>
-                <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2 -mx-4 px-4">
+            <div className="space-y-3">
+                <h2 className="text-sm font-black text-slate-900 uppercase tracking-tighter px-0">Categorias</h2>
+                <div className="flex gap-2.5 overflow-x-auto hide-scrollbar pb-2 -mx-4 px-4">
                     {categories.map(cat => (
                         <button
                             key={cat}
                             onClick={() => setActiveCategory(cat)}
-                            className={`shrink-0 px-6 py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all ${activeCategory === cat
-                                ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30 font-black'
+                            className={`shrink-0 px-5 py-2.5 rounded-2xl text-[10px] sm:text-[11px] font-black uppercase tracking-widest transition-all active:scale-95 ${activeCategory === cat
+                                ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'
                                 : 'bg-white text-slate-500 hover:bg-slate-100 border border-slate-100'
                                 }`}
                         >
@@ -95,37 +95,37 @@ const Home: React.FC<HomeProps> = ({ cart, addToCart, updateQuantity }) => {
                         const quantity = cartItem?.quantity || 0;
 
                         return (
-                            <div key={product.id} className="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm flex gap-4 overflow-hidden relative group">
+                            <div key={product.id} className="bg-white p-3 sm:p-4 rounded-3xl border border-slate-100 shadow-sm flex gap-3 sm:gap-4 overflow-hidden relative group">
                                 {/* Imagem */}
-                                <div className="w-28 h-28 shrink-0 rounded-2xl overflow-hidden bg-slate-50 group-hover:shadow-inner transition-all">
+                                <div className="w-24 h-24 sm:w-28 sm:h-28 shrink-0 rounded-2xl overflow-hidden bg-slate-50 group-hover:shadow-inner transition-all">
                                     <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
                                 </div>
 
                                 {/* Info */}
-                                <div className="flex-1 flex flex-col justify-between py-1">
+                                <div className="flex-1 flex flex-col justify-between py-0.5">
                                     <div>
-                                        <h3 className="text-sm font-black text-slate-800 leading-tight uppercase tracking-tighter line-clamp-2">{product.name}</h3>
-                                        <p className="text-[10px] font-bold text-slate-400 mt-1 line-clamp-2 leading-snug">{product.description}</p>
+                                        <h3 className="text-xs sm:text-sm font-black text-slate-800 leading-tight uppercase tracking-tighter line-clamp-2">{product.name}</h3>
+                                        <p className="text-[9px] sm:text-[10px] font-bold text-slate-400 mt-1 line-clamp-2 leading-snug">{product.description}</p>
                                     </div>
 
-                                    <div className="flex items-center justify-between mt-2">
-                                        <span className="text-lg font-black text-blue-600 tracking-tighter">
+                                    <div className="flex items-center justify-between mt-1 sm:mt-2">
+                                        <span className="text-base sm:text-lg font-black text-blue-600 tracking-tighter">
                                             R$ {product.price.toFixed(2)}
                                         </span>
 
                                         {/* Controles de Quantidade */}
                                         {quantity > 0 ? (
-                                            <div className="flex items-center bg-slate-100 rounded-xl p-1 gap-2 shadow-inner">
+                                            <div className="flex items-center bg-slate-100 rounded-xl p-0.5 sm:p-1 gap-1.5 sm:gap-2 shadow-inner">
                                                 <button
                                                     onClick={() => updateQuantity(product.id, quantity - 1)}
-                                                    className="w-8 h-8 rounded-lg bg-white shadow-sm flex items-center justify-center font-black text-slate-500 active:scale-90 transition-transform"
+                                                    className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-white shadow-sm flex items-center justify-center font-black text-slate-500 active:scale-90 transition-transform"
                                                 >
                                                     -
                                                 </button>
-                                                <span className="w-6 text-center font-black text-sm">{quantity}</span>
+                                                <span className="w-5 text-center font-black text-xs sm:text-sm">{quantity}</span>
                                                 <button
                                                     onClick={() => updateQuantity(product.id, quantity + 1)}
-                                                    className="w-8 h-8 rounded-lg bg-blue-600 shadow-sm shadow-blue-500/50 flex items-center justify-center font-black text-white active:scale-90 transition-transform"
+                                                    className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-blue-600 shadow-sm shadow-blue-500/50 flex items-center justify-center font-black text-white active:scale-90 transition-transform"
                                                 >
                                                     +
                                                 </button>
@@ -133,9 +133,9 @@ const Home: React.FC<HomeProps> = ({ cart, addToCart, updateQuantity }) => {
                                         ) : (
                                             <button
                                                 onClick={() => addToCart({ ...product, quantity: 1 })}
-                                                className="px-4 py-2 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg active:scale-95 transition-all"
+                                                className="px-3 sm:px-4 py-1.5 sm:py-2 bg-slate-900 text-white rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest shadow-lg active:scale-95 transition-all"
                                             >
-                                                Adicionar
+                                                Pedir
                                             </button>
                                         )}
                                     </div>

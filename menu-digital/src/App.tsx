@@ -450,7 +450,7 @@ function AppContent() {
   const renderBanner = () => {
     if (!banner) return null;
     return (
-      <div className={`fixed top-4 left-4 right-4 z-[9999] animate-slide-in`}>
+      <div className={`fixed top-0 left-0 right-0 z-[9999] animate-slide-in p-4 sm:max-w-md sm:mx-auto`}>
         <div className={`flex items-center justify-between p-4 rounded-2xl shadow-2xl backdrop-blur-md border ${banner.type === 'error' ? 'bg-red-500/90 border-red-400 text-white' : 'bg-white/90 border-slate-200 text-slate-900 shadow-slate-200/50'}`}>
           <div className="flex items-center gap-3">
             <div className={`w-8 h-8 rounded-full flex items-center justify-center ${banner.type === 'error' ? 'bg-white/20' : 'bg-slate-100'}`}>
@@ -721,7 +721,7 @@ function AppContent() {
   }
 
   return (
-    <div className="min-h-screen max-w-md mx-auto relative shadow-2xl bg-slate-50 overflow-hidden">
+    <div className="min-h-[100dvh] w-full sm:max-w-md sm:mx-auto relative sm:shadow-2xl bg-slate-50 overflow-hidden flex flex-col">
       {orderReadyNotify && (
         <OrderReadyNotification
           message={orderReadyNotify.message}
@@ -759,7 +759,7 @@ function AppContent() {
       </header>
 
 
-      <main className="h-[calc(100vh-80px)] overflow-y-auto hide-scrollbar">
+      <main className="flex-1 overflow-y-auto hide-scrollbar">
         <Routes>
           <Route path="/" element={<Home cart={cart} addToCart={addToCart} updateQuantity={updateQuantity} />} />
         </Routes>
