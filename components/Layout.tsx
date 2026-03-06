@@ -264,17 +264,25 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
                   } ${blinkClass} ${isSidebarCollapsed ? 'justify-center' : ''}`}
                 title={isSidebarCollapsed ? item.label : ''}
               >
-                <div className="shrink-0 scale-110">
+                <div className="shrink-0 scale-110 relative">
                   <item.icon />
+                  {isDeliveryApp && shouldBlinkDeliveryApp && (
+                    <span className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-rose-500 rounded-full border-2 border-slate-900 animate-pulse z-10"></span>
+                  )}
                 </div>
                 {!isSidebarCollapsed && (
                   <span className="font-medium truncate animate-in fade-in slide-in-from-left-1 duration-200">
                     {item.label}
                   </span>
                 )}
-                {isSidebarCollapsed && (
+                {isSidebarCollapsed && !shouldBlinkDeliveryApp && (
                   <div className="absolute left-full ml-2 px-2 py-1 bg-slate-800 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50">
                     {item.label}
+                  </div>
+                )}
+                {isSidebarCollapsed && isDeliveryApp && shouldBlinkDeliveryApp && (
+                  <div className="absolute left-full ml-2 px-2 py-1 bg-rose-600 text-white text-[10px] rounded opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 font-black uppercase tracking-widest">
+                    Nova Mensagem
                   </div>
                 )}
               </button>

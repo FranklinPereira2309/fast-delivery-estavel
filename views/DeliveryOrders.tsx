@@ -415,8 +415,13 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
                                         onClick={() => setSelectedOrderChat(order)}
                                         className={`flex items-center gap-3 p-4 rounded-3xl transition-all ${selectedOrderChat?.id === order.id ? 'bg-white shadow-md border border-slate-100 scale-[1.02]' : 'hover:bg-white/50'} ${unreadClients.has(order.id) ? 'animate-notify-turquoise border-indigo-200 bg-indigo-50/50' : ''}`}
                                     >
-                                        <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-white font-black uppercase text-sm ${selectedOrderChat?.id === order.id ? 'bg-indigo-600 shadow-lg shadow-indigo-500/20' : 'bg-slate-300'}`}>
-                                            {order.clientName.charAt(0)}
+                                        <div className="relative shrink-0">
+                                            <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-white font-black uppercase text-sm ${selectedOrderChat?.id === order.id ? 'bg-indigo-600 shadow-lg shadow-indigo-500/20' : 'bg-slate-300'}`}>
+                                                {order.clientName.charAt(0)}
+                                            </div>
+                                            {unreadClients.has(order.id) && (
+                                                <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-rose-500 rounded-full border-2 border-white animate-pulse shadow-sm z-10"></span>
+                                            )}
                                         </div>
                                         <div className="flex-1 text-left min-w-0">
                                             <p className="text-sm font-black text-slate-800 truncate">{order.clientName}</p>

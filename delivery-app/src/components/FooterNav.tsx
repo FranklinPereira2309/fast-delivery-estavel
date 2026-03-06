@@ -36,8 +36,13 @@ const FooterNav: React.FC<FooterNavProps> = ({ hasUnread }) => {
                 onClick={() => navigate('/chat')}
                 className={`flex flex-col items-center gap-1 transition-all ${isActive('/chat') ? 'text-indigo-600 scale-110' : 'text-slate-400'} active:scale-95`}
             >
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-lg -mt-8 border-4 border-white ${hasUnread ? 'bg-indigo-600 shadow-indigo-200 animate-blink-blue' : (isActive('/chat') ? 'bg-indigo-600 shadow-indigo-200' : 'bg-slate-400 shadow-slate-200')}`}>
-                    <Icons.MessageSquare className="w-6 h-6" />
+                <div className="relative">
+                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-lg -mt-8 border-4 border-white ${hasUnread ? 'bg-indigo-600 shadow-indigo-200 animate-blink-blue' : (isActive('/chat') ? 'bg-indigo-600 shadow-indigo-200' : 'bg-slate-400 shadow-slate-200')}`}>
+                        <Icons.MessageSquare className="w-6 h-6" />
+                    </div>
+                    {hasUnread && !isActive('/chat') && (
+                        <span className="absolute -top-9 -right-1 w-4 h-4 bg-rose-500 rounded-full border-2 border-white animate-pulse shadow-sm z-10"></span>
+                    )}
                 </div>
                 <span className="text-[10px] font-black uppercase tracking-widest mt-1">Chat</span>
             </button>
