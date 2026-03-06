@@ -377,7 +377,7 @@ const App: React.FC = () => {
       </header>
 
       {/* CONTEÚDO PRINCIPAL */}
-      <main className="flex-1 overflow-y-auto p-4 pb-24 relative custom-scrollbar">
+      <main className={`flex-1 relative ${activeTab === 'CHAT' ? 'overflow-hidden' : 'overflow-y-auto p-4 pb-24 custom-scrollbar'}`}>
         {activeTab === 'PENDING' && (
           <div className="flex flex-col gap-4 animate-in slide-in-from-right duration-300">
             {/* RESUMO DE HOJE */}
@@ -574,13 +574,13 @@ const App: React.FC = () => {
         )}
 
         {activeTab === 'CHAT' && (
-          <div className="flex flex-col h-full min-h-[400px] bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden animate-in slide-in-from-right duration-300">
-            <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
-              <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
-                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" /> Suporte Logística
+          <div className="flex flex-col h-full bg-white animate-in slide-in-from-right duration-300">
+            <div className="p-4 border-b border-slate-100 bg-white flex justify-between items-center shrink-0">
+              <h3 className="text-xs font-black text-slate-800 uppercase tracking-widest flex items-center gap-2">
+                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse-ring" /> Suporte Logística
               </h3>
             </div>
-            <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-4 custom-scrollbar bg-slate-50/30">
               {messages.length === 0 && (
                 <div className="flex flex-col items-center justify-center py-12 opacity-30">
                   <Icons.Dashboard className="w-12 h-12 mb-4" />
@@ -599,15 +599,15 @@ const App: React.FC = () => {
               ))}
               <div ref={chatEndRef} />
             </div>
-            <form onSubmit={handleSendMessage} className="p-3 bg-white border-t border-slate-100 flex gap-2">
+            <form onSubmit={handleSendMessage} className="p-4 bg-white border-t border-slate-100 flex gap-2 pb-6">
               <input
                 type="text" value={newMessage}
                 onChange={e => setNewMessage(e.target.value)}
                 placeholder="Sua mensagem..."
-                className="flex-1 bg-slate-50 border-none rounded-2xl px-4 text-sm font-bold focus:ring-2 focus:ring-blue-500/20 transition-all outline-none"
+                className="flex-1 bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-sm font-bold focus:ring-4 focus:ring-blue-50 focus:border-blue-200 focus:bg-white transition-all outline-none"
               />
-              <button type="submit" className="w-12 h-12 bg-blue-600 text-white rounded-2xl shadow-lg shadow-blue-500/30 flex items-center justify-center active:scale-90 transition-all">
-                <Icons.Send className="w-5 h-5 -rotate-12" />
+              <button type="submit" className="w-14 h-14 bg-blue-600 text-white rounded-2xl shadow-xl shadow-blue-500/20 flex items-center justify-center active:scale-95 transition-all">
+                <Icons.Send className="w-6 h-6 -rotate-12" />
               </button>
             </form>
           </div>
