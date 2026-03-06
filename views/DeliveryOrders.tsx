@@ -26,6 +26,7 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
     const [unreadClients, setUnreadClients] = useState<Set<string>>(new Set());
     const [messages, setMessages] = useState<any[]>([]);
     const [newMessage, setNewMessage] = useState('');
+    const [isSending, setIsSending] = useState(false);
     const chatEndRef = React.useRef<HTMLDivElement>(null);
 
     const [alertConfig, setAlertConfig] = useState<{
@@ -119,11 +120,12 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
 
     const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!newMessage.trim() || !currentUser || !selectedOrderChat) return;
+        if (!newMessage.trim() || !currentUser || !selectedOrderChat || isSending) return;
 
         try {
             const text = newMessage.trim();
             setNewMessage('');
+            setIsSending(true);
 
             if (selectedOrderChat.clientId) {
                 // Use new support system if client is known
@@ -134,9 +136,11 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
                 socket.emit('send_message', { ...(savedMsg as any), orderId: selectedOrderChat.id });
             }
 
-            loadChatHistory(selectedOrderChat.id);
+            await loadChatHistory(selectedOrderChat.id);
+            setIsSending(false);
         } catch (e) {
             console.error("Erro ao enviar mensagem:", e);
+            setIsSending(false);
         }
     };
 
@@ -296,7 +300,7 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
                         onClick={() => {
                             setActiveTab('chat');
                         }}
-                        className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all relative ${activeTab === 'chat' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' : 'text-slate-400 hover:bg-slate-50'} ${unreadClients.size > 0 ? 'animate-notify-turquoise' : ''}`}
+                        className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all relative ${activeTab === 'chat' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' : 'text-slate-400 hover:bg-slate-50'} ${unreadClients.size > 0 ? 'animate-piscar-red' : ''}`}
                     >
                         Chat {unreadClients.size > 0 && <span className="absolute -top-1 -right-1 w-3 h-3 bg-rose-500 rounded-full border-2 border-white animate-pulse"></span>}
                     </button>
@@ -464,8 +468,8 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
                                         <div key={msg.id || i} className={`flex ${msg.isFromClient ? 'justify-start' : 'justify-end'}`}>
                                             <div className={`max-w-[70%] p-5 rounded-[2rem] shadow-sm text-sm ${msg.isFromClient ? 'bg-white border border-slate-100 text-slate-800 rounded-tl-none' : 'bg-slate-900 text-white rounded-tr-none'}`}>
                                                 <div className="flex justify-between items-center mb-1 gap-4">
-                                                    <span className="text-[8px] font-black uppercase tracking-widest opacity-50">
-                                                        {msg.isFromClient ? (msg.senderName || 'Cliente') : 'Você'}
+                                                    <span className={`text-[8px] font-black uppercase tracking-widest ${msg.isFromClient ? 'opacity-50' : 'text-indigo-300'}`}>
+                                                        {msg.isFromClient ? (msg.senderName || 'Cliente') : 'VOCÊ (ATENDENTE)'}
                                                     </span>
                                                     <span className="text-[8px] font-black opacity-30 uppercase tracking-tighter">
                                                         {new Date(msg.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
@@ -475,6 +479,13 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
                                             </div>
                                         </div>
                                     ))}
+                                    {isSending && (
+                                        <div className="flex justify-end animate-pulse">
+                                            <div className="bg-slate-700 text-white px-4 py-2 rounded-2xl rounded-tr-none text-[10px] font-black uppercase tracking-widest">
+                                                Enviando...
+                                            </div>
+                                        </div>
+                                    )}
                                     <div ref={chatEndRef} />
                                 </div>
 

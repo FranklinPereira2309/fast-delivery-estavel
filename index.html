@@ -60,7 +60,6 @@
             animation: moderate-blink 2s ease-in-out infinite;
         }
 
-        /* Notificação Turquesa - Tom Forte Sem Transparência */
         @keyframes notify-turquoise-blink {
 
             0%,
@@ -76,6 +75,43 @@
 
         .animate-notify-turquoise {
             animation: notify-turquoise-blink 2s ease-in-out infinite;
+        }
+
+        @keyframes piscar-red {
+
+            0%,
+            100% {
+                background-color: transparent;
+                border-color: transparent;
+            }
+
+            50% {
+                background-color: #ef4444;
+                border-color: #ef4444;
+                transform: scale(1.05);
+            }
+        }
+
+        .animate-piscar-red {
+            animation: piscar-red 1s ease-in-out infinite;
+        }
+
+        @keyframes piscar-blue {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                background-color: #2563eb;
+                transform: scale(1.1);
+                box-shadow: 0 0 15px rgba(37, 99, 235, 0.5);
+            }
+        }
+
+        .animate-piscar-blue {
+            animation: piscar-blue 1s ease-in-out infinite;
         }
 
         @keyframes shake {

@@ -9,6 +9,7 @@ const Chat: React.FC = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [messages, setMessages] = useState<any[]>([]);
     const [newMessage, setNewMessage] = useState('');
+    const [isSending, setIsSending] = useState(false);
     const [client, setClient] = useState<any>(null);
     const chatEndRef = useRef<HTMLDivElement>(null);
 
@@ -62,16 +63,22 @@ const Chat: React.FC = () => {
 
     const handleSend = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!newMessage.trim() || !client) return;
+        if (!newMessage.trim() || !client || isSending) return;
 
         try {
             const msgText = newMessage.trim();
             setNewMessage('');
+            setIsSending(true);
             await api.sendSupportMessage(client.name, msgText, client.id, false);
-            // The message will come back via socket or we can optimistically add it
-            // Backend Controller emits 'new_support_message'
+            // After sending, we fetch history to update or wait for socket
+            // To be more responsive, we'll fetch history immediately
+            const history = await api.getSupportHistory(client.id);
+            setMessages(history);
+            setIsSending(false);
+            setTimeout(scrollToBottom, 100);
         } catch (error) {
             console.error("Error sending message", error);
+            setIsSending(false);
         }
     };
 
@@ -114,9 +121,14 @@ const Chat: React.FC = () => {
                 ) : (
                     messages.map((msg, i) => (
                         <div key={msg.id || i} className={`flex ${msg.isAdmin ? 'justify-start' : 'justify-end'} animate-in slide-in-from-bottom-2 duration-300`}>
-                            <div className={`max-w-[85%] p-4 rounded-[1.8rem] shadow-sm text-[13px] leading-relaxed ${msg.isAdmin ? 'bg-white border border-slate-100 text-slate-800 rounded-tl-none shadow-indigo-100/10' : 'bg-indigo-600 text-white rounded-tr-none shadow-indigo-200/50'}`}>
+                            <div className={`max-w-[85%] p-4 rounded-[1.8rem] shadow-sm text-[13px] border leading-relaxed ${msg.isAdmin ? 'bg-white border-slate-100 text-slate-800 rounded-tl-none shadow-indigo-100/10' : 'bg-indigo-600 border-indigo-500 text-white rounded-tr-none shadow-indigo-200/50'}`}>
+                                <div className={`flex items-center gap-1.5 mb-1.5 opacity-60 ${msg.isAdmin ? 'justify-start' : 'justify-end'}`}>
+                                    <span className="text-[7px] font-black uppercase tracking-[0.2em]">
+                                        {msg.isAdmin ? 'Atendente (Suporte)' : 'VOCÊ'}
+                                    </span>
+                                </div>
                                 <p className="font-bold">{msg.message}</p>
-                                <div className={`flex items-center gap-2 mt-1.5 opacity-50 ${msg.isAdmin ? 'justify-start' : 'justify-end'}`}>
+                                <div className={`flex items-center gap-2 mt-2 opacity-50 ${msg.isAdmin ? 'justify-start' : 'justify-end'}`}>
                                     <span className="text-[8px] font-black uppercase tracking-widest">
                                         {new Date(msg.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                                     </span>
@@ -124,6 +136,13 @@ const Chat: React.FC = () => {
                             </div>
                         </div>
                     ))
+                )}
+                {isSending && (
+                    <div className="flex justify-end animate-pulse">
+                        <div className="bg-indigo-400 text-white px-4 py-2 rounded-2xl rounded-tr-none text-[9px] font-black uppercase tracking-widest shadow-sm">
+                            Enviando...
+                        </div>
+                    </div>
                 )}
                 <div ref={chatEndRef} />
             </div>
