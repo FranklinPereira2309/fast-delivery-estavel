@@ -48,26 +48,28 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
         'DINHEIRO': 'Dinheiro'
     };
 
-    const fetchOrders = async () => {
-        setIsLoading(true);
-        const [allOrders, prods, settings] = await Promise.all([
-            db.getOrders(),
-            db.getProducts(),
-            db.getSettings()
-        ]);
-        setAllProducts(prods);
-        setBusinessSettings(settings);
+    const fetchOrders = async (silent = false) => {
+        if (!silent) setIsLoading(true);
+        try {
+            const [allOrders, prods, settings] = await Promise.all([
+                db.getOrders(),
+                db.getProducts(),
+                db.getSettings()
+            ]);
+            setAllProducts(prods);
+            setBusinessSettings(settings);
 
-        // Separate orders by status
-        const appOrders = allOrders.filter(o => o.isOriginDeliveryApp);
-
-        if (activeTab === 'active') {
-            setOrders(appOrders.filter(o => !['DELIVERED', 'CANCELLED'].includes(o.status)));
-        } else {
-            setOrders(appOrders.filter(o => ['DELIVERED', 'CANCELLED'].includes(o.status)));
+            const appOrders = allOrders.filter(o => o.isOriginDeliveryApp);
+            if (activeTab === 'active') {
+                setOrders(appOrders.filter(o => !['DELIVERED', 'CANCELLED'].includes(o.status)));
+            } else {
+                setOrders(appOrders.filter(o => ['DELIVERED', 'CANCELLED'].includes(o.status)));
+            }
+        } catch (error) {
+            console.error("Error fetching orders:", error);
+        } finally {
+            if (!silent) setIsLoading(false);
         }
-
-        setIsLoading(false);
     };
 
     const fetchSupportMessages = async () => {
@@ -85,19 +87,26 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
     }, [activeTab]);
 
     useEffect(() => {
+        let isMounted = true;
+        let timeoutId: any;
+
+        const pollData = async () => {
+            if (!isMounted) return;
+            await fetchOrders(true);
+            if (isMounted) {
+                timeoutId = setTimeout(pollData, 10000); // Poll every 10s as fallback
+            }
+        };
+
         const handleOrdersUpdate = () => {
-            fetchOrders();
+            fetchOrders(true);
         };
 
         const handleNewOrder = (order: Order) => {
             if (activeTab === 'active' && order.isOriginDeliveryApp) {
                 audioAlert.play();
-                setOrders((prev) => [order, ...prev.filter(o => o.id !== order.id)]);
+                fetchOrders(true);
             }
-        };
-
-        const handleOrderChange = () => {
-            fetchOrders();
         };
 
         const handleNewSupportMessage = (msg: any) => {
@@ -113,17 +122,21 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
         socket.on('orderStatusChanged', handleOrdersUpdate);
         socket.on('new_support_message', handleNewSupportMessage);
 
+        timeoutId = setTimeout(pollData, 10000);
+
         return () => {
+            isMounted = false;
+            if (timeoutId) clearTimeout(timeoutId);
             socket.off('ordersUpdated', handleOrdersUpdate);
             socket.off('newOrder', handleNewOrder);
             socket.off('orderStatusChanged', handleOrdersUpdate);
             socket.off('new_support_message', handleNewSupportMessage);
         };
-    }, []);
+    }, [activeTab]);
 
     const approveOrder = async (orderId: string) => {
         await db.updateOrderStatus(orderId, 'PREPARING', currentUser);
-        await fetchOrders();
+        await fetchOrders(true);
     };
 
     const rejectOrder = async (orderId: string) => {
@@ -133,9 +146,9 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
             message: 'Deseja realmente rejeitar/excluir este pedido? Esta ação não pode ser desfeita.',
             type: 'DANGER',
             onConfirm: async () => {
-                await db.updateOrderStatus(orderId, 'CANCELLED', currentUser);
-                await fetchOrders();
                 setAlertConfig(prev => ({ ...prev, isOpen: false }));
+                await db.updateOrderStatus(orderId, 'CANCELLED', currentUser);
+                await fetchOrders(true);
             }
         });
     };
@@ -144,12 +157,19 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
         setPrintingOrder(order);
     };
 
-    if (isLoading) {
-        return <div className="p-8 flex items-center justify-center">Carregando pedidos...</div>;
-    }
-
     return (
-        <div className="p-6 h-full flex flex-col bg-slate-50">
+        <div className="p-6 h-full flex flex-col bg-slate-50 relative">
+            {isLoading && (
+                <div className="absolute top-0 left-0 w-full h-1 bg-indigo-100 overflow-hidden z-50">
+                    <div className="h-full bg-indigo-600 animate-[loading_2s_infinite]"></div>
+                </div>
+            )}
+            <style>{`
+                @keyframes loading {
+                    0% { transform: translateX(-100%); }
+                    100% { transform: translateX(100%); }
+                }
+            `}</style>
             <div className="flex items-center justify-between mb-6 no-print">
                 <div>
                     <h1 className="text-2xl font-black text-slate-800 uppercase tracking-tighter flex items-center gap-3">
@@ -418,7 +438,7 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
                             await db.updateOrderItems(editingOrder.id, updatedItems, currentUser);
                             await db.updateOrderPaymentMethod(editingOrder.id, paymentMethod, currentUser);
                             setEditingOrder(null);
-                            await fetchOrders();
+                            await fetchOrders(true);
                             setAlertConfig({
                                 isOpen: true,
                                 title: 'SUCESSO',
