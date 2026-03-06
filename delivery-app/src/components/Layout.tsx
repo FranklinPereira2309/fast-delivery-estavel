@@ -21,67 +21,64 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     // Business Status & Countdown
     const [isClosingSoon, setIsClosingSoon] = useState(false);
     const [countdown, setCountdown] = useState<string>('');
+    const settingsRef = React.useRef<any>(null);
     const [settings, setSettings] = useState<any>(null);
 
-    React.useEffect(() => {
-        const updateCountdown = (s: any) => {
-            if (s.operatingHours && !s.isManuallyClosed) {
-                try {
-                    const hours = JSON.parse(s.operatingHours);
-                    const now = new Date();
-                    const day = now.getDay();
-                    const config = hours.find((h: any) => h.dayOfWeek === day);
+    const updateCountdown = React.useCallback(() => {
+        const s = settingsRef.current;
+        if (s && s.operatingHours && !s.isManuallyClosed) {
+            try {
+                const hours = JSON.parse(s.operatingHours);
+                const now = new Date();
+                const day = now.getDay();
+                const config = hours.find((h: any) => h.dayOfWeek === day);
 
-                    if (config && config.isOpen) {
-                        const [closeH, closeM] = config.closeTime.split(':').map(Number);
-                        const closeDate = new Date();
-                        closeDate.setHours(closeH, closeM, 0);
+                if (config && config.isOpen) {
+                    const [closeH, closeM] = config.closeTime.split(':').map(Number);
+                    const closeDate = new Date();
+                    closeDate.setHours(closeH, closeM, 0);
 
-                        const diffMs = closeDate.getTime() - now.getTime();
-                        if (diffMs > 0 && diffMs <= 30 * 60 * 1000) {
-                            setIsClosingSoon(true);
-                            const mins = Math.floor(diffMs / 60000);
-                            const secs = Math.floor((diffMs % 60000) / 1000);
-                            setCountdown(`${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`);
-                        } else {
-                            setIsClosingSoon(false);
-                        }
+                    const diffMs = closeDate.getTime() - now.getTime();
+                    if (diffMs > 0 && diffMs <= 30 * 60 * 1000) {
+                        setIsClosingSoon(true);
+                        const mins = Math.floor(diffMs / 60000);
+                        const secs = Math.floor((diffMs % 60000) / 1000);
+                        setCountdown(`${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`);
                     } else {
                         setIsClosingSoon(false);
                     }
-                } catch (e) {
-                    console.error("Error parsing operating hours:", e);
+                } else {
+                    setIsClosingSoon(false);
                 }
+            } catch (e) {
+                console.error("Error parsing operating hours:", e);
             }
-        };
+        }
+    }, []);
 
-        let interval: any;
+    const fetchSettings = React.useCallback(async () => {
+        try {
+            const s = await api.getSettings();
+            setSettings(s);
+            settingsRef.current = s;
+            updateCountdown();
+        } catch (err) {
+            console.error("Error fetching settings in Layout:", err);
+        }
+    }, [updateCountdown]);
 
-        const fetchSettings = async () => {
-            try {
-                const s = await api.getSettings();
-                setSettings(s);
-                updateCountdown(s);
-            } catch (err) {
-                console.error("Error fetching settings in Layout:", err);
-            }
-        };
-
+    // Initial fetch and periodic settings fetch (every 15s)
+    React.useEffect(() => {
         fetchSettings();
-
-        // Update countdown every second for accuracy
-        interval = setInterval(() => {
-            if (settings) updateCountdown(settings);
-        }, 1000);
-
-        // Fetch fresh settings every 15 seconds to sync status/banner
         const settingsInterval = setInterval(fetchSettings, 15000);
+        return () => clearInterval(settingsInterval);
+    }, [fetchSettings]);
 
-        return () => {
-            if (interval) clearInterval(interval);
-            if (settingsInterval) clearInterval(settingsInterval);
-        };
-    }, [settings]);
+    // Real-time countdown interval (every 1s)
+    React.useEffect(() => {
+        const countdownInterval = setInterval(updateCountdown, 1000);
+        return () => clearInterval(countdownInterval);
+    }, [updateCountdown]);
 
     React.useEffect(() => {
         const handleNewMessage = () => {
