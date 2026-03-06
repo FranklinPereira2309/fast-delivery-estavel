@@ -88,13 +88,13 @@ const Dashboard: React.FC = () => {
     });
 
     return [
-      { name: 'Delivery', value: types[SaleType.OWN_DELIVERY], color: '#3b82f6' },
+      { name: 'Delivery', value: types[SaleType.OWN_DELIVERY], color: '#4f46e5' },
       { name: 'Balcão', value: types[SaleType.COUNTER], color: '#10b981' },
       { name: 'Mesa', value: types[SaleType.TABLE], color: '#f59e0b' }
     ].filter(item => item.value > 0);
   }, [orders]);
 
-  const COLORS_PAYMENT = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444'];
+  const COLORS_PAYMENT = ['#10b981', '#4f46e5', '#f59e0b', '#ef4444'];
 
   if (isLoading) {
     return (
@@ -143,8 +143,8 @@ const Dashboard: React.FC = () => {
               <AreaChart data={chartData}>
                 <defs>
                   <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2} />
-                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                    <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.2} />
+                    <stop offset="95%" stopColor="#4f46e5" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
@@ -154,7 +154,7 @@ const Dashboard: React.FC = () => {
                   contentStyle={{ borderRadius: '20px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)', padding: '15px' }}
                   itemStyle={{ fontWeight: 800, fontSize: '12px', textTransform: 'uppercase' }}
                 />
-                <Area type="monotone" dataKey="vendas" stroke="#3b82f6" strokeWidth={4} fillOpacity={1} fill="url(#colorSales)" />
+                <Area type="monotone" dataKey="vendas" stroke="#4f46e5" strokeWidth={4} fillOpacity={1} fill="url(#colorSales)" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -175,7 +175,7 @@ const Dashboard: React.FC = () => {
                 />
                 <Bar dataKey="pedidos" radius={[10, 10, 0, 0]}>
                   {chartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={index === chartData.length - 1 ? '#3b82f6' : '#e2e8f0'} />
+                    <Cell key={`cell-${index}`} fill={index === chartData.length - 1 ? '#4f46e5' : '#e2e8f0'} />
                   ))}
                 </Bar>
               </BarChart>
