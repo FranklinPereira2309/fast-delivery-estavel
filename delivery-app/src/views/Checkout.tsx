@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../CartContext';
 import { api } from '../services/api';
+import { socket } from '../services/socket';
 import { Icons } from '../constants';
 import CustomAlert from '../components/CustomAlert';
+import type { StoreStatus } from '../types';
 
 interface AlertState {
     isOpen: boolean;
@@ -30,6 +32,7 @@ const Checkout: React.FC = () => {
     const [deliveryFee, setDeliveryFee] = useState(0);
     const [isLoading, setIsLoading] = useState(false);
     const [isFetchingCep, setIsFetchingCep] = useState(false);
+    const [storeStatus, setStoreStatus] = useState<StoreStatus | null>(null);
     const [alertState, setAlertState] = useState<AlertState>({
         isOpen: false, title: '', message: '', type: 'INFO', onConfirm: () => { }, onCancel: () => setAlertState(prev => ({ ...prev, isOpen: false }))
     });
@@ -58,16 +61,35 @@ const Checkout: React.FC = () => {
                     }
                 }
 
-                // Fetch Settings
-                const s = await api.getSettings();
+                // Fetch Settings & Status
+                const [s, status] = await Promise.all([
+                    api.getSettings(),
+                    api.getStoreStatus()
+                ]);
                 const fee = parseFloat(s.deliveryFee.replace('R$', '').replace(',', '.').trim()) || 0;
                 setDeliveryFee(fee);
+                setStoreStatus(status);
             } catch (err) {
                 console.error('Error fetching settings or client:', err);
             }
         };
         init();
     }, []);
+
+    useEffect(() => {
+        socket.on('store_status_changed', (newStatus: StoreStatus) => {
+            setStoreStatus(newStatus);
+            if (newStatus.status === 'offline') {
+                showAlert('Loja Fechada', 'O restaurante acabou de fechar. Você será redirecionado para o início.', 'INFO', () => {
+                    navigate('/');
+                });
+            }
+        });
+
+        return () => {
+            socket.off('store_status_changed');
+        };
+    }, [navigate]);
 
     const finalTotal = total + deliveryFee;
 
@@ -110,6 +132,13 @@ const Checkout: React.FC = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (items.length === 0) return;
+
+        if (storeStatus?.status === 'offline') {
+            showAlert('Loja Fechada', 'O restaurante está fechado no momento e não está aceitando novos pedidos.', 'DANGER', () => {
+                navigate('/');
+            });
+            return;
+        }
 
         let finalAddress = savedAddress;
 

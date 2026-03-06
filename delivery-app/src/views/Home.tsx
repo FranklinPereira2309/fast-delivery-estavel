@@ -195,8 +195,9 @@ const Home: React.FC = () => {
                             <div className="flex justify-between items-center mt-3">
                                 <span className="text-lg font-black text-slate-800 tracking-tighter">R$ {product.price.toFixed(2)}</span>
                                 <button
-                                    onClick={() => addToCart(product)}
-                                    className="w-10 h-10 bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white rounded-xl flex items-center justify-center font-bold active:scale-90 transition-all shadow-sm group-hover:shadow-indigo-200"
+                                    onClick={() => storeStatus?.status !== 'offline' && addToCart(product)}
+                                    disabled={storeStatus?.status === 'offline'}
+                                    className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold active:scale-90 transition-all shadow-sm ${storeStatus?.status === 'offline' ? 'bg-slate-100 text-slate-300 cursor-not-allowed' : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white group-hover:shadow-indigo-200'}`}
                                 >
                                     +
                                 </button>
@@ -207,7 +208,7 @@ const Home: React.FC = () => {
             </div>
 
             {/* Floating Cart Button */}
-            {items.length > 0 && (
+            {items.length > 0 && storeStatus?.status !== 'offline' && (
                 <div className="fixed bottom-32 left-6 right-6 animate-in slide-in-from-bottom duration-300 z-[60]">
                     <button
                         onClick={() => navigate('/checkout')}
