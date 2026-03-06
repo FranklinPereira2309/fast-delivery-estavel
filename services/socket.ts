@@ -78,18 +78,19 @@ socket.on('new_message', (msg: any) => {
     if (msg.isFromDriver && msg.driverId) {
         chatUnreadManager.addUnread(msg.driverId);
     }
-    // Check for Client message
-    if (msg.isFromClient) {
-        // Support message has clientId, Chat message has orderId
-        const id = msg.clientId || msg.orderId;
-        if (id) {
-            clientChatUnreadManager.addUnread(id);
-        }
+});
+
+// App Delivery Admin - Order Chat Unreads
+socket.on('newOrderMessage', (data: any) => {
+    const { orderId, message } = data;
+    if (message && message.sender === 'CLIENT' && orderId) {
+        clientChatUnreadManager.addUnread(orderId);
     }
 });
 
+// App Delivery Admin - Support Chat Unreads
 socket.on('new_support_message', (msg: any) => {
-    if (msg.isFromClient && msg.clientId) {
+    if (!msg.isAdmin && msg.clientId) {
         clientChatUnreadManager.addUnread(msg.clientId);
     }
 });

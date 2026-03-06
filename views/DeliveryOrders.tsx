@@ -120,7 +120,30 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
             // Assuming chat view is open, remove from unreads
             clientChatUnreadManager.removeUnread(selectedOrderChat.clientId || selectedOrderChat.id);
         }
-    }, [selectedOrderChat]);
+
+        const handleNewOrderMessage = (data: any) => {
+            const { orderId, message } = data;
+            if (activeTab === 'chat' && selectedOrderChat && String(selectedOrderChat.id) === String(orderId)) {
+                loadChatHistory(selectedOrderChat.id, selectedOrderChat.clientId);
+                clientChatUnreadManager.removeUnread(orderId);
+            }
+        };
+
+        const handleNewSupportMessage = (msg: any) => {
+            if (activeTab === 'chat' && selectedOrderChat && String(selectedOrderChat.clientId) === String(msg.clientId)) {
+                loadChatHistory(selectedOrderChat.id, selectedOrderChat.clientId);
+                clientChatUnreadManager.removeUnread(msg.clientId);
+            }
+        };
+
+        socket.on('newOrderMessage', handleNewOrderMessage);
+        socket.on('new_support_message', handleNewSupportMessage);
+
+        return () => {
+            socket.off('newOrderMessage', handleNewOrderMessage);
+            socket.off('new_support_message', handleNewSupportMessage);
+        };
+    }, [selectedOrderChat, activeTab]);
 
     const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
