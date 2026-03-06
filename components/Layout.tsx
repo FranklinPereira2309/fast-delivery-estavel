@@ -246,15 +246,13 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
             const isKitchen = item.id === 'kitchen';
             const isTables = item.id === 'tables';
             const isDeliveryApp = item.id === 'delivery-orders';
-            let blinkClass = (isMonitor && shouldBlinkMonitor) ||
+            const blinkClass = (isMonitor && shouldBlinkMonitor) ||
               (isPOS && shouldBlinkPOS) ||
               (isLogistics && (shouldBlinkLogistics || shouldBlinkLogisticsChat)) ||
               (isKitchen && (isAlerting || shouldBlinkKitchen)) ||
               (isTables && (isAlerting || shouldBlinkTables)) ||
               (isDeliveryApp && shouldBlinkDeliveryApp)
-              ? 'animate-notify-turquoise border-none' : '';
-
-
+              ? 'animate-notify-turquoise border border-cyan-400/30' : '';
 
             return (
               <button

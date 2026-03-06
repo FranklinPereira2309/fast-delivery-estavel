@@ -14,6 +14,7 @@ interface DeliveryOrdersProps {
 const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
     // Chat States
     const [orders, setOrders] = useState<Order[]>([]);
+    const [clients, setClients] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [editingOrder, setEditingOrder] = useState<Order | null>(null);
     const [allProducts, setAllProducts] = useState<any[]>([]);
@@ -60,16 +61,18 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
     const fetchOrders = async (silent = false) => {
         if (!silent) setIsLoading(true);
         try {
-            const [allOrders, prods, settings] = await Promise.all([
+            const [allOrders, s, p, allClients] = await Promise.all([
                 db.getOrders(),
+                db.getSettings(),
                 db.getProducts(),
-                db.getSettings()
+                db.getClients()
             ]);
-            setAllProducts(prods);
-            setBusinessSettings(settings);
+            setBusinessSettings(s);
+            setAllProducts(p);
+            setClients(allClients);
 
-            const appOrders = allOrders
-                .filter(o => o.isOriginDeliveryApp)
+            // Filter for Delivery App orders
+            const appOrders = allOrders.filter(o => o.isOriginDeliveryApp)
                 .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 
             if (activeTab === 'active') {
@@ -90,18 +93,16 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
         }
     };
 
-    const loadChatHistory = async (orderId: string) => {
-        const order = orders.find(o => o.id === orderId);
+    const loadChatHistory = async (orderId?: string, clientId?: string) => {
         let history: any[] = [];
 
-        // Fetch order-specific messages (legacy)
-        const orderHistory = await db.getClientChatHistory(orderId);
-        history = [...orderHistory];
+        if (orderId) {
+            const orderHistory = await db.getClientChatHistory(orderId);
+            history = [...orderHistory];
+        }
 
-        // If client is present, fetch their support history (the new full chat)
-        if (order?.clientId) {
-            const supportHistory = await db.getClientSupportHistory(order.clientId);
-            // Translate SupportMessage to match view expectation if needed
+        if (clientId) {
+            const supportHistory = await db.getClientSupportHistory(clientId);
             const translatedSupport = supportHistory.map(m => ({
                 ...m,
                 isFromClient: !m.isAdmin,
@@ -109,7 +110,7 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
                 createdAt: m.createdAt
             }));
 
-            // Merge histories and sort by date
+            // Merge and sort
             history = [...history, ...translatedSupport].sort((a, b) =>
                 new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
             );
@@ -136,7 +137,7 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
                 socket.emit('send_message', { ...(savedMsg as any), orderId: selectedOrderChat.id });
             }
 
-            await loadChatHistory(selectedOrderChat.id);
+            await loadChatHistory(selectedOrderChat.id, selectedOrderChat.clientId);
             setIsSending(false);
         } catch (e) {
             console.error("Erro ao enviar mensagem:", e);
@@ -150,9 +151,10 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
 
     useEffect(() => {
         if (selectedOrderChat) {
-            loadChatHistory(selectedOrderChat.id);
+            loadChatHistory(selectedOrderChat.id, selectedOrderChat.clientId);
             setUnreadClients(prev => {
                 const next = new Set(prev);
+                if (selectedOrderChat.clientId) next.delete(selectedOrderChat.clientId);
                 next.delete(selectedOrderChat.id);
                 return next;
             });
@@ -187,35 +189,23 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
         };
 
         const handleNewSupportMessage = (msg: any) => {
-            if (msg.orderId) {
-                // Mensagem de Chat de Pedido (Legado)
-                if (activeTab === 'chat' && selectedOrderChat?.id === msg.orderId) {
-                    setMessages(prev => [...prev.filter(m => m.id !== msg.id), msg]);
-                } else {
-                    setUnreadClients(prev => new Set(prev).add(msg.orderId));
-                    audioAlert.play();
+            if (msg.role === 'admin') return;
+
+            // Alerta por ClientId (novo sistema) ou OrderId (legado)
+            const alertId = msg.clientId || msg.orderId;
+
+            if (alertId) {
+                // Adiciona à lista de não lidos
+                setUnreadClients(prev => new Set(prev).add(alertId));
+
+                // Se for o chat aberto, recarrega as mensagens
+                if (selectedOrderChat && (selectedOrderChat.clientId === msg.clientId || selectedOrderChat.id === msg.orderId)) {
+                    loadChatHistory(selectedOrderChat.id, selectedOrderChat.clientId);
                 }
-            } else if (msg.clientId && !msg.isAdmin) {
-                // Nova mensagem de Chat de Suporte (Novo Sistema)
-                if (activeTab === 'chat' && selectedOrderChat?.clientId === msg.clientId) {
-                    const translated = {
-                        ...msg,
-                        isFromClient: true,
-                        text: msg.message,
-                        createdAt: msg.createdAt
-                    };
-                    setMessages(prev => [...prev.filter(m => m.id !== msg.id), translated]);
-                } else {
-                    // Tenta achar o pedido para alertar na barra lateral
-                    const clientOrder = orders.find(o => o.clientId === msg.clientId && o.isOriginDeliveryApp);
-                    if (clientOrder) {
-                        setUnreadClients(prev => new Set(prev).add(clientOrder.id));
-                    }
-                    audioAlert.play();
-                }
-            } else {
-                // Outras notificações de suporte (banners, etc)
+
                 audioAlert.play();
+                // Opcionalmente atualiza a lista de clientes para garantir que o novo cliente apareça
+                fetchOrders(true);
             }
         };
 
@@ -400,31 +390,49 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
                             <h3 className="text-xs font-black text-slate-800 uppercase tracking-widest">APP Delivery Clientes:</h3>
                         </div>
                         <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-2 custom-scrollbar">
-                            {orders
-                                .filter(o => o.isOriginDeliveryApp)
-                                .map(order => (
-                                    <button
-                                        key={order.id}
-                                        onClick={() => setSelectedOrderChat(order)}
-                                        className={`flex items-center gap-3 p-4 rounded-3xl transition-all ${selectedOrderChat?.id === order.id ? 'bg-white shadow-md border border-slate-100 scale-[1.02]' : 'hover:bg-white/50'} ${unreadClients.has(order.id) ? 'animate-notify-turquoise bg-emerald-50/50 border-emerald-100' : ''}`}
-                                    >
-                                        <div className="relative shrink-0">
-                                            <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-white font-black uppercase text-sm ${selectedOrderChat?.id === order.id ? 'bg-indigo-600 shadow-lg shadow-indigo-500/20' : 'bg-slate-300'}`}>
-                                                {order.clientName.charAt(0)}
-                                            </div>
-                                            {unreadClients.has(order.id) && (
-                                                <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-white animate-pulse shadow-sm z-10"></span>
-                                            )}
+                            {/* Combined list of active orders and clients with messages */}
+                            {Array.from(new Map<string, { id: string, clientId?: string, name: string, orderId?: string }>([
+                                // 1. Map all APP orders first
+                                ...orders.map(o => [o.id, {
+                                    id: o.id,
+                                    clientId: o.clientId,
+                                    name: o.clientName,
+                                    orderId: o.id
+                                }] as [string, { id: string, clientId?: string, name: string, orderId?: string }]),
+                                // 2. Add clients from unread set if not already present
+                                ...Array.from(unreadClients).map(id => {
+                                    const order = orders.find(o => o.id === id);
+                                    if (order) return [order.id, { id: order.id, clientId: order.clientId, name: order.clientName, orderId: order.id }] as [string, { id: string, clientId?: string, name: string, orderId?: string }];
+
+                                    const client = clients.find(c => c.id === id);
+                                    if (client) return [id, { id: id, clientId: id, name: client.name }] as [string, { id: string, clientId?: string, name: string, orderId?: string }];
+
+                                    return [id, { id: id, clientId: id, name: `Cliente ${id.slice(-4)}` }] as [string, { id: string, clientId?: string, name: string, orderId?: string }];
+                                })
+                            ]).values()).map(chatItem => (
+                                <button
+                                    key={chatItem.id}
+                                    onClick={() => setSelectedOrderChat(chatItem as any)}
+                                    className={`flex items-center gap-3 p-4 rounded-3xl transition-all ${selectedOrderChat?.id === chatItem.id ? 'bg-white shadow-md border border-slate-100 scale-[1.02]' : 'hover:bg-white/50'} ${unreadClients.has(chatItem.clientId || chatItem.id) ? 'animate-notify-turquoise bg-emerald-50/50 border-emerald-100' : ''}`}
+                                >
+                                    <div className="relative shrink-0">
+                                        <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-white font-black uppercase text-sm ${selectedOrderChat?.id === chatItem.id ? 'bg-indigo-600 shadow-lg shadow-indigo-500/20' : 'bg-slate-300'}`}>
+                                            {chatItem.name.charAt(0)}
                                         </div>
-                                        <div className="flex-1 text-left min-w-0">
-                                            <p className="text-sm font-black text-slate-800 truncate">{order.clientName}</p>
-                                            <div className="flex items-center gap-1.5 mt-0.5">
-                                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Pedido #{order.id.slice(-4).toUpperCase()}</span>
-                                            </div>
+                                        {unreadClients.has(chatItem.clientId || chatItem.id) && (
+                                            <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-white animate-pulse shadow-sm z-10"></span>
+                                        )}
+                                    </div>
+                                    <div className="flex-1 text-left min-w-0">
+                                        <p className="text-sm font-black text-slate-800 truncate">{chatItem.name}</p>
+                                        <div className="flex items-center gap-1.5 mt-0.5">
+                                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">
+                                                {chatItem.orderId ? `Pedido #${chatItem.orderId.slice(-4).toUpperCase()}` : 'Atendimento Direto'}
+                                            </span>
                                         </div>
-                                    </button>
-                                ))
-                            }
+                                    </div>
+                                </button>
+                            ))}
                         </div>
                     </div>
 
