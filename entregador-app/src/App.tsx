@@ -73,7 +73,8 @@ const App: React.FC = () => {
   });
   const [historyEndDate, setHistoryEndDate] = useState(new Date().toISOString().split('T')[0]);
   const [printingHistoryOrder, setPrintingHistoryOrder] = useState<Order | null>(null);
-  const [storeStatus, setStoreStatus] = useState<{ status: 'online' | 'offline' }>({ status: 'offline' });
+  const [storeStatus, setStoreStatus] = useState<{ status: 'online' | 'offline', next_status_change?: string | null, is_manually_closed?: boolean }>({ status: 'offline' });
+  const [countdown, setCountdown] = useState<string | null>(null);
   const [customAlertMessage, setCustomAlertMessage] = useState<string | null>(null);
   const [selectedPayments, setSelectedPayments] = useState<Record<string, string>>({});
 
@@ -271,6 +272,26 @@ const App: React.FC = () => {
   }, [printingOrder, products]);
 
 
+  useEffect(() => {
+    if (storeStatus.status === 'online' && storeStatus.next_status_change) {
+      const updateCountdown = () => {
+        const diffMs = new Date(storeStatus.next_status_change!).getTime() - new Date().getTime();
+        if (diffMs > 0 && diffMs <= 30 * 60 * 1000) {
+          const mins = Math.floor(diffMs / 60000);
+          const secs = Math.floor((diffMs % 60000) / 1000);
+          setCountdown(`${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`);
+        } else {
+          setCountdown(null);
+        }
+      };
+      updateCountdown();
+      const interval = setInterval(updateCountdown, 1000);
+      return () => clearInterval(interval);
+    } else {
+      setCountdown(null);
+    }
+  }, [storeStatus]);
+
   if (isLoading) return null;
 
   if (!currentUser) {
@@ -322,6 +343,16 @@ const App: React.FC = () => {
           <button onClick={() => { setIsAlertOpen(false); setCustomAlertMessage(null); }} className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
             <Icons.Check className="w-4 h-4" />
           </button>
+        </div>
+      )}
+
+      {/* Store Status Banner */}
+      {(storeStatus.status === 'offline' || countdown !== null) && (
+        <div className={`px-6 py-2 text-[10px] font-black uppercase tracking-widest text-white sticky top-[72px] z-[30] animate-in slide-in-from-top duration-300 text-center ${storeStatus.status === 'offline' ? 'bg-rose-600/90 backdrop-blur-md' : 'bg-orange-500/90 backdrop-blur-md'}`}>
+          {storeStatus.status === 'offline'
+            ? (storeStatus.is_manually_closed ? 'Loja Fechada Temporariamente' : 'Loja Fora do Horário de Funcionamento')
+            : `Atenção: A loja fechará em ${countdown} minutos!`
+          }
         </div>
       )}
 

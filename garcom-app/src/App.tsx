@@ -22,7 +22,7 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
   const [showFeedbacks, setShowFeedbacks] = useState(false);
   const [hasNewFeedback, setHasNewFeedback] = useState(false);
   const [storeStatus, setStoreStatus] = useState<StoreStatus>({ status: 'online', is_manually_closed: false, next_status_change: null });
-  const [minutesToClose, setMinutesToClose] = useState<number | null>(null);
+  const [countdown, setCountdown] = useState<string | null>(null);
   const [recentOrders, setRecentOrders] = useState<Order[]>([]);
   const [resolvedWaiterId, setResolvedWaiterId] = useState<string | null>(user.waiterId || null);
 
@@ -154,16 +154,21 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
 
   useEffect(() => {
     if (storeStatus.status === 'online' && storeStatus.next_status_change) {
-      const checkTime = () => {
+      const updateCountdown = () => {
         const diffMs = new Date(storeStatus.next_status_change!).getTime() - new Date().getTime();
-        const diffMins = Math.floor(diffMs / 60000);
-        setMinutesToClose(diffMins > 0 && diffMins <= 30 ? diffMins : null);
+        if (diffMs > 0 && diffMs <= 30 * 60 * 1000) {
+          const mins = Math.floor(diffMs / 60000);
+          const secs = Math.floor((diffMs % 60000) / 1000);
+          setCountdown(`${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`);
+        } else {
+          setCountdown(null);
+        }
       };
-      checkTime();
-      const interval = setInterval(checkTime, 60000);
+      updateCountdown();
+      const interval = setInterval(updateCountdown, 1000);
       return () => clearInterval(interval);
     } else {
-      setMinutesToClose(null);
+      setCountdown(null);
     }
   }, [storeStatus]);
 
@@ -300,12 +305,11 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
       </header>
 
       {/* Store Status Banner */}
-      {(storeStatus.status === 'offline' || minutesToClose !== null) && (
-        <div className={`px-6 py-3 border-b text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 animate-in slide-in-from-top duration-300 ${storeStatus.status === 'offline' ? 'bg-red-600 text-white border-red-700' : 'bg-orange-500 text-white border-orange-600'}`}>
-          <AlertCircle size={14} />
+      {(storeStatus.status === 'offline' || countdown !== null) && (
+        <div className={`px-6 py-2 text-[10px] font-black uppercase tracking-widest text-white sticky top-[105px] z-[30] animate-in slide-in-from-top duration-300 text-center ${storeStatus.status === 'offline' ? 'bg-rose-600/90 backdrop-blur-md' : 'bg-orange-500/90 backdrop-blur-md'}`}>
           {storeStatus.status === 'offline'
             ? (storeStatus.is_manually_closed ? 'Loja Fechada Temporariamente' : 'Loja Fora do Horário de Funcionamento')
-            : `Atenção: A loja fechará em ${minutesToClose} minutos!`
+            : `Atenção: A loja fechará em ${countdown} minutos!`
           }
         </div>
       )}

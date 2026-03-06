@@ -62,7 +62,7 @@ function AppContent() {
 
   // Status da Loja
   const [storeStatus, setStoreStatus] = useState<StoreStatus>({ status: 'online', is_manually_closed: false, next_status_change: null });
-  const [minutesToClose, setMinutesToClose] = useState<number | null>(null);
+  const [countdown, setCountdown] = useState<string | null>(null);
 
   const fetchStatus = useCallback(async () => {
     try {
@@ -399,16 +399,21 @@ function AppContent() {
 
   useEffect(() => {
     if (storeStatus.status === 'online' && storeStatus.next_status_change) {
-      const checkTime = () => {
+      const updateCountdown = () => {
         const diffMs = new Date(storeStatus.next_status_change!).getTime() - new Date().getTime();
-        const diffMins = Math.floor(diffMs / 60000);
-        setMinutesToClose(diffMins > 0 && diffMins <= 30 ? diffMins : null);
+        if (diffMs > 0 && diffMs <= 30 * 60 * 1000) {
+          const mins = Math.floor(diffMs / 60000);
+          const secs = Math.floor((diffMs % 60000) / 1000);
+          setCountdown(`${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`);
+        } else {
+          setCountdown(null);
+        }
       };
-      checkTime();
-      const interval = setInterval(checkTime, 60000);
+      updateCountdown();
+      const interval = setInterval(updateCountdown, 1000);
       return () => clearInterval(interval);
     } else {
-      setMinutesToClose(null);
+      setCountdown(null);
     }
   }, [storeStatus]);
 
@@ -745,11 +750,11 @@ function AppContent() {
       </header>
 
       {/* Banner de Status da Loja */}
-      {(storeStatus.status === 'offline' || minutesToClose !== null) && (
-        <div className={`text-center py-2 text-xs font-black uppercase tracking-widest text-white px-4 ${storeStatus.status === 'offline' ? 'bg-red-600 bg-opacity-90 backdrop-blur-md sticky top-[72px] z-30' : 'bg-orange-500 bg-opacity-90 backdrop-blur-md sticky top-[72px] z-30'}`}>
+      {(storeStatus.status === 'offline' || countdown !== null) && (
+        <div className={`text-center py-2 text-[10px] font-black uppercase tracking-widest text-white px-4 sticky top-[72px] z-30 animate-in slide-in-from-top duration-300 ${storeStatus.status === 'offline' ? 'bg-rose-600/90 backdrop-blur-md' : 'bg-orange-500/90 backdrop-blur-md'}`}>
           {storeStatus.status === 'offline'
             ? (storeStatus.is_manually_closed ? 'Fechado Temporariamente' : 'Não estamos aceitando pedidos')
-            : `Atenção: A loja fechará em ${minutesToClose} minutos!`
+            : `Atenção: A loja fechará em ${countdown} minutos!`
           }
         </div>
       )}
