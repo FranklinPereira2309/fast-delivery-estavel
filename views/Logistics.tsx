@@ -737,9 +737,9 @@ const Logistics: React.FC = () => {
                 <span className="text-2xl font-black">R$ {printingOrder.total.toFixed(2)}</span>
               </div>
 
-              <div className="flex gap-2 no-print">
-                <button onClick={() => window.print()} className="flex-1 bg-slate-900 text-white py-4 rounded-2xl font-black uppercase text-[10px] shadow-xl">Imprimir</button>
-                <button onClick={() => setPrintingOrder(null)} className="flex-1 bg-slate-100 text-slate-600 py-4 rounded-2xl font-black uppercase text-[10px]">Fechar</button>
+              <div className="flex gap-4 no-print">
+                <button onClick={() => window.print()} className="flex-1 bg-slate-900 text-white py-4 rounded-2xl font-black uppercase text-[10px] shadow-xl hover:bg-black transition-all">Imprimir</button>
+                <button onClick={() => setPrintingOrder(null)} className="flex-1 bg-slate-100 text-slate-500 py-4 rounded-2xl font-black uppercase text-[10px] hover:bg-slate-200 transition-all">Fechar</button>
               </div>
             </div>
           </div>
@@ -777,9 +777,9 @@ const Logistics: React.FC = () => {
                 <span className="text-2xl font-black">R$ {printingHistoryOrder.total.toFixed(2)}</span>
               </div>
 
-              <div className="flex gap-2 no-print">
-                <button onClick={() => window.print()} className="flex-1 bg-slate-900 text-white py-4 rounded-2xl font-black uppercase text-[10px] shadow-xl">Imprimir</button>
-                <button onClick={() => setPrintingHistoryOrder(null)} className="flex-1 bg-slate-100 text-slate-600 py-4 rounded-2xl font-black uppercase text-[10px]">Fechar</button>
+              <div className="flex gap-4 no-print">
+                <button onClick={() => window.print()} className="flex-1 bg-slate-900 text-white py-4 rounded-2xl font-black uppercase text-[10px] shadow-xl hover:bg-black transition-all">Imprimir</button>
+                <button onClick={() => setPrintingHistoryOrder(null)} className="flex-1 bg-slate-100 text-slate-500 py-4 rounded-2xl font-black uppercase text-[10px] hover:bg-slate-200 transition-all">Fechar</button>
               </div>
             </div>
           </div>

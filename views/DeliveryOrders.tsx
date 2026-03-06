@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { db } from '../services/db';
 import { socket } from '../services/socket';
-import { Order, User, OrderStatusLabels } from '../types';
+import { Order, User, OrderStatusLabels, DeliveryDriver, Product, SaleType, BusinessSettings } from '../types';
 import { Icons } from '../constants';
 import CustomAlert from '../components/CustomAlert';
+import { getInitials } from '../services/utils';
 
 interface DeliveryOrdersProps {
     currentUser: User;
@@ -15,6 +16,9 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
     const [isLoading, setIsLoading] = useState(true);
     const [editingOrder, setEditingOrder] = useState<Order | null>(null);
     const [allProducts, setAllProducts] = useState<any[]>([]);
+    const [drivers, setDrivers] = useState<DeliveryDriver[]>([]);
+    const [products, setProducts] = useState<Product[]>([]);
+    const [businessSettings, setBusinessSettings] = useState<BusinessSettings | null>(null);
     const [activeTab, setActiveTab] = useState<'active' | 'history' | 'chat'>('active');
     const [businessSettings, setBusinessSettings] = useState<any>(null);
     const [printingOrder, setPrintingOrder] = useState<Order | null>(null);
@@ -47,30 +51,26 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
         'dinheiro': 'Dinheiro', 'CASH': 'Dinheiro'
     };
 
-    const getInitials = (name: any) => {
-        if (!name || typeof name !== 'string') return 'C';
-        return name.charAt(0).toUpperCase();
+    const getDriverName = (driverId?: string) => {
+        if (!driverId) return 'Desconhecido';
+        return drivers.find(d => d.id === driverId)?.name || 'Removido';
     };
 
     const fetchOrders = async (silent = false) => {
         if (!silent) setIsLoading(true);
         try {
-            const [allOrders, s, p, allClients] = await Promise.all([
+            const [allOrders, allDrivers, allProducts, settings] = await Promise.all([
                 db.getOrders(),
-                db.getSettings(),
+                db.getDrivers(),
                 db.getProducts(),
-                db.getClients()
+                db.getSettings()
             ]);
-            setBusinessSettings(s);
-            setAllProducts(p);
-            setClients(allClients);
-
-            const appOrders = allOrders.filter(o => o.isOriginDeliveryApp)
-                .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-
-            setOrders(appOrders);
+            setOrders(allOrders.filter(o => o.type === SaleType.APP_DELIVERY || o.type === SaleType.OWN_DELIVERY));
+            setDrivers(allDrivers);
+            setProducts(allProducts);
+            setBusinessSettings(settings);
         } catch (error) {
-            console.error("Error fetching orders:", error);
+            console.error('Error fetching orders:', error);
         } finally {
             if (!silent) setIsLoading(false);
         }
@@ -224,13 +224,42 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
                     <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
                         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                             {historyOrders.map(order => (
-                                <div key={order.id} className="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm opacity-80 hover:opacity-100 flex flex-col h-fit">
-                                    <div className="flex justify-between items-start mb-4">
-                                        <h3 className="font-black text-2xl text-slate-800 tracking-tighter">#{order.id.slice(-4).toUpperCase()}</h3>
-                                        <p className="text-xl font-black text-slate-800">R$ {order.total.toFixed(2)}</p>
+                                <div key={order.id} className="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col hover:shadow-xl transition-all h-max">
+                                    <div className="flex justify-between items-start mb-2">
+                                        <h3 className="font-black text-xl text-slate-800 tracking-tighter uppercase">APP</h3>
+                                        <div className="px-3 py-1 bg-emerald-500 text-white rounded-full text-[8px] font-black uppercase tracking-widest shadow-sm">
+                                            FINALIZADA
+                                        </div>
                                     </div>
-                                    <p className="font-bold text-slate-700 leading-tight uppercase text-xs mb-6">{order.clientName}</p>
-                                    <button onClick={() => handlePrint(order)} className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg flex items-center justify-center gap-2"><Icons.Print className="w-4 h-4" /> Cupom</button>
+
+                                    <div className="mb-6">
+                                        <p className="font-bold text-slate-400 text-[10px] uppercase tracking-widest mb-1">{order.clientName}</p>
+                                        <p className="text-[10px] font-bold text-slate-400 uppercase">DATA: {new Date(order.createdAt).toLocaleDateString('pt-BR')}</p>
+                                    </div>
+
+                                    <div className="bg-slate-50 p-4 rounded-3xl flex items-center gap-4 mb-6">
+                                        <div className="bg-white p-2 rounded-xl shadow-sm">
+                                            <Icons.Logistics className="w-5 h-5 text-slate-800" />
+                                        </div>
+                                        <div>
+                                            <p className="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em] mb-0.5">ENTREGUE POR:</p>
+                                            <p className="text-sm font-black text-slate-800">{getDriverName(order.driverId)}</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex justify-between items-center border-t border-slate-50 pt-4">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">TOTAL:</span>
+                                            <span className="font-black text-lg text-slate-800">R$ {order.total.toFixed(2)}</span>
+                                        </div>
+                                        <button
+                                            onClick={() => handlePrint(order)}
+                                            className="p-3 bg-slate-50 text-slate-300 hover:text-indigo-600 rounded-xl transition-all"
+                                            title="Imprimir Cupom"
+                                        >
+                                            <Icons.Print className="w-5 h-5" />
+                                        </button>
+                                    </div>
                                 </div>
                             ))}
                         </div>
@@ -308,13 +337,50 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
                 onCancel={() => setAlertConfig(prev => ({ ...prev, isOpen: false }))}
             />
 
-            {printingOrder && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/80 no-print">
-                    <div className="bg-white w-full max-w-[80mm] p-8 rounded-3xl text-center">
-                        <h2 className="font-black text-lg mb-4 uppercase">Cupom de Pedido</h2>
+            {printingOrder && businessSettings && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md no-print">
+                    <div className="relative w-full max-w-[80mm] bg-white p-8 border border-dashed shadow-2xl font-receipt text-[11px] text-black">
+                        <div className="text-center mb-6 border-b border-dashed pb-4">
+                            <h2 className="font-black text-sm uppercase tracking-tighter">{businessSettings.name}</h2>
+                            <p className="text-[9px] font-bold mt-1 uppercase">Comprovante de Pedido</p>
+                        </div>
+
+                        <div className="space-y-1 mb-4">
+                            <p>DATA: {new Date(printingOrder.createdAt).toLocaleString('pt-BR')}</p>
+                            <p>CLIENTE: {printingOrder.clientName}</p>
+                            {printingOrder.clientPhone && <p>FONE: {printingOrder.clientPhone}</p>}
+                            {printingOrder.clientAddress && (
+                                <p className="font-bold border-t border-dashed mt-2 pt-1 uppercase leading-tight">ENTREGA: {printingOrder.clientAddress}</p>
+                            )}
+                        </div>
+
+                        <div className="border-t border-dashed my-3 py-3">
+                            {printingOrder.items.map((it, idx) => (
+                                <div key={idx} className="flex justify-between font-black uppercase py-0.5">
+                                    <span>{it.quantity}X {(it.product?.name || 'Item').substring(0, 18)}</span>
+                                    <span>R$ {((it.quantity || 1) * (it.price || 0)).toFixed(2)}</span>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="flex justify-between items-end border-t border-dashed pt-4 mb-8">
+                            <span className="font-black text-[10px] uppercase tracking-widest">TOTAL:</span>
+                            <span className="text-2xl font-black">R$ {printingOrder.total.toFixed(2)}</span>
+                        </div>
+
                         <div className="flex gap-4">
-                            <button onClick={() => window.print()} className="flex-1 bg-slate-900 text-white py-4 rounded-xl font-black uppercase text-[10px]">Imprimir</button>
-                            <button onClick={() => setPrintingOrder(null)} className="flex-1 bg-slate-100 text-slate-600 py-4 rounded-xl font-black uppercase text-[10px]">Fechar</button>
+                            <button
+                                onClick={() => window.print()}
+                                className="flex-1 bg-slate-900 text-white py-4 rounded-2xl font-black uppercase text-[10px] shadow-xl hover:bg-black transition-all"
+                            >
+                                Imprimir
+                            </button>
+                            <button
+                                onClick={() => setPrintingOrder(null)}
+                                className="flex-1 bg-slate-100 text-slate-500 py-4 rounded-2xl font-black uppercase text-[10px] hover:bg-slate-200 transition-all"
+                            >
+                                Fechar
+                            </button>
                         </div>
                     </div>
                 </div>
