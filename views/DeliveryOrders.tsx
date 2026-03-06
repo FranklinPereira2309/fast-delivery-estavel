@@ -202,38 +202,47 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
                 {/* Active Orders View */}
                 {activeTab === 'active' && (
                     <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
-                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                            {activeOrders.map(order => (
-                                <div key={order.id} className="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col hover:shadow-xl transition-all h-fit">
-                                    <div className="flex justify-between items-start mb-4">
-                                        <h3 className="font-black text-2xl text-slate-800 tracking-tighter">#{order.id.slice(-4).toUpperCase()}</h3>
-                                        <p className="text-xl font-black text-slate-800">R$ {order.total.toFixed(2)}</p>
-                                    </div>
-                                    <div className="space-y-4 mb-6">
-                                        <p className="font-bold text-slate-700 leading-tight uppercase text-xs">{order.clientName}</p>
-                                        <p className="text-[10px] font-bold text-slate-400 uppercase leading-relaxed">{order.clientAddress}</p>
-                                        <div className="bg-slate-50 rounded-2xl p-4">
-                                            {order.items.map((it, idx) => (
-                                                <div key={idx} className="flex gap-2 text-xs font-bold text-slate-600">
-                                                    <span className="text-indigo-600">{it.quantity}x</span> {it.product?.name || 'Item'}
-                                                </div>
-                                            ))}
+                        {activeOrders.length === 0 ? (
+                            <div className="w-full bg-white p-20 rounded-[3rem] border-2 border-dashed border-slate-100 flex flex-col items-center justify-center text-center animate-in fade-in zoom-in duration-500">
+                                <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-6 shadow-inner">
+                                    <Icons.Clock className="w-10 h-10 text-slate-200" />
+                                </div>
+                                <h3 className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em]">Sem entregas pendentes no momento...</h3>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                                {activeOrders.map(order => (
+                                    <div key={order.id} className="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col hover:shadow-xl transition-all h-fit">
+                                        <div className="flex justify-between items-start mb-4">
+                                            <h3 className="font-black text-2xl text-slate-800 tracking-tighter">#{order.id.slice(-4).toUpperCase()}</h3>
+                                            <p className="text-xl font-black text-slate-800">R$ {order.total.toFixed(2)}</p>
+                                        </div>
+                                        <div className="space-y-4 mb-6">
+                                            <p className="font-bold text-slate-700 leading-tight uppercase text-xs">{order.clientName}</p>
+                                            <p className="text-[10px] font-bold text-slate-400 uppercase leading-relaxed">{order.clientAddress}</p>
+                                            <div className="bg-slate-50 rounded-2xl p-4">
+                                                {order.items.map((it, idx) => (
+                                                    <div key={idx} className="flex gap-2 text-xs font-bold text-slate-600">
+                                                        <span className="text-indigo-600">{it.quantity}x</span> {it.product?.name || 'Item'}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                        <div className="flex gap-3 mt-auto pt-4 border-t border-slate-50">
+                                            {order.status === 'PENDING' ? (
+                                                <>
+                                                    <button onClick={() => approveOrder(order.id)} className="flex-1 py-4 bg-indigo-600 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-indigo-100 transition-all">Aceitar</button>
+                                                    <button onClick={() => setEditingOrder(order)} className="w-12 h-12 bg-white border border-slate-200 text-slate-400 hover:text-indigo-600 rounded-2xl flex items-center justify-center transition-all"><Icons.Edit className="w-5 h-5" /></button>
+                                                    <button onClick={() => rejectOrder(order.id)} className="w-12 h-12 bg-white border border-slate-200 text-rose-400 hover:bg-rose-50 rounded-2xl flex items-center justify-center transition-all"><Icons.Delete className="w-5 h-5" /></button>
+                                                </>
+                                            ) : (
+                                                <button onClick={() => handlePrint(order)} className="flex-1 py-4 bg-indigo-600 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg flex items-center justify-center gap-2"><Icons.Print className="w-4 h-4" /> Cupom</button>
+                                            )}
                                         </div>
                                     </div>
-                                    <div className="flex gap-3 mt-auto pt-4 border-t border-slate-50">
-                                        {order.status === 'PENDING' ? (
-                                            <>
-                                                <button onClick={() => approveOrder(order.id)} className="flex-1 py-4 bg-indigo-600 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-indigo-100 transition-all">Aceitar</button>
-                                                <button onClick={() => setEditingOrder(order)} className="w-12 h-12 bg-white border border-slate-200 text-slate-400 hover:text-indigo-600 rounded-2xl flex items-center justify-center transition-all"><Icons.Edit className="w-5 h-5" /></button>
-                                                <button onClick={() => rejectOrder(order.id)} className="w-12 h-12 bg-white border border-slate-200 text-rose-400 hover:bg-rose-50 rounded-2xl flex items-center justify-center transition-all"><Icons.Delete className="w-5 h-5" /></button>
-                                            </>
-                                        ) : (
-                                            <button onClick={() => handlePrint(order)} className="flex-1 py-4 bg-indigo-600 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg flex items-center justify-center gap-2"><Icons.Print className="w-4 h-4" /> Cupom</button>
-                                        )}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 )}
 
