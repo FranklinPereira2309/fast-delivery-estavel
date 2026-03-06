@@ -374,7 +374,7 @@ const Logistics: React.FC = () => {
       setBusinessSettings(settings);
       setReadyOrders(allOrders.filter(o =>
         o.type === SaleType.OWN_DELIVERY &&
-        ([OrderStatus.READY, OrderStatus.OUT_FOR_DELIVERY, OrderStatus.DELIVERED] as OrderStatus[]).includes(o.status)
+        ([OrderStatus.READY, OrderStatus.OUT_FOR_DELIVERY] as OrderStatus[]).includes(o.status)
       ).sort((a, b) => b.createdAt.localeCompare(a.createdAt)));
       setHistoryOrders(allOrders.filter(o => o.type === SaleType.OWN_DELIVERY && o.status === OrderStatus.DELIVERED));
     } catch (error) {
@@ -602,8 +602,8 @@ const Logistics: React.FC = () => {
                     <div key={msg.id || i} className={`flex ${msg.isFromDriver ? 'justify-start' : 'justify-end'}`}>
                       <div className={`max-w-[70%] p-5 rounded-[2rem] shadow-sm text-sm ${msg.isFromDriver ? 'bg-white border border-slate-100 text-slate-800 rounded-tl-none' : 'bg-slate-900 text-white rounded-tr-none'}`}>
                         <div className="flex justify-between items-center mb-1 gap-4">
-                          <span className="text-[8px] font-black uppercase tracking-widest opacity-50">
-                            {msg.isFromDriver ? (msg.senderName || 'Entregador') : 'Você'}
+                          <span className={`text-[8px] font-black uppercase tracking-widest ${msg.isFromDriver ? 'text-indigo-600' : 'opacity-50'}`}>
+                            {msg.isFromDriver ? (msg.senderName || selectedDriver?.name || 'Entregador') : 'Você'}
                           </span>
                           <span className="text-[8px] font-black opacity-30 uppercase tracking-tighter">
                             {new Date(msg.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
@@ -642,33 +642,15 @@ const Logistics: React.FC = () => {
         </div>
       ) : (
         <div className="flex flex-col gap-6 h-full overflow-hidden">
-          <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex gap-4 items-end flex-wrap">
-            <div className="space-y-2 flex-1 min-w-[200px] relative">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Data Início</label>
-              <input type="date" value={historyStartDate} onChange={e => setHistoryStartDate(e.target.value)} className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-sm" />
-            </div>
-            <div className="space-y-2 flex-1 min-w-[200px] relative">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Data Fim</label>
-              <input type="date" value={historyEndDate} onChange={e => setHistoryEndDate(e.target.value)} className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-sm" />
-            </div>
-            <div className="space-y-2 flex-1 min-w-[200px] relative">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Entregador</label>
-              <select value={historyDriverId} onChange={e => setHistoryDriverId(e.target.value)} className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-sm">
-                <option value="TODOS">TODOS OS ENTREGADORES</option>
-                {drivers.map(d => (
-                  <option key={d.id} value={d.id}>{d.name} ({d.vehicle.plate})</option>
-                ))}
-              </select>
+          <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex justify-between items-center">
+            <div>
+              <h3 className="text-lg font-black text-slate-800 uppercase tracking-tighter">Histórico de Entregas</h3>
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Registros de entregas finalizadas pelo sistema</p>
             </div>
           </div>
 
           <div className="flex-1 overflow-y-auto grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 pb-8">
-            {historyOrders.filter(o => {
-              const orderDate = o.createdAt.split('T')[0];
-              const inDate = orderDate >= historyStartDate && orderDate <= historyEndDate;
-              const inDriver = historyDriverId === 'TODOS' || o.driverId === historyDriverId;
-              return inDate && inDriver;
-            }).sort((a, b) => b.createdAt.localeCompare(a.createdAt)).map(order => (
+            {historyOrders.sort((a, b) => b.createdAt.localeCompare(a.createdAt)).map(order => (
               <div key={order.id} className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col gap-4 group hover:shadow-xl transition-all h-max">
                 <div className="flex justify-between items-start">
                   <div>
@@ -704,16 +686,12 @@ const Logistics: React.FC = () => {
                 </div>
               </div>
             ))}
-            {historyOrders.filter(o => {
-              const orderDate = o.createdAt.split('T')[0];
-              const inDate = orderDate >= historyStartDate && orderDate <= historyEndDate;
-              const inDriver = historyDriverId === 'TODOS' || o.driverId === historyDriverId;
-              return inDate && inDriver;
-            }).length === 0 && (
-                <div className="col-span-full py-20 text-center bg-white rounded-3xl border-2 border-dashed border-slate-100 mt-2">
-                  <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">Nenhum histórico encontrado para os filtros.</p>
-                </div>
-              )}
+            {historyOrders.length === 0 && (
+              <div className="col-span-full py-20 text-center bg-white rounded-3xl border-2 border-dashed border-slate-100 mt-2">
+                <Icons.Clock className="w-12 h-12 mx-auto text-slate-200 mb-4" />
+                <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">Nenhuma entrega no histórico.</p>
+              </div>
+            )}
           </div>
         </div>
       )
