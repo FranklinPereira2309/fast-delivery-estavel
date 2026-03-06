@@ -289,9 +289,9 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
                         onClick={() => {
                             setActiveTab('chat');
                         }}
-                        className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all relative ${activeTab === 'chat' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' : 'text-slate-400 hover:bg-slate-50'} ${unreadClients.size > 0 ? 'animate-piscar-red' : ''}`}
+                        className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all relative ${activeTab === 'chat' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' : 'text-slate-400 hover:bg-slate-50'} ${unreadClients.size > 0 ? 'animate-notify-turquoise' : ''}`}
                     >
-                        Chat {unreadClients.size > 0 && <span className="absolute -top-1 -right-1 w-3 h-3 bg-rose-500 rounded-full border-2 border-white animate-pulse"></span>}
+                        Chat {unreadClients.size > 0 && <span className="absolute -top-1 -right-1 w-3 h-3 bg-indigo-400 rounded-full border-2 border-white animate-pulse"></span>}
                     </button>
                 </div>
             </div>
@@ -406,14 +406,14 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
                                     <button
                                         key={order.id}
                                         onClick={() => setSelectedOrderChat(order)}
-                                        className={`flex items-center gap-3 p-4 rounded-3xl transition-all ${selectedOrderChat?.id === order.id ? 'bg-white shadow-md border border-slate-100 scale-[1.02]' : 'hover:bg-white/50'} ${unreadClients.has(order.id) ? 'animate-notify-turquoise border-indigo-200 bg-indigo-50/50' : ''}`}
+                                        className={`flex items-center gap-3 p-4 rounded-3xl transition-all ${selectedOrderChat?.id === order.id ? 'bg-white shadow-md border border-slate-100 scale-[1.02]' : 'hover:bg-white/50'} ${unreadClients.has(order.id) ? 'animate-notify-turquoise bg-emerald-50/50 border-emerald-100' : ''}`}
                                     >
                                         <div className="relative shrink-0">
                                             <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-white font-black uppercase text-sm ${selectedOrderChat?.id === order.id ? 'bg-indigo-600 shadow-lg shadow-indigo-500/20' : 'bg-slate-300'}`}>
                                                 {order.clientName.charAt(0)}
                                             </div>
                                             {unreadClients.has(order.id) && (
-                                                <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-rose-500 rounded-full border-2 border-white animate-pulse shadow-sm z-10"></span>
+                                                <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-white animate-pulse shadow-sm z-10"></span>
                                             )}
                                         </div>
                                         <div className="flex-1 text-left min-w-0">
