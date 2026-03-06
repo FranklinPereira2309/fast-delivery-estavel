@@ -28,7 +28,7 @@ const Kitchen: React.FC = () => {
     if (session) setCurrentUser(session.user);
 
     refreshData(true);
-    const interval = setInterval(() => refreshData(false), 3000);
+    const interval = setInterval(() => refreshData(false), 10000); // 10s para Render Free
 
     // Socket.io Real-time
     const handleNewOrder = () => refreshData(false);

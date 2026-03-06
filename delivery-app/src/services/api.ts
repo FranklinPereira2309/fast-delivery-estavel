@@ -3,25 +3,40 @@ import type { BusinessSettings } from '../types';
 const API_BASE_URL = (import.meta as any).env.VITE_API_URL || 'http://localhost:3000/api';
 
 class DeliveryApiService {
-    private async request<T>(path: string, options: RequestInit = {}): Promise<T> {
-        const token = localStorage.getItem('delivery_app_token');
-        const headers = {
-            'Content-Type': 'application/json',
-            ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-            ...((options.headers as any) || {}),
-        };
+    private async request<T>(path: string, options: RequestInit = {}, retries = 2): Promise<T> {
+        try {
+            const token = localStorage.getItem('delivery_app_token');
+            const headers = {
+                'Content-Type': 'application/json',
+                ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+                ...((options.headers as any) || {}),
+            };
 
-        const response = await fetch(`${API_BASE_URL}${path}`, {
-            ...options,
-            headers,
-        });
+            const response = await fetch(`${API_BASE_URL}${path}`, {
+                ...options,
+                headers,
+            });
 
-        if (!response.ok) {
-            const error = await response.json().catch(() => ({ message: 'Erro desconhecido' }));
-            throw new Error(error.message || 'Erro na requisição');
+            if (!response.ok) {
+                // Tenta novamente se for erro temporário de servidor (502, 503, 504)
+                if (retries > 0 && (response.status === 502 || response.status === 503 || response.status === 504)) {
+                    await new Promise(r => setTimeout(r, 2000));
+                    return this.request(path, options, retries - 1);
+                }
+
+                const error = await response.json().catch(() => ({ message: 'Erro desconhecido' }));
+                throw new Error(error.message || 'Erro na requisição');
+            }
+
+            return response.json();
+        } catch (e) {
+            if (retries > 0) {
+                // Erro de rede (ex: Failed to fetch) - tenta novamente
+                await new Promise(r => setTimeout(r, 2000));
+                return this.request(path, options, retries - 1);
+            }
+            throw e;
         }
-
-        return response.json();
     }
 
     // Auth

@@ -7,6 +7,7 @@ const AUTH_KEY = 'delivery_fast_auth';
 
 
 const DEFAULT_SETTINGS: BusinessSettings = {
+  key: 'default',
   name: 'Fast Food Express',
   cnpj: '12.345.678/0001-90',
   address: 'Av. Paulista, 1000 - São Paulo, SP',
@@ -16,6 +17,7 @@ const DEFAULT_SETTINGS: BusinessSettings = {
   geofenceRadius: 30,
   isManuallyClosed: false,
   operatingHours: '[]',
+  orderTimeoutMinutes: 30,
   maxChange: 191,
   enableNfcEmission: false,
   waiterPrivacyEnabled: false,
@@ -27,39 +29,54 @@ const DEFAULT_SETTINGS: BusinessSettings = {
 };
 
 class APIDBService {
-  private async request<T>(path: string, options: RequestInit = {}): Promise<T> {
-    const response = await fetch(`${API_URL}${path}`, {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
-    });
+  private async request<T>(path: string, options: RequestInit = {}, retries = 2): Promise<T> {
+    try {
+      const response = await fetch(`${API_URL}${path}`, {
+        ...options,
+        headers: {
+          'Content-Type': 'application/json',
+          ...options.headers,
+        },
+      });
 
-    if (!response.ok) {
-      let message = '';
-      try {
-        const error = await response.json();
-        message = error.message;
-      } catch (e) {
-        // Fallback to status translations
-      }
-
-      if (!message) {
-        switch (response.status) {
-          case 400: message = 'Dados inválidos ou incompletos'; break;
-          case 401: message = 'Acesso não Autorizado'; break;
-          case 403: message = 'Você não tem permissão para esta ação'; break;
-          case 404: message = 'Recurso não encontrado'; break;
-          case 500: message = 'Erro interno no servidor'; break;
-          default: message = `Erro inesperado: Status ${response.status}`;
+      if (!response.ok) {
+        // Se for erro temporário de servidor (Cold Start / Bad Gateway), tenta de novo
+        if (retries > 0 && (response.status === 502 || response.status === 503 || response.status === 504)) {
+          await new Promise(r => setTimeout(r, 2000));
+          return this.request(path, options, retries - 1);
         }
+
+        let message = '';
+        try {
+          const error = await response.json();
+          message = error.message;
+        } catch (e) {
+          // Fallback to status translations
+        }
+
+        if (!message) {
+          switch (response.status) {
+            case 400: message = 'Dados inválidos ou incompletos'; break;
+            case 401: message = 'Acesso não Autorizado'; break;
+            case 403: message = 'Você não tem permissão para esta ação'; break;
+            case 404: message = 'Recurso não encontrado'; break;
+            case 500: message = 'Erro interno no servidor'; break;
+            default: message = `Erro inesperado: Status ${response.status}`;
+          }
+        }
+
+        throw new Error(message);
       }
 
-      throw new Error(message);
+      return response.json();
+    } catch (e) {
+      if (retries > 0) {
+        // Erro de rede (Failed to fetch) - tenta de novo
+        await new Promise(r => setTimeout(r, 2000));
+        return this.request(path, options, retries - 1);
+      }
+      throw e;
     }
-
-    return response.json();
   }
 
   // Waiters

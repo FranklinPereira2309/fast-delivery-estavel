@@ -43,7 +43,7 @@ const SalesMonitor: React.FC = () => {
 
   useEffect(() => {
     refreshData();
-    const interval = setInterval(refreshData, 3000);
+    const interval = setInterval(refreshData, 10000); // Aumentado para 10s p/ o plano Render Free
     return () => clearInterval(interval);
   }, []);
 

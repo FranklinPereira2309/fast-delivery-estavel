@@ -301,7 +301,7 @@ const Logistics: React.FC = () => {
     const session = db.getCurrentSession();
     if (session) setCurrentUser(session.user);
 
-    const interval = setInterval(refreshData, 5000);
+    const interval = setInterval(refreshData, 10000); // 10s para Render Free
 
     const handleNewMessage = (msg: any) => {
       if (activeTab === 'CHAT' && selectedDriver?.id === msg.driverId) {
