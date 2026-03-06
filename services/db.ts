@@ -393,9 +393,13 @@ class APIDBService {
     return this.request<OrderRejection[]>('/drivers/rejections');
   }
 
-  // Client Chat (Delivery App)
+  // Client Chat (Delivery App - Support System)
   public async getClientChatHistory(orderId: string): Promise<any[]> {
     return this.request<any[]>(`/orders/${orderId}/messages`);
+  }
+
+  public async getClientSupportHistory(clientId: string): Promise<any[]> {
+    return this.request<any[]>(`/support?clientId=${clientId}`);
   }
 
   public async sendClientChatMessage(orderId: string, text: string, sender: string, isFromClient: boolean) {
@@ -404,6 +408,18 @@ class APIDBService {
       body: JSON.stringify({
         text,
         sender: isFromClient ? 'CLIENT' : 'STORE'
+      })
+    });
+  }
+
+  public async sendAdminSupportMessage(clientId: string, message: string, userName: string) {
+    return this.request('/support', {
+      method: 'POST',
+      body: JSON.stringify({
+        clientId,
+        message,
+        userName,
+        isAdmin: true
       })
     });
   }

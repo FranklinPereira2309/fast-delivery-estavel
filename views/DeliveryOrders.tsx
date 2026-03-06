@@ -90,7 +90,30 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
     };
 
     const loadChatHistory = async (orderId: string) => {
-        const history = await db.getClientChatHistory(orderId);
+        const order = orders.find(o => o.id === orderId);
+        let history: any[] = [];
+
+        // Fetch order-specific messages (legacy)
+        const orderHistory = await db.getClientChatHistory(orderId);
+        history = [...orderHistory];
+
+        // If client is present, fetch their support history (the new full chat)
+        if (order?.clientId) {
+            const supportHistory = await db.getClientSupportHistory(order.clientId);
+            // Translate SupportMessage to match view expectation if needed
+            const translatedSupport = supportHistory.map(m => ({
+                ...m,
+                isFromClient: !m.isAdmin,
+                text: m.message,
+                createdAt: m.createdAt
+            }));
+
+            // Merge histories and sort by date
+            history = [...history, ...translatedSupport].sort((a, b) =>
+                new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+            );
+        }
+
         setMessages(history);
     };
 
@@ -99,9 +122,18 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
         if (!newMessage.trim() || !currentUser || !selectedOrderChat) return;
 
         try {
-            const savedMsg = await db.sendClientChatMessage(selectedOrderChat.id, newMessage, 'Atendimento', false);
-            socket.emit('send_message', { ...(savedMsg as any), orderId: selectedOrderChat.id });
+            const text = newMessage.trim();
             setNewMessage('');
+
+            if (selectedOrderChat.clientId) {
+                // Use new support system if client is known
+                await db.sendAdminSupportMessage(selectedOrderChat.clientId, text, currentUser.name);
+            } else {
+                // Fallback to legacy order-specific messages
+                const savedMsg = await db.sendClientChatMessage(selectedOrderChat.id, text, 'Atendimento', false);
+                socket.emit('send_message', { ...(savedMsg as any), orderId: selectedOrderChat.id });
+            }
+
             loadChatHistory(selectedOrderChat.id);
         } catch (e) {
             console.error("Erro ao enviar mensagem:", e);
@@ -152,15 +184,33 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
 
         const handleNewSupportMessage = (msg: any) => {
             if (msg.orderId) {
-                // Mensagem de Chat de Pedido
+                // Mensagem de Chat de Pedido (Legado)
                 if (activeTab === 'chat' && selectedOrderChat?.id === msg.orderId) {
                     setMessages(prev => [...prev.filter(m => m.id !== msg.id), msg]);
                 } else {
                     setUnreadClients(prev => new Set(prev).add(msg.orderId));
                     audioAlert.play();
                 }
+            } else if (msg.clientId && !msg.isAdmin) {
+                // Nova mensagem de Chat de Suporte (Novo Sistema)
+                if (activeTab === 'chat' && selectedOrderChat?.clientId === msg.clientId) {
+                    const translated = {
+                        ...msg,
+                        isFromClient: true,
+                        text: msg.message,
+                        createdAt: msg.createdAt
+                    };
+                    setMessages(prev => [...prev.filter(m => m.id !== msg.id), translated]);
+                } else {
+                    // Tenta achar o pedido para alertar na barra lateral
+                    const clientOrder = orders.find(o => o.clientId === msg.clientId && o.isOriginDeliveryApp);
+                    if (clientOrder) {
+                        setUnreadClients(prev => new Set(prev).add(clientOrder.id));
+                    }
+                    audioAlert.play();
+                }
             } else {
-                // Mensagem legada/global (se ainda existir)
+                // Outras notificações de suporte (banners, etc)
                 audioAlert.play();
             }
         };

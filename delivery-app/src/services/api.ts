@@ -96,10 +96,14 @@ class DeliveryApiService {
         });
     }
 
-    async sendSupportMessage(userName: string | null, message: string) {
+    async getSupportHistory(clientId: string) {
+        return this.request<any[]>(`/support?clientId=${clientId}&t=${Date.now()}`);
+    }
+
+    async sendSupportMessage(userName: string | null, message: string, clientId?: string, isAdmin: boolean = false) {
         return this.request('/support', {
             method: 'POST',
-            body: JSON.stringify({ userName, message }),
+            body: JSON.stringify({ userName, message, clientId, isAdmin }),
         });
     }
 

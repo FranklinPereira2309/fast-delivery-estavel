@@ -4,15 +4,19 @@ import { getIO } from '../socket';
 
 export const getMessages = async (req: Request, res: Response) => {
     try {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+        const { clientId } = req.query;
+        const where: any = {};
+
+        if (clientId) {
+            where.clientId = clientId as string;
+        } else {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            where.createdAt = { gte: today };
+        }
 
         const messages = await prisma.supportMessage.findMany({
-            where: {
-                createdAt: {
-                    gte: today
-                }
-            },
+            where,
             orderBy: {
                 createdAt: 'asc'
             }
@@ -25,7 +29,7 @@ export const getMessages = async (req: Request, res: Response) => {
 
 export const sendMessage = async (req: Request, res: Response) => {
     try {
-        const { userName, message } = req.body;
+        const { userName, message, clientId, isAdmin } = req.body;
         if (!message) {
             return res.status(400).json({ error: 'Mensagem é obrigatória' });
         }
@@ -33,7 +37,9 @@ export const sendMessage = async (req: Request, res: Response) => {
         const newMessage = await prisma.supportMessage.create({
             data: {
                 userName,
-                message
+                message,
+                clientId,
+                isAdmin: !!isAdmin
             }
         });
 

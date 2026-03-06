@@ -7,6 +7,7 @@ import OrderHistory from './views/OrderHistory';
 import OrderDetails from './views/OrderDetails';
 import RecoverPassword from './views/RecoverPassword';
 import Profile from './views/Profile';
+import Chat from './views/Chat';
 import { CartProvider } from './CartContext';
 import Layout from './components/Layout';
 
@@ -24,6 +25,7 @@ function App() {
                         <Route path="/history" element={<OrderHistory />} />
                         <Route path="/order/:id" element={<OrderDetails />} />
                         <Route path="/profile" element={<Profile />} />
+                        <Route path="/chat" element={<Chat />} />
                         <Route path="*" element={<Navigate to="/" replace />} />
                     </Routes>
                 </Layout>

@@ -155,8 +155,10 @@ model RecipeItem {
 
 model SupportMessage {
   id        String   @id @default(uuid())
+  clientId  String?
   userName  String?
   message   String
+  isAdmin   Boolean  @default(false)
   createdAt DateTime @default(now())
   isRead    Boolean  @default(false)
 }

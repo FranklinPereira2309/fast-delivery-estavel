@@ -3,11 +3,10 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Icons } from '../constants';
 
 interface FooterNavProps {
-    onOpenChat: () => void;
     hasUnread?: boolean;
 }
 
-const FooterNav: React.FC<FooterNavProps> = ({ onOpenChat, hasUnread }) => {
+const FooterNav: React.FC<FooterNavProps> = ({ hasUnread }) => {
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -34,13 +33,13 @@ const FooterNav: React.FC<FooterNavProps> = ({ onOpenChat, hasUnread }) => {
             </button>
 
             <button
-                onClick={onOpenChat}
-                className="flex flex-col items-center gap-1 text-slate-400 hover:text-indigo-600 transition-all active:scale-95"
+                onClick={() => navigate('/chat')}
+                className={`flex flex-col items-center gap-1 transition-all ${isActive('/chat') ? 'text-indigo-600 scale-110' : 'text-slate-400'} active:scale-95`}
             >
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-lg -mt-8 border-4 border-white ${hasUnread ? 'bg-indigo-600 shadow-indigo-200 animate-blink-blue' : 'bg-slate-400 shadow-slate-200'}`}>
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-lg -mt-8 border-4 border-white ${hasUnread ? 'bg-indigo-600 shadow-indigo-200 animate-blink-blue' : (isActive('/chat') ? 'bg-indigo-600 shadow-indigo-200' : 'bg-slate-400 shadow-slate-200')}`}>
                     <Icons.MessageSquare className="w-6 h-6" />
                 </div>
-                <span className="text-[10px] font-black uppercase tracking-widest mt-1">Mensagem</span>
+                <span className="text-[10px] font-black uppercase tracking-widest mt-1">Chat</span>
             </button>
 
             <button
