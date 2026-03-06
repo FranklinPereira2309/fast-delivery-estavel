@@ -143,6 +143,12 @@
             animation: shake 0.5s cubic-bezier(.36, .07, .19, .97) both;
         }
 
+        /* Ocultar o ícone de visualização de senha nativo do Edge/IE */
+        input[type="password"]::-ms-reveal,
+        input[type="password"]::-ms-clear {
+            display: none;
+        }
+
 
         .print-only {
             display: none !important;
