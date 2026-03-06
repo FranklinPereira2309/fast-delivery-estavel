@@ -207,7 +207,7 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
             </div>
 
             <div className="flex flex-1 gap-6 overflow-hidden mt-6">
-                <div className={`flex-1 overflow-y-auto pr-2 pb-20 no-print ${activeTab === 'chat' ? 'hidden lg:block' : ''}`}>
+                <div className={`flex-1 overflow-y-auto pr-2 pb-20 no-print ${activeTab === 'chat' ? 'hidden' : 'block'}`}>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
                         {orders.length === 0 ? (
                             <div className="col-span-full h-64 flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-3xl bg-white">
@@ -303,7 +303,7 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
                 </div>
 
                 {/* Messages Panel */}
-                <div className={`${activeTab === 'chat' ? 'flex-1 md:w-96 flex' : 'w-96 hidden xl:flex'} bg-white rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col overflow-hidden no-print animate-in slide-in-from-right duration-500`}>
+                <div className={`${activeTab === 'chat' ? 'flex-1 flex' : 'hidden'} bg-white rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col overflow-hidden no-print animate-in slide-in-from-right duration-500`}>
                     <div className="p-6 border-b border-slate-50 bg-slate-50/50">
                         <h2 className="font-black text-slate-800 uppercase tracking-tighter flex items-center gap-2">
                             <Icons.Message className="w-5 h-5 text-indigo-500" />
