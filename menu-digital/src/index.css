@@ -5,6 +5,12 @@
 @tailwind utilities;
 
 @layer base {
+  button {
+    @apply cursor-pointer;
+  }
+}
+
+@layer base {
   body {
     @apply bg-slate-50 text-slate-800 font-sans antialiased pb-24;
     font-family: 'Inter', sans-serif;
