@@ -171,7 +171,7 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
 
     const approveOrder = async (id: string) => {
         await db.updateOrderStatus(id, 'PREPARING', currentUser);
-        await fetchOrders(true);
+        await fetchOrders();
     };
 
     const rejectOrder = async (id: string) => {
@@ -183,7 +183,7 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
             onConfirm: async () => {
                 await db.updateOrderStatus(id, 'CANCELLED', currentUser);
                 setAlertConfig(prev => ({ ...prev, isOpen: false }));
-                await fetchOrders(true);
+                await fetchOrders();
             }
         });
     };
