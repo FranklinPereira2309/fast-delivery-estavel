@@ -5,6 +5,7 @@ import { Icons } from '../constants';
 import { api } from '../services/api';
 import { socket } from '../services/socket';
 import CustomAlert from './CustomAlert';
+import type { StoreStatus } from '../types';
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const location = useLocation();
@@ -22,7 +23,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [isClosingSoon, setIsClosingSoon] = useState(false);
     const [countdown, setCountdown] = useState<string>('');
     const settingsRef = React.useRef<any>(null);
-    const [settings, setSettings] = useState<any>(null);
+    const [storeStatus, setStoreStatus] = useState<StoreStatus | null>(null);
 
     const updateCountdown = React.useCallback(() => {
         const s = settingsRef.current;
@@ -58,8 +59,11 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
     const fetchSettings = React.useCallback(async () => {
         try {
-            const s = await api.getSettings();
-            setSettings(s);
+            const [s, status] = await Promise.all([
+                api.getSettings(),
+                api.getStoreStatus()
+            ]);
+            setStoreStatus(status);
             settingsRef.current = s;
             updateCountdown();
         } catch (err) {
@@ -89,10 +93,14 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
         socket.on('new_message', handleNewMessage);
         socket.on('new_support_message', handleNewMessage);
+        socket.on('store_status_changed', (newStatus: StoreStatus) => {
+            setStoreStatus(newStatus);
+        });
 
         return () => {
             socket.off('new_message', handleNewMessage);
             socket.off('new_support_message', handleNewMessage);
+            socket.off('store_status_changed');
         };
     }, [isChatOpen]);
 
@@ -126,10 +134,12 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     return (
         <div className={`min-h-screen bg-slate-50 ${shouldShowFooter ? 'pb-28' : ''}`}>
             {/* Banner de Status da Loja (Global) */}
-            {(settings?.isManuallyClosed || isClosingSoon) && (
-                <div className={`text-center py-2 text-[10px] font-black uppercase tracking-widest text-white px-4 sticky top-0 z-[60] animate-in slide-in-from-top duration-300 ${settings?.isManuallyClosed ? 'bg-rose-600/90 backdrop-blur-md' : 'bg-orange-500/90 backdrop-blur-md'}`}>
-                    {settings?.isManuallyClosed
-                        ? 'Estamos fechados no momento. Retornaremos em breve!'
+            {(storeStatus?.status === 'offline' || isClosingSoon) && (
+                <div className={`text-center py-2 text-[10px] font-black uppercase tracking-widest text-white px-4 sticky top-0 z-[60] animate-in slide-in-from-top duration-300 ${storeStatus?.status === 'offline' ? 'bg-rose-600/90 backdrop-blur-md' : 'bg-orange-500/90 backdrop-blur-md'}`}>
+                    {storeStatus?.status === 'offline'
+                        ? (storeStatus.is_manually_closed
+                            ? 'Estamos fechados no momento. Retornaremos em breve!'
+                            : 'Loja fora do horário de funcionamento')
                         : `Atenção: A loja fechará em ${countdown} minutos!`
                     }
                 </div>

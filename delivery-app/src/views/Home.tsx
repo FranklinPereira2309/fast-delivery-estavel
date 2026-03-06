@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { api } from '../services/api';
-import type { Product, BusinessSettings } from '../types';
+import { socket } from '../services/socket';
+import type { Product, BusinessSettings, StoreStatus } from '../types';
 import { Icons } from '../constants';
 import { useCart } from '../CartContext';
 import CustomAlert from '../components/CustomAlert';
@@ -13,6 +14,7 @@ const Home: React.FC = () => {
     const [categories, setCategories] = useState<string[]>([]);
     const [selectedCategory, setSelectedCategory] = useState('Todos');
     const [settings, setSettings] = useState<BusinessSettings | null>(null);
+    const [storeStatus, setStoreStatus] = useState<StoreStatus | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [clientName, setClientName] = useState('');
@@ -34,14 +36,16 @@ const Home: React.FC = () => {
 
         const fetchInitialData = async () => {
             try {
-                const [p, s] = await Promise.all([
+                const [p, s, status] = await Promise.all([
                     api.getProducts(),
-                    api.getSettings()
+                    api.getSettings(),
+                    api.getStoreStatus()
                 ]);
                 setProducts(p);
                 const cats = Array.from(new Set(p.map((prod: Product) => prod.category)));
                 setCategories(['Todos', ...cats]);
                 setSettings(s as any);
+                setStoreStatus(status);
             } catch (e) {
                 console.error(e);
             } finally {
@@ -54,14 +58,25 @@ const Home: React.FC = () => {
         // Polling settings every 15s to update Delivery ON/OFF status
         const interval = setInterval(async () => {
             try {
-                const s = await api.getSettings();
+                const [s, status] = await Promise.all([
+                    api.getSettings(),
+                    api.getStoreStatus()
+                ]);
                 setSettings(s as any);
+                setStoreStatus(status);
             } catch (e) {
                 console.error("Error polling settings", e);
             }
         }, 15000);
 
-        return () => clearInterval(interval);
+        socket.on('store_status_changed', (newStatus: StoreStatus) => {
+            setStoreStatus(newStatus);
+        });
+
+        return () => {
+            clearInterval(interval);
+            socket.off('store_status_changed');
+        };
     }, []);
 
     const filteredProducts = products.filter(p => {
@@ -104,9 +119,9 @@ const Home: React.FC = () => {
                     <div>
                         <h1 className="text-3xl font-black text-slate-800 tracking-tighter uppercase">Delivery <span className="text-indigo-500">Fast</span></h1>
                         <div className="flex items-center gap-2 mt-2 bg-slate-50 px-3 py-1.5 rounded-full inline-flex border border-slate-100 whitespace-nowrap">
-                            <div className={`w-2 h-2 rounded-full ${settings?.isManuallyClosed ? 'bg-rose-500' : 'bg-emerald-500 animate-pulse-ring'}`}></div>
-                            <span className={`text-[10px] font-black uppercase tracking-widest ${settings?.isManuallyClosed ? 'text-rose-500' : 'text-emerald-500'}`}>
-                                {settings?.isManuallyClosed ? 'Delivery OFF' : 'Delivery ON'}
+                            <div className={`w-2 h-2 rounded-full ${storeStatus?.status === 'offline' ? 'bg-rose-500' : 'bg-emerald-500 animate-pulse-ring'}`}></div>
+                            <span className={`text-[10px] font-black uppercase tracking-widest ${storeStatus?.status === 'offline' ? 'text-rose-500' : 'text-emerald-500'}`}>
+                                {storeStatus?.status === 'offline' ? 'Delivery OFF' : 'Delivery ON'}
                             </span>
                         </div>
                     </div>

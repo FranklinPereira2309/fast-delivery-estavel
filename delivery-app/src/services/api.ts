@@ -67,7 +67,7 @@ class DeliveryApiService {
     }
 
     async getStoreStatus() {
-        return this.request<{ status: string, is_manually_closed: boolean }>(`/maintenance/status?t=${Date.now()}`);
+        return this.request<{ status: 'online' | 'offline', is_manually_closed: boolean, next_status_change: string | null }>(`/public/store-status?t=${Date.now()}`);
     }
 
     // Orders
