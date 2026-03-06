@@ -4,7 +4,24 @@ import cors from 'cors';
 import compression from 'compression';
 
 import authRoutes from './routes/authRoutes';
-// ... other imports ...
+import userRoutes from './routes/userRoutes';
+import clientRoutes from './routes/clientRoutes';
+import clientAuthRoutes from './routes/clientAuthRoutes';
+import productRoutes from './routes/productRoutes';
+import inventoryRoutes from './routes/inventoryRoutes';
+import orderRoutes from './routes/orderRoutes';
+import driverRoutes from './routes/driverRoutes';
+import waiterRoutes from './routes/waiterRoutes';
+import settingsRoutes from './routes/settingsRoutes';
+import auditRoutes from './routes/auditRoutes';
+import tableRoutes from './routes/tableRoutes';
+import publicRoutes from './routes/publicRoutes';
+import chatRoutes from './routes/chatRoutes';
+import cashRoutes from './routes/cashRoutes';
+import receivableRoutes from './routes/receivableRoutes';
+import maintenanceRoutes from './routes/maintenanceRoutes';
+import paymentRoutes from './routes/paymentRoutes';
+import backupRoutes from './routes/backupRoutes';
 import supportRoutes from './routes/supportRoutes';
 import { initSocket } from './socket';
 import { startOrderTimeoutService } from './services/orderTimeoutService';
