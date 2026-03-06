@@ -987,17 +987,28 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
               </div>
             </div>
 
-            <div className="flex flex-col gap-2 no-print">
+            <div className="grid grid-cols-2 gap-4 no-print mt-6">
               {isConfirmingBilling ? (
-                <button onClick={confirmBilling} className="w-full bg-blue-600 text-white py-4 rounded-xl font-black uppercase text-[10px] shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all flex items-center justify-center gap-2">
-                  <Icons.Dashboard /> Confirmar Envio ao PDV
+                <button
+                  onClick={confirmBilling}
+                  className="bg-blue-600 text-white py-4 rounded-[22px] font-black uppercase text-[10px] tracking-widest shadow-xl hover:bg-blue-700 active:scale-95 transition-all flex items-center justify-center gap-2"
+                >
+                  <Icons.Dashboard /> CONFIRMAR
                 </button>
               ) : (
-                <button onClick={() => window.print()} className="w-full bg-slate-900 text-white py-4 rounded-xl font-black uppercase text-[10px] shadow-lg hover:bg-black transition-all flex items-center justify-center gap-2">
-                  <Icons.Print /> Imprimir Cupom
+                <button
+                  onClick={() => window.print()}
+                  className="bg-slate-900 text-white py-4 rounded-[22px] font-receipt font-black uppercase text-[11px] shadow-xl hover:bg-black active:scale-95 transition-all flex items-center justify-center"
+                >
+                  IMPRIMIR
                 </button>
               )}
-              <button onClick={() => { setShowConsumptionTicket(false); setIsConfirmingBilling(false); }} className="w-full py-3 text-slate-400 font-black uppercase text-[9px] hover:text-red-500 transition-all">Cancelar / Voltar</button>
+              <button
+                onClick={() => { setShowConsumptionTicket(false); setIsConfirmingBilling(false); }}
+                className="bg-slate-50 text-slate-400 py-4 rounded-[22px] font-receipt font-black uppercase text-[11px] hover:bg-slate-100 active:scale-95 transition-all flex items-center justify-center"
+              >
+                {isConfirmingBilling ? 'CANCELAR' : 'FECHAR'}
+              </button>
             </div>
           </div>
         </div>

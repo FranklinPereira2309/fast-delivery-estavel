@@ -508,11 +508,19 @@ const SalesMonitor: React.FC = () => {
                   </>
                 )}
 
-                <div className="flex flex-col gap-2 no-print">
-                  <div className="flex gap-2">
-                    <button onClick={() => window.print()} className="flex-[2] bg-slate-900 text-white py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl">Imprimir</button>
-                    <button onClick={() => setPrintingOrder(null)} className="flex-1 bg-slate-100 text-slate-600 py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest">Fechar</button>
-                  </div>
+                <div className="grid grid-cols-2 gap-4 no-print mt-6">
+                  <button
+                    onClick={() => window.print()}
+                    className="bg-slate-900 text-white py-4 rounded-[22px] font-receipt font-black uppercase text-[11px] shadow-xl hover:bg-black active:scale-95 transition-all flex items-center justify-center"
+                  >
+                    IMPRIMIR
+                  </button>
+                  <button
+                    onClick={() => setPrintingOrder(null)}
+                    className="bg-slate-50 text-slate-400 py-4 rounded-[22px] font-receipt font-black uppercase text-[11px] hover:bg-slate-100 active:scale-95 transition-all flex items-center justify-center"
+                  >
+                    FECHAR
+                  </button>
                 </div>
               </div>
             </div>
