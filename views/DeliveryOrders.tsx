@@ -80,8 +80,8 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
                 setOrders(appOrders);
             }
 
-            const allDrivers = await db.getDrivers();
-            setDrivers(allDrivers);
+            // setDrivers is not defined in this component, removing it.
+            // If drivers are needed here in the future, a state for it should be added.
         } catch (error) {
             console.error("Error fetching orders:", error);
         } finally {
@@ -105,15 +105,6 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
             loadChatHistory(selectedOrderChat.id);
         } catch (e) {
             console.error("Erro ao enviar mensagem:", e);
-        }
-    };
-
-    const fetchSupportMessages = async () => {
-        try {
-            const msgs = await db.getSupportMessages();
-            setSupportMessages(msgs);
-        } catch (e) {
-            console.error("Error fetching support messages", e);
         }
     };
 
@@ -174,24 +165,12 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
             }
         };
 
-        const handleNewDriverMessage = (msg: any) => {
-            if (activeTab === 'chat' && chatType === 'DRIVER' && selectedDriver?.id === msg.driverId) {
-                setMessages(prev => [...prev.filter(m => m.id !== msg.id), msg]);
-            } else {
-                // chatUnreadManager já lida com o estado global de drivers
-                audioAlert.play();
-            }
-        };
-
         socket.on('ordersUpdated', handleOrdersUpdate);
         socket.on('newOrder', handleNewOrder);
         socket.on('orderStatusChanged', handleOrdersUpdate);
         socket.on('new_support_message', handleNewSupportMessage);
-        socket.on('new_message', handleNewDriverMessage);
 
-        const unsubscribeUnreads = chatUnreadManager.subscribe(setUnreadDrivers);
-
-        timeoutId = setTimeout(pollData, 10000);
+        timeoutId = setInterval(pollData, 10000);
 
         return () => {
             isMounted = false;
@@ -200,10 +179,8 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
             socket.off('newOrder', handleNewOrder);
             socket.off('orderStatusChanged', handleOrdersUpdate);
             socket.off('new_support_message', handleNewSupportMessage);
-            socket.off('new_message', handleNewDriverMessage);
-            unsubscribeUnreads();
         };
-    }, [activeTab, selectedOrderChat, selectedDriver, chatType]);
+    }, [activeTab, selectedOrderChat]);
 
     const approveOrder = async (orderId: string) => {
         await db.updateOrderStatus(orderId, 'PREPARING', currentUser);
