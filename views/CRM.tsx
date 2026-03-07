@@ -397,13 +397,13 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
                   type="submit"
                   form="client-form"
                   disabled={isSubmitting}
-                  className={`p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-full transition-all ${isSubmitting ? 'opacity-70 cursor-not-allowed' : ''}`}
+                  className={`p-1.5 flex items-center justify-center bg-emerald-500 hover:bg-emerald-600 text-white rounded-full transition-all shadow-lg active:scale-95 ${isSubmitting ? 'opacity-70 cursor-not-allowed' : ''}`}
                   title="Salvar Cliente"
                 >
                   {isSubmitting ? (
-                    <RefreshCw className="h-6 w-6 animate-spin text-blue-600" />
+                    <RefreshCw className="h-6 w-6 animate-spin" />
                   ) : (
-                    <Save className="h-6 w-6 text-blue-600" />
+                    <Check className="h-6 w-6 stroke-[3]" />
                   )}
                 </button>
                 <button
