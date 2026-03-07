@@ -1500,7 +1500,7 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
                                                 <span className="p-2 sm:p-3 bg-amber-50 text-amber-600 rounded-2xl"><Icons.Edit /></span>
                                                 Corrigir Caixa
                                             </h3>
-                                            <p className="text-[8px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-2 ml-10 sm:ml-14">Paco: Apenas Admin Master</p>
+                                            <p className="text-[8px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-2 ml-10 sm:ml-14">Apenas Admin Master pode autorizar e salvar alterações</p>
                                         </div>
                                         <button onClick={() => setIsEditReportModalOpen(false)} className="sm:hidden p-2 text-slate-400 hover:text-slate-600"><Icons.Close /></button>
                                     </div>
