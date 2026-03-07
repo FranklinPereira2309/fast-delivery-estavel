@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { TableSession, Product, User, OrderItem, StoreStatus } from '../types';
 import { db } from '../api';
-import { X, Search, ShoppingCart, CheckCircle2, AlertCircle, Trash2, Plus, Minus, ArrowRight, LayoutGrid, RefreshCw, MessageSquare } from 'lucide-react';
+import { X, Search, ShoppingCart, CheckCircle2, AlertCircle, Trash2, Plus, Minus, ArrowRight, LayoutGrid, RefreshCw, MessageSquare, Key } from 'lucide-react';
 import Modal from './Modal';
 import ClientSelector from './ClientSelector';
 
@@ -298,6 +298,12 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, user, onClose, onRef
                             {table.status === 'billing' && <span className="px-4 py-1.5 bg-amber-500 text-white text-[10px] font-black rounded-full uppercase tracking-widest">Aguardando Pagamento</span>}
                         </div>
                         <h2 className="text-2xl font-black text-slate-900 tracking-tighter uppercase leading-none">Gerenciar Mesa</h2>
+                        {table.pin && (
+                            <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 bg-slate-900 text-white rounded-xl shadow-lg shadow-slate-900/10">
+                                <Key size={12} className="text-blue-400" />
+                                <span className="text-[10px] font-black uppercase tracking-[0.2em]">PIN: {table.pin}</span>
+                            </div>
+                        )}
                     </div>
                     <div className="flex gap-2">
                         {table.status === 'occupied' && !showTransfer && isResponsible && (
