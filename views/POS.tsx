@@ -1630,7 +1630,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
           </div>
         </div>
 
-        <div className="w-80 lg:w-80 xl:w-96 bg-white rounded-3xl border border-slate-100 shadow-sm flex flex-col shrink-0 overflow-y-auto overflow-x-hidden relative border-l-4 border-l-blue-600/10">
+        <div className="w-80 lg:w-80 xl:w-96 bg-white rounded-3xl border border-slate-100 shadow-sm flex flex-col shrink-0 overflow-hidden relative border-l-4 border-l-blue-600/10">
           {!activeCashSession && (
             <div className="absolute inset-0 z-20 bg-slate-50/80 backdrop-blur-[2px] rounded-r-3xl flex items-center justify-center">
               <div className="bg-white p-8 rounded-3xl shadow-2xl border border-red-100 flex flex-col items-center gap-4 text-center max-w-[80%]">
@@ -1738,7 +1738,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
             </div>
           </div>
 
-          <div className="min-h-[150px] p-4 lg:p-6 xl:p-8 space-y-3 xl:space-y-4 font-receipt text-[11px]">
+          <div className="flex-1 min-h-0 p-4 lg:p-6 xl:p-8 space-y-3 xl:space-y-4 font-receipt text-[11px] overflow-y-auto custom-scrollbar">
             {groupedCart.length > 0 ? groupedCart.map(([id, data]) => (
               <div key={id} className={`flex justify-between items-center border-b border-dotted pb-2 ${(currentOrderStatus === OrderStatus.PREPARING || currentOrderStatus === OrderStatus.PARTIALLY_READY) ? 'animate-moderate-blink text-orange-600' : ''}`}>
                 <div className="flex-1">
