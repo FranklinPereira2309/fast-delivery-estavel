@@ -23,9 +23,6 @@ socket.on('newOrder', (data: any) => {
     }
 });
 
-socket.on('newFeedback', () => {
-    setGlobalAlert(true);
-});
 
 export const useDigitalAlert = () => {
     const [isAlerting, setIsAlerting] = useState(globalIsAlerting);

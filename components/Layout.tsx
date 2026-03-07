@@ -24,6 +24,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
   const [shouldBlinkDeliveryApp, setShouldBlinkDeliveryApp] = useState(false);
   const [shouldBlinkLogisticsChat, setShouldBlinkLogisticsChat] = useState(false);
   const [shouldBlinkDeliveryAppChat, setShouldBlinkDeliveryAppChat] = useState(false);
+  const [shouldBlinkPOSFeedback, setShouldBlinkPOSFeedback] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
   const [settings, setSettings] = useState<any>(null);
   const { isAlerting } = useDigitalAlert();
@@ -164,6 +165,19 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
   }, [activeTab]);
 
   useEffect(() => {
+    const handleNewFeedback = () => {
+      if (activeTab !== 'pos') {
+        setShouldBlinkPOSFeedback(true);
+        audioAlert.play();
+      }
+    };
+    socket.on('newFeedback', handleNewFeedback);
+    return () => {
+      socket.off('newFeedback', handleNewFeedback);
+    };
+  }, [activeTab]);
+
+  useEffect(() => {
     // Chat Monitoring for Module Level Blink via Global Managers
     const unsubscribeDrivers = chatUnreadManager.subscribe((unreads) => {
       // Only blink if we are NOT inside Logistics, or if we ARE inside Logistics but NOT on the chat tab.
@@ -195,6 +209,10 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
   useEffect(() => {
     if (activeTab === 'kitchen') setShouldBlinkKitchen(false);
     if (activeTab === 'sales-monitor') setShouldBlinkMonitor(false);
+    if (activeTab === 'pos') {
+      setShouldBlinkPOS(false);
+      setShouldBlinkPOSFeedback(false);
+    }
     if (activeTab === 'logistics') {
       setShouldBlinkLogistics(false);
     }
@@ -249,7 +267,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
             const isTables = item.id === 'tables';
             const isDeliveryApp = item.id === 'delivery-orders';
             const isAlertActive = (isMonitor && shouldBlinkMonitor) ||
-              (isPOS && shouldBlinkPOS) ||
+              (isPOS && (shouldBlinkPOS || shouldBlinkPOSFeedback)) ||
               (isLogistics && (shouldBlinkLogistics || shouldBlinkLogisticsChat)) ||
               (isKitchen && (isAlerting || shouldBlinkKitchen)) ||
               (isTables && (isAlerting || shouldBlinkTables)) ||

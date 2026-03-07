@@ -14,6 +14,8 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
+    const [showNewPassword, setShowNewPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [error, setError] = useState('');
     const [view, setView] = useState<'LOGIN' | 'FORGOT' | 'RESET' | 'FORCE_RESET' | 'SHOW_CODE'>('LOGIN');
     const [loading, setLoading] = useState(false);
@@ -189,11 +191,43 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                             </div>
                             <div className="space-y-2">
                                 <label className="text-[10px] font-black text-slate-400 uppercase ml-4">Nova Senha</label>
-                                <input type="password" required placeholder="••••••••" className="w-full p-5 bg-slate-50 border-none rounded-[2rem] text-slate-700 font-bold outline-none text-sm" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
+                                <div className="relative">
+                                    <input
+                                        type={showNewPassword ? "text" : "password"}
+                                        required
+                                        placeholder="••••••••"
+                                        className="w-full p-5 bg-slate-50 border-none rounded-[2rem] text-slate-700 font-bold outline-none text-sm group-focus:ring-2 group-focus:ring-blue-500/20 transition-all"
+                                        value={newPassword}
+                                        onChange={(e) => setNewPassword(e.target.value)}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowNewPassword(!showNewPassword)}
+                                        className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600 transition-colors"
+                                    >
+                                        {showNewPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                    </button>
+                                </div>
                             </div>
                             <div className="space-y-2">
                                 <label className="text-[10px] font-black text-slate-400 uppercase ml-4">Confirme a Senha</label>
-                                <input type="password" required placeholder="••••••••" className="w-full p-5 bg-slate-50 border-none rounded-[2rem] text-slate-700 font-bold outline-none text-sm" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
+                                <div className="relative">
+                                    <input
+                                        type={showConfirmPassword ? "text" : "password"}
+                                        required
+                                        placeholder="••••••••"
+                                        className="w-full p-5 bg-slate-50 border-none rounded-[2rem] text-slate-700 font-bold outline-none text-sm group-focus:ring-2 group-focus:ring-blue-500/20 transition-all"
+                                        value={confirmPassword}
+                                        onChange={(e) => setConfirmPassword(e.target.value)}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                        className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600 transition-colors"
+                                    >
+                                        {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                    </button>
+                                </div>
                             </div>
                             <button type="submit" disabled={loading} className="w-full py-5 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-[2rem] shadow-xl shadow-emerald-500/30 uppercase text-[11px] tracking-widest">
                                 {loading ? 'Salvando...' : 'Salvar Nova Senha'}
