@@ -467,7 +467,7 @@ const OperatingHoursSettings: React.FC<{ settings: BusinessSettings, setSettings
                 </div>
             </div>
 
-            <div className={`p-6 rounded-3xl border-2 transition-all flex items-center justify-between ${settings.isManuallyClosed ? 'bg-red-50 border-red-200' : 'bg-blue-50 border-blue-200'}`}>
+            <div className={`p-6 rounded-3xl border-2 transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${settings.isManuallyClosed ? 'bg-red-50 border-red-200' : 'bg-blue-50 border-blue-200'}`}>
                 <div>
                     <h4 className={`text-lg font-black uppercase tracking-tight ${settings.isManuallyClosed ? 'text-red-800' : 'text-blue-800'}`}>
                         {settings.isManuallyClosed ? 'Loja Fechada Manualmente' : 'Controle Manual: Loja Aberta'}
@@ -479,7 +479,7 @@ const OperatingHoursSettings: React.FC<{ settings: BusinessSettings, setSettings
                 <button
                     type="button"
                     onClick={() => setSettings({ ...settings, isManuallyClosed: !settings.isManuallyClosed })}
-                    className={`px-8 py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest transition-all shadow-xl ${settings.isManuallyClosed ? 'bg-red-600 text-white hover:bg-red-700 shadow-red-200' : 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-200'}`}
+                    className={`w-full sm:w-auto px-8 py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest transition-all shadow-xl ${settings.isManuallyClosed ? 'bg-red-600 text-white hover:bg-red-700 shadow-red-200' : 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-200'}`}
                 >
                     {settings.isManuallyClosed ? 'Reabrir Loja Agora' : 'Fechar Loja Temporariamente'}
                 </button>
@@ -488,12 +488,12 @@ const OperatingHoursSettings: React.FC<{ settings: BusinessSettings, setSettings
             <div className="pt-6 border-t border-slate-100 space-y-4">
                 <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Programação Semanal</h4>
                 {hours.map((config, ix) => (
-                    <div key={ix} className="flex items-center gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                        <div className="w-32 flex items-center gap-3">
+                    <div key={ix} className="flex flex-col sm:flex-row sm:items-center gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                        <div className="w-full sm:w-32 flex items-center gap-3">
                             <input type="checkbox" checked={config.isOpen} onChange={e => updateHour(ix, 'isOpen', e.target.checked)} className="w-5 h-5 rounded-md text-blue-600" />
                             <span className={`font-black uppercase text-sm ${config.isOpen ? 'text-slate-800' : 'text-slate-400 line-through'}`}>{daysOfWeek[config.dayOfWeek]}</span>
                         </div>
-                        <div className="flex items-center gap-4 flex-1">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-4 flex-1">
                             {config.isOpen ? (
                                 <>
                                     <div className="flex items-center gap-2">
@@ -592,7 +592,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings, onReset }) =
             <div className="flex-1 overflow-y-auto pr-4 custom-scrollbar">
                 {activeSubTab === 'EMPRESA' && (
                     <div className="bg-white p-10 rounded-[3rem] shadow-sm border border-slate-100 max-w-4xl">
-                        <div className="flex justify-between items-start mb-10">
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-10 gap-4">
                             <div>
                                 <h3 className="text-2xl font-black text-slate-800 uppercase tracking-tighter">Identidade do Negócio</h3>
                                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Aparecerá nos cupons e relatórios do sistema</p>
@@ -607,7 +607,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings, onReset }) =
                             )}
                         </div>
                         <form onSubmit={handleSaveSettings} className="space-y-8">
-                            <div className="grid grid-cols-2 gap-8">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nome Fantasia</label>
                                     <input type="text" className="w-full p-4 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-blue-50 transition-all font-bold text-sm" value={settings.name} onChange={e => setSettings({ ...settings, name: e.target.value })} />
@@ -632,7 +632,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings, onReset }) =
                                     <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Troco Máximo (R$)</h4>
                                     <input type="number" className="w-full p-4 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-blue-50 transition-all font-bold text-sm" value={settings.maxChange || 191} onChange={e => setSettings({ ...settings, maxChange: parseFloat(e.target.value) || 0 })} />
                                 </div>
-                                <div className="space-y-2 col-span-2 p-6 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-between">
+                                <div className="space-y-2 col-span-1 md:col-span-2 p-6 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                                     <div>
                                         <h4 className="text-[12px] font-black text-slate-800 uppercase tracking-widest">Cobrar Taxa de Serviço Opcional</h4>
                                         <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase">Aplica % de comissão na venda pelo PDV de Mesas e Menu Digital</p>
@@ -657,7 +657,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings, onReset }) =
                                         </button>
                                     </div>
                                 </div>
-                                <div className="space-y-2 col-span-2">
+                                <div className="space-y-2 col-span-1 md:col-span-2">
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Endereço Completo</label>
                                     <input type="text" className="w-full p-4 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-blue-50 transition-all font-bold text-sm" value={settings.address} onChange={e => setSettings({ ...settings, address: e.target.value })} />
                                 </div>
@@ -745,7 +745,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings, onReset }) =
                                     </div>
                                 </div>
                                 <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 space-y-6">
-                                    <div className="flex items-center justify-between">
+                                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                                         <div>
                                             <h4 className="text-[12px] font-black text-slate-800 uppercase tracking-widest">Ativar Tela de Privacidade</h4>
                                             <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase">Bloqueia automaticamente o App Garçom após período de inatividade.</p>
@@ -773,7 +773,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings, onReset }) =
                             </div>
 
                             <div className="pt-8 border-t border-slate-100">
-                                <div className="flex justify-between items-center mb-6">
+                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                                     <div>
                                         <h4 className="text-sm font-black text-slate-800 uppercase tracking-tighter">Geolocalização & Bloqueio (Geofencing)</h4>
                                         <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Restrinja pedidos do Cardápio Digital para clientes não presentes no local</p>
@@ -837,7 +837,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings, onReset }) =
                             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Credenciais para emissão de NFC-e (Nota Fiscal de Consumidor Eletrônica)</p>
                         </div>
                         <form onSubmit={handleSaveSettings} className="space-y-8">
-                            <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100 flex items-center justify-between mb-8">
+                            <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
                                 <div>
                                     <h4 className="text-[12px] font-black text-slate-800 uppercase tracking-widest">Habilitar Opção de NFC-e no PDV</h4>
                                     <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase">Quando desativado, o sistema emitirá apenas o cupom simples padrão.</p>
@@ -851,7 +851,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings, onReset }) =
                                 </button>
                             </div>
 
-                            <div className={`grid grid-cols-2 gap-8 ${!settings.enableNfcEmission ? 'opacity-40 pointer-events-none' : ''}`}>
+                            <div className={`grid grid-cols-1 sm:grid-cols-2 gap-8 ${!settings.enableNfcEmission ? 'opacity-40 pointer-events-none' : ''}`}>
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Inscrição Estadual (IE)</label>
                                     <input type="text" className="w-full p-4 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-blue-50 transition-all font-bold text-sm" value={settings.ie || ''} onChange={e => setSettings({ ...settings, ie: e.target.value })} placeholder="Isento ou Número da IE" />
@@ -894,14 +894,14 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings, onReset }) =
                             <h3 className="text-2xl font-black mb-2 text-blue-600 uppercase tracking-tighter">Manutenção e Backup</h3>
                             <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mb-10">Gerencie a segurança dos seus dados</p>
 
-                            <div className="p-8 bg-blue-50 rounded-3xl border border-blue-100 flex items-center justify-between">
+                            <div className="p-8 bg-blue-50 rounded-3xl border border-blue-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                                 <div>
                                     <p className="text-sm font-black text-blue-900 uppercase tracking-tight">Cópia de Segurança (Backup):</p>
                                     <p className="text-[10px] text-blue-700/60 font-bold mt-1 uppercase">Baixe um arquivo contendo todos os dados do sistema (pedidos, clientes, produtos).</p>
                                 </div>
                                 <button
                                     onClick={handleBackup}
-                                    className="bg-blue-600 text-white px-8 py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-blue-700 transition-all shadow-xl shadow-blue-200 flex items-center gap-3"
+                                    className="w-full sm:w-auto bg-blue-600 text-white px-8 py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-blue-700 transition-all shadow-xl shadow-blue-200 flex items-center justify-center gap-3"
                                 >
                                     <Icons.Download className="w-4 h-4" />
                                     Baixar Backup (.sql)
@@ -918,7 +918,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings, onReset }) =
                                 <p className="text-xs text-red-700/60 font-medium mb-8 leading-relaxed">A reinicialização apagará permanentemente todos os pedidos, clientes, estoque e configurações customizadas. O sistema retornará ao estado de instalação inicial.</p>
                                 <button
                                     onClick={onReset}
-                                    className="bg-red-600 text-white px-8 py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-red-700 transition-all shadow-xl shadow-red-200 flex items-center gap-3"
+                                    className="w-full sm:w-auto bg-red-600 text-white px-8 py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-red-700 transition-all shadow-xl shadow-red-200 flex items-center justify-center gap-3"
                                 >
                                     <Icons.Delete />
                                     Reiniciar Sistema (Reset de Fábrica)
