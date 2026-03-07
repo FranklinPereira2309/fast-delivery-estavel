@@ -396,15 +396,19 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
         let nfeData: any = undefined;
         let currentOrderData = null;
 
+        const rec = pendingReceivables.find(r => r.id === isReceivingFiado);
+        if (rec) {
+          currentOrderData = { ...rec.order, paymentMethod: method };
+        }
+
         if (emitNfce && businessSettings?.enableNfcEmission) {
           nfeData = {
             nfeStatus: 'EMITTED',
             nfeNumber: `NFC-${Date.now()}`,
             nfeUrl: `https://sefaz.gov.br/nfce/qrcode?p=${Date.now()}`
           };
-          const rec = pendingReceivables.find(r => r.id === isReceivingFiado);
-          if (rec) {
-            currentOrderData = { ...rec.order, paymentMethod: method, ...nfeData };
+          if (currentOrderData) {
+            currentOrderData = { ...currentOrderData, ...nfeData };
           }
         }
 
@@ -416,12 +420,16 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
         await clearState(true, true);
         await refreshAllData();
 
-        if (shouldEmit && currentOrderData) {
-          setIsNfceVisual(true);
+        if (currentOrderData) {
+          setIsNfceVisual(shouldEmit);
           setPrintingOrder(currentOrderData as any);
-          setIsNfceFeedbackOpen(true);
-          setTimeout(() => setIsNfceFeedbackOpen(false), 5000);
+          if (shouldEmit) {
+            setIsNfceFeedbackOpen(true);
+            setTimeout(() => setIsNfceFeedbackOpen(false), 5000);
+          }
         }
+
+        setIsPaymentModalOpen(false);
       } catch (err: any) {
         showAlert("Erro", err.message || "Erro ao processar recebimento.", "DANGER");
       }
