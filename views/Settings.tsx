@@ -87,14 +87,14 @@ const WaiterManagement: React.FC = () => {
                 onCancel={() => setAlertConfig(prev => ({ ...prev, isOpen: false }))}
             />
 
-            <div className="flex justify-between items-center bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center bg-white p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] border border-slate-100 shadow-sm gap-4">
                 <div>
                     <h3 className="text-xl font-black text-slate-800 uppercase tracking-tighter">Equipe de Garçons</h3>
                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Colaboradores com acesso ao App Garçom</p>
                 </div>
                 <button
                     onClick={() => { setEditingWaiter(null); setFormData({ name: '', phone: '', email: '' }); setIsModalOpen(true); }}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-blue-100 transition-all flex items-center gap-2"
+                    className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-blue-100 transition-all flex items-center justify-center gap-2"
                 >
                     <Icons.User size={16} />
                     Novo Garçom
@@ -154,13 +154,12 @@ const WaiterManagement: React.FC = () => {
                     </div>
                 ))}
             </div>
-
             {isModalOpen && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-white rounded-[3rem] shadow-2xl w-full max-w-xl border border-white/20 overflow-hidden animate-in zoom-in duration-300">
-                        <div className="p-10 pb-0 flex justify-between items-start">
+                    <div className="bg-white rounded-[2rem] sm:rounded-[3rem] shadow-2xl w-full max-w-xl border border-white/20 overflow-hidden animate-in zoom-in duration-300">
+                        <div className="p-6 sm:p-10 pb-0 flex justify-between items-start">
                             <div>
-                                <h4 className="text-2xl font-black text-slate-800 uppercase tracking-tighter mb-1">
+                                <h4 className="text-xl sm:text-2xl font-black text-slate-800 uppercase tracking-tighter mb-1">
                                     {editingWaiter ? 'Editar Garçom' : 'Cadastrar Garçom'}
                                 </h4>
                                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Preencha os dados para acesso ao sistema</p>
@@ -170,7 +169,7 @@ const WaiterManagement: React.FC = () => {
                             </button>
                         </div>
 
-                        <form onSubmit={handleSave} className="p-10 space-y-8">
+                        <form onSubmit={handleSave} className="p-6 sm:p-10 space-y-6 sm:y-8">
                             <div className="grid grid-cols-2 gap-6">
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Nome Completo</label>
@@ -348,12 +347,12 @@ const UserManagementInternal: React.FC = () => {
                 onConfirm={alertConfig.onConfirm || (() => setAlertConfig(prev => ({ ...prev, isOpen: false })))}
                 onCancel={() => setAlertConfig(prev => ({ ...prev, isOpen: false }))}
             />
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
                 <div>
                     <h3 className="text-xl font-black text-slate-800 uppercase tracking-tighter">Controle de Acesso (ACL)</h3>
                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Defina permissões e usuários do sistema</p>
                 </div>
-                <button onClick={() => { setEditingUser(null); setFormData({ name: '', email: '', password: '', phone: '', permissions: ['dashboard'] }); setIsModalOpen(true); }} className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-100 transition-all">+ Novo Usuário</button>
+                <button onClick={() => { setEditingUser(null); setFormData({ name: '', email: '', password: '', phone: '', permissions: ['dashboard'] }); setIsModalOpen(true); }} className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-100 transition-all">+ Novo Usuário</button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {users.map(u => (

@@ -597,13 +597,13 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
       <CustomAlert {...alertConfig} onConfirm={alertConfig.onConfirm} onCancel={alertConfig.onCancel} />
 
       {/* Header Gestão de Mesas */}
-      <div className="flex justify-between items-center bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm gap-6">
         <div>
           <h2 className="text-2xl font-black text-slate-800 uppercase tracking-tighter">Gestão de Mesas</h2>
           <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">Painel de Atendimento em Tempo Real</p>
         </div>
-        <div className="flex items-center gap-6">
-          <div className="flex gap-4">
+        <div className="flex flex-col xl:flex-row items-stretch xl:items-center gap-6 w-full sm:w-auto">
+          <div className="grid grid-cols-2 sm:flex gap-4">
             <div className="flex items-center gap-1.5"><span className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce"></span><span className="text-[10px] font-bold uppercase text-slate-400">Livre</span></div>
             <div className="flex items-center gap-1.5"><span className="w-2 h-2 bg-fuchsia-600 rounded-full animate-bounce"></span><span className="text-[10px] font-bold uppercase text-slate-400">App Digital</span></div>
             <div className="flex items-center gap-1.5"><span className="w-2 h-2 bg-red-600 rounded-full animate-bounce"></span><span className="text-[10px] font-bold uppercase text-slate-400">Ocupada</span></div>
@@ -615,7 +615,7 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
               setShowFeedbacks(true);
               setHasNewFeedback(false);
             }}
-            className={`flex items-center gap-2 px-6 py-3 rounded-2xl transition-all font-black uppercase text-[10px] relative ${hasNewFeedback ? 'bg-indigo-600 text-white animate-moderate-blink shadow-lg shadow-indigo-200' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
+            className={`flex items-center justify-center gap-2 px-6 py-3 rounded-2xl transition-all font-black uppercase text-[10px] relative ${hasNewFeedback ? 'bg-indigo-600 text-white animate-moderate-blink shadow-lg shadow-indigo-200' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
@@ -857,7 +857,6 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
                                   setManualClientName(e.target.value);
                                   if (errors.manualClientName) setErrors(prev => ({ ...prev, manualClientName: false }));
                                 }}
-                                className={`w-full p-4 md:p-5 bg-white border-2 rounded-2xl text-xs font-black outline-none focus:ring-4 focus:ring-blue-50 transition-all ${errors.manualClientName ? 'border-red-500 animate-shake' : 'border-slate-200'}`}
                               />
                             </div>
                             <div className="w-full md:w-1/3 space-y-1.5">
@@ -871,7 +870,6 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
                                   setManualClientPhone(maskPhone(e.target.value));
                                   if (errors.manualClientPhone) setErrors(prev => ({ ...prev, manualClientPhone: false }));
                                 }}
-                                className={`w-full p-4 md:p-5 bg-white border-2 rounded-2xl text-xs font-black outline-none focus:ring-4 focus:ring-blue-50 transition-all ${errors.manualClientPhone ? 'border-red-500 animate-shake' : 'border-slate-200'}`}
                               />
                             </div>
                           </div>
@@ -887,7 +885,6 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
                                   setManualClientEmail(e.target.value);
                                   if (errors.manualClientEmail) setErrors(prev => ({ ...prev, manualClientEmail: false }));
                                 }}
-                                className={`w-full p-4 md:p-5 bg-white border-2 rounded-2xl text-xs font-black outline-none focus:ring-4 focus:ring-blue-50 transition-all ${errors.manualClientEmail ? 'border-red-500 animate-shake' : 'border-slate-200'}`}
                               />
                             </div>
                             <div className="flex-1 space-y-1.5">
@@ -901,7 +898,6 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
                                   setManualClientDocument(maskDocument(e.target.value));
                                   if (errors.manualClientDocument) setErrors(prev => ({ ...prev, manualClientDocument: false }));
                                 }}
-                                className={`w-full p-4 bg-white border-2 rounded-2xl text-[11px] font-black outline-none focus:ring-4 focus:ring-blue-50 transition-all ${errors.manualClientDocument ? 'border-red-500 animate-shake' : 'border-slate-200'}`}
                               />
                             </div>
                           </div>
@@ -936,7 +932,6 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
                                       }
                                     }
                                   }}
-                                  className={`w-full p-4 md:p-5 bg-white border border-slate-200 rounded-2xl text-xs font-black outline-none focus:ring-4 focus:ring-blue-50 transition-all ${isLoadingCep ? 'opacity-50' : ''}`}
                                 />
                                 {isLoadingCep && (
                                   <div className="absolute right-3 top-1/2 -translate-y-1/2 mt-2">

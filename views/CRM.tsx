@@ -277,7 +277,7 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-slate-100 flex flex-col h-full overflow-hidden relative">
-      <div className="p-6 border-b border-slate-100 flex justify-between items-center gap-4">
+      <div className="p-4 sm:p-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4">
         <div className="relative flex-1 max-w-md">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -293,7 +293,7 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
         <div className="flex gap-3">
           <button
             onClick={openAddModal}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 shadow-lg shadow-blue-200 transition-all"
+            className="flex-1 sm:flex-none justify-center bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 shadow-lg shadow-blue-200 transition-all"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -303,8 +303,8 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto">
-        <table className="w-full text-left border-collapse">
+      <div className="flex-1 overflow-x-auto">
+        <table className="w-full text-left border-collapse min-w-[800px] sm:min-w-0">
           <thead>
             <tr className="bg-slate-50 border-b border-slate-100">
               <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Cliente</th>
@@ -387,9 +387,9 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
 
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-opacity">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200">
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-              <h3 className="text-xl font-bold text-slate-800">
+          <div className="bg-white rounded-[2rem] sm:rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div className="p-4 sm:p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+              <h3 className="text-lg sm:text-xl font-bold text-slate-800">
                 {editingClient ? 'Editar Cliente' : 'Cadastrar Novo Cliente'}
               </h3>
               <button
@@ -402,7 +402,7 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
               </button>
             </div>
 
-            <form onSubmit={handleSave} className="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
+            <form onSubmit={handleSave} className="p-4 sm:p-6 space-y-4 max-h-[80vh] overflow-y-auto">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className={`text-xs font-bold uppercase ${errors.name ? 'text-red-500' : 'text-slate-500'}`}>Nome Completo *</label>

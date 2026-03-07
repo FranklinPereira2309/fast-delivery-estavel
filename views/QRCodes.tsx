@@ -43,7 +43,7 @@ const QRCodes: React.FC = () => {
                 }
             `}</style>
             {/* Header (Oculto na impressão) */}
-            <div className="flex justify-between items-center bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm print:hidden">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm print:hidden gap-4">
                 <div>
                     <h2 className="text-2xl font-black text-slate-800 uppercase tracking-tighter">QR Codes das Mesas</h2>
                     <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">
@@ -53,7 +53,7 @@ const QRCodes: React.FC = () => {
                 <div className="flex items-center gap-4">
                     <button
                         onClick={() => window.print()}
-                        className="px-6 py-3 bg-slate-900 text-white rounded-xl text-xs font-black uppercase hover:bg-slate-800 transition-all flex items-center gap-2 shadow-lg"
+                        className="w-full sm:w-auto px-6 py-3 bg-slate-900 text-white rounded-xl text-xs font-black uppercase hover:bg-slate-800 transition-all flex items-center justify-center gap-2 shadow-lg"
                     >
                         <Icons.Print />
                         Imprimir Todos
@@ -62,7 +62,7 @@ const QRCodes: React.FC = () => {
             </div>
 
             {/* Grid de QR Codes */}
-            <div id="print-area" className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8 overflow-y-auto pb-12 print:overflow-visible print:pb-0 print:grid-cols-3 print:gap-8">
+            <div id="print-area" className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8 overflow-y-auto pb-12 print:overflow-visible print:pb-0 print:grid-cols-3 print:gap-8">
                 {tables.map((tableNum) => {
                     const tableUrl = `${MENU_BASE_URL}/?mesa=${tableNum}`;
 
