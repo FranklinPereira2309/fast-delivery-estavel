@@ -40,8 +40,8 @@ export const deleteClient = async (req: Request, res: Response) => {
     const id = req.params.id as string;
     const { user } = req.body;
 
-    if (!user?.permissions?.includes('admin')) {
-        return res.status(403).json({ message: 'Apenas o Administrador Master pode excluir clientes.' });
+    if (!user?.permissions?.includes('admin') && !user?.permissions?.includes('settings')) {
+        return res.status(403).json({ message: 'Apenas usuários autorizados podem excluir clientes.' });
     }
 
     try {

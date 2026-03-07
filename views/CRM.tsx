@@ -126,8 +126,8 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
   };
 
   const handleDelete = async (id: string) => {
-    if (!currentUser.permissions.includes('admin')) {
-      showAlert('Acesso Negado', 'Apenas o Administrador Master pode excluir clientes.', 'DANGER');
+    if (!currentUser.permissions.includes('admin') && !currentUser.permissions.includes('settings')) {
+      showAlert('Acesso Negado', 'Você não tem permissão para excluir clientes.', 'DANGER');
       return;
     }
 
