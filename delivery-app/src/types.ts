@@ -119,6 +119,13 @@ export interface Client {
   phone: string;
   email?: string;
   document?: string;
+  cep?: string;
+  street?: string;
+  addressNumber?: string;
+  neighborhood?: string;
+  city?: string;
+  state?: string;
+  complement?: string;
   addresses: string[];
   totalOrders: number;
   lastOrderDate?: string;

@@ -7,6 +7,7 @@ import { Icons, PLACEHOLDER_FOOD_IMAGE, formatImageUrl } from '../constants';
 import CustomAlert from '../components/CustomAlert';
 import { useDigitalAlert } from '../hooks/useDigitalAlert';
 import { validateEmail, validateCPF, validateCNPJ, maskPhone, maskDocument, toTitleCase } from '../services/validationUtils';
+import { formatAddress } from '../services/formatUtils';
 import WaiterAuthModal from '../components/WaiterAuthModal';
 
 interface TablesProps {
@@ -42,6 +43,12 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
   const [manualClientEmail, setManualClientEmail] = useState('');
   const [manualClientDocument, setManualClientDocument] = useState('');
   const [manualClientAddress, setManualClientAddress] = useState('');
+  const [manualClientStreet, setManualClientStreet] = useState('');
+  const [manualClientNumber, setManualClientNumber] = useState('');
+  const [manualClientNeighborhood, setManualClientNeighborhood] = useState('');
+  const [manualClientCity, setManualClientCity] = useState('');
+  const [manualClientState, setManualClientState] = useState('');
+  const [manualClientComplement, setManualClientComplement] = useState('');
   const [manualClientCep, setManualClientCep] = useState('');
   const [isLoadingCep, setIsLoadingCep] = useState(false);
   const [clientSearch, setClientSearch] = useState('');
@@ -494,13 +501,30 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
           finalClientId = existingClient.id; // It actually existed, we can just use the ID
         } else {
           // Let's create a real client using db
+          const manualData = {
+            street: manualClientStreet,
+            addressNumber: manualClientNumber,
+            neighborhood: manualClientNeighborhood,
+            city: manualClientCity,
+            state: manualClientState,
+            complement: manualClientComplement,
+            cep: manualClientCep
+          };
+
           const newClient: Client = {
             id: `CLIENT-${Date.now()}`,
             name: toTitleCase(manualClientName),
             phone: manualClientPhone,
             email: manualClientEmail || undefined,
             document: manualClientDocument || undefined,
-            addresses: manualClientAddress ? [toTitleCase(manualClientAddress)] : [],
+            cep: manualClientCep || undefined,
+            street: toTitleCase(manualClientStreet),
+            addressNumber: manualClientNumber || undefined,
+            neighborhood: toTitleCase(manualClientNeighborhood),
+            city: toTitleCase(manualClientCity),
+            state: manualClientState?.toUpperCase() || undefined,
+            complement: manualClientComplement || undefined,
+            addresses: [formatAddress({ ...manualData })],
             totalOrders: 0
           };
           await db.saveClient(newClient);
@@ -522,7 +546,15 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
       clientPhone,
       clientEmail,
       clientDocument,
-      clientAddress
+      clientAddress: isUnregisteredClient ? formatAddress({
+        street: manualClientStreet,
+        addressNumber: manualClientNumber,
+        neighborhood: manualClientNeighborhood,
+        city: manualClientCity,
+        state: manualClientState,
+        complement: manualClientComplement,
+        cep: manualClientCep
+      }) : (selectedClient ? formatAddress(selectedClient) : undefined)
     });
 
     await db.logAction(currentUser, 'TABLE_BILL_REQUEST', `Mesa ${printingPreBill.tableNumber}: Pré-conta para ${clientName}.`);
@@ -536,6 +568,12 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
     setManualClientEmail('');
     setManualClientDocument('');
     setManualClientAddress('');
+    setManualClientStreet('');
+    setManualClientNumber('');
+    setManualClientNeighborhood('');
+    setManualClientCity('');
+    setManualClientState('');
+    setManualClientComplement('');
     setManualClientCep('');
     setClientSearch('');
     await refreshData();
@@ -615,7 +653,13 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
               setManualClientEmail(s?.clientEmail || '');
               setManualClientDocument(s?.clientDocument || '');
               setManualClientAddress(s?.clientAddress || '');
-              setManualClientCep('');
+              setManualClientStreet(s?.street || '');
+              setManualClientNumber(s?.addressNumber || '');
+              setManualClientNeighborhood(s?.neighborhood || '');
+              setManualClientCity(s?.city || '');
+              setManualClientState(s?.state || '');
+              setManualClientComplement(s?.complement || '');
+              setManualClientCep(s?.cep || '');
               setClientSearch('');
               setSelectedClient(null);
             }}
@@ -857,41 +901,113 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
                               />
                             </div>
                           </div>
-                          <div className="flex gap-2 items-start">
-                            <div className="w-1/3 relative shrink-0">
+                          <div className="space-y-4">
+                            <div className="flex gap-2">
+                              <div className="w-32 shrink-0 relative">
+                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">CEP</label>
+                                <input
+                                  type="text"
+                                  placeholder="00000000"
+                                  maxLength={8}
+                                  value={manualClientCep}
+                                  onChange={async e => {
+                                    const cep = e.target.value.replace(/\D/g, '').slice(0, 8);
+                                    setManualClientCep(cep);
+                                    if (cep.length === 8) {
+                                      setIsLoadingCep(true);
+                                      try {
+                                        const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+                                        const data = await res.json();
+                                        if (!data.erro) {
+                                          setManualClientStreet(data.logradouro || '');
+                                          setManualClientNeighborhood(data.bairro || '');
+                                          setManualClientCity(data.localidade || '');
+                                          setManualClientState(data.uf || '');
+                                        }
+                                      } catch (err) {
+                                        console.error('ViaCep error:', err);
+                                      } finally {
+                                        setIsLoadingCep(false);
+                                      }
+                                    }
+                                  }}
+                                  className={`w-full p-4 bg-white border border-slate-200 rounded-2xl text-[11px] font-black outline-none focus:ring-4 focus:ring-blue-50 transition-all ${isLoadingCep ? 'opacity-50' : ''}`}
+                                />
+                                {isLoadingCep && (
+                                  <div className="absolute right-3 top-1/2 -translate-y-1/2 mt-2">
+                                    <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                                  </div>
+                                )}
+                              </div>
+                              <div className="flex-1">
+                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Logradouro</label>
+                                <input
+                                  type="text"
+                                  placeholder="Rua / Avenida"
+                                  value={manualClientStreet}
+                                  onChange={e => setManualClientStreet(e.target.value)}
+                                  className="w-full p-4 bg-white border border-slate-200 rounded-2xl text-[11px] font-black outline-none focus:ring-4 focus:ring-blue-50 transition-all"
+                                />
+                              </div>
+                            </div>
+
+                            <div className="flex gap-2">
+                              <div className="w-24 shrink-0">
+                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Número</label>
+                                <input
+                                  type="text"
+                                  placeholder="123"
+                                  value={manualClientNumber}
+                                  onChange={e => setManualClientNumber(e.target.value)}
+                                  className="w-full p-4 bg-white border border-slate-200 rounded-2xl text-[11px] font-black outline-none focus:ring-4 focus:ring-blue-50 transition-all"
+                                />
+                              </div>
+                              <div className="flex-1">
+                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Bairro</label>
+                                <input
+                                  type="text"
+                                  placeholder="Bairro"
+                                  value={manualClientNeighborhood}
+                                  onChange={e => setManualClientNeighborhood(e.target.value)}
+                                  className="w-full p-4 bg-white border border-slate-200 rounded-2xl text-[11px] font-black outline-none focus:ring-4 focus:ring-blue-50 transition-all"
+                                />
+                              </div>
+                            </div>
+
+                            <div className="flex gap-2">
+                              <div className="flex-1">
+                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Cidade</label>
+                                <input
+                                  type="text"
+                                  placeholder="Cidade"
+                                  value={manualClientCity}
+                                  onChange={e => setManualClientCity(e.target.value)}
+                                  className="w-full p-4 bg-white border border-slate-200 rounded-2xl text-[11px] font-black outline-none focus:ring-4 focus:ring-blue-50 transition-all"
+                                />
+                              </div>
+                              <div className="w-16 shrink-0">
+                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">UF</label>
+                                <input
+                                  type="text"
+                                  placeholder="SP"
+                                  maxLength={2}
+                                  value={manualClientState}
+                                  onChange={e => setManualClientState(e.target.value.toUpperCase())}
+                                  className="w-full p-4 bg-white border border-slate-200 rounded-2xl text-[11px] font-black outline-none focus:ring-4 focus:ring-blue-50 transition-all"
+                                />
+                              </div>
+                            </div>
+
+                            <div className="space-y-1">
+                              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Complemento / Referência</label>
                               <input
                                 type="text"
-                                placeholder="CEP"
-                                maxLength={8}
-                                value={manualClientCep}
-                                onChange={async e => {
-                                  const cep = e.target.value.replace(/\D/g, '').slice(0, 8);
-                                  setManualClientCep(cep);
-                                  if (cep.length === 8) {
-                                    setIsLoadingCep(true);
-                                    try {
-                                      const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
-                                      const data = await res.json();
-                                      if (!data.erro) {
-                                        const newAddress = `${data.logradouro}, , ${data.bairro}, ${data.localidade} - ${data.uf}`;
-                                        setManualClientAddress(newAddress);
-                                      }
-                                    } catch (err) {
-                                      console.error('ViaCep error:', err);
-                                    } finally {
-                                      setIsLoadingCep(false);
-                                    }
-                                  }
-                                }}
-                                className={`w-full p-4 bg-white border border-slate-200 rounded-2xl text-[11px] font-black outline-none focus:ring-4 focus:ring-blue-50 transition-all ${isLoadingCep ? 'opacity-50' : ''}`}
+                                placeholder="Ex: Próximo ao mercado..."
+                                value={manualClientComplement}
+                                onChange={e => setManualClientComplement(e.target.value)}
+                                className="w-full p-4 bg-white border border-slate-200 rounded-2xl text-[11px] font-black outline-none focus:ring-4 focus:ring-blue-50 transition-all"
                               />
-                              {isLoadingCep && (
-                                <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                                  <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                                </div>
-                              )}
                             </div>
-                            <textarea className="flex-1 w-full p-4 bg-white border border-slate-200 rounded-2xl text-[11px] font-black outline-none focus:ring-4 focus:ring-blue-50 transition-all h-20 resize-none" placeholder="Endereço (Opcional)" value={manualClientAddress} onChange={(e) => setManualClientAddress(e.target.value)} />
                           </div>
                         </div>
                       ) : (
@@ -902,7 +1018,7 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
                               {clients.filter(c => c.name.toLowerCase().includes(clientSearch.toLowerCase())).map(c => (<button key={c.id} onClick={() => { setSelectedClient(c); setClientSearch(c.name); setShowClientList(false); }} className="w-full text-left p-4 hover:bg-slate-50 border-b border-slate-50 last:border-0 rounded-2xl"><p className="text-xs font-black text-slate-800 uppercase tracking-tighter">{c.name}</p><p className="text-[10px] text-slate-400 font-bold">{c.phone}</p></button>))}
                             </div>
                           )}
-                          {selectedClient && <div className="mt-4 bg-emerald-50 p-4 rounded-2xl border border-emerald-100 flex justify-between items-center animate-in fade-in"><div className="flex-1 min-w-0"><p className="text-[10px] font-black text-emerald-700 uppercase">{selectedClient.name}</p><p className="text-[8px] text-emerald-400 truncate uppercase">{selectedClient.addresses[0]}</p></div><button onClick={() => setSelectedClient(null)} className="text-emerald-400 font-black px-2 text-xl">×</button></div>}
+                          {selectedClient && <div className="mt-4 bg-emerald-50 p-4 rounded-2xl border border-emerald-100 flex justify-between items-center animate-in fade-in"><div className="flex-1 min-w-0"><p className="text-[10px] font-black text-emerald-700 uppercase">{selectedClient.name}</p><p className="text-[8px] text-emerald-400 truncate uppercase">{formatAddress(selectedClient)}</p></div><button onClick={() => setSelectedClient(null)} className="text-emerald-400 font-black px-2 text-xl">×</button></div>}
                         </div>
                       )}
                       <button onClick={() => { const sess = getSessForTable(selectedTable!); if (sess) startBillingRequest(sess); }} disabled={getSessForTable(selectedTable)?.items.length === 0} className="w-full py-5 bg-orange-500 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-xl shadow-orange-100 hover:bg-orange-600 transition-all active:scale-95 disabled:opacity-50">Solicitar Pré-Fechamento / Ir para Cupom</button>

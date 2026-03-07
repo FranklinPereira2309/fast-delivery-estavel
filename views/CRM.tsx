@@ -16,6 +16,7 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [isLoadingCep, setIsLoadingCep] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Estados do CustomAlert
   const [alertConfig, setAlertConfig] = useState<{
@@ -108,19 +109,19 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
   const openEditModal = (client: Client) => {
     setEditingClient(client);
     setErrors({});
-    const addr = client.addresses[0] || '';
+
     setFormData({
       name: client.name,
       phone: client.phone,
       email: client.email || '',
       document: client.document || '',
-      cep: '',
-      logradouro: addr,
-      numero: '',
-      complemento: '',
-      bairro: '',
-      cidade: '',
-      uf: ''
+      cep: client.cep || '',
+      logradouro: client.street || '',
+      numero: client.addressNumber || '',
+      complemento: client.complement || '',
+      bairro: client.neighborhood || '',
+      cidade: client.city || '',
+      uf: client.state || ''
     });
     setIsModalOpen(true);
   };
@@ -217,23 +218,39 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
       return;
     }
 
-    const fullAddress = `${formData.logradouro}, ${formData.numero}${formData.complemento ? ' - ' + formData.complemento : ''}, ${formData.bairro}, ${formData.cidade} - ${formData.uf} (CEP: ${formData.cep})`;
+    const fullAddress = `${formData.logradouro}, ${formData.numero}${formData.complemento ? ' - ' + formData.complemento : ''}, ${formData.bairro}, ${formData.cidade} - ${formData.uf}`;
 
     const clientData: Client = {
-      id: editingClient?.id || Date.now().toString(),
+      id: editingClient?.id || '', // Empty ID tells backend it's new
       name: toTitleCase(formData.name),
       phone: formData.phone,
       email: formData.email || undefined,
       document: formData.document || undefined,
+      cep: formData.cep || undefined,
+      street: formData.logradouro || undefined,
+      addressNumber: formData.numero || undefined,
+      complement: formData.complement || undefined,
+      neighborhood: formData.bairro || undefined,
+      city: formData.cidade || undefined,
+      state: (formData.uf || '').toUpperCase() || undefined,
       addresses: [fullAddress],
       totalOrders: editingClient?.totalOrders || 0,
       lastOrderDate: editingClient?.lastOrderDate || '-'
     };
 
-    await db.saveClient(clientData);
-    refreshClients();
-    setIsModalOpen(false);
-    setErrors({});
+    setIsSubmitting(true);
+    try {
+      await db.saveClient(clientData);
+      refreshClients();
+      setIsModalOpen(false);
+      setErrors({});
+      showAlert('Sucesso', editingClient ? 'Cliente atualizado com sucesso!' : 'Cliente cadastrado com sucesso!', 'SUCCESS');
+    } catch (error: any) {
+      console.error(error);
+      showAlert('Erro ao Salvar', error.message || 'Não foi possível salvar os dados do cliente.', 'DANGER');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const filtered = clients.filter(c =>
@@ -527,9 +544,17 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-3 bg-blue-600 text-white text-sm font-bold rounded-xl shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all"
+                  disabled={isSubmitting}
+                  className={`flex-1 py-3 bg-blue-600 text-white text-sm font-bold rounded-xl shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all flex items-center justify-center gap-2 ${isSubmitting ? 'opacity-70 cursor-not-allowed' : ''}`}
                 >
-                  Salvar Cliente
+                  {isSubmitting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Salvando...
+                    </>
+                  ) : (
+                    'Salvar Cliente'
+                  )}
                 </button>
               </div>
             </form>

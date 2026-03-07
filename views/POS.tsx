@@ -6,6 +6,7 @@ import { socket, feedbackUnreadManager } from '../services/socket';
 import { Icons, PLACEHOLDER_FOOD_IMAGE, formatImageUrl } from '../constants';
 import CustomAlert from '../components/CustomAlert';
 import { validateEmail, validateCPF, validateCNPJ, maskPhone, maskDocument, toTitleCase } from '../services/validationUtils';
+import { formatAddress } from '../services/formatUtils';
 import { QRCodeCanvas } from 'qrcode.react';
 
 const API_URL = (import.meta as any).env.VITE_API_URL || 'http://localhost:3000/api';
@@ -32,10 +33,15 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
   const [avulsoData, setAvulsoData] = useState({
     phone: '',
     name: '',
-    address: '',
-    cep: '',
     email: '',
-    document: ''
+    document: '',
+    cep: '',
+    street: '',
+    addressNumber: '',
+    neighborhood: '',
+    city: '',
+    state: '',
+    complement: ''
   });
   const [isLoadingCep, setIsLoadingCep] = useState(false);
 
@@ -516,13 +522,20 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
             finalClientName = existingClient.name;
           } else if (isAvulso && avulsoData.name && avulsoData.phone) {
             const newClient: Client = {
-              id: `CLIENT-${Date.now()}`,
+              id: editingClient?.id || `CLIENT-${Date.now()}`,
               name: toTitleCase(avulsoData.name),
               phone: avulsoData.phone,
-              addresses: avulsoData.address ? [toTitleCase(avulsoData.address)] : [],
-              totalOrders: 0,
               email: avulsoData.email || undefined,
-              document: avulsoData.document || undefined
+              document: avulsoData.document || undefined,
+              cep: avulsoData.cep || undefined,
+              street: toTitleCase(avulsoData.street),
+              addressNumber: avulsoData.addressNumber || undefined,
+              neighborhood: toTitleCase(avulsoData.neighborhood),
+              city: toTitleCase(avulsoData.city),
+              state: avulsoData.state?.toUpperCase() || undefined,
+              complement: avulsoData.complement || undefined,
+              addresses: [formatAddress({ ...avulsoData })],
+              totalOrders: 0
             };
             await db.saveClient(newClient);
             finalClientId = newClient.id;
@@ -538,7 +551,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
 
     const finalAddress = isTableSale
       ? (pendingTables.find(t => t.tableNumber === finalTableNum)?.clientAddress || undefined)
-      : (isAvulso ? toTitleCase(avulsoData.address) : (selectedClient?.addresses[0] || undefined));
+      : (isAvulso ? formatAddress({ ...avulsoData }) : (selectedClient ? formatAddress(selectedClient) : undefined));
 
     const finalPhone = isTableSale
       ? (pendingTables.find(t => t.tableNumber === finalTableNum)?.clientPhone || undefined)
@@ -1253,13 +1266,13 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                   </div>
 
                   {(saleType === SaleType.OWN_DELIVERY || saleType === SaleType.THIRD_PARTY) && (
-                    <div className="space-y-1.5">
-                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Endereço de Entrega</label>
+                    <div className="space-y-4">
                       <div className="flex gap-2">
                         <div className="w-32 shrink-0 relative">
+                          <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">CEP</label>
                           <input
                             type="text"
-                            placeholder="CEP"
+                            placeholder="00000000"
                             maxLength={8}
                             value={avulsoData.cep}
                             onChange={async e => {
@@ -1271,8 +1284,13 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                                   const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
                                   const data = await res.json();
                                   if (!data.erro) {
-                                    const newAddress = `${data.logradouro}, , ${data.bairro}, ${data.localidade} - ${data.uf}`;
-                                    setAvulsoData(prev => ({ ...prev, address: newAddress }));
+                                    setAvulsoData(prev => ({
+                                      ...prev,
+                                      street: data.logradouro || '',
+                                      neighborhood: data.bairro || '',
+                                      city: data.localidade || '',
+                                      state: data.uf || ''
+                                    }));
                                   }
                                 } catch (err) {
                                   console.error('ViaCep error:', err);
@@ -1284,12 +1302,73 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                             className={`w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl text-xs font-black outline-none focus:border-blue-500 transition-all ${isLoadingCep ? 'opacity-50' : ''}`}
                           />
                         </div>
+                        <div className="flex-1">
+                          <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Logradouro</label>
+                          <input
+                            type="text"
+                            placeholder="Rua / Avenida"
+                            value={avulsoData.street}
+                            onChange={e => setAvulsoData({ ...avulsoData, street: e.target.value })}
+                            className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl text-xs font-black outline-none focus:border-blue-500 transition-all"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex gap-2">
+                        <div className="w-24 shrink-0">
+                          <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Número</label>
+                          <input
+                            type="text"
+                            placeholder="123"
+                            value={avulsoData.addressNumber}
+                            onChange={e => setAvulsoData({ ...avulsoData, addressNumber: e.target.value })}
+                            className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl text-xs font-black outline-none focus:border-blue-500 transition-all"
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Bairro</label>
+                          <input
+                            type="text"
+                            placeholder="Bairro"
+                            value={avulsoData.neighborhood}
+                            onChange={e => setAvulsoData({ ...avulsoData, neighborhood: e.target.value })}
+                            className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl text-xs font-black outline-none focus:border-blue-500 transition-all"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex gap-2">
+                        <div className="flex-1">
+                          <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Cidade</label>
+                          <input
+                            type="text"
+                            placeholder="Cidade"
+                            value={avulsoData.city}
+                            onChange={e => setAvulsoData({ ...avulsoData, city: e.target.value })}
+                            className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl text-xs font-black outline-none focus:border-blue-500 transition-all"
+                          />
+                        </div>
+                        <div className="w-16 shrink-0">
+                          <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">UF</label>
+                          <input
+                            type="text"
+                            placeholder="SP"
+                            maxLength={2}
+                            value={avulsoData.state}
+                            onChange={e => setAvulsoData({ ...avulsoData, state: e.target.value.toUpperCase() })}
+                            className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl text-xs font-black outline-none focus:border-blue-500 transition-all"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Complemento / Referência</label>
                         <input
                           type="text"
-                          placeholder="Endereço Completo, Número, Bairro..."
-                          value={avulsoData.address}
-                          onChange={e => setAvulsoData({ ...avulsoData, address: e.target.value })}
-                          className="flex-1 p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl text-xs font-black outline-none focus:border-blue-500 transition-all"
+                          placeholder="Ex: Apto 101, Próximo ao mercado..."
+                          value={avulsoData.complement}
+                          onChange={e => setAvulsoData({ ...avulsoData, complement: e.target.value })}
+                          className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl text-xs font-black outline-none focus:border-blue-500 transition-all"
                         />
                       </div>
                     </div>
@@ -1341,7 +1420,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
               <button
                 onClick={() => {
                   setSelectedClient(null);
-                  setAvulsoData({ name: '', phone: '', address: '', cep: '', email: '', document: '' });
+                  setAvulsoData({ name: '', phone: '', email: '', document: '', cep: '', street: '', addressNumber: '', neighborhood: '', city: '', state: '', complement: '' });
                   setIsAvulso(false);
                   setIsClientModalOpen(false);
                 }}

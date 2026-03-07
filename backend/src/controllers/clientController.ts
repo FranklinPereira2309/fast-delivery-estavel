@@ -41,7 +41,8 @@ export const saveClient = async (req: Request, res: Response) => {
     const clientData = {
         ...data,
         pin: data.pin || Math.floor(1000 + Math.random() * 9000).toString(),
-        ...(newPassword && { password: newPassword })
+        ...(newPassword && { password: newPassword }),
+        // Map any remaining fields explicitly if needed, but ...data should cover them if keys match
     };
 
     const client = await prisma.client.upsert({

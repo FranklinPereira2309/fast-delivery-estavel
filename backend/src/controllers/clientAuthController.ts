@@ -89,7 +89,7 @@ export const loginClient = async (req: ExpressRequest, res: ExpressResponse) => 
 export const updateClientProfile = async (req: ExpressRequest, res: ExpressResponse) => {
     try {
         const id = req.params.id as string;
-        const { name, email, address, currentPassword, password } = req.body;
+        const { name, email, addresses, cep, street, addressNumber, neighborhood, city, state, complement, currentPassword, password } = req.body;
 
         const client = await prisma.client.findUnique({
             where: { id }
@@ -113,7 +113,14 @@ export const updateClientProfile = async (req: ExpressRequest, res: ExpressRespo
         const data: any = {};
         if (name) data.name = name;
         if (email) data.email = email;
-        if (address) data.addresses = [address]; // Salva a nova string inteira se enviada
+        if (addresses) data.addresses = addresses;
+        if (cep) data.cep = cep;
+        if (street) data.street = street;
+        if (addressNumber) data.addressNumber = addressNumber;
+        if (neighborhood) data.neighborhood = neighborhood;
+        if (city) data.city = city;
+        if (state) data.state = state;
+        if (complement) data.complement = complement;
         if (password) data.password = await bcrypt.hash(password, 10);
 
         const updatedClient = await prisma.client.update({

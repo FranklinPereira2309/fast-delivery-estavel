@@ -4,6 +4,7 @@ import { useCart } from '../CartContext';
 import { api } from '../services/api';
 import { socket } from '../services/socket';
 import { Icons } from '../constants';
+import { formatAddress } from '../services/formatUtils';
 import CustomAlert from '../components/CustomAlert';
 import type { StoreStatus } from '../types';
 
@@ -147,7 +148,7 @@ const Checkout: React.FC = () => {
                 showAlert('Atenção', 'Por favor, preencha todos os campos obrigatórios do novo endereço.', 'DANGER');
                 return;
             }
-            finalAddress = `${newAddress.street}, ${newAddress.number}, ${newAddress.neighborhood} - ${newAddress.complement ? `Comp: ${newAddress.complement}` : ''} [${newAddress.tag}]`;
+            finalAddress = formatAddress(newAddress);
         } else {
             if (!savedAddress) {
                 showAlert('Atenção', 'Por favor, informe seu endereço.', 'DANGER');
