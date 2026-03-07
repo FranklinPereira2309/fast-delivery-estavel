@@ -8,6 +8,12 @@ const Login: React.FC = () => {
     const [phone, setPhone] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
+    const [view, setView] = useState<'LOGIN' | 'FORCE_RESET'>('LOGIN');
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [showNewPassword, setShowNewPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [pendingLoginData, setPendingLoginData] = useState<{ client: any, token: string } | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [alertState, setAlertState] = useState({
         isOpen: false,
@@ -46,13 +52,94 @@ const Login: React.FC = () => {
 
         setIsLoading(true);
         try {
-            await api.login(cleanPhone, password);
-            navigate('/');
+            const data = await api.login(cleanPhone, password);
+
+            if (data.client?.mustChangePassword) {
+                // Usuário está com a senha padrão (123)
+                setPendingLoginData(data);
+                setView('FORCE_RESET');
+            } else {
+                // Fluxo normal
+                localStorage.setItem('delivery_app_token', data.token);
+                localStorage.setItem('delivery_app_client', JSON.stringify(data.client));
+                navigate('/');
+            }
         } catch (err: any) {
             setAlertState({
                 isOpen: true,
                 title: 'Erro no Login',
                 message: 'Dados incorretos, verifique o telefone e/ou senha',
+                type: 'DANGER',
+                onConfirm: () => setAlertState(prev => ({ ...prev, isOpen: false })),
+                onCancel: undefined
+            });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleResetPassword = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (newPassword !== confirmPassword) {
+            setAlertState({
+                isOpen: true,
+                title: 'Atenção',
+                message: 'As senhas não coincidem.',
+                type: 'INFO',
+                onConfirm: () => setAlertState(prev => ({ ...prev, isOpen: false })),
+                onCancel: undefined
+            });
+            return;
+        }
+
+        if (newPassword === '123') {
+            setAlertState({
+                isOpen: true,
+                title: 'Atenção',
+                message: 'A nova senha não pode ser "123". Escolha uma senha mais segura.',
+                type: 'INFO',
+                onConfirm: () => setAlertState(prev => ({ ...prev, isOpen: false })),
+                onCancel: undefined
+            });
+            return;
+        }
+
+        if (newPassword.length < 6) {
+            setAlertState({
+                isOpen: true,
+                title: 'Atenção',
+                message: 'A senha deve ter pelo menos 6 caracteres.',
+                type: 'INFO',
+                onConfirm: () => setAlertState(prev => ({ ...prev, isOpen: false })),
+                onCancel: undefined
+            });
+            return;
+        }
+
+        setIsLoading(true);
+        try {
+            if (!pendingLoginData) throw new Error('Dados de login perdidos.');
+
+            // Atualiza a senha no backend usando o overrideToken temporário
+            await api.updateClient(
+                pendingLoginData.client.id,
+                { currentPassword: password, password: newPassword },
+                pendingLoginData.token
+            );
+
+            // Atualização bem sucedida: Efetiva o login
+            // Atualiza o client removendo a flag
+            const finalClient = { ...pendingLoginData.client, mustChangePassword: false };
+
+            localStorage.setItem('delivery_app_token', pendingLoginData.token);
+            localStorage.setItem('delivery_app_client', JSON.stringify(finalClient));
+
+            navigate('/');
+        } catch (err: any) {
+            setAlertState({
+                isOpen: true,
+                title: 'Erro',
+                message: err.message || 'Erro ao redefinir a senha.',
                 type: 'DANGER',
                 onConfirm: () => setAlertState(prev => ({ ...prev, isOpen: false })),
                 onCancel: undefined
@@ -77,63 +164,142 @@ const Login: React.FC = () => {
 
                 <div className="text-center mb-10">
                     <h1 className="text-3xl font-black text-slate-800 uppercase tracking-tighter italic">Delivery Fast</h1>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2">Acesso do Cliente</p>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2">
+                        {view === 'LOGIN' ? 'Acesso do Cliente' : 'Troca de Senha Obrigatória'}
+                    </p>
                 </div>
 
-                <form onSubmit={handleLogin} className="space-y-6">
-                    <div className="space-y-2">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">WhatsApp</label>
-                        <input
-                            type="tel"
-                            className="w-full p-5 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-indigo-100 transition-all font-bold text-sm"
-                            placeholder="(00) 00000-0000"
-                            value={phone}
-                            onChange={e => setPhone(maskPhone(e.target.value))}
-                            required
-                        />
-                    </div>
+                {view === 'LOGIN' ? (
+                    <>
+                        <form onSubmit={handleLogin} className="space-y-6">
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">WhatsApp</label>
+                                <input
+                                    type="tel"
+                                    className="w-full p-5 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-indigo-100 transition-all font-bold text-sm"
+                                    placeholder="(00) 00000-0000"
+                                    value={phone}
+                                    onChange={e => setPhone(maskPhone(e.target.value))}
+                                    required
+                                />
+                            </div>
 
-                    <div className="space-y-2">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Senha</label>
-                        <div className="relative">
-                            <input
-                                type={showPassword ? "text" : "password"}
-                                className="w-full p-5 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-indigo-100 transition-all font-bold text-sm pr-14"
-                                placeholder="••••••••"
-                                value={password}
-                                onChange={e => setPassword(e.target.value)}
-                                required
-                            />
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Senha</label>
+                                <div className="relative">
+                                    <input
+                                        type={showPassword ? "text" : "password"}
+                                        className="w-full p-5 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-indigo-100 transition-all font-bold text-sm pr-14"
+                                        placeholder="••••••••"
+                                        value={password}
+                                        onChange={e => setPassword(e.target.value)}
+                                        required
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        className="absolute right-4 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-indigo-600 transition-all rounded-xl active:scale-90"
+                                    >
+                                        {showPassword ? <Icons.EyeOff className="w-5 h-5" /> : <Icons.Eye className="w-5 h-5" />}
+                                    </button>
+                                </div>
+                            </div>
+
                             <button
-                                type="button"
-                                onClick={() => setShowPassword(!showPassword)}
-                                className="absolute right-4 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-indigo-600 transition-all rounded-xl active:scale-90"
+                                disabled={isLoading}
+                                type="submit"
+                                className="w-full bg-slate-800 text-white py-5 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-slate-900 transition-all shadow-xl shadow-slate-200 mt-4"
                             >
-                                {showPassword ? <Icons.EyeOff className="w-5 h-5" /> : <Icons.Eye className="w-5 h-5" />}
+                                {isLoading ? 'Entrando...' : 'Entrar'}
+                            </button>
+                        </form>
+
+                        <div className="mt-10 text-center space-y-4">
+                            <p className="text-xs font-bold text-slate-400">
+                                Não tem conta? <button onClick={() => navigate('/register')} className="text-indigo-600 ml-1">Cadastre-se</button>
+                            </p>
+                            <button
+                                onClick={() => navigate('/recover')}
+                                className="text-[10px] font-black text-slate-300 uppercase tracking-widest hover:text-indigo-400 transition-colors"
+                            >
+                                Esqueci minha senha
                             </button>
                         </div>
-                    </div>
+                    </>
+                ) : (
+                    <form onSubmit={handleResetPassword} className="space-y-6 animate-in fade-in duration-300">
+                        <div className="p-4 bg-amber-50 border border-amber-100 rounded-2xl mb-4">
+                            <p className="text-[9px] font-black text-amber-600 uppercase tracking-tight leading-relaxed">
+                                Você está usando a senha padrão. Por segurança, crie uma senha forte agora.
+                            </p>
+                        </div>
 
-                    <button
-                        disabled={isLoading}
-                        type="submit"
-                        className="w-full bg-slate-800 text-white py-5 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-slate-900 transition-all shadow-xl shadow-slate-200 mt-4"
-                    >
-                        {isLoading ? 'Entrando...' : 'Entrar'}
-                    </button>
-                </form>
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Nova Senha</label>
+                            <div className="relative">
+                                <input
+                                    type={showNewPassword ? "text" : "password"}
+                                    className="w-full p-5 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-indigo-100 transition-all font-bold text-sm pr-14"
+                                    placeholder="••••••••"
+                                    value={newPassword}
+                                    onChange={e => setNewPassword(e.target.value)}
+                                    required
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowNewPassword(!showNewPassword)}
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-indigo-600 transition-all rounded-xl active:scale-90"
+                                >
+                                    {showNewPassword ? <Icons.EyeOff className="w-5 h-5" /> : <Icons.Eye className="w-5 h-5" />}
+                                </button>
+                            </div>
+                        </div>
 
-                <div className="mt-10 text-center space-y-4">
-                    <p className="text-xs font-bold text-slate-400">
-                        Não tem conta? <button onClick={() => navigate('/register')} className="text-indigo-600 ml-1">Cadastre-se</button>
-                    </p>
-                    <button
-                        onClick={() => navigate('/recover')}
-                        className="text-[10px] font-black text-slate-300 uppercase tracking-widest hover:text-indigo-400 transition-colors"
-                    >
-                        Esqueci minha senha
-                    </button>
-                </div>
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Confirme a Senha</label>
+                            <div className="relative">
+                                <input
+                                    type={showConfirmPassword ? "text" : "password"}
+                                    className="w-full p-5 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-indigo-100 transition-all font-bold text-sm pr-14"
+                                    placeholder="••••••••"
+                                    value={confirmPassword}
+                                    onChange={e => setConfirmPassword(e.target.value)}
+                                    required
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-indigo-600 transition-all rounded-xl active:scale-90"
+                                >
+                                    {showConfirmPassword ? <Icons.EyeOff className="w-5 h-5" /> : <Icons.Eye className="w-5 h-5" />}
+                                </button>
+                            </div>
+                        </div>
+
+                        <button
+                            disabled={isLoading}
+                            type="submit"
+                            className="w-full bg-emerald-600 text-white py-5 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-emerald-700 transition-all shadow-xl shadow-emerald-200 mt-4"
+                        >
+                            {isLoading ? 'Salvando...' : 'Salvar Nova Senha'}
+                        </button>
+
+                        <div className="mt-4 text-center">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setView('LOGIN');
+                                    setPendingLoginData(null);
+                                    setNewPassword('');
+                                    setConfirmPassword('');
+                                }}
+                                className="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors"
+                            >
+                                Voltar para o Login
+                            </button>
+                        </div>
+                    </form>
+                )}
             </div>
 
             <CustomAlert

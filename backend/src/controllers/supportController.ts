@@ -38,7 +38,7 @@ export const sendMessage = async (req: Request, res: Response) => {
             data: {
                 userName,
                 message,
-                clientId,
+                ...(clientId && { clientId }),
                 isAdmin: !!isAdmin
             }
         });

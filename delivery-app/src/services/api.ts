@@ -6,9 +6,10 @@ class DeliveryApiService {
     private async request<T>(path: string, options: RequestInit = {}, retries = 2): Promise<T> {
         try {
             const token = localStorage.getItem('delivery_app_token');
+            const actualToken = (options as any).overrideToken || token;
             const headers = {
                 'Content-Type': 'application/json',
-                ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+                ...(actualToken ? { 'Authorization': `Bearer ${actualToken}` } : {}),
                 ...((options.headers as any) || {}),
             };
 
@@ -45,8 +46,8 @@ class DeliveryApiService {
             method: 'POST',
             body: JSON.stringify({ phone, password: pass }),
         });
-        localStorage.setItem('delivery_app_token', data.token);
-        localStorage.setItem('delivery_app_client', JSON.stringify(data.client));
+        // Responsabilidade de salvar token movida para Login.tsx
+        // para permitir validação de mustChangePassword antes do login efetivo
         return data;
     }
 
@@ -104,11 +105,12 @@ class DeliveryApiService {
         return this.request<any[]>(`/orders/client/my-orders?clientId=${client.id}&t=${Date.now()}`);
     }
 
-    async updateClient(clientId: string, data: any) {
+    async updateClient(clientId: string, data: any, overrideToken?: string) {
         return this.request<any>(`/client-auth/profile/${clientId}`, {
             method: 'PUT',
             body: JSON.stringify(data),
-        });
+            overrideToken
+        } as RequestInit & { overrideToken?: string });
     }
 
     async getSupportHistory(clientId: string) {

@@ -71,8 +71,14 @@ export const loginClient = async (req: ExpressRequest, res: ExpressResponse) => 
             return res.status(401).json({ message: 'Senha incorreta.' });
         }
 
+        const isDefaultPassword = await bcrypt.compare('123', client.password);
+        const clientResponse = {
+            ...client,
+            mustChangePassword: isDefaultPassword
+        };
+
         const token = jwt.sign({ id: client.id, role: 'CLIENT' }, JWT_SECRET, { expiresIn: '30d' });
-        res.json({ token, client });
+        res.json({ token, client: clientResponse });
     } catch (error) {
         console.error('Login Client Error:', error);
         res.status(500).json({ message: 'Erro interno' });

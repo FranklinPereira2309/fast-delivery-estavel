@@ -6,12 +6,32 @@ export const getAllClients = async (req: Request, res: Response) => {
     res.json(clients);
 };
 
+import bcrypt from 'bcryptjs';
+
 export const saveClient = async (req: Request, res: Response) => {
     const data = req.body;
+    let newPassword = undefined;
+
+    // Check if client is new
+    if (!data.id) {
+        newPassword = await bcrypt.hash('123', 10);
+    } else {
+        const existingClient = await prisma.client.findUnique({ where: { id: data.id } });
+        if (!existingClient) {
+            newPassword = await bcrypt.hash('123', 10);
+        }
+    }
+
+    const clientData = {
+        ...data,
+        pin: data.pin || Math.floor(1000 + Math.random() * 9000).toString(),
+        ...(newPassword && { password: newPassword })
+    };
+
     const client = await prisma.client.upsert({
         where: { id: data.id || '' },
-        update: data,
-        create: data
+        update: clientData,
+        create: clientData
     });
     res.json(client);
 };
