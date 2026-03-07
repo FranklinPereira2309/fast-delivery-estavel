@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { TableSession, Product, User, OrderItem, StoreStatus } from '../types';
 import { db } from '../api';
-import { X, Search, ShoppingCart, CheckCircle2, AlertCircle, Trash2, Plus, Minus, ArrowRight, LayoutGrid, RefreshCw, MessageSquare, Key } from 'lucide-react';
+import { X, Search, ShoppingCart, CheckCircle2, AlertCircle, Trash2, Plus, Minus, ArrowRight, LayoutGrid, RefreshCw, MessageSquare, Key, Eye, EyeOff } from 'lucide-react';
 import Modal from './Modal';
 import ClientSelector from './ClientSelector';
 
@@ -36,6 +36,7 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, user, onClose, onRef
     const [showTransfer, setShowTransfer] = useState(false);
     const [transferTarget, setTransferTarget] = useState<number | ''>('');
     const [showClientSelect, setShowClientSelect] = useState(false);
+    const [showPin, setShowPin] = useState(false);
 
     const actingWaiterId = resolvedWaiterId || user.waiterId || user.id;
 
@@ -299,10 +300,16 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, user, onClose, onRef
                         </div>
                         <h2 className="text-2xl font-black text-slate-900 tracking-tighter uppercase leading-none">Gerenciar Mesa</h2>
                         {table.pin && (
-                            <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 bg-slate-900 text-white rounded-xl shadow-lg shadow-slate-900/10">
+                            <button
+                                onClick={() => setShowPin(!showPin)}
+                                className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 bg-slate-900 text-white rounded-xl shadow-lg shadow-slate-900/10 active:scale-95 transition-all"
+                            >
                                 <Key size={12} className="text-blue-400" />
-                                <span className="text-[10px] font-black uppercase tracking-[0.2em]">PIN: {table.pin}</span>
-                            </div>
+                                <span className="text-[10px] font-black uppercase tracking-[0.2em]">
+                                    PIN: {showPin ? table.pin : '••••'}
+                                </span>
+                                {showPin ? <EyeOff size={12} className="text-slate-400" /> : <Eye size={12} className="text-slate-400" />}
+                            </button>
                         )}
                     </div>
                     <div className="flex gap-2">
