@@ -30,6 +30,11 @@ export const registerClient = async (req: ExpressRequest, res: ExpressResponse) 
         const hashedPassword = await bcrypt.hash('123', 10);
         const pin = Math.floor(1000 + Math.random() * 9000).toString();
 
+        const fullAddress = [
+            [street, addressNumber, complement].filter(Boolean).join(', '),
+            [neighborhood, city, state?.toUpperCase()].filter(Boolean).join(', ')
+        ].filter(Boolean).join(' - ');
+
         const newClient = await prisma.client.create({
             data: {
                 name,
@@ -43,7 +48,8 @@ export const registerClient = async (req: ExpressRequest, res: ExpressResponse) 
                 neighborhood,
                 city,
                 state,
-                complement
+                complement,
+                addresses: fullAddress ? [fullAddress] : []
             }
         });
 
@@ -121,6 +127,26 @@ export const updateClientProfile = async (req: ExpressRequest, res: ExpressRespo
         if (city) data.city = city;
         if (state) data.state = state;
         if (complement) data.complement = complement;
+
+        // Auto-generate addresses array if structured fields are provided and addresses is not explicitly sent
+        if (!addresses && (street || addressNumber || neighborhood || city || state)) {
+            const current = client;
+            const s = street || current.street;
+            const n = addressNumber || current.addressNumber;
+            const c = complement || current.complement;
+            const b = neighborhood || current.neighborhood;
+            const ci = city || current.city;
+            const st = state || current.state;
+
+            const fullAddress = [
+                [s, n, c].filter(Boolean).join(', '),
+                [b, ci, st?.toUpperCase()].filter(Boolean).join(', ')
+            ].filter(Boolean).join(' - ');
+
+            if (fullAddress) {
+                data.addresses = [fullAddress];
+            }
+        }
         if (password) data.password = await bcrypt.hash(password, 10);
 
         const updatedClient = await prisma.client.update({

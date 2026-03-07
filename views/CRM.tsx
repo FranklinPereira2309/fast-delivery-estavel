@@ -4,13 +4,30 @@ import { Client, User } from '../types';
 import { db } from '../services/db';
 import CustomAlert from '../components/CustomAlert';
 import { validateEmail, validateCPF, validateCNPJ, maskPhone, maskDocument, toTitleCase } from '../services/validationUtils';
-import { Eye, EyeOff, RefreshCw } from 'lucide-react';
+import { Eye, EyeOff, RefreshCw, MapPin } from 'lucide-react';
 
 interface CRMProps {
   currentUser: User;
 }
 
 const CRM: React.FC<CRMProps> = ({ currentUser }) => {
+  const formatClientAddress = (client: Client) => {
+    if (client.addresses && client.addresses.length > 0 && client.addresses[0]) {
+      return client.addresses[0];
+    }
+
+    // Fallback to structured fields
+    if (client.street) {
+      const parts = [
+        [client.street, client.addressNumber, client.complement].filter(Boolean).join(', '),
+        [client.neighborhood, client.city, client.state?.toUpperCase()].filter(Boolean).join(', ')
+      ].filter(Boolean).join(' - ');
+      return parts || 'Endereço incompleto';
+    }
+
+    return 'Nenhum endereço';
+  };
+
   const [clients, setClients] = useState<Client[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -316,7 +333,12 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
                     </div>
                   ) : <span className="text-xs text-slate-400 italic">Não gerado</span>}
                 </td>
-                <td className="px-6 py-4 text-sm text-slate-600 max-w-xs truncate">{client.addresses[0] || 'Nenhum endereço'}</td>
+                <td className="px-6 py-4 text-sm text-slate-600 max-w-xs truncate">
+                  <div className="flex items-center gap-2">
+                    {client.street && !client.addresses?.[0] && <MapPin className="w-3 h-3 text-amber-500" title="Endereço gerado dinamicamente" />}
+                    {formatClientAddress(client)}
+                  </div>
+                </td>
                 <td className="px-6 py-4">
                   <span className="bg-blue-50 text-blue-600 px-2 py-1 rounded-lg text-xs font-bold">
                     {client.totalOrders}
