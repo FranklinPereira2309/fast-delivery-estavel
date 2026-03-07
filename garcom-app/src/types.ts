@@ -33,8 +33,10 @@ export interface Product {
 }
 
 export interface OrderItem {
+    id?: string;
     uid: string;
     productId: string;
+    productName?: string;
     product?: Product;
     quantity: number;
     price: number;

@@ -49,6 +49,7 @@ const DirectOrderModal: React.FC<DirectOrderModalProps> = ({ user, onClose, onRe
         setCart(prev => [...prev, {
             uid: `item-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
             productId: product.id,
+            productName: product.name,
             product,
             quantity: 1,
             price: product.price
@@ -213,7 +214,7 @@ const DirectOrderModal: React.FC<DirectOrderModalProps> = ({ user, onClose, onRe
                                         <div key={item.uid} className="flex justify-between items-center bg-slate-50 p-3 rounded-2xl border border-slate-100">
                                             <div className="min-w-0 flex-1 mr-4">
                                                 <p className="text-[11px] font-black text-slate-800 uppercase truncate">
-                                                    {item.quantity}x {item.product?.name || 'Produto'}
+                                                    {item.quantity}x {item.productName || item.product?.name || 'Produto'}
                                                 </p>
                                             </div>
                                             <div className="flex items-center gap-3">
