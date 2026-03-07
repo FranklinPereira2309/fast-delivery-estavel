@@ -110,12 +110,16 @@ export const verifyTable = async (req: Request, res: Response) => {
                     status: 'available',
                     pin: pinToSet,
                     sessionToken: tokenToSet,
-                    startTime: startTimeToSet
+                    startTime: startTimeToSet,
+                    hasPendingDigital: false,
+                    pendingReviewItems: null
                 },
                 update: {
                     pin: pinToSet,
                     sessionToken: tokenToSet,
-                    startTime: startTimeToSet
+                    startTime: startTimeToSet,
+                    hasPendingDigital: false,
+                    pendingReviewItems: null
                 }
             });
 

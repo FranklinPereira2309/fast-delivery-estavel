@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import prisma from '../prisma';
 import { TableSession } from '@prisma/client';
 import { getIO } from '../socket';
+import crypto from 'crypto';
 
 const mapSessionResponse = (session: any) => {
     if (!session) return null;
@@ -194,6 +195,12 @@ export const saveTableSession = async (req: Request, res: Response) => {
             });
 
             // 7. Upsert TableSession with Linked Items
+            // NOVIDADE: Se o garçom está abrindo a mesa manualmente e ela não tem PIN, geramos um agora.
+            // Além disso, limpamos resquícios de "Digital (!)" (hasPendingDigital e pendingReviewItems)
+            // se o atendimento está sendo assumido/iniciado manualmente por um garçom.
+            const pinToSet = existingSession?.pin || Math.floor(1000 + Math.random() * 9000).toString();
+            const tokenToSet = existingSession?.sessionToken || crypto.randomBytes(32).toString('hex');
+
             const session = await tx.tableSession.upsert({
                 where: { tableNumber: tableNum },
                 update: {
@@ -201,6 +208,10 @@ export const saveTableSession = async (req: Request, res: Response) => {
                     startTime: actualStartTime,
                     clientId: clientId === 'ANONYMOUS' ? null : clientId, // TableSession allows null clientId
                     waiterId: waiterId,
+                    pin: pinToSet,
+                    sessionToken: tokenToSet,
+                    hasPendingDigital: false, // Limpa resquícios digitais
+                    pendingReviewItems: null,   // Limpa resquícios digitais
                     items: {
                         create: currentItems.map((item: any) => ({
                             ...(item.uid ? { id: item.uid } : {}),
@@ -218,6 +229,10 @@ export const saveTableSession = async (req: Request, res: Response) => {
                     ...sessionData,
                     startTime: actualStartTime,
                     tableNumber: tableNum,
+                    pin: pinToSet,
+                    sessionToken: tokenToSet,
+                    hasPendingDigital: false,
+                    pendingReviewItems: null,
                     items: {
                         create: currentItems.map((item: any) => ({
                             ...(item.uid ? { id: item.uid } : {}),
