@@ -2227,7 +2227,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                         <p className="text-[8px] font-bold text-blue-400 uppercase">Apenas Admin Master pode autorizar</p>
                       </div>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex flex-col sm:flex-row gap-2">
                       <input
                         type="password"
                         placeholder="Senha do Administrador"
@@ -2237,7 +2237,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                       />
                       <button
                         onClick={handleSystemPreview}
-                        className="px-6 bg-blue-600 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-blue-700 transition-all shadow-xl active:scale-95"
+                        className="w-full sm:w-auto px-6 py-4 sm:py-0 bg-blue-600 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-blue-700 transition-all shadow-xl active:scale-95 flex items-center justify-center"
                       >
                         GERAR
                       </button>
