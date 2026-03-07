@@ -4,7 +4,7 @@ import { Client, User } from '../types';
 import { db } from '../services/db';
 import CustomAlert from '../components/CustomAlert';
 import { validateEmail, validateCPF, validateCNPJ, maskPhone, maskDocument, toTitleCase } from '../services/validationUtils';
-import { Eye, EyeOff, RefreshCw, MapPin } from 'lucide-react';
+import { Eye, EyeOff, RefreshCw, MapPin, Save, X, Check } from 'lucide-react';
 
 interface CRMProps {
   currentUser: User;
@@ -392,17 +392,30 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
               <h3 className="text-lg sm:text-xl font-bold text-slate-800">
                 {editingClient ? 'Editar Cliente' : 'Cadastrar Novo Cliente'}
               </h3>
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-200 rounded-full transition-all"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="submit"
+                  form="client-form"
+                  disabled={isSubmitting}
+                  className={`p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-full transition-all ${isSubmitting ? 'opacity-70 cursor-not-allowed' : ''}`}
+                  title="Salvar Cliente"
+                >
+                  {isSubmitting ? (
+                    <RefreshCw className="h-6 w-6 animate-spin text-blue-600" />
+                  ) : (
+                    <Save className="h-6 w-6 text-blue-600" />
+                  )}
+                </button>
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-200 rounded-full transition-all"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
             </div>
 
-            <form onSubmit={handleSave} className="p-4 sm:p-6 space-y-4 max-h-[80vh] overflow-y-auto">
+            <form id="client-form" onSubmit={handleSave} className="p-4 sm:p-6 space-y-4 max-h-[80vh] overflow-y-auto">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className={`text-xs font-bold uppercase ${errors.name ? 'text-red-500' : 'text-slate-500'}`}>Nome Completo *</label>
@@ -556,29 +569,7 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
                 </div>
               </div>
 
-              <div className="pt-6 flex gap-3 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="flex-1 py-3 text-sm font-bold text-slate-500 hover:bg-slate-100 rounded-xl transition-all"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className={`flex-1 py-3 bg-blue-600 text-white text-sm font-bold rounded-xl shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all flex items-center justify-center gap-2 ${isSubmitting ? 'opacity-70 cursor-not-allowed' : ''}`}
-                >
-                  {isSubmitting ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      Salvando...
-                    </>
-                  ) : (
-                    'Salvar Cliente'
-                  )}
-                </button>
-              </div>
+              {/* Footer buttons removed as per request */}
             </form>
           </div>
         </div>
