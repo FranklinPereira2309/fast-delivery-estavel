@@ -683,14 +683,14 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
 
       {/* MODAL GESTÃO DE MESA SELECIONADA */}
       {selectedTable !== null && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-          <div className="bg-white rounded-[3rem] shadow-2xl w-full max-w-5xl h-[85vh] flex flex-col overflow-hidden animate-in zoom-in duration-200 border border-white/20">
-            <div className="p-8 border-b bg-slate-50 flex justify-between items-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-0 md:p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="bg-white rounded-none md:rounded-[3rem] shadow-2xl w-full max-w-5xl h-full md:h-[90vh] flex flex-col overflow-hidden animate-in zoom-in duration-200 border border-white/20">
+            <div className="p-4 md:p-8 border-b bg-slate-50 flex justify-between items-center shrink-0">
               <div className="flex items-center gap-6">
-                <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-white text-3xl font-black shadow-xl ${getTableStatus(selectedTable) === 'available' ? 'bg-emerald-500' : getTableStatus(selectedTable) === 'pending_digital' ? 'bg-[#C026D3]' : 'bg-red-600'}`}>{selectedTable}</div>
+                <div className={`w-12 h-12 md:w-16 md:h-16 rounded-xl md:rounded-2xl flex items-center justify-center text-white text-xl md:text-3xl font-black shadow-xl ${getTableStatus(selectedTable) === 'available' ? 'bg-emerald-500' : getTableStatus(selectedTable) === 'pending_digital' ? 'bg-[#C026D3]' : 'bg-red-600'}`}>{selectedTable}</div>
                 <div>
-                  <h3 className="text-2xl font-black text-slate-800 uppercase tracking-tighter">Painel da Mesa {selectedTable}</h3>
-                  <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">{getSessForTable(selectedTable)?.startTime ? `Aberta às ${new Date(getSessForTable(selectedTable)!.startTime).toLocaleTimeString()}` : 'Aguardando Atendimento'}</p>
+                  <h3 className="text-lg md:text-2xl font-black text-slate-800 uppercase tracking-tighter">Mesa {selectedTable}</h3>
+                  <p className="text-[9px] md:text-xs text-slate-400 font-bold uppercase tracking-widest">{getSessForTable(selectedTable)?.startTime ? `Aberta às ${new Date(getSessForTable(selectedTable)!.startTime).toLocaleTimeString()}` : 'Aguardando Atendimento'}</p>
                 </div>
               </div>
               <div className="flex items-center gap-4">
@@ -714,15 +714,15 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
               </div>
             </div>
 
-            <div className="flex flex-1 min-h-0">
-              <div className="w-24 bg-slate-100 border-r flex flex-col">
-                <button onClick={() => setActiveModalTab('LAUNCH')} className={`flex-1 flex flex-col items-center justify-center gap-1 transition-all ${activeModalTab === 'LAUNCH' ? 'bg-white text-blue-600 border-r-4 border-blue-600 shadow-inner' : 'text-slate-400 hover:bg-slate-200'}`}><Icons.Dashboard /><span className="text-[10px] font-black uppercase">Lançar</span></button>
-                <button onClick={() => setActiveModalTab('REMOVE')} className={`flex-1 flex flex-col items-center justify-center gap-1 transition-all ${activeModalTab === 'REMOVE' ? 'bg-white text-red-600 border-r-4 border-red-600 shadow-inner' : 'text-slate-400 hover:bg-slate-200'}`}><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg><span className="text-[10px] font-black uppercase">Estornar</span></button>
-                <button onClick={() => setActiveModalTab('CONSUMPTION')} className={`flex-1 flex flex-col items-center justify-center gap-1 transition-all ${activeModalTab === 'CONSUMPTION' ? 'bg-white text-indigo-600 border-r-4 border-indigo-600 shadow-inner' : 'text-slate-400 hover:bg-slate-200'}`}><Icons.View /><span className="text-[10px] font-black uppercase">Consumo</span></button>
-                <button onClick={() => setActiveModalTab('CHECKOUT')} className={`flex-1 flex flex-col items-center justify-center gap-1 transition-all ${activeModalTab === 'CHECKOUT' ? 'bg-white text-emerald-600 border-r-4 border-emerald-600 shadow-inner' : 'text-slate-400 hover:bg-slate-200'}`}><Icons.Print /><span className="text-[10px] font-black uppercase">Fechar</span></button>
+            <div className="flex flex-col md:flex-row flex-1 min-h-0">
+              <div className="flex md:flex-col w-full md:w-24 bg-slate-100 border-b md:border-b-0 md:border-r shrink-0">
+                <button onClick={() => setActiveModalTab('LAUNCH')} className={`flex-1 flex flex-col items-center justify-center py-3 md:py-0 gap-1 transition-all ${activeModalTab === 'LAUNCH' ? 'bg-white text-blue-600 border-b-4 md:border-b-0 md:border-r-4 border-blue-600 shadow-inner' : 'text-slate-400 hover:bg-slate-200'}`}><Icons.Dashboard /><span className="text-[8px] md:text-[10px] font-black uppercase">Lançar</span></button>
+                <button onClick={() => setActiveModalTab('REMOVE')} className={`flex-1 flex flex-col items-center justify-center py-3 md:py-0 gap-1 transition-all ${activeModalTab === 'REMOVE' ? 'bg-white text-red-600 border-b-4 md:border-b-0 md:border-r-4 border-red-600 shadow-inner' : 'text-slate-400 hover:bg-slate-200'}`}><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg><span className="text-[8px] md:text-[10px] font-black uppercase">Estornar</span></button>
+                <button onClick={() => setActiveModalTab('CONSUMPTION')} className={`flex-1 flex flex-col items-center justify-center py-3 md:py-0 gap-1 transition-all ${activeModalTab === 'CONSUMPTION' ? 'bg-white text-indigo-600 border-b-4 md:border-b-0 md:border-r-4 border-indigo-600 shadow-inner' : 'text-slate-400 hover:bg-slate-200'}`}><Icons.View /><span className="text-[8px] md:text-[10px] font-black uppercase">Consumo</span></button>
+                <button onClick={() => setActiveModalTab('CHECKOUT')} className={`flex-1 flex flex-col items-center justify-center py-3 md:py-0 gap-1 transition-all ${activeModalTab === 'CHECKOUT' ? 'bg-white text-emerald-600 border-b-4 md:border-b-0 md:border-r-4 border-emerald-600 shadow-inner' : 'text-slate-400 hover:bg-slate-200'}`}><Icons.Print /><span className="text-[8px] md:text-[10px] font-black uppercase">Fechar</span></button>
               </div>
 
-              <div className="flex-1 p-12 overflow-y-auto relative">
+              <div className="flex-1 p-4 md:p-12 overflow-y-auto relative">
                 {activeModalTab === 'LAUNCH' && (
                   <div className="space-y-8">
                     {getTableStatus(selectedTable) === 'billing' && (
@@ -836,7 +836,7 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
                 )}
 
                 {activeModalTab === 'CHECKOUT' && (
-                  <div className="flex flex-col items-center justify-center h-full">
+                  <div className="flex flex-col items-center py-4">
                     <div className="text-center mb-8"><p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Valor Total da Conta</p><h4 className="text-6xl font-black text-slate-900 tracking-tighter">R$ {(
                       (getSessForTable(selectedTable)?.items.reduce((acc, it) => acc + (it.price * it.quantity), 0) || 0) +
                       (settings.serviceFeeStatus ? ((getSessForTable(selectedTable)?.items.reduce((acc, it) => acc + (it.price * it.quantity), 0) || 0) * (settings.serviceFeePercentage || 10) / 100) : 0)
@@ -844,53 +844,57 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
                     <div className="w-full max-w-2xl bg-slate-50 p-8 rounded-[2rem] border border-slate-100 space-y-6">
                       <div className="flex items-center justify-between"><label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Identificação do Cliente</label><button onClick={() => { setIsUnregisteredClient(!isUnregisteredClient); setSelectedClient(null); setManualClientName(''); setManualClientPhone(''); setManualClientAddress(''); setManualClientCep(''); setClientSearch(''); setManualClientEmail(''); setManualClientDocument(''); }} className={`text-[9px] font-black uppercase px-2 py-1 rounded-lg transition-all ${isUnregisteredClient ? 'bg-blue-600 text-white shadow-md' : 'bg-slate-200 text-slate-500'}`}>{isUnregisteredClient ? 'Mudar para Base' : 'Cliente Avulso?'}</button></div>
                       {isUnregisteredClient ? (
-                        <div className="space-y-3 animate-in zoom-in-95">
-                          <div className="flex gap-2">
-                            <div className="flex-1 space-y-1">
+                        <div className="space-y-4 animate-in zoom-in-95">
+                          <div className="flex flex-col md:flex-row gap-4">
+                            <div className="flex-1 space-y-1.5">
                               <label className={`text-[9px] font-black uppercase tracking-widest ml-1 ${errors.manualClientName ? 'text-red-500' : 'text-slate-400'}`}>Nome Completo *</label>
                               <input
                                 type="text"
+                                className={`w-full p-4 md:p-5 bg-white border-2 rounded-2xl text-xs font-black outline-none focus:ring-4 focus:ring-blue-50 transition-all ${errors.manualClientName ? 'border-red-500 animate-shake' : 'border-slate-200'}`}
                                 placeholder="Nome do Cliente"
                                 value={manualClientName}
                                 onChange={e => {
                                   setManualClientName(e.target.value);
                                   if (errors.manualClientName) setErrors(prev => ({ ...prev, manualClientName: false }));
                                 }}
-                                className={`w-full p-4 bg-white border-2 rounded-2xl text-[11px] font-black outline-none focus:ring-4 focus:ring-blue-50 transition-all ${errors.manualClientName ? 'border-red-500 animate-shake' : 'border-slate-200'}`}
+                                className={`w-full p-4 md:p-5 bg-white border-2 rounded-2xl text-xs font-black outline-none focus:ring-4 focus:ring-blue-50 transition-all ${errors.manualClientName ? 'border-red-500 animate-shake' : 'border-slate-200'}`}
                               />
                             </div>
-                            <div className="w-1/3 space-y-1">
+                            <div className="w-full md:w-1/3 space-y-1.5">
                               <label className={`text-[9px] font-black uppercase tracking-widest ml-1 ${errors.manualClientPhone ? 'text-red-500' : 'text-slate-400'}`}>Telefone *</label>
                               <input
                                 type="text"
+                                className={`w-full p-4 md:p-5 bg-white border-2 rounded-2xl text-xs font-black outline-none focus:ring-4 focus:ring-blue-50 transition-all ${errors.manualClientPhone ? 'border-red-500 animate-shake' : 'border-slate-200'}`}
                                 placeholder="(00) 9 0000-0000"
                                 value={manualClientPhone}
                                 onChange={e => {
                                   setManualClientPhone(maskPhone(e.target.value));
                                   if (errors.manualClientPhone) setErrors(prev => ({ ...prev, manualClientPhone: false }));
                                 }}
-                                className={`w-full p-4 bg-white border-2 rounded-2xl text-[11px] font-black outline-none focus:ring-4 focus:ring-blue-50 transition-all ${errors.manualClientPhone ? 'border-red-500 animate-shake' : 'border-slate-200'}`}
+                                className={`w-full p-4 md:p-5 bg-white border-2 rounded-2xl text-xs font-black outline-none focus:ring-4 focus:ring-blue-50 transition-all ${errors.manualClientPhone ? 'border-red-500 animate-shake' : 'border-slate-200'}`}
                               />
                             </div>
                           </div>
-                          <div className="flex gap-2">
-                            <div className="flex-1 space-y-1">
+                          <div className="flex flex-col md:flex-row gap-4">
+                            <div className="flex-1 space-y-1.5">
                               <label className={`text-[9px] font-black uppercase tracking-widest ml-1 ${errors.manualClientEmail ? 'text-red-500' : 'text-slate-400'}`}>E-mail</label>
                               <input
                                 type="email"
+                                className={`w-full p-4 md:p-5 bg-white border-2 rounded-2xl text-xs font-black outline-none focus:ring-4 focus:ring-blue-50 transition-all ${errors.manualClientEmail ? 'border-red-500 animate-shake' : 'border-slate-200'}`}
                                 placeholder="Email"
                                 value={manualClientEmail}
                                 onChange={e => {
                                   setManualClientEmail(e.target.value);
                                   if (errors.manualClientEmail) setErrors(prev => ({ ...prev, manualClientEmail: false }));
                                 }}
-                                className={`w-full p-4 bg-white border-2 rounded-2xl text-[11px] font-black outline-none focus:ring-4 focus:ring-blue-50 transition-all ${errors.manualClientEmail ? 'border-red-500 animate-shake' : 'border-slate-200'}`}
+                                className={`w-full p-4 md:p-5 bg-white border-2 rounded-2xl text-xs font-black outline-none focus:ring-4 focus:ring-blue-50 transition-all ${errors.manualClientEmail ? 'border-red-500 animate-shake' : 'border-slate-200'}`}
                               />
                             </div>
-                            <div className="flex-1 space-y-1">
+                            <div className="flex-1 space-y-1.5">
                               <label className={`text-[9px] font-black uppercase tracking-widest ml-1 ${errors.manualClientDocument ? 'text-red-500' : 'text-slate-400'}`}>CPF / CNPJ</label>
                               <input
                                 type="text"
+                                className={`w-full p-4 md:p-5 bg-white border-2 rounded-2xl text-xs font-black outline-none focus:ring-4 focus:ring-blue-50 transition-all ${errors.manualClientDocument ? 'border-red-500 animate-shake' : 'border-slate-200'}`}
                                 placeholder="000.000.000-00"
                                 value={manualClientDocument}
                                 onChange={e => {
@@ -902,11 +906,12 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
                             </div>
                           </div>
                           <div className="space-y-4">
-                            <div className="flex gap-2">
-                              <div className="w-32 shrink-0 relative">
+                            <div className="flex flex-col md:flex-row gap-4">
+                              <div className="w-full md:w-32 shrink-0 relative">
                                 <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">CEP</label>
                                 <input
                                   type="text"
+                                  className={`w-full p-4 md:p-5 bg-white border border-slate-200 rounded-2xl text-xs font-black outline-none focus:ring-4 focus:ring-blue-50 transition-all ${isLoadingCep ? 'opacity-50' : ''}`}
                                   placeholder="00000000"
                                   maxLength={8}
                                   value={manualClientCep}
@@ -931,7 +936,7 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
                                       }
                                     }
                                   }}
-                                  className={`w-full p-4 bg-white border border-slate-200 rounded-2xl text-[11px] font-black outline-none focus:ring-4 focus:ring-blue-50 transition-all ${isLoadingCep ? 'opacity-50' : ''}`}
+                                  className={`w-full p-4 md:p-5 bg-white border border-slate-200 rounded-2xl text-xs font-black outline-none focus:ring-4 focus:ring-blue-50 transition-all ${isLoadingCep ? 'opacity-50' : ''}`}
                                 />
                                 {isLoadingCep && (
                                   <div className="absolute right-3 top-1/2 -translate-y-1/2 mt-2">
@@ -943,57 +948,57 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
                                 <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Logradouro</label>
                                 <input
                                   type="text"
+                                  className="w-full p-4 md:p-5 bg-white border border-slate-200 rounded-2xl text-xs font-black outline-none focus:ring-4 focus:ring-blue-50 transition-all"
                                   placeholder="Rua / Avenida"
                                   value={manualClientStreet}
                                   onChange={e => setManualClientStreet(e.target.value)}
-                                  className="w-full p-4 bg-white border border-slate-200 rounded-2xl text-[11px] font-black outline-none focus:ring-4 focus:ring-blue-50 transition-all"
                                 />
                               </div>
                             </div>
 
-                            <div className="flex gap-2">
-                              <div className="w-24 shrink-0">
+                            <div className="flex flex-col md:flex-row gap-4">
+                              <div className="w-full md:w-24 shrink-0">
                                 <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Número</label>
                                 <input
                                   type="text"
+                                  className="w-full p-4 md:p-5 bg-white border border-slate-200 rounded-2xl text-xs font-black outline-none focus:ring-4 focus:ring-blue-50 transition-all"
                                   placeholder="123"
                                   value={manualClientNumber}
                                   onChange={e => setManualClientNumber(e.target.value)}
-                                  className="w-full p-4 bg-white border border-slate-200 rounded-2xl text-[11px] font-black outline-none focus:ring-4 focus:ring-blue-50 transition-all"
                                 />
                               </div>
                               <div className="flex-1">
                                 <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Bairro</label>
                                 <input
                                   type="text"
+                                  className="w-full p-4 md:p-5 bg-white border border-slate-200 rounded-2xl text-xs font-black outline-none focus:ring-4 focus:ring-blue-50 transition-all"
                                   placeholder="Bairro"
                                   value={manualClientNeighborhood}
                                   onChange={e => setManualClientNeighborhood(e.target.value)}
-                                  className="w-full p-4 bg-white border border-slate-200 rounded-2xl text-[11px] font-black outline-none focus:ring-4 focus:ring-blue-50 transition-all"
                                 />
                               </div>
                             </div>
 
-                            <div className="flex gap-2">
+                            <div className="flex flex-col md:flex-row gap-4">
                               <div className="flex-1">
                                 <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Cidade</label>
                                 <input
                                   type="text"
+                                  className="w-full p-4 md:p-5 bg-white border border-slate-200 rounded-2xl text-xs font-black outline-none focus:ring-4 focus:ring-blue-50 transition-all"
                                   placeholder="Cidade"
                                   value={manualClientCity}
                                   onChange={e => setManualClientCity(e.target.value)}
-                                  className="w-full p-4 bg-white border border-slate-200 rounded-2xl text-[11px] font-black outline-none focus:ring-4 focus:ring-blue-50 transition-all"
                                 />
                               </div>
-                              <div className="w-16 shrink-0">
+                              <div className="w-full md:w-16 shrink-0">
                                 <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">UF</label>
                                 <input
                                   type="text"
+                                  className="w-full p-4 md:p-5 bg-white border border-slate-200 rounded-2xl text-xs font-black outline-none focus:ring-4 focus:ring-blue-50 transition-all"
                                   placeholder="SP"
                                   maxLength={2}
                                   value={manualClientState}
                                   onChange={e => setManualClientState(e.target.value.toUpperCase())}
-                                  className="w-full p-4 bg-white border border-slate-200 rounded-2xl text-[11px] font-black outline-none focus:ring-4 focus:ring-blue-50 transition-all"
                                 />
                               </div>
                             </div>
