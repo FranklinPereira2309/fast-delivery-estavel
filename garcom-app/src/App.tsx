@@ -119,12 +119,23 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
     fetchStatus();
     fetchOrders();
 
-    socket.on('tableStatusChanged', fetchData);
-    socket.on('newOrder', () => {
+    socket.on('tableStatusChanged', (data) => {
+      console.log('Real-time table update:', data);
+      fetchData();
+    });
+    socket.on('newOrder', (data) => {
+      console.log('Real-time new order:', data);
       fetchData();
       fetchOrders();
     });
-    socket.on('orderStatusUpdated', fetchData);
+    socket.on('orderStatusUpdated', (data) => {
+      console.log('Real-time order status update (legacy):', data);
+      fetchData();
+    });
+    socket.on('orderStatusChanged', (data) => {
+      console.log('Real-time order status change:', data);
+      fetchData();
+    });
     socket.on('store_status_changed', (status: StoreStatus) => setStoreStatus(status));
 
     const handleNewFeedback = (feedback: any) => {
