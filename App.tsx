@@ -55,6 +55,7 @@ const App: React.FC = () => {
   // Estados dos Alertas
   const [isResetAlertOpen, setIsResetAlertOpen] = useState(false);
   const [isSavedAlertOpen, setIsSavedAlertOpen] = useState(false);
+  const [resetPassword, setResetPassword] = useState('');
 
   useEffect(() => {
     const init = async () => {
@@ -87,7 +88,16 @@ const App: React.FC = () => {
   };
 
   const handleResetSystem = async () => {
+    if (!resetPassword) return;
+
+    const isValid = await db.verifyAdminPassword(resetPassword);
+    if (!isValid) {
+      alert("Senha de Admin Master incorreta!");
+      return;
+    }
+
     setIsResetAlertOpen(false);
+    setResetPassword('');
     await db.resetDatabase();
     // Limpar estado explicitamente e forçar refresh total para garantir que volte à tela de Admin Master
     setCurrentUser(null);
@@ -158,7 +168,15 @@ const App: React.FC = () => {
         message="Esta ação irá apagar TODOS os dados do sistema e restaurar os padrões de fábrica. Após confirmar, você precisará logar novamente como Admin Master."
         type="DANGER"
         onConfirm={handleResetSystem}
-        onCancel={() => setIsResetAlertOpen(false)}
+        onCancel={() => {
+          setIsResetAlertOpen(false);
+          setResetPassword('');
+        }}
+        showInput={true}
+        inputValue={resetPassword}
+        onInputChange={(e) => setResetPassword(e.target.value)}
+        inputPlaceholder="Senha do Admin Master"
+        inputType="password"
       />
       <CustomAlert
         isOpen={isSavedAlertOpen}
