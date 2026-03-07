@@ -12,7 +12,8 @@ const mapSessionResponse = (session: any) => {
             uid: item.id, // Ensure frontend gets 'uid'
             productName: item.product?.name || null,
             observations: item.observations || null
-        }))
+        })),
+        pin: session.pin || null
     };
 };
 
