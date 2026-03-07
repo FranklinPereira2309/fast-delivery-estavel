@@ -524,7 +524,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
             const newClient: Client = {
               id: editingClient?.id || `CLIENT-${Date.now()}`,
               name: toTitleCase(avulsoData.name),
-              phone: avulsoData.phone,
+              phone: avulsoData.phone.replace(/\D/g, ''),
               email: avulsoData.email || undefined,
               document: avulsoData.document || undefined,
               cep: avulsoData.cep || undefined,

@@ -240,7 +240,7 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
     const clientData: Client = {
       id: editingClient?.id || '', // Empty ID tells backend it's new
       name: toTitleCase(formData.name),
-      phone: formData.phone,
+      phone: formData.phone.replace(/\D/g, ''),
       email: formData.email || undefined,
       document: formData.document || undefined,
       cep: formData.cep || undefined,

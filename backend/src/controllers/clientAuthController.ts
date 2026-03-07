@@ -6,7 +6,9 @@ const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_delivery_fast';
 
 export const registerClient = async (req: ExpressRequest, res: ExpressResponse) => {
     try {
-        const { name, email, phone, password, cep, street, addressNumber, neighborhood, city, state, complement } = req.body;
+        let { name, email, phone, password, cep, street, addressNumber, neighborhood, city, state, complement } = req.body;
+
+        if (phone) phone = phone.replace(/\D/g, '');
 
         if (!name || !phone || !password) {
             return res.status(400).json({ message: 'Nome, celular e senha são obrigatórios.' });
@@ -95,7 +97,7 @@ export const loginClient = async (req: ExpressRequest, res: ExpressResponse) => 
 export const updateClientProfile = async (req: ExpressRequest, res: ExpressResponse) => {
     try {
         const id = req.params.id as string;
-        const { name, email, addresses, cep, street, addressNumber, neighborhood, city, state, complement, currentPassword, password } = req.body;
+        const { name, email, phone, addresses, cep, street, addressNumber, neighborhood, city, state, complement, currentPassword, password } = req.body;
 
         const client = await prisma.client.findUnique({
             where: { id }
@@ -119,6 +121,7 @@ export const updateClientProfile = async (req: ExpressRequest, res: ExpressRespo
         const data: any = {};
         if (name) data.name = name;
         if (email) data.email = email;
+        if (phone) data.phone = phone.replace(/\D/g, '');
         if (addresses) data.addresses = addresses;
         if (cep) data.cep = cep;
         if (street) data.street = street;

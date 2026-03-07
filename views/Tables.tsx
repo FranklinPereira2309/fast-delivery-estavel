@@ -514,7 +514,7 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
           const newClient: Client = {
             id: `CLIENT-${Date.now()}`,
             name: toTitleCase(manualClientName),
-            phone: manualClientPhone,
+            phone: manualClientPhone.replace(/\D/g, ''),
             email: manualClientEmail || undefined,
             document: manualClientDocument || undefined,
             cep: manualClientCep || undefined,

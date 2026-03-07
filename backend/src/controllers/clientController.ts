@@ -9,7 +9,10 @@ export const getAllClients = async (req: Request, res: Response) => {
 import bcrypt from 'bcryptjs';
 
 export const saveClient = async (req: Request, res: Response) => {
-    const data = req.body;
+    const data = { ...req.body };
+    if (data.phone) {
+        data.phone = data.phone.replace(/\D/g, '');
+    }
     let newPassword = undefined;
 
     // Check if client is new
