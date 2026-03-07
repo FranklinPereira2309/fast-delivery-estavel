@@ -22,6 +22,12 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess, initialUser }) => {
     const [loading, setLoading] = useState(false);
     const [loggedInUser, setLoggedInUser] = useState<User | null>(initialUser || null);
 
+    const handleLogout = () => {
+        const AUTH_KEY = 'delivery_fast_garcom_auth';
+        localStorage.removeItem(AUTH_KEY);
+        window.location.reload();
+    };
+
     React.useEffect(() => {
         if (initialUser && initialUser.mustChangePassword) {
             setEmail(initialUser.email);
@@ -255,6 +261,16 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess, initialUser }) => {
                             <button type="submit" disabled={loading} className="w-full py-5 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-[2rem] shadow-xl shadow-emerald-500/30 uppercase text-[11px] tracking-widest">
                                 {loading ? 'Salvando...' : 'Salvar Nova Senha'}
                             </button>
+
+                            {view === 'FORCE_RESET' && (
+                                <button
+                                    type="button"
+                                    onClick={handleLogout}
+                                    className="w-full text-slate-400 text-[10px] font-black uppercase tracking-widest hover:text-slate-600 transition-colors pt-2"
+                                >
+                                    Voltar para o Login
+                                </button>
+                            )}
                         </form>
                     )}
 
