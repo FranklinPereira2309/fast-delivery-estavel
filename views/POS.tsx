@@ -1113,21 +1113,21 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       {isClientModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
           <div className="bg-white w-[500px] max-w-[95vw] rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-100 flex flex-col max-h-[90vh]">
-            <div className="p-8 border-b border-slate-50 shrink-0">
-              <div className="flex justify-between items-center mb-6">
+            <div className="p-6 md:p-8 pb-4 border-b border-slate-50 shrink-0">
+              <div className="flex justify-between items-center mb-4">
                 <div>
-                  <h2 className="text-2xl font-black text-slate-800 uppercase tracking-tighter">Identificar Cliente</h2>
+                  <h2 className="text-xl font-black text-slate-800 uppercase tracking-tighter">Identificar Cliente</h2>
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Venda: {getFriendlySaleType(saleType)}</p>
                 </div>
                 <button
                   onClick={() => setIsClientModalOpen(false)}
-                  className="w-10 h-10 flex items-center justify-center bg-slate-100 rounded-full text-slate-400 hover:bg-red-50 hover:text-red-500 transition-all font-black text-xl"
+                  className="w-8 h-8 flex items-center justify-center bg-slate-100 rounded-full text-slate-400 hover:bg-red-50 hover:text-red-500 transition-all font-black text-lg"
                 >
                   ×
                 </button>
               </div>
 
-              <div className="flex gap-2 bg-slate-100 p-1.5 rounded-2xl mb-6">
+              <div className="flex gap-2 bg-slate-100 p-1.5 rounded-2xl">
                 <button
                   onClick={() => {
                     setIsAvulso(false);
@@ -1151,7 +1151,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
               </div>
             </div>
 
-            <div className="p-8 overflow-y-auto">
+            <div className="flex-1 p-8 pt-6 overflow-y-auto">
               {!isAvulso ? (
                 <div className="space-y-4">
                   <div className="relative">
@@ -1373,50 +1373,51 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                       </div>
                     </div>
                   )}
-
-                  <button
-                    onClick={() => {
-                      const newErrors: Record<string, boolean> = {};
-                      if (!avulsoData.name) newErrors.avulsoName = true;
-
-                      const cleanPhone = avulsoData.phone.replace(/\D/g, '');
-                      if ((saleType === SaleType.OWN_DELIVERY || saleType === SaleType.COUNTER) && cleanPhone.length < 11) {
-                        newErrors.avulsoPhone = true;
-                      } else if (cleanPhone.length > 0 && cleanPhone.length < 11) {
-                        newErrors.avulsoPhone = true;
-                      }
-
-                      if (avulsoData.email && !validateEmail(avulsoData.email)) newErrors.avulsoEmail = true;
-
-                      if (avulsoData.document) {
-                        const cleanDoc = avulsoData.document.replace(/\D/g, '');
-                        if (cleanDoc.length === 11) {
-                          if (!validateCPF(cleanDoc)) newErrors.avulsoDocument = true;
-                        } else if (cleanDoc.length === 14) {
-                          if (!validateCNPJ(cleanDoc)) newErrors.avulsoDocument = true;
-                        } else {
-                          newErrors.avulsoDocument = true;
-                        }
-                      }
-
-                      if (Object.keys(newErrors).length > 0) {
-                        setErrors(newErrors);
-                        return showAlert("Dados Inválidos", "Verifique os campos destacados em vermelho.", "DANGER");
-                      }
-
-                      setIsClientModalOpen(false);
-                      setErrors({});
-                    }}
-                    className="w-full py-5 bg-blue-600 hover:bg-blue-700 text-white rounded-3xl font-black uppercase tracking-widest shadow-xl shadow-blue-100 transition-all flex items-center justify-center gap-3"
-                  >
-                    Confirmar Identificação
-                    <Icons.View className="w-4 h-4" />
-                  </button>
                 </div>
               )}
             </div>
 
-            <div className="p-8 bg-slate-50 flex gap-4 shrink-0">
+            <div className="p-8 bg-slate-50 border-t flex flex-col gap-4 shrink-0">
+              {isAvulso && (
+                <button
+                  onClick={() => {
+                    const newErrors: Record<string, boolean> = {};
+                    if (!avulsoData.name) newErrors.avulsoName = true;
+
+                    const cleanPhone = avulsoData.phone.replace(/\D/g, '');
+                    if ((saleType === SaleType.OWN_DELIVERY || saleType === SaleType.COUNTER) && cleanPhone.length < 11) {
+                      newErrors.avulsoPhone = true;
+                    } else if (cleanPhone.length > 0 && cleanPhone.length < 11) {
+                      newErrors.avulsoPhone = true;
+                    }
+
+                    if (avulsoData.email && !validateEmail(avulsoData.email)) newErrors.avulsoEmail = true;
+
+                    if (avulsoData.document) {
+                      const cleanDoc = avulsoData.document.replace(/\D/g, '');
+                      if (cleanDoc.length === 11) {
+                        if (!validateCPF(cleanDoc)) newErrors.avulsoDocument = true;
+                      } else if (cleanDoc.length === 14) {
+                        if (!validateCNPJ(cleanDoc)) newErrors.avulsoDocument = true;
+                      } else {
+                        newErrors.avulsoDocument = true;
+                      }
+                    }
+
+                    if (Object.keys(newErrors).length > 0) {
+                      setErrors(newErrors);
+                      return showAlert("Dados Inválidos", "Verifique os campos destacados em vermelho.", "DANGER");
+                    }
+
+                    setIsClientModalOpen(false);
+                    setErrors({});
+                  }}
+                  className="w-full py-5 bg-blue-600 hover:bg-blue-700 text-white rounded-3xl font-black uppercase tracking-widest shadow-xl shadow-blue-100 transition-all flex items-center justify-center gap-3"
+                >
+                  Confirmar Identificação
+                  <Icons.View className="w-4 h-4" />
+                </button>
+              )}
               <button
                 onClick={() => {
                   setSelectedClient(null);
