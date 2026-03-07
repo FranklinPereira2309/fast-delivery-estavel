@@ -71,6 +71,22 @@ export const clientChatUnreadManager = {
     }
 };
 
+// Global Unread State Management - Digital Menu Feedbacks/Messages
+let hasUnreadFeedback = false;
+const feedbackSubscribers = new Set<(hasUnread: boolean) => void>();
+
+export const feedbackUnreadManager = {
+    getHasUnread: () => hasUnreadFeedback,
+    setUnread: (value: boolean) => {
+        hasUnreadFeedback = value;
+        feedbackSubscribers.forEach(cb => cb(hasUnreadFeedback));
+    },
+    subscribe: (callback: (hasUnread: boolean) => void) => {
+        feedbackSubscribers.add(callback);
+        return () => feedbackSubscribers.delete(callback);
+    }
+};
+
 
 // Initial listener for global unreads
 socket.on('new_message', (msg: any) => {
@@ -78,6 +94,11 @@ socket.on('new_message', (msg: any) => {
     if (msg.isFromDriver && msg.driverId) {
         chatUnreadManager.addUnread(msg.driverId);
     }
+});
+
+// Digital Menu Feedback
+socket.on('newFeedback', () => {
+    feedbackUnreadManager.setUnread(true);
 });
 
 // App Delivery Admin - Order Chat Unreads

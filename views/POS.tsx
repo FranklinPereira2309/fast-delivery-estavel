@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Product, OrderItem, SaleType, Order, OrderStatus, OrderStatusLabels, User, Client, DeliveryDriver, TableSession, CashSession, Receivable } from '../types';
 import { db, BusinessSettings } from '../services/db';
-import { socket } from '../services/socket';
+import { socket, feedbackUnreadManager } from '../services/socket';
 import { Icons, PLACEHOLDER_FOOD_IMAGE, formatImageUrl } from '../constants';
 import CustomAlert from '../components/CustomAlert';
 import { validateEmail, validateCPF, validateCNPJ, maskPhone, maskDocument, toTitleCase } from '../services/validationUtils';
@@ -119,23 +119,23 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       refreshAllData();
     };
 
-    const handleNewFeedback = (feedback: any) => {
-      console.log('WS: Novo feedback recebido no PDV!', feedback);
-      setFeedbacks(prev => [feedback, ...prev]);
-      setHasNewFeedback(true);
-    };
-
     socket.on('newOrder', handleRealtimeUpdate);
     socket.on('tableStatusChanged', handleRealtimeUpdate);
     socket.on('orderStatusChanged', handleRealtimeUpdate);
-    socket.on('newFeedback', handleNewFeedback);
+
+    const unsubscribeFeedbacks = feedbackUnreadManager.subscribe((hasUnread) => {
+      setHasNewFeedback(hasUnread);
+    });
+
+    // Initialize state
+    setHasNewFeedback(feedbackUnreadManager.getHasUnread());
 
     return () => {
       clearInterval(interval);
       socket.off('newOrder', handleRealtimeUpdate);
       socket.off('tableStatusChanged', handleRealtimeUpdate);
       socket.off('orderStatusChanged', handleRealtimeUpdate);
-      socket.off('newFeedback', handleNewFeedback);
+      unsubscribeFeedbacks();
     };
   }, []);
 
@@ -1358,7 +1358,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
               <button
                 onClick={() => {
                   setShowFeedbacks(true);
-                  setHasNewFeedback(false);
+                  feedbackUnreadManager.setUnread(false);
                 }}
                 className={`p-2 rounded-xl transition-all relative ${hasNewFeedback ? 'bg-indigo-600 text-white animate-moderate-blink shadow-lg' : 'bg-slate-200 text-slate-500 hover:bg-slate-300'}`}
                 title="Mensagens do Dia"

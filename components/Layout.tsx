@@ -1,11 +1,10 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Icons } from '../constants';
 import { db } from '../services/db';
-import { User, Order, OrderStatus, TableSession, SaleType } from '../types';
+import { User, Order, OrderStatus, TableSession, SaleType, BusinessSettings } from '../types';
 import { useDigitalAlert } from '../hooks/useDigitalAlert';
 import { audioAlert } from '../services/audioAlert';
-import { socket, chatUnreadManager, clientChatUnreadManager } from '../services/socket';
+import { socket, chatUnreadManager, clientChatUnreadManager, feedbackUnreadManager } from '../services/socket';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -26,7 +25,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
   const [shouldBlinkDeliveryAppChat, setShouldBlinkDeliveryAppChat] = useState(false);
   const [shouldBlinkPOSFeedback, setShouldBlinkPOSFeedback] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
-  const [settings, setSettings] = useState<any>(null);
+  const [settings, setSettings] = useState<BusinessSettings | null>(null);
   const { isAlerting } = useDigitalAlert();
   const lastOrdersMap = useRef<Record<string, { status: OrderStatus, itemCount: number }>>({});
   const isFirstRun = useRef(true);
@@ -165,16 +164,17 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
   }, [activeTab]);
 
   useEffect(() => {
-    const handleNewFeedback = () => {
-      if (activeTab !== 'pos') {
-        setShouldBlinkPOSFeedback(true);
+    const unsubscribe = feedbackUnreadManager.subscribe((hasUnread) => {
+      setShouldBlinkPOSFeedback(hasUnread);
+      if (hasUnread && activeTab !== 'pos') {
         audioAlert.play();
       }
-    };
-    socket.on('newFeedback', handleNewFeedback);
-    return () => {
-      socket.off('newFeedback', handleNewFeedback);
-    };
+    });
+
+    // Initialize state
+    setShouldBlinkPOSFeedback(feedbackUnreadManager.getHasUnread());
+
+    return () => unsubscribe();
   }, [activeTab]);
 
   useEffect(() => {
@@ -211,7 +211,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
     if (activeTab === 'sales-monitor') setShouldBlinkMonitor(false);
     if (activeTab === 'pos') {
       setShouldBlinkPOS(false);
-      setShouldBlinkPOSFeedback(false);
+      feedbackUnreadManager.setUnread(false);
     }
     if (activeTab === 'logistics') {
       setShouldBlinkLogistics(false);
