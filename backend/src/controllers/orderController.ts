@@ -769,8 +769,10 @@ export const updateOrderItems = async (req: Request, res: Response) => {
                 throw new Error('Não é permitido editar itens de entregas Delivery já concluídas.');
             }
 
-            // 1. Return old items to inventory
-            await handleInventoryImpact(tx, order.items, 'INCREMENT', id);
+            // 1. Return old items to inventory (if it was already impacting inventory)
+            if (order.status === 'DELIVERED') {
+                await handleInventoryImpact(tx, order.items, 'INCREMENT', id);
+            }
 
             // 2. Calculate new total
             const newTotal = items.reduce((sum: number, item: any) => sum + (parseFloat(item.price) * parseFloat(item.quantity)), 0) + (order.deliveryFee || 0);
@@ -794,8 +796,10 @@ export const updateOrderItems = async (req: Request, res: Response) => {
                 include: { items: { include: { product: true } } }
             });
 
-            // 4. Subtract new items from inventory
-            await handleInventoryImpact(tx, updatedOrder.items, 'DECREMENT', id);
+            // 4. Subtract new items from inventory (if it is currently impacting inventory)
+            if (order.status === 'DELIVERED') {
+                await handleInventoryImpact(tx, updatedOrder.items, 'DECREMENT', id);
+            }
 
             // 5. Update associated Receivable if it exists
             await tx.receivable.updateMany({

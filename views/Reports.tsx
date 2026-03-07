@@ -234,34 +234,49 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
             let totalOutros = 0;
             let totalFiado = 0;
 
+            const normalizePaymentMethod = (method: string): string => {
+                const m = method.toUpperCase();
+                if (m.includes('DINHEIRO') || m === 'CASH') return 'DINHEIRO';
+                if (m.includes('PIX')) return 'PIX';
+                if (m.includes('CRÉDITO') || m === 'CREDIT') return 'CRÉDITO';
+                if (m.includes('DÉBITO') || m === 'DEBIT') return 'DÉBITO';
+                if (m.includes('FIADO')) return 'FIADO';
+                return m;
+            };
+
             filteredOrders.forEach(o => {
-                const method = (o.paymentMethod || '').toUpperCase();
+                const rawMethod = (o.paymentMethod || '').toUpperCase();
                 const total = o.total || 0;
                 const split1 = o.splitAmount1 || 0;
                 const split2 = total - split1;
 
-                if (method.includes('+')) {
-                    const parts = method.split('+').map(p => p.trim());
+                if (rawMethod.includes('+')) {
+                    const parts = rawMethod.split('+').map(p => p.trim());
+
                     // Part 1
-                    if (parts[0].includes('DINHEIRO')) totalDinheiro += split1;
-                    else if (parts[0].includes('CRÉDITO')) totalCredito += split1;
-                    else if (parts[0].includes('DÉBITO')) totalDebito += split1;
-                    else if (parts[0].includes('PIX')) totalPix += split1;
-                    else if (parts[0].includes('FIADO')) totalFiado += split1;
+                    const m1 = normalizePaymentMethod(parts[0]);
+                    if (m1 === 'DINHEIRO') totalDinheiro += split1;
+                    else if (m1 === 'CRÉDITO') totalCredito += split1;
+                    else if (m1 === 'DÉBITO') totalDebito += split1;
+                    else if (m1 === 'PIX') totalPix += split1;
+                    else if (m1 === 'FIADO') totalFiado += split1;
                     else totalOutros += split1;
+
                     // Part 2
-                    if (parts[1].includes('DINHEIRO')) totalDinheiro += split2;
-                    else if (parts[1].includes('CRÉDITO')) totalCredito += split2;
-                    else if (parts[1].includes('DÉBITO')) totalDebito += split2;
-                    else if (parts[1].includes('PIX')) totalPix += split2;
-                    else if (parts[1].includes('FIADO')) totalFiado += split2;
+                    const m2 = normalizePaymentMethod(parts[1]);
+                    if (m2 === 'DINHEIRO') totalDinheiro += split2;
+                    else if (m2 === 'CRÉDITO') totalCredito += split2;
+                    else if (m2 === 'DÉBITO') totalDebito += split2;
+                    else if (m2 === 'PIX') totalPix += split2;
+                    else if (m2 === 'FIADO') totalFiado += split2;
                     else totalOutros += split2;
                 } else {
-                    if (method.includes('DINHEIRO')) totalDinheiro += total;
-                    else if (method.includes('CRÉDITO')) totalCredito += total;
-                    else if (method.includes('DÉBITO')) totalDebito += total;
-                    else if (method.includes('PIX')) totalPix += total;
-                    else if (method.includes('FIADO')) totalFiado += total;
+                    const m = normalizePaymentMethod(rawMethod);
+                    if (m === 'DINHEIRO') totalDinheiro += total;
+                    else if (m === 'CRÉDITO') totalCredito += total;
+                    else if (m === 'DÉBITO') totalDebito += total;
+                    else if (m === 'PIX') totalPix += total;
+                    else if (m === 'FIADO') totalFiado += total;
                     else totalOutros += total;
                 }
             });

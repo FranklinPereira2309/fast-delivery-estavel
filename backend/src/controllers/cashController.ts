@@ -62,37 +62,51 @@ const calculateSessionTotals = async (openedAt: Date) => {
     // Orders before the session opened (orphans)
     const orphanOrders = allOrdersOfDay.filter(o => o.createdAt < openedAt);
 
+    const normalizePaymentMethod = (method: string): string => {
+        const m = method.toUpperCase();
+        if (m.includes('DINHEIRO') || m === 'CASH') return 'DINHEIRO';
+        if (m.includes('PIX')) return 'PIX';
+        if (m.includes('CRÉDITO') || m === 'CREDIT') return 'CRÉDITO';
+        if (m.includes('DÉBITO') || m === 'DEBIT') return 'DÉBITO';
+        if (m.includes('FIADO')) return 'FIADO';
+        return m;
+    };
+
     const calc = (orderList: any[]) => {
         let cash = 0, pix = 0, credit = 0, debit = 0, others = 0, fiado = 0;
         orderList.forEach(order => {
-            const method = order.paymentMethod?.toUpperCase() || '';
+            const rawMethod = order.paymentMethod?.toUpperCase() || '';
             const total = order.total || 0;
             const split1 = order.splitAmount1 || 0;
             const split2 = total - split1;
 
-            if (method.includes('+')) {
-                const parts = method.split('+').map((p: any) => p.trim());
+            if (rawMethod.includes('+')) {
+                const parts = rawMethod.split('+').map((p: any) => p.trim());
+
                 // First part
-                if (parts[0].includes('DINHEIRO')) cash += split1;
-                else if (parts[0].includes('PIX')) pix += split1;
-                else if (parts[0].includes('CRÉDITO')) credit += split1;
-                else if (parts[0].includes('DÉBITO')) debit += split1;
-                else if (parts[0].includes('FIADO')) fiado += split1;
+                const method1 = normalizePaymentMethod(parts[0]);
+                if (method1 === 'DINHEIRO') cash += split1;
+                else if (method1 === 'PIX') pix += split1;
+                else if (method1 === 'CRÉDITO') credit += split1;
+                else if (method1 === 'DÉBITO') debit += split1;
+                else if (method1 === 'FIADO') fiado += split1;
                 else others += split1;
 
                 // Second part
-                if (parts[1].includes('DINHEIRO')) cash += split2;
-                else if (parts[1].includes('PIX')) pix += split2;
-                else if (parts[1].includes('CRÉDITO')) credit += split2;
-                else if (parts[1].includes('DÉBITO')) debit += split2;
-                else if (parts[1].includes('FIADO')) fiado += split2;
+                const method2 = normalizePaymentMethod(parts[1]);
+                if (method2 === 'DINHEIRO') cash += split2;
+                else if (method2 === 'PIX') pix += split2;
+                else if (method2 === 'CRÉDITO') credit += split2;
+                else if (method2 === 'DÉBITO') debit += split2;
+                else if (method2 === 'FIADO') fiado += split2;
                 else others += split2;
             } else {
-                if (method.includes('DINHEIRO')) cash += total;
-                else if (method.includes('PIX')) pix += total;
-                else if (method.includes('CRÉDITO')) credit += total;
-                else if (method.includes('DÉBITO')) debit += total;
-                else if (method.includes('FIADO')) fiado += total;
+                const method = normalizePaymentMethod(rawMethod);
+                if (method === 'DINHEIRO') cash += total;
+                else if (method === 'PIX') pix += total;
+                else if (method === 'CRÉDITO') credit += total;
+                else if (method === 'DÉBITO') debit += total;
+                else if (method === 'FIADO') fiado += total;
                 else others += total;
             }
         });
