@@ -17,13 +17,14 @@ export const registerClient = async (req: ExpressRequest, res: ExpressResponse) 
             where: {
                 OR: [
                     { phone },
-                    email ? { email } : {}
+                    (email && email.trim() !== '') ? { email } : {}
                 ]
             }
         });
 
         if (existingClient) {
-            return res.status(409).json({ message: 'Telefone ou e-mail já em uso. Por favor, substitua os dados informados ou efetue a recuperação de conta.' });
+            const field = existingClient.phone === phone ? 'Telefone' : 'E-mail';
+            return res.status(409).json({ message: `${field} já em uso. Por favor, substitua os dados informados ou efetue a recuperação de conta.` });
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);

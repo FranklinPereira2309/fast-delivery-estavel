@@ -16,10 +16,26 @@ export const saveClient = async (req: Request, res: Response) => {
     if (!data.id) {
         newPassword = await bcrypt.hash('123', 10);
     } else {
-        const existingClient = await prisma.client.findUnique({ where: { id: data.id } });
-        if (!existingClient) {
+        const existingById = await prisma.client.findUnique({ where: { id: data.id } });
+        if (!existingById) {
             newPassword = await bcrypt.hash('123', 10);
         }
+    }
+
+    // Validation: Duplicate phone or email
+    const duplicate = await prisma.client.findFirst({
+        where: {
+            OR: [
+                { phone: data.phone },
+                data.email ? { email: data.email } : {}
+            ],
+            NOT: data.id ? { id: data.id } : undefined
+        }
+    });
+
+    if (duplicate) {
+        const field = duplicate.phone === data.phone ? 'telefone' : 'e-mail';
+        return res.status(409).json({ message: `Este ${field} já está sendo utilizado por outro cliente.` });
     }
 
     const clientData = {
