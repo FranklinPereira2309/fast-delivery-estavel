@@ -1231,7 +1231,7 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
 
                         <button
                             onClick={() => generateSalesPDF(false)}
-                            className="mt-6 sm:mt-8 w-full py-4 sm:py-6 bg-slate-900 hover:bg-black text-white rounded-2xl sm:rounded-[2rem] font-black uppercase text-[10px] sm:text-xs tracking-widest shadow-xl transition-all flex items-center justify-center gap-3"
+                            className="mt-6 sm:mt-8 w-full py-4 sm:py-6 bg-slate-900 hover:bg-black text-white rounded-2xl sm:rounded-[2rem] font-black uppercase text-[10px] sm:text-xs tracking-widest shadow-xl transition-all flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 px-4 text-center whitespace-normal"
                         >
                             <Icons.Print />
                             Visualizar Relatório de Vendas
@@ -1314,7 +1314,7 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
                             {selectedClient && (
                                 <button
                                     onClick={() => generateClientOrdersPDF(false)}
-                                    className="w-full py-4 bg-purple-600 hover:bg-purple-700 text-white rounded-2xl sm:rounded-[2rem] font-black uppercase text-[10px] sm:text-xs tracking-widest shadow-xl transition-all flex items-center justify-center gap-3"
+                                    className="w-full py-4 bg-purple-600 hover:bg-purple-700 text-white rounded-2xl sm:rounded-[2rem] font-black uppercase text-[10px] sm:text-xs tracking-widest shadow-xl transition-all flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 px-4 text-center whitespace-normal"
                                 >
                                     <Icons.Dashboard />
                                     Ver Compras do Cliente
@@ -1323,7 +1323,7 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
 
                             <button
                                 onClick={() => generateClientsPDF(false)}
-                                className={`w-full py-4 ${selectedClient ? 'bg-slate-100 hover:bg-slate-200 text-slate-600' : 'bg-blue-600 hover:bg-blue-700 text-white'} rounded-2xl sm:rounded-[2rem] font-black uppercase text-[10px] sm:text-xs tracking-widest shadow-xl transition-all flex items-center justify-center gap-3`}
+                                className={`w-full py-4 ${selectedClient ? 'bg-slate-100 hover:bg-slate-200 text-slate-600' : 'bg-blue-600 hover:bg-blue-700 text-white'} rounded-2xl sm:rounded-[2rem] font-black uppercase text-[10px] sm:text-xs tracking-widest shadow-xl transition-all flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 px-4 text-center whitespace-normal`}
                             >
                                 <Icons.Print />
                                 {selectedClient ? 'Gerar Lista Geral' : 'Visualizar Lista de Clientes'}
@@ -1368,7 +1368,7 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
 
                         <button
                             onClick={() => generateDriversPDF(false)}
-                            className="mt-6 sm:mt-8 w-full py-4 sm:py-6 bg-slate-900 hover:bg-black text-white rounded-2xl sm:rounded-[2rem] font-black uppercase text-[10px] sm:text-xs tracking-widest shadow-xl transition-all flex items-center justify-center gap-3"
+                            className="mt-6 sm:mt-8 w-full py-4 sm:py-6 bg-slate-900 hover:bg-black text-white rounded-2xl sm:rounded-[2rem] font-black uppercase text-[10px] sm:text-xs tracking-widest shadow-xl transition-all flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 px-4 text-center whitespace-normal"
                         >
                             <Icons.Print />
                             Visualizar Relatório de Rotas
@@ -1402,7 +1402,7 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
 
                         <button
                             onClick={() => generateInventoryPDF(false)}
-                            className="mt-6 sm:mt-8 w-full py-4 sm:py-6 bg-slate-900 hover:bg-black text-white rounded-2xl sm:rounded-[2rem] font-black uppercase text-[10px] sm:text-xs tracking-widest shadow-xl transition-all flex items-center justify-center gap-3"
+                            className="mt-6 sm:mt-8 w-full py-4 sm:py-6 bg-slate-900 hover:bg-black text-white rounded-2xl sm:rounded-[2rem] font-black uppercase text-[10px] sm:text-xs tracking-widest shadow-xl transition-all flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 px-4 text-center whitespace-normal"
                         >
                             <Icons.Print />
                             Visualizar Relatório de Movimentação
@@ -1485,7 +1485,7 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
 
                         <button
                             onClick={() => generateCashPDF(false)}
-                            className="mt-6 sm:mt-8 w-full py-4 sm:py-6 bg-slate-900 hover:bg-black text-white rounded-2xl sm:rounded-[2rem] font-black uppercase text-[10px] sm:text-xs tracking-widest shadow-xl transition-all flex items-center justify-center gap-3"
+                            className="mt-6 sm:mt-8 w-full py-4 sm:py-6 bg-slate-900 hover:bg-black text-white rounded-2xl sm:rounded-[2rem] font-black uppercase text-[10px] sm:text-xs tracking-widest shadow-xl transition-all flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 px-4 text-center whitespace-normal"
                         >
                             <Icons.Print />
                             Visualizar Histórico de Caixa
@@ -1700,7 +1700,7 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
 
                         <button
                             onClick={() => generateReceivablesPDF(false)}
-                            className="mt-6 sm:mt-8 w-full py-4 sm:py-6 bg-slate-900 hover:bg-black text-white rounded-2xl sm:rounded-[2rem] font-black uppercase text-[10px] sm:text-xs tracking-widest shadow-xl transition-all flex items-center justify-center gap-3"
+                            className="mt-6 sm:mt-8 w-full py-4 sm:py-6 bg-slate-900 hover:bg-black text-white rounded-2xl sm:rounded-[2rem] font-black uppercase text-[10px] sm:text-xs tracking-widest shadow-xl transition-all flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 px-4 text-center whitespace-normal"
                         >
                             <Icons.Print />
                             Visualizar Relatório de Recebimentos
@@ -1765,7 +1765,7 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
                                     generateWaitersAnalyticalPDF(false);
                                 }
                             }}
-                            className="mt-6 sm:mt-8 w-full py-4 sm:py-6 bg-slate-900 hover:bg-black text-white rounded-2xl sm:rounded-[2rem] font-black uppercase text-[10px] sm:text-xs tracking-widest shadow-xl transition-all flex items-center justify-center gap-3"
+                            className="mt-6 sm:mt-8 w-full py-4 sm:py-6 bg-slate-900 hover:bg-black text-white rounded-2xl sm:rounded-[2rem] font-black uppercase text-[10px] sm:text-xs tracking-widest shadow-xl transition-all flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 px-4 text-center whitespace-normal"
                         >
                             <Icons.Print />
                             Visualizar Relatório de Comissões
