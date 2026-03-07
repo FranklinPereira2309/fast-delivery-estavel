@@ -19,6 +19,15 @@ const mapSessionResponse = (session: any) => {
 };
 
 export const getTableSessions = async (req: Request, res: Response) => {
+    // Sanity Sweep: Remove any sessions that are 'available' and have no pending digital items
+    // This prevents stale PINs from appearing when a table is officially "free" but the row persists.
+    await prisma.tableSession.deleteMany({
+        where: {
+            status: 'available',
+            hasPendingDigital: false
+        }
+    }).catch(e => console.error('Error during table session sanity sweep:', e));
+
     const sessions = await prisma.tableSession.findMany({
         include: {
             items: { include: { product: true } },
@@ -374,8 +383,8 @@ export const deleteTableSession = async (req: Request, res: Response) => {
             status: 'available',
             action: 'refresh',
             rejectionMessage: rejectionMessage,
-            sessionToken: session?.sessionToken || null,
-            pin: session?.pin || null
+            sessionToken: null,
+            pin: null
         });
     } catch (e) {
         console.error('Socket error emitting tableStatusChanged:', e);
@@ -478,8 +487,18 @@ export const transferTableSession = async (req: Request, res: Response) => {
 
         // Notify via sockets
         try {
-            getIO().emit('tableStatusChanged', { tableNumber: fromTable, status: 'available', action: 'refresh' });
-            getIO().emit('tableStatusChanged', { tableNumber: toTable, status: 'occupied', action: 'refresh' });
+            getIO().emit('tableStatusChanged', {
+                tableNumber: fromTable,
+                status: 'available',
+                action: 'refresh',
+                sessionToken: null,
+                pin: null
+            });
+            getIO().emit('tableStatusChanged', {
+                tableNumber: toTable,
+                status: 'occupied',
+                action: 'refresh'
+            });
         } catch (e) {
             console.error('Socket error during transfer:', e);
         }

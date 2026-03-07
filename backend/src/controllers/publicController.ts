@@ -112,14 +112,30 @@ export const verifyTable = async (req: Request, res: Response) => {
                     sessionToken: tokenToSet,
                     startTime: startTimeToSet,
                     hasPendingDigital: false,
-                    pendingReviewItems: null
+                    pendingReviewItems: null,
+                    clientName: null,
+                    clientPhone: null,
+                    clientEmail: null,
+                    clientDocument: null,
+                    clientId: null,
+                    clientAddress: null,
+                    clientCep: null,
+                    clientComplement: null
                 },
                 update: {
                     pin: pinToSet,
                     sessionToken: tokenToSet,
                     startTime: startTimeToSet,
                     hasPendingDigital: false,
-                    pendingReviewItems: null
+                    pendingReviewItems: null,
+                    clientName: null,
+                    clientPhone: null,
+                    clientEmail: null,
+                    clientDocument: null,
+                    clientId: null,
+                    clientAddress: null,
+                    clientCep: null,
+                    clientComplement: null
                 }
             });
 
