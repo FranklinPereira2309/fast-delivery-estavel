@@ -1119,12 +1119,54 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                   <h2 className="text-xl font-black text-slate-800 uppercase tracking-tighter">Identificar Cliente</h2>
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Venda: {getFriendlySaleType(saleType)}</p>
                 </div>
-                <button
-                  onClick={() => setIsClientModalOpen(false)}
-                  className="w-8 h-8 flex items-center justify-center bg-slate-100 rounded-full text-slate-400 hover:bg-red-50 hover:text-red-500 transition-all font-black text-lg"
-                >
-                  ×
-                </button>
+                <div className="flex items-center gap-2">
+                  {isAvulso && (
+                    <button
+                      onClick={() => {
+                        const newErrors: Record<string, boolean> = {};
+                        if (!avulsoData.name) newErrors.avulsoName = true;
+
+                        const cleanPhone = avulsoData.phone.replace(/\D/g, '');
+                        if ((saleType === SaleType.OWN_DELIVERY || saleType === SaleType.COUNTER) && cleanPhone.length < 11) {
+                          newErrors.avulsoPhone = true;
+                        } else if (cleanPhone.length > 0 && cleanPhone.length < 11) {
+                          newErrors.avulsoPhone = true;
+                        }
+
+                        if (avulsoData.email && !validateEmail(avulsoData.email)) newErrors.avulsoEmail = true;
+
+                        if (avulsoData.document) {
+                          const cleanDoc = avulsoData.document.replace(/\D/g, '');
+                          if (cleanDoc.length === 11) {
+                            if (!validateCPF(cleanDoc)) newErrors.avulsoDocument = true;
+                          } else if (cleanDoc.length === 14) {
+                            if (!validateCNPJ(cleanDoc)) newErrors.avulsoDocument = true;
+                          } else {
+                            newErrors.avulsoDocument = true;
+                          }
+                        }
+
+                        if (Object.keys(newErrors).length > 0) {
+                          setErrors(newErrors);
+                          return showAlert("Dados Inválidos", "Verifique os campos destacados em vermelho.", "DANGER");
+                        }
+
+                        setIsClientModalOpen(false);
+                        setErrors({});
+                      }}
+                      className="w-10 h-10 flex items-center justify-center bg-emerald-100 text-emerald-600 rounded-full hover:bg-emerald-600 hover:text-white transition-all shadow-lg shadow-emerald-100/50"
+                      title="Salvar Observações"
+                    >
+                      <Icons.Check className="w-5 h-5" />
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setIsClientModalOpen(false)}
+                    className="w-10 h-10 flex items-center justify-center bg-slate-100 rounded-full text-slate-400 hover:bg-red-50 hover:text-red-500 transition-all font-black text-lg"
+                  >
+                    ×
+                  </button>
+                </div>
               </div>
 
               <div className="flex gap-2 bg-slate-100 p-1.5 rounded-2xl">
@@ -1376,64 +1418,9 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                 </div>
               )}
             </div>
-
-            <div className="p-8 bg-slate-50 border-t flex flex-col gap-4 shrink-0">
-              {isAvulso && (
-                <button
-                  onClick={() => {
-                    const newErrors: Record<string, boolean> = {};
-                    if (!avulsoData.name) newErrors.avulsoName = true;
-
-                    const cleanPhone = avulsoData.phone.replace(/\D/g, '');
-                    if ((saleType === SaleType.OWN_DELIVERY || saleType === SaleType.COUNTER) && cleanPhone.length < 11) {
-                      newErrors.avulsoPhone = true;
-                    } else if (cleanPhone.length > 0 && cleanPhone.length < 11) {
-                      newErrors.avulsoPhone = true;
-                    }
-
-                    if (avulsoData.email && !validateEmail(avulsoData.email)) newErrors.avulsoEmail = true;
-
-                    if (avulsoData.document) {
-                      const cleanDoc = avulsoData.document.replace(/\D/g, '');
-                      if (cleanDoc.length === 11) {
-                        if (!validateCPF(cleanDoc)) newErrors.avulsoDocument = true;
-                      } else if (cleanDoc.length === 14) {
-                        if (!validateCNPJ(cleanDoc)) newErrors.avulsoDocument = true;
-                      } else {
-                        newErrors.avulsoDocument = true;
-                      }
-                    }
-
-                    if (Object.keys(newErrors).length > 0) {
-                      setErrors(newErrors);
-                      return showAlert("Dados Inválidos", "Verifique os campos destacados em vermelho.", "DANGER");
-                    }
-
-                    setIsClientModalOpen(false);
-                    setErrors({});
-                  }}
-                  className="w-full py-5 bg-blue-600 hover:bg-blue-700 text-white rounded-3xl font-black uppercase tracking-widest shadow-xl shadow-blue-100 transition-all flex items-center justify-center gap-3"
-                >
-                  Confirmar Identificação
-                  <Icons.View className="w-4 h-4" />
-                </button>
-              )}
-              <button
-                onClick={() => {
-                  setSelectedClient(null);
-                  setAvulsoData({ name: '', phone: '', email: '', document: '', cep: '', street: '', addressNumber: '', neighborhood: '', city: '', state: '', complement: '' });
-                  setIsAvulso(false);
-                  setIsClientModalOpen(false);
-                }}
-                className="flex-1 py-4 bg-white border border-slate-200 text-slate-500 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-red-50 hover:text-red-500 hover:border-red-100 transition-all"
-              >
-                Limpar / Voltar
-              </button>
-            </div>
           </div>
         </div>
-      )
-      }
+      )}
 
       <div className="flex gap-2 lg:gap-4 xl:gap-6 flex-1 min-h-0">
         <div className="w-64 lg:w-72 flex flex-col gap-2 lg:gap-4 shrink-0">
@@ -2646,56 +2633,58 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
 
 
       {/* MODAL DE MENSAGENS / FEEDBACK (SIDEBAR) */}
-      {showFeedbacks && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-end p-4 bg-slate-900/60 backdrop-blur-sm">
-          <div className="absolute inset-0" onClick={() => setShowFeedbacks(false)} />
-          <div className="bg-white rounded-[3rem] shadow-2xl w-full max-w-md h-[95vh] flex flex-col overflow-hidden animate-in slide-in-from-right duration-300 relative border-l border-white/20">
-            <div className="p-8 border-b bg-indigo-50 flex justify-between items-center">
-              <div>
-                <h3 className="text-xl font-black text-indigo-900 uppercase tracking-tighter">Mensagens dos Clientes</h3>
-                <p className="text-[9px] font-bold text-indigo-400 uppercase tracking-widest">Feedbacks e Sugestões do dia</p>
-              </div>
-              <button
-                onClick={() => setShowFeedbacks(false)}
-                className="p-3 bg-white text-slate-400 rounded-2xl hover:text-slate-600 transition-all shadow-sm"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="flex-1 overflow-y-auto p-6 space-y-4">
-              {feedbacks.length > 0 ? (
-                feedbacks.map((fb, i) => (
-                  <div key={fb.id || i} className="bg-slate-50 border border-slate-100 p-5 rounded-[2rem] shadow-sm animate-in fade-in slide-in-from-bottom-2" style={{ animationDelay: `${i * 50}ms` }}>
-                    <div className="flex justify-between items-start mb-3">
-                      <div className="flex items-center gap-2">
-                        <div className="bg-indigo-600 text-white w-8 h-8 rounded-xl flex items-center justify-center text-[10px] font-black">M{fb.tableNumber}</div>
-                        <span className="text-xs font-black text-slate-800 uppercase tracking-tight">{fb.name || 'Cliente Anônimo'}</span>
-                      </div>
-                      <span className="text-[8px] font-bold text-slate-400 uppercase">
-                        {fb.createdAt ? new Date(fb.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
-                      </span>
-                    </div>
-                    <p className="text-sm font-bold text-slate-600 leading-relaxed bg-white/50 p-4 rounded-2xl border border-slate-50 italic">
-                      "{fb.message}"
-                    </p>
-                  </div>
-                ))
-              ) : (
-                <div className="h-full flex flex-col items-center justify-center text-center p-12 space-y-4">
-                  <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center text-slate-300">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                    </svg>
-                  </div>
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Nenhuma mensagem recebida hoje.</p>
+      {
+        showFeedbacks && (
+          <div className="fixed inset-0 z-[120] flex items-center justify-end p-4 bg-slate-900/60 backdrop-blur-sm">
+            <div className="absolute inset-0" onClick={() => setShowFeedbacks(false)} />
+            <div className="bg-white rounded-[3rem] shadow-2xl w-full max-w-md h-[95vh] flex flex-col overflow-hidden animate-in slide-in-from-right duration-300 relative border-l border-white/20">
+              <div className="p-8 border-b bg-indigo-50 flex justify-between items-center">
+                <div>
+                  <h3 className="text-xl font-black text-indigo-900 uppercase tracking-tighter">Mensagens dos Clientes</h3>
+                  <p className="text-[9px] font-bold text-indigo-400 uppercase tracking-widest">Feedbacks e Sugestões do dia</p>
                 </div>
-              )}
+                <button
+                  onClick={() => setShowFeedbacks(false)}
+                  className="p-3 bg-white text-slate-400 rounded-2xl hover:text-slate-600 transition-all shadow-sm"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                {feedbacks.length > 0 ? (
+                  feedbacks.map((fb, i) => (
+                    <div key={fb.id || i} className="bg-slate-50 border border-slate-100 p-5 rounded-[2rem] shadow-sm animate-in fade-in slide-in-from-bottom-2" style={{ animationDelay: `${i * 50}ms` }}>
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="flex items-center gap-2">
+                          <div className="bg-indigo-600 text-white w-8 h-8 rounded-xl flex items-center justify-center text-[10px] font-black">M{fb.tableNumber}</div>
+                          <span className="text-xs font-black text-slate-800 uppercase tracking-tight">{fb.name || 'Cliente Anônimo'}</span>
+                        </div>
+                        <span className="text-[8px] font-bold text-slate-400 uppercase">
+                          {fb.createdAt ? new Date(fb.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
+                        </span>
+                      </div>
+                      <p className="text-sm font-bold text-slate-600 leading-relaxed bg-white/50 p-4 rounded-2xl border border-slate-50 italic">
+                        "{fb.message}"
+                      </p>
+                    </div>
+                  ))
+                ) : (
+                  <div className="h-full flex flex-col items-center justify-center text-center p-12 space-y-4">
+                    <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center text-slate-300">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                      </svg>
+                    </div>
+                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Nenhuma mensagem recebida hoje.</p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )
+      }
+    </div >
   );
 };
 
