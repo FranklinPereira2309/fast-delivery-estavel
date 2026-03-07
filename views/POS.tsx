@@ -1215,7 +1215,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                       />
                     </div>
                     <div className="w-1/3 space-y-1.5">
-                      <label className={`text-[9px] font-black uppercase tracking-widest ml-1 ${errors.avulsoPhone ? 'text-red-500' : 'text-slate-400'}`}>Telefone {saleType === SaleType.OWN_DELIVERY ? '*' : ''}</label>
+                      <label className={`text-[9px] font-black uppercase tracking-widest ml-1 ${errors.avulsoPhone ? 'text-red-500' : 'text-slate-400'}`}>Telefone {(saleType === SaleType.OWN_DELIVERY || saleType === SaleType.COUNTER) ? '*' : ''}</label>
                       <input
                         type="text"
                         className={`w-full p-4 bg-slate-50 border-2 rounded-2xl text-xs font-black outline-none focus:border-blue-500 transition-all ${errors.avulsoPhone ? 'border-red-500 animate-shake' : 'border-slate-100'}`}
@@ -1265,7 +1265,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                     </div>
                   </div>
 
-                  {(saleType === SaleType.OWN_DELIVERY || saleType === SaleType.THIRD_PARTY) && (
+                  {(saleType === SaleType.OWN_DELIVERY || saleType === SaleType.THIRD_PARTY || saleType === SaleType.COUNTER) && (
                     <div className="space-y-4">
                       <div className="flex gap-2">
                         <div className="w-32 shrink-0 relative">
@@ -1380,7 +1380,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                       if (!avulsoData.name) newErrors.avulsoName = true;
 
                       const cleanPhone = avulsoData.phone.replace(/\D/g, '');
-                      if (saleType === SaleType.OWN_DELIVERY && cleanPhone.length < 11) {
+                      if ((saleType === SaleType.OWN_DELIVERY || saleType === SaleType.COUNTER) && cleanPhone.length < 11) {
                         newErrors.avulsoPhone = true;
                       } else if (cleanPhone.length > 0 && cleanPhone.length < 11) {
                         newErrors.avulsoPhone = true;
