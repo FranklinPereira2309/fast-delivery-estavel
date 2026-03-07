@@ -5,9 +5,10 @@ import type { User } from '../types';
 
 interface LoginProps {
     onLoginSuccess: (user: User) => void;
+    initialUser?: User;
 }
 
-const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
+const Login: React.FC<LoginProps> = ({ onLoginSuccess, initialUser }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [recoveryCode, setRecoveryCode] = useState('');
@@ -19,7 +20,14 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
     const [error, setError] = useState('');
     const [view, setView] = useState<'LOGIN' | 'FORGOT' | 'RESET' | 'FORCE_RESET' | 'SHOW_CODE'>('LOGIN');
     const [loading, setLoading] = useState(false);
-    const [loggedInUser, setLoggedInUser] = useState<User | null>(null);
+    const [loggedInUser, setLoggedInUser] = useState<User | null>(initialUser || null);
+
+    React.useEffect(() => {
+        if (initialUser && initialUser.mustChangePassword) {
+            setEmail(initialUser.email);
+            setView('FORCE_RESET');
+        }
+    }, [initialUser]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -69,6 +77,21 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                 recoveryCode: (loggedInUser?.recoveryCode || recoveryCode).toUpperCase().trim(),
                 newPassword
             });
+
+            // Update local state and localStorage to prevent loop on reload
+            if (loggedInUser) {
+                const updatedUser = { ...loggedInUser, mustChangePassword: false };
+                setLoggedInUser(updatedUser);
+
+                // Update localStorage if it exists
+                const AUTH_KEY = 'delivery_fast_garcom_auth';
+                const saved = localStorage.getItem(AUTH_KEY);
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    parsed.user = updatedUser;
+                    localStorage.setItem(AUTH_KEY, JSON.stringify(parsed));
+                }
+            }
 
             setView('SHOW_CODE');
         } catch (err: any) {

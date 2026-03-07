@@ -595,8 +595,8 @@ const App: React.FC = () => {
     setUser(db.getCurrentUser());
   }, []);
 
-  if (!user) {
-    return <Login onLoginSuccess={setUser} />;
+  if (!user || user.mustChangePassword) {
+    return <Login onLoginSuccess={setUser} initialUser={user || undefined} />;
   }
 
   return <Dashboard user={user} />;
