@@ -16,8 +16,8 @@ const Register: React.FC = () => {
         city: '',
         state: '',
         complement: '',
-        password: '123',
-        confirmPassword: '123'
+        password: '',
+        confirmPassword: ''
     });
 
     const [isLoadingCep, setIsLoadingCep] = useState(false);
@@ -369,11 +369,6 @@ const Register: React.FC = () => {
                                 </button>
                             </div>
                         </div>
-                    </div>
-                    <div className="px-4 py-3 bg-indigo-50 border border-indigo-100 rounded-2xl">
-                        <p className="text-[10px] font-bold text-indigo-600 uppercase tracking-tight leading-relaxed">
-                            Nota: Por segurança, todos os novos cadastros iniciam com a senha padrão "123", que deverá ser alterada obrigatoriamente no seu primeiro login.
-                        </p>
                     </div>
 
                     <div className="pt-6">
