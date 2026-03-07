@@ -256,6 +256,7 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, user, onClose, onRef
 
     const total = table.items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
     const cartTotal = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+    const hasPendingItems = table.items.some(it => !it.isReady);
 
     let pendingItems: any[] = [];
     try {
@@ -366,11 +367,11 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, user, onClose, onRef
                     </button>
                     <button
                         onClick={() => {
-                            if (storeStatus?.status === 'offline') return;
+                            if (storeStatus?.status === 'offline' || table.status === 'billing') return;
                             setActiveTab('LAUNCH');
                         }}
-                        disabled={storeStatus?.status === 'offline'}
-                        className={`shrink-0 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'LAUNCH' ? 'bg-slate-900 text-white shadow-lg' : (storeStatus?.status === 'offline' ? 'bg-slate-50 text-slate-200' : 'bg-slate-50 text-slate-400 border border-slate-100')}`}
+                        disabled={storeStatus?.status === 'offline' || table.status === 'billing'}
+                        className={`shrink-0 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'LAUNCH' ? 'bg-slate-900 text-white shadow-lg' : (storeStatus?.status === 'offline' || table.status === 'billing' ? 'bg-slate-50 text-slate-200 cursor-not-allowed' : 'bg-slate-50 text-slate-400 border border-slate-100')}`}
                     >
                         Lançar
                     </button>
@@ -627,10 +628,10 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, user, onClose, onRef
                             </div>
                             <button
                                 onClick={() => handleCheckout()}
-                                disabled={table.status === 'billing' || loading || !isResponsible}
-                                className={`px-8 py-5 rounded-[2rem] font-black uppercase text-[11px] tracking-widest transition-all active:scale-95 shadow-xl ${table.status === 'billing' || !isResponsible ? 'bg-slate-50 text-slate-300 cursor-not-allowed border border-slate-100' : 'bg-blue-600 text-white shadow-blue-500/20 hover:bg-blue-700'}`}
+                                disabled={table.status === 'billing' || loading || !isResponsible || hasPendingItems}
+                                className={`px-8 py-5 rounded-[2rem] font-black uppercase text-[11px] tracking-widest transition-all active:scale-95 shadow-xl ${table.status === 'billing' || !isResponsible || hasPendingItems ? 'bg-slate-50 text-slate-300 cursor-not-allowed border border-slate-100' : 'bg-blue-600 text-white shadow-blue-500/20 hover:bg-blue-700'}`}
                             >
-                                {loading ? '...' : (table.status === 'billing' ? 'Conta Solicitada' : 'Solicitar Conta')}
+                                {loading ? '...' : (table.status === 'billing' ? 'Conta Solicitada' : (hasPendingItems ? 'Itens Pendentes' : 'Solicitar Conta'))}
                             </button>
                         </div>
                     )}
