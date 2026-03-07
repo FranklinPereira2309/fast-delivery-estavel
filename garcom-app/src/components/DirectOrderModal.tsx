@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Minus, Plus, X, Search, LayoutGrid, Check } from 'lucide-react';
+import { Minus, Plus, X, Search, LayoutGrid, Check, Trash2 } from 'lucide-react';
 import { db } from '../api';
 import type { User, Product, OrderItem, SaleType, StoreStatus } from '../types';
 import Modal from './Modal';
@@ -18,6 +18,7 @@ const DirectOrderModal: React.FC<DirectOrderModalProps> = ({ user, onClose, onRe
     const [products, setProducts] = useState<Product[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [cart, setCart] = useState<OrderItem[]>([]);
+    const [showCartItems, setShowCartItems] = useState(false);
     const [loading, setLoading] = useState(false);
     const [showClientSelect, setShowClientSelect] = useState(false);
     const [modal, setModal] = useState<{
@@ -112,7 +113,7 @@ const DirectOrderModal: React.FC<DirectOrderModalProps> = ({ user, onClose, onRe
     return (
         <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex flex-col animate-in fade-in duration-300" onClick={onClose}>
             <div
-                className="mt-auto bg-white w-full rounded-t-[3rem] max-h-[92vh] flex flex-col shadow-2xl animate-in slide-in-from-bottom duration-500 overflow-hidden relative"
+                className="mt-auto bg-white w-full rounded-t-[3rem] max-h-[92vh] flex flex-col shadow-2xl animate-in slide-in-from-bottom duration-500 overflow-hidden"
                 onClick={e => e.stopPropagation()}
             >
                 {/* Header */}
@@ -148,7 +149,7 @@ const DirectOrderModal: React.FC<DirectOrderModalProps> = ({ user, onClose, onRe
                 </div>
 
                 {/* Product List */}
-                <main className="flex-1 overflow-y-auto px-8 pb-40 hide-scrollbar">
+                <main className="flex-1 overflow-y-auto px-8 pb-4 hide-scrollbar">
                     <div className="space-y-3">
                         {filteredProducts.map(product => {
                             const cartItem = cart.find(p => p.productId === product.id);
@@ -202,27 +203,69 @@ const DirectOrderModal: React.FC<DirectOrderModalProps> = ({ user, onClose, onRe
                 </main>
 
                 {/* Footer Actions */}
-                <div className="absolute bottom-0 left-0 right-0 p-8 pt-4 bg-white/80 backdrop-blur-md border-t border-slate-50">
-                    <div className="flex justify-between items-center mb-4 px-4">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white font-black shadow-lg shadow-blue-500/30">
-                                {cart.reduce((s, i) => s + i.quantity, 0)}
+                <div className="p-8 pt-4 bg-white border-t border-slate-50 flex flex-col gap-4 z-10 shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
+                    {cart.length > 0 && (
+                        <div className="flex flex-col gap-4">
+                            {showCartItems && (
+                                <div className="space-y-2 mb-2 max-h-48 overflow-y-auto pr-2 animate-in slide-in-from-bottom-2 duration-200">
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1 mb-2">Itens no Lançamento</p>
+                                    {cart.map((item) => (
+                                        <div key={item.uid} className="flex justify-between items-center bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                                            <div className="min-w-0 flex-1 mr-4">
+                                                <p className="text-[11px] font-black text-slate-800 uppercase truncate">
+                                                    {item.quantity}x {item.product?.name || 'Produto'}
+                                                </p>
+                                            </div>
+                                            <div className="flex items-center gap-3">
+                                                <span className="text-[10px] font-black text-slate-900 tracking-tighter">R$ {(item.price * item.quantity).toFixed(2)}</span>
+                                                <button
+                                                    onClick={() => updateCartQuantity(item.productId, -item.quantity)}
+                                                    className="p-2 bg-red-50 text-red-500 rounded-xl active:scale-90 transition-transform"
+                                                >
+                                                    <Trash2 size={14} />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                            <div className="flex justify-between items-center px-4">
+                                <button
+                                    onClick={() => setShowCartItems(!showCartItems)}
+                                    className="flex items-center gap-3 active:scale-95 transition-transform"
+                                >
+                                    <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white font-black shadow-xl shadow-blue-500/30">
+                                        {cart.reduce((s, i) => s + i.quantity, 0)}
+                                    </div>
+                                    <div className="text-left">
+                                        <p className="text-xs font-black text-slate-900 uppercase tracking-tighter">Resumo</p>
+                                        <p className="text-[9px] font-bold text-blue-600 uppercase tracking-widest">{showCartItems ? 'Ocultar' : 'Ver Tudo'}</p>
+                                    </div>
+                                </button>
+                                <p className="text-2xl font-black text-blue-600 tracking-tighter">R$ {cartTotal.toFixed(2)}</p>
                             </div>
-                            <p className="text-xs font-black text-slate-900 uppercase tracking-tighter">Itens selecionados</p>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => setCart([])}
+                                    className="p-5 bg-slate-100 text-slate-400 rounded-[2rem] font-black uppercase text-[11px] tracking-widest active:scale-95 transition-all"
+                                    title="Limpar Tudo"
+                                >
+                                    <Trash2 size={20} />
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        if (storeStatus?.status === 'offline') return;
+                                        handleConfirmOrder();
+                                    }}
+                                    disabled={loading || storeStatus?.status === 'offline'}
+                                    className={`flex-1 py-5 bg-slate-900 text-white rounded-[2rem] font-black uppercase text-[11px] tracking-[0.2em] shadow-2xl active:scale-[0.98] transition-all flex items-center justify-center gap-3 ${storeStatus?.status === 'offline' ? 'grayscale opacity-50 cursor-not-allowed' : ''}`}
+                                >
+                                    <Check size={20} />
+                                    {loading ? 'Processando...' : (storeStatus?.status === 'offline' ? 'Loja Offline' : 'Prosseguir')}
+                                </button>
+                            </div>
                         </div>
-                        <p className="text-xl font-black text-blue-600 tracking-tighter">R$ {cartTotal.toFixed(2)}</p>
-                    </div>
-                    <button
-                        onClick={() => {
-                            if (storeStatus?.status === 'offline') return;
-                            handleConfirmOrder();
-                        }}
-                        disabled={cart.length === 0 || loading || storeStatus?.status === 'offline'}
-                        className={`w-full py-5 bg-slate-900 text-white rounded-[2rem] font-black uppercase text-[11px] tracking-[0.2em] shadow-2xl active:scale-[0.98] transition-all flex items-center justify-center gap-3 disabled:opacity-50 ${storeStatus?.status === 'offline' ? 'grayscale opacity-50 cursor-not-allowed' : ''}`}
-                    >
-                        <Check size={20} />
-                        {loading ? 'Processando...' : (storeStatus?.status === 'offline' ? 'Loja Offline' : 'Confirmar e Identificar')}
-                    </button>
+                    )}
                 </div>
 
                 <Modal

@@ -31,6 +31,7 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, user, onClose, onRef
     const [products, setProducts] = useState<Product[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [cart, setCart] = useState<OrderItem[]>([]);
+    const [showCartItems, setShowCartItems] = useState(false);
     const [loading, setLoading] = useState(false);
     const [showTransfer, setShowTransfer] = useState(false);
     const [transferTarget, setTransferTarget] = useState<number | ''>('');
@@ -285,7 +286,7 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, user, onClose, onRef
             onClick={onClose}
         >
             <div
-                className="mt-auto bg-white w-full rounded-t-[3rem] max-h-[92vh] flex flex-col shadow-2xl animate-in slide-in-from-bottom duration-500 overflow-hidden relative"
+                className="mt-auto bg-white w-full rounded-t-[3rem] max-h-[92vh] flex flex-col shadow-2xl animate-in slide-in-from-bottom duration-500 overflow-hidden"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
@@ -371,7 +372,7 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, user, onClose, onRef
                 </div>
 
                 {/* Content Area */}
-                <main className="flex-1 overflow-y-auto px-8 pb-32 hide-scrollbar">
+                <main className="flex-1 overflow-y-auto px-8 pb-4 hide-scrollbar">
                     {!isResponsible && (
                         <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-2xl flex items-center gap-3 animate-in fade-in zoom-in duration-300">
                             <AlertCircle className="text-red-500" size={20} />
@@ -544,26 +545,64 @@ const TableDetails: React.FC<TableDetailsProps> = ({ table, user, onClose, onRef
                 </main>
 
                 {/* Sticky Actions Bar */}
-                <div className="absolute bottom-0 left-0 right-0 p-8 pt-4 bg-white/80 backdrop-blur-md border-t border-slate-50 flex flex-col gap-4">
+                <div className="p-8 pt-4 bg-white border-t border-slate-50 flex flex-col gap-4 z-10 shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
                     {activeTab === 'LAUNCH' && cart.length > 0 && (
                         <div className="flex flex-col gap-4">
+                            {showCartItems && (
+                                <div className="space-y-2 mb-2 max-h-48 overflow-y-auto pr-2 animate-in slide-in-from-bottom-2 duration-200">
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1 mb-2">Itens no Pedido</p>
+                                    {cart.map((item) => (
+                                        <div key={item.uid} className="flex justify-between items-center bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                                            <div className="min-w-0 flex-1 mr-4">
+                                                <p className="text-[11px] font-black text-slate-800 uppercase truncate">
+                                                    {item.quantity}x {item.productName}
+                                                </p>
+                                            </div>
+                                            <div className="flex items-center gap-3">
+                                                <span className="text-[10px] font-black text-slate-900 tracking-tighter">R$ {(item.price * item.quantity).toFixed(2)}</span>
+                                                <button
+                                                    onClick={() => updateCartQuantity(item.productId, -item.quantity)}
+                                                    className="p-2 bg-red-50 text-red-500 rounded-xl active:scale-90 transition-transform"
+                                                >
+                                                    <Trash2 size={14} />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                             <div className="flex justify-between items-center px-4">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white font-black shadow-lg shadow-blue-500/30">
+                                <button
+                                    onClick={() => setShowCartItems(!showCartItems)}
+                                    className="flex items-center gap-3 active:scale-95 transition-transform"
+                                >
+                                    <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white font-black shadow-xl shadow-blue-500/30">
                                         {cart.reduce((s, i) => s + i.quantity, 0)}
                                     </div>
-                                    <p className="text-xs font-black text-slate-900 uppercase tracking-tighter">Itens no Carrinho</p>
-                                </div>
-                                <p className="text-xl font-black text-blue-600 tracking-tighter">R$ {cartTotal.toFixed(2)}</p>
+                                    <div className="text-left">
+                                        <p className="text-xs font-black text-slate-900 uppercase tracking-tighter">Carrinho</p>
+                                        <p className="text-[9px] font-bold text-blue-600 uppercase tracking-widest">{showCartItems ? 'Ocultar' : 'Ver Itens'}</p>
+                                    </div>
+                                </button>
+                                <p className="text-2xl font-black text-blue-600 tracking-tighter">R$ {cartTotal.toFixed(2)}</p>
                             </div>
-                            <button
-                                onClick={handleSave}
-                                disabled={loading || !isResponsible}
-                                className={`w-full py-5 bg-slate-900 text-white rounded-[2rem] font-black uppercase text-[11px] tracking-[0.2em] shadow-2xl active:scale-[0.98] transition-all flex items-center justify-center gap-3 ${!isResponsible ? 'grayscale opacity-50 cursor-not-allowed' : ''}`}
-                            >
-                                <ArrowRight size={20} />
-                                {loading ? 'Lançando...' : 'Confirmar Lançamento'}
-                            </button>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => setCart([])}
+                                    className="p-5 bg-slate-100 text-slate-400 rounded-[2rem] font-black uppercase text-[11px] tracking-widest active:scale-95 transition-all"
+                                    title="Limpar Carrinho"
+                                >
+                                    <Trash2 size={20} />
+                                </button>
+                                <button
+                                    onClick={handleSave}
+                                    disabled={loading || !isResponsible}
+                                    className={`flex-1 py-5 bg-slate-900 text-white rounded-[2rem] font-black uppercase text-[11px] tracking-[0.2em] shadow-2xl active:scale-[0.98] transition-all flex items-center justify-center gap-3 ${!isResponsible ? 'grayscale opacity-50 cursor-not-allowed' : ''}`}
+                                >
+                                    <ArrowRight size={20} />
+                                    {loading ? 'Lançando...' : 'Confirmar Lançamento'}
+                                </button>
+                            </div>
                         </div>
                     )}
 
