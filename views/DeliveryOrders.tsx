@@ -200,7 +200,7 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
         chatClients.set(o.id, { id: o.id, clientId: o.clientId, name: o.clientName || 'Cliente', orderId: o.id });
     });
 
-    if (isLoading && orders.length === 0) return <div className="p-20 text-center font-black uppercase text-slate-400 animate-pulse">Carregando Pedidos...</div>;
+
 
     return (
         <div className="p-6 h-full flex flex-col bg-slate-50 relative">
