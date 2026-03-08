@@ -276,16 +276,16 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
   );
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-slate-100 flex flex-col h-full overflow-hidden relative">
-      <div className="p-4 sm:p-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4">
+    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 flex flex-col h-full overflow-hidden relative">
+      <div className="p-4 sm:p-6 border-b border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4">
         <div className="relative flex-1 max-w-md">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
           <input
             type="text"
             placeholder="Buscar por nome ou telefone..."
-            className="w-full pl-10 pr-4 py-2 bg-slate-100 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all text-sm"
+            className="w-full pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all text-sm text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -293,7 +293,7 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
         <div className="flex gap-3">
           <button
             onClick={openAddModal}
-            className="flex-1 sm:flex-none justify-center bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 shadow-lg shadow-blue-200 transition-all"
+            className="flex-1 sm:flex-none justify-center bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 shadow-lg shadow-blue-200 dark:shadow-blue-900/20 transition-all active:scale-95"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -306,41 +306,41 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
       <div className="flex-1 overflow-x-auto">
         <table className="w-full text-left border-collapse min-w-[800px] sm:min-w-0">
           <thead>
-            <tr className="bg-slate-50 border-b border-slate-100">
-              <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Cliente</th>
-              <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Telefone</th>
-              <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">PIN (Acesso App)</th>
-              <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Endereço Principal</th>
-              <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Pedidos</th>
-              <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider text-right">Ações</th>
+            <tr className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800">
+              <th className="px-6 py-4 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Cliente</th>
+              <th className="px-6 py-4 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Telefone</th>
+              <th className="px-6 py-4 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">PIN (Acesso App)</th>
+              <th className="px-6 py-4 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Endereço Principal</th>
+              <th className="px-6 py-4 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Pedidos</th>
+              <th className="px-6 py-4 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider text-right">Ações</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
             {filtered.length > 0 ? filtered.map(client => (
-              <tr key={client.id} className="hover:bg-slate-50 transition-colors group">
+              <tr key={client.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors group">
                 <td className="px-6 py-4">
-                  <p className="font-bold text-slate-800">{client.name}</p>
-                  <p className="text-xs text-slate-400">Último: {client.lastOrderDate || '-'}</p>
+                  <p className="font-bold text-slate-800 dark:text-slate-200">{client.name}</p>
+                  <p className="text-xs text-slate-400 dark:text-slate-500">Último: {client.lastOrderDate || '-'}</p>
                 </td>
-                <td className="px-6 py-4 text-sm text-slate-600">{client.phone}</td>
-                <td className="px-6 py-4 text-sm text-slate-600">
+                <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">{client.phone}</td>
+                <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">
                   {client.pin ? (
                     <div className="flex items-center gap-2">
-                      <span className="font-mono bg-slate-100 px-2 py-1 rounded w-16 text-center select-all">{visiblePins[client.id] ? client.pin : '••••'}</span>
-                      <button onClick={() => togglePinVisibility(client.id)} className="text-slate-400 hover:text-indigo-600 transition-colors" title={visiblePins[client.id] ? "Ocultar PIN" : "Revelar PIN"}>
+                      <span className="font-mono bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded w-16 text-center select-all dark:text-slate-200">{visiblePins[client.id] ? client.pin : '••••'}</span>
+                      <button onClick={() => togglePinVisibility(client.id)} className="text-slate-400 dark:text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors" title={visiblePins[client.id] ? "Ocultar PIN" : "Revelar PIN"}>
                         {visiblePins[client.id] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
                     </div>
-                  ) : <span className="text-xs text-slate-400 italic">Não gerado</span>}
+                  ) : <span className="text-xs text-slate-400 dark:text-slate-500 italic">Não gerado</span>}
                 </td>
-                <td className="px-6 py-4 text-sm text-slate-600 max-w-xs truncate">
+                <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400 max-w-xs truncate">
                   <div className="flex items-center gap-2">
                     {client.street && !client.addresses?.[0] && <MapPin className="w-3 h-3 text-amber-500" title="Endereço gerado dinamicamente" />}
                     {formatClientAddress(client)}
                   </div>
                 </td>
                 <td className="px-6 py-4">
-                  <span className="bg-blue-50 text-blue-600 px-2 py-1 rounded-lg text-xs font-bold">
+                  <span className="bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 px-2 py-1 rounded-lg text-xs font-bold">
                     {client.totalOrders}
                   </span>
                 </td>
@@ -348,14 +348,14 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
                   <div className="flex justify-end gap-2">
                     <button
                       onClick={() => handleResetPin(client.id)}
-                      className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-all"
+                      className="p-2 text-slate-400 dark:text-slate-500 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-slate-800 rounded-lg transition-all"
                       title="Regerar PIN de Acesso"
                     >
                       <RefreshCw className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => openEditModal(client)}
-                      className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                      className="p-2 text-slate-400 dark:text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-slate-800 rounded-lg transition-all"
                       title="Editar"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -364,7 +364,7 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
                     </button>
                     <button
                       onClick={() => handleDelete(client.id)}
-                      className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                      className="p-2 text-slate-400 dark:text-slate-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-slate-800 rounded-lg transition-all"
                       title="Excluir"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -376,7 +376,7 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
               </tr>
             )) : (
               <tr>
-                <td colSpan={5} className="px-6 py-12 text-center text-slate-400 italic">
+                <td colSpan={5} className="px-6 py-12 text-center text-slate-400 dark:text-slate-500 italic">
                   Nenhum cliente encontrado.
                 </td>
               </tr>
@@ -387,9 +387,9 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
 
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-opacity">
-          <div className="bg-white rounded-[2rem] sm:rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200">
-            <div className="p-4 sm:p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-              <h3 className="text-lg sm:text-xl font-bold text-slate-800">
+          <div className="bg-white dark:bg-slate-900 rounded-[2rem] sm:rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200 border border-transparent dark:border-slate-800">
+            <div className="p-4 sm:p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-900">
+              <h3 className="text-lg sm:text-xl font-bold text-slate-800 dark:text-white">
                 {editingClient ? 'Editar Cliente' : 'Cadastrar Novo Cliente'}
               </h3>
               <div className="flex items-center gap-2">
@@ -408,21 +408,21 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
                 </button>
                 <button
                   onClick={() => setIsModalOpen(false)}
-                  className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-200 rounded-full transition-all"
+                  className="p-2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full transition-all"
                 >
                   <X className="h-6 w-6" />
                 </button>
               </div>
             </div>
 
-            <form id="client-form" onSubmit={handleSave} className="p-4 sm:p-6 space-y-4 max-h-[80vh] overflow-y-auto">
+            <form id="client-form" onSubmit={handleSave} className="p-4 sm:p-6 space-y-4 max-h-[80vh] overflow-y-auto custom-scrollbar">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className={`text-xs font-bold uppercase ${errors.name ? 'text-red-500' : 'text-slate-500'}`}>Nome Completo *</label>
+                  <label className={`text-xs font-bold uppercase ${errors.name ? 'text-red-500' : 'text-slate-500 dark:text-slate-400'}`}>Nome Completo *</label>
                   <input
                     type="text"
                     required
-                    className={`w-full p-3 bg-slate-100 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all font-medium ${errors.name ? 'ring-2 ring-red-500 animate-shake' : ''}`}
+                    className={`w-full p-3 bg-slate-100 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all font-medium text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 ${errors.name ? 'ring-2 ring-red-500 animate-shake' : ''}`}
                     placeholder="Ex: João da Silva"
                     value={formData.name}
                     onChange={(e) => {
@@ -433,11 +433,11 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
                 </div>
 
                 <div className="space-y-1">
-                  <label className={`text-xs font-bold uppercase ${errors.phone ? 'text-red-500' : 'text-slate-500'}`}>Telefone / WhatsApp *</label>
+                  <label className={`text-xs font-bold uppercase ${errors.phone ? 'text-red-500' : 'text-slate-500 dark:text-slate-400'}`}>Telefone / WhatsApp *</label>
                   <input
                     type="text"
                     required
-                    className={`w-full p-3 bg-slate-100 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all font-medium ${errors.phone ? 'ring-2 ring-red-500 animate-shake' : ''}`}
+                    className={`w-full p-3 bg-slate-100 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all font-medium text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 ${errors.phone ? 'ring-2 ring-red-500 animate-shake' : ''}`}
                     placeholder="Ex: (11) 9 9999-9999"
                     value={formData.phone}
                     onChange={(e) => {
@@ -448,10 +448,10 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
                 </div>
 
                 <div className="space-y-1">
-                  <label className={`text-xs font-bold uppercase ${errors.email ? 'text-red-500' : 'text-slate-500'}`}>Email</label>
+                  <label className={`text-xs font-bold uppercase ${errors.email ? 'text-red-500' : 'text-slate-500 dark:text-slate-400'}`}>Email</label>
                   <input
                     type="email"
-                    className={`w-full p-3 bg-slate-100 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all font-medium ${errors.email ? 'ring-2 ring-red-500 animate-shake' : ''}`}
+                    className={`w-full p-3 bg-slate-100 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all font-medium text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 ${errors.email ? 'ring-2 ring-red-500 animate-shake' : ''}`}
                     placeholder="Ex: joao@email.com"
                     value={formData.email}
                     onChange={(e) => {
@@ -462,10 +462,10 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
                 </div>
 
                 <div className="space-y-1">
-                  <label className={`text-xs font-bold uppercase ${errors.document ? 'text-red-500' : 'text-slate-500'}`}>CPF / CNPJ</label>
+                  <label className={`text-xs font-bold uppercase ${errors.document ? 'text-red-500' : 'text-slate-500 dark:text-slate-400'}`}>CPF / CNPJ</label>
                   <input
                     type="text"
-                    className={`w-full p-3 bg-slate-100 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all font-medium ${errors.document ? 'ring-2 ring-red-500 animate-shake' : ''}`}
+                    className={`w-full p-3 bg-slate-100 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all font-medium text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 ${errors.document ? 'ring-2 ring-red-500 animate-shake' : ''}`}
                     placeholder="000.000.000-00 ou 00.000.000/0000-00"
                     value={formData.document}
                     onChange={(e) => {
@@ -476,17 +476,17 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
                 </div>
               </div>
 
-              <div className="border-t border-slate-100 pt-4 mt-4">
-                <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Endereço de Entrega</h4>
+              <div className="border-t border-slate-100 dark:border-slate-800 pt-4 mt-4">
+                <h4 className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-4">Endereço de Entrega</h4>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-500 uppercase">CEP (8 dígitos)</label>
+                    <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">CEP (8 dígitos)</label>
                     <div className="relative">
                       <input
                         type="text"
                         maxLength={8}
-                        className={`w-full p-3 bg-slate-100 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all font-medium ${isLoadingCep ? 'opacity-50' : ''}`}
+                        className={`w-full p-3 bg-slate-100 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all font-medium text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 ${isLoadingCep ? 'opacity-50' : ''}`}
                         placeholder="00000000"
                         value={formData.cep}
                         onChange={handleCepChange}
@@ -500,10 +500,10 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
                   </div>
 
                   <div className="md:col-span-2 space-y-1">
-                    <label className="text-xs font-bold text-slate-500 uppercase">Logradouro (Rua)</label>
+                    <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Logradouro (Rua)</label>
                     <input
                       type="text"
-                      className="w-full p-3 bg-slate-100 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all font-medium"
+                      className="w-full p-3 bg-slate-100 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all font-medium text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500"
                       placeholder="Rua, Avenida, etc"
                       value={formData.logradouro}
                       onChange={(e) => setFormData({ ...formData, logradouro: e.target.value })}
@@ -513,20 +513,20 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-500 uppercase">Número</label>
+                    <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Número</label>
                     <input
                       type="text"
-                      className="w-full p-3 bg-slate-100 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all font-medium"
+                      className="w-full p-3 bg-slate-100 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all font-medium text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500"
                       placeholder="123"
                       value={formData.numero}
                       onChange={(e) => setFormData({ ...formData, numero: e.target.value })}
                     />
                   </div>
                   <div className="space-y-1 md:col-span-3">
-                    <label className="text-xs font-bold text-slate-500 uppercase">Complemento</label>
+                    <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Complemento</label>
                     <input
                       type="text"
-                      className="w-full p-3 bg-slate-100 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all font-medium"
+                      className="w-full p-3 bg-slate-100 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all font-medium text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500"
                       placeholder="Apto, Bloco, etc"
                       value={formData.complemento}
                       onChange={(e) => setFormData({ ...formData, complemento: e.target.value })}
@@ -536,31 +536,31 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-500 uppercase">Bairro</label>
+                    <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Bairro</label>
                     <input
                       type="text"
-                      className="w-full p-3 bg-slate-100 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all font-medium"
+                      className="w-full p-3 bg-slate-100 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all font-medium text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500"
                       placeholder="Bairro"
                       value={formData.bairro}
                       onChange={(e) => setFormData({ ...formData, bairro: e.target.value })}
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-500 uppercase">Cidade</label>
+                    <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Cidade</label>
                     <input
                       type="text"
-                      className="w-full p-3 bg-slate-100 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all font-medium"
+                      className="w-full p-3 bg-slate-100 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all font-medium text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500"
                       placeholder="Cidade"
                       value={formData.cidade}
                       onChange={(e) => setFormData({ ...formData, cidade: e.target.value })}
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-500 uppercase">UF / Estado</label>
+                    <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">UF / Estado</label>
                     <input
                       type="text"
                       maxLength={2}
-                      className="w-full p-3 bg-slate-100 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all font-medium uppercase"
+                      className="w-full p-3 bg-slate-100 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all font-medium uppercase text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500"
                       placeholder="SP"
                       value={formData.uf}
                       onChange={(e) => setFormData({ ...formData, uf: e.target.value })}

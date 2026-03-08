@@ -173,8 +173,8 @@ const Kitchen: React.FC = () => {
   return (
     <div className="space-y-6 rounded-[2rem] p-2 transition-all duration-300 relative" onClick={() => { if (isAlerting) dismissAlert(); }}>
       <div className="flex gap-6 mb-2">
-        <button onClick={() => setViewTab('FILA')} className={`pb-4 text-xl font-black uppercase transition-all ${viewTab === 'FILA' ? 'text-blue-600 border-b-4 border-blue-600' : 'text-slate-400 hover:text-slate-600'}`}>Fila de Produção</button>
-        <button onClick={() => setViewTab('HISTORICO')} className={`pb-4 text-xl font-black uppercase transition-all ${viewTab === 'HISTORICO' ? 'text-blue-600 border-b-4 border-blue-600' : 'text-slate-400 hover:text-slate-600'}`}>Histórico de Itens</button>
+        <button onClick={() => setViewTab('FILA')} className={`pb-4 text-xl font-black uppercase transition-all ${viewTab === 'FILA' ? 'text-blue-600 border-b-4 border-blue-600' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'}`}>Fila de Produção</button>
+        <button onClick={() => setViewTab('HISTORICO')} className={`pb-4 text-xl font-black uppercase transition-all ${viewTab === 'HISTORICO' ? 'text-blue-600 border-b-4 border-blue-600' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'}`}>Histórico de Itens</button>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
@@ -186,23 +186,23 @@ const Kitchen: React.FC = () => {
                 setAcknowledgedOrders(prev => new Set(prev).add(order.id));
               }
             }}
-            className={`bg-white rounded-[2rem] border-2 transition-all flex flex-col overflow-hidden shadow-sm hover:shadow-xl ${viewTab === 'FILA' ? 'border-blue-100' : 'border-slate-100 opacity-90'
-              } ${viewTab === 'FILA' && !acknowledgedOrders.has(order.id) ? 'animate-moderate-blink border-blue-400' : ''}`}
+            className={`bg-white dark:bg-slate-800 rounded-[2rem] border-2 transition-all flex flex-col overflow-hidden shadow-sm hover:shadow-xl ${viewTab === 'FILA' ? 'border-blue-100 dark:border-blue-900/30' : 'border-slate-100 dark:border-slate-700 opacity-90'
+              } ${viewTab === 'FILA' && !acknowledgedOrders.has(order.id) ? 'animate-moderate-blink border-blue-400 dark:border-blue-500' : ''}`}
           >
-            <div className={`flex flex-col ${viewTab === 'FILA' ? 'p-6 bg-blue-50' : 'p-4 bg-slate-50 border-b border-slate-100'}`}>
+            <div className={`flex flex-col ${viewTab === 'FILA' ? 'p-6 bg-blue-50 dark:bg-blue-900/20' : 'p-4 bg-slate-50 dark:bg-slate-900 border-b border-slate-100 dark:border-slate-700'}`}>
               <div className="flex justify-between items-start">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest truncate max-w-[150px]">
+                <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest truncate max-w-[150px]">
                   {order.type === SaleType.TABLE ? getWaiterName(order.waiterId) : (order.id.split('-')[1] || order.id)}
                 </p>
-                <span className="text-[10px] font-black bg-white px-3 py-1 rounded-full text-blue-600 shadow-sm uppercase">
+                <span className="text-[10px] font-black bg-white dark:bg-blue-900/40 px-3 py-1 rounded-full text-blue-600 dark:text-blue-400 shadow-sm uppercase">
                   {new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' }).format(new Date(order.createdAt))}
                 </span>
               </div>
               <div className="flex justify-between items-center mt-2">
-                <h4 className={`${viewTab === 'FILA' ? 'text-lg' : 'text-sm'} font-black text-slate-800 uppercase`}>
+                <h4 className={`${viewTab === 'FILA' ? 'text-lg' : 'text-sm'} font-black text-slate-800 dark:text-white uppercase`}>
                   {translateOrderType(order.type)} {order.tableNumber ? `- MESA ${order.tableNumber}` : ''}
                   {order.status === OrderStatus.REOPENED && (
-                    <span className="ml-2 inline-block px-2 py-0.5 bg-amber-100 text-amber-600 rounded-md text-[8px] font-black animate-pulse">REABERTA</span>
+                    <span className="ml-2 inline-block px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-md text-[8px] font-black animate-pulse">REABERTA</span>
                   )}
                 </h4>
                 {viewTab === 'HISTORICO' && (
@@ -211,19 +211,19 @@ const Kitchen: React.FC = () => {
                       e.stopPropagation();
                       setExpandedOrders(prev => ({ ...prev, [order.id]: !prev[order.id] }));
                     }}
-                    className="p-2 hover:bg-white rounded-xl transition-all text-slate-400 hover:text-blue-600 shadow-sm border border-transparent hover:border-slate-100"
+                    className="p-2 hover:bg-white dark:hover:bg-slate-800 rounded-xl transition-all text-slate-400 dark:text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 shadow-sm border border-transparent hover:border-slate-100 dark:hover:border-slate-700"
                   >
                     {expandedOrders[order.id] ? <Icons.ChevronUp className="w-4 h-4" /> : <Icons.ChevronDown className="w-4 h-4" />}
                   </button>
                 )}
               </div>
-              <p className={`${viewTab === 'FILA' ? 'text-[10px]' : 'text-[9px]'} font-bold text-slate-500 uppercase tracking-tight truncate`}>{order.clientName}</p>
+              <p className={`${viewTab === 'FILA' ? 'text-[10px]' : 'text-[9px]'} font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tight truncate`}>{order.clientName}</p>
             </div>
 
             <div className={`${viewTab === 'FILA' ? 'p-4 md:p-6' : 'p-3'} flex-1 flex flex-col min-h-0`}>
               {viewTab === 'FILA' && (
                 <div className="flex justify-between items-center mb-3">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                  <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                     Itens Pendentes
                   </p>
                 </div>
@@ -237,7 +237,7 @@ const Kitchen: React.FC = () => {
 
                     return (
                       <div key={item.uid} className="space-y-2 animate-in fade-in duration-300">
-                        <label className={`block cursor-pointer bg-white p-5 md:p-4 rounded-2xl border transition-all shadow-sm ${isSelected ? 'border-blue-600 ring-2 ring-blue-50' : 'border-slate-100 hover:border-blue-200'
+                        <label className={`block cursor-pointer bg-white dark:bg-slate-900/40 p-5 md:p-4 rounded-2xl border transition-all shadow-sm ${isSelected ? 'border-blue-600 dark:border-blue-500 ring-2 ring-blue-50 dark:ring-blue-900/20' : 'border-slate-100 dark:border-slate-700 hover:border-blue-200 dark:hover:border-blue-800'
                           }`}>
                           <div className="flex items-center gap-3">
                             {viewTab === 'FILA' && (
@@ -249,22 +249,22 @@ const Kitchen: React.FC = () => {
                               />
                             )}
                             <div className="flex-1">
-                              <p className="font-black text-slate-800 uppercase text-xs">
-                                <span className="text-blue-600 text-sm">{item.quantity}x</span> {product?.name}
+                              <p className="font-black text-slate-800 dark:text-slate-200 uppercase text-xs">
+                                <span className="text-blue-600 dark:text-blue-400 text-sm">{item.quantity}x</span> {product?.name}
                               </p>
                               {item.observations && (
-                                <p className="inline-block text-[10px] text-orange-600 font-bold bg-orange-100/50 px-2 py-1 rounded-md mt-1 mb-1 border border-orange-200">
+                                <p className="inline-block text-[10px] text-orange-600 dark:text-orange-400 font-bold bg-orange-100/50 dark:bg-orange-900/20 px-2 py-1 rounded-md mt-1 mb-1 border border-orange-200 dark:border-orange-900/30">
                                   Obs: {item.observations}
                                 </p>
                               )}
                               {product?.recipe && product.recipe.length > 0 && (
-                                <div className="mt-2 pl-2 border-l-2 border-slate-200">
-                                  <p className="text-[8px] font-black text-slate-400 uppercase mb-1">Ficha Técnica:</p>
+                                <div className="mt-2 pl-2 border-l-2 border-slate-200 dark:border-slate-700">
+                                  <p className="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase mb-1">Ficha Técnica:</p>
                                   <ul className="space-y-0.5">
                                     {product.recipe.map((rec, i) => {
                                       const inv = inventory.find(invIt => invIt.id === rec.inventoryItemId);
                                       return (
-                                        <li key={i} className="text-[9px] font-bold text-slate-500 uppercase list-inside list-disc">
+                                        <li key={i} className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase list-inside list-disc">
                                           {inv?.name || 'Ingrediente Desconhecido'} ({(rec.quantity * item.quantity).toFixed(2)}{inv?.unit})
                                         </li>
                                       );
@@ -273,7 +273,7 @@ const Kitchen: React.FC = () => {
                                 </div>
                               )}
                               {item.isReady && (
-                                <p className="text-[8px] text-emerald-500 font-black uppercase mt-2">Pronto em: {new Date(item.readyAt!).toLocaleTimeString()}</p>
+                                <p className="text-[8px] text-emerald-500 dark:text-emerald-400 font-black uppercase mt-2">Pronto em: {new Date(item.readyAt!).toLocaleTimeString()}</p>
                               )}
                             </div>
                           </div>
@@ -285,21 +285,21 @@ const Kitchen: React.FC = () => {
               )}
 
               {viewTab === 'FILA' && order.items.some(it => it.isReady) && (
-                <div className="pt-4 border-t border-slate-100">
-                  <p className="text-[8px] font-black text-slate-300 uppercase tracking-widest mb-2">Itens já saíram:</p>
+                <div className="pt-4 border-t border-slate-100 dark:border-slate-700">
+                  <p className="text-[8px] font-black text-slate-300 dark:text-slate-600 uppercase tracking-widest mb-2">Itens já saíram:</p>
                   {order.items.filter(it => it.isReady).map((it, i) => (
-                    <p key={it.uid} className="text-[10px] font-bold text-slate-300 line-through uppercase">{it.quantity}x {products.find(p => p.id === it.productId)?.name}</p>
+                    <p key={it.uid} className="text-[10px] font-bold text-slate-300 dark:text-slate-600 line-through uppercase">{it.quantity}x {products.find(p => p.id === it.productId)?.name}</p>
                   ))}
                 </div>
               )}
             </div>
 
             {viewTab === 'FILA' && (
-              <div className="p-4 md:p-6 bg-slate-50/50 border-t border-slate-100 shrink-0">
+              <div className="p-4 md:p-6 bg-slate-50/50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-700 shrink-0">
                 {!order.items.every(it => it.isReady) && (
                   <button
                     onClick={() => markSelectedAsReady(order)}
-                    className="w-full py-5 md:py-4 bg-blue-600 hover:bg-blue-700 text-white font-black text-sm md:text-xs uppercase rounded-2xl shadow-xl shadow-blue-200 transition-all active:scale-95 flex items-center justify-center gap-3"
+                    className="w-full py-5 md:py-4 bg-blue-600 hover:bg-blue-700 text-white font-black text-sm md:text-xs uppercase rounded-2xl shadow-xl shadow-blue-200 dark:shadow-blue-900/20 transition-all active:scale-95 flex items-center justify-center gap-3"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 md:h-4 md:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
                     Concluir Selecionados
@@ -309,9 +309,9 @@ const Kitchen: React.FC = () => {
             )}
           </div>
         )) : (
-          <div className="col-span-full py-20 text-center bg-white rounded-[3rem] border-2 border-dashed border-slate-100">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto text-slate-100 mb-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-            <p className="text-slate-400 font-black uppercase tracking-[0.2em] text-[10px]">Cozinha em dia! Sem pendências.</p>
+          <div className="col-span-full py-20 text-center bg-white dark:bg-slate-900 rounded-[3rem] border-2 border-dashed border-slate-100 dark:border-slate-800">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto text-slate-100 dark:text-slate-800 mb-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            <p className="text-slate-400 dark:text-slate-500 font-black uppercase tracking-[0.2em] text-[10px]">Cozinha em dia! Sem pendências.</p>
           </div>
         )}
       </div>

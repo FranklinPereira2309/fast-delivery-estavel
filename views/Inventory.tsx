@@ -159,35 +159,35 @@ const Inventory: React.FC = () => {
   return (
     <div className="flex flex-col h-full gap-6">
       <CustomAlert {...alertConfig} onConfirm={alertConfig.onConfirm} onCancel={alertConfig.onCancel} />
-      <div className="flex gap-4 border-b border-slate-200 shrink-0">
-        <button onClick={() => setViewMode('ESTOQUE')} className={`pb-4 px-2 font-bold transition-all ${viewMode === 'ESTOQUE' ? 'border-b-4 border-blue-600 text-blue-600' : 'text-slate-400 hover:text-slate-600'}`}>Estoque de Insumos</button>
-        <button onClick={() => setViewMode('CARDAPIO')} className={`pb-4 px-2 font-bold transition-all ${viewMode === 'CARDAPIO' ? 'border-b-4 border-blue-600 text-blue-600' : 'text-slate-400 hover:text-slate-600'}`}>Cardápio / Ficha Técnica</button>
+      <div className="flex gap-4 border-b border-slate-200 dark:border-slate-800 shrink-0">
+        <button onClick={() => setViewMode('ESTOQUE')} className={`pb-4 px-2 font-bold transition-all ${viewMode === 'ESTOQUE' ? 'border-b-4 border-blue-600 text-blue-600' : 'text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300'}`}>Estoque de Insumos</button>
+        <button onClick={() => setViewMode('CARDAPIO')} className={`pb-4 px-2 font-bold transition-all ${viewMode === 'CARDAPIO' ? 'border-b-4 border-blue-600 text-blue-600' : 'text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300'}`}>Cardápio / Ficha Técnica</button>
       </div>
 
       {viewMode === 'ESTOQUE' ? (
-        <div className="bg-white rounded-3xl shadow-sm border border-slate-100 flex-1 flex flex-col overflow-hidden">
-          <div className="p-6 border-b flex justify-between items-center bg-slate-50">
+        <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 flex-1 flex flex-col overflow-hidden">
+          <div className="p-6 border-b dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-900/50">
             <div>
-              <h3 className="font-black text-slate-800 uppercase tracking-tight text-lg">Insumos e Matéria-Prima</h3>
-              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Controle de volumes para produção.</p>
+              <h3 className="font-black text-slate-800 dark:text-white uppercase tracking-tight text-lg">Insumos e Matéria-Prima</h3>
+              <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest">Controle de volumes para produção.</p>
             </div>
-            <button onClick={() => openInvModal()} className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase shadow-lg shadow-blue-100 transition-all">+ Novo Insumo</button>
+            <button onClick={() => openInvModal()} className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase shadow-lg shadow-blue-100 dark:shadow-blue-900/20 transition-all">+ Novo Insumo</button>
           </div>
           <div className="overflow-y-auto flex-1">
             <table className="w-full text-left">
-              <thead><tr className="border-b text-slate-400 text-[10px] uppercase font-bold tracking-widest"><th className="px-6 py-4">Insumo</th><th className="px-6 py-4">Quantidade</th><th className="px-6 py-4">Status</th><th className="px-6 py-4 text-right">Ações</th></tr></thead>
-              <tbody className="divide-y">{inventory.length > 0 ? inventory.map(item => (
-                <tr key={item.id} className="hover:bg-slate-50 transition-colors group">
+              <thead><tr className="border-b dark:border-slate-800 text-slate-400 dark:text-slate-500 text-[10px] uppercase font-bold tracking-widest"><th className="px-6 py-4">Insumo</th><th className="px-6 py-4">Quantidade</th><th className="px-6 py-4">Status</th><th className="px-6 py-4 text-right">Ações</th></tr></thead>
+              <tbody className="divide-y dark:divide-slate-800">{inventory.length > 0 ? inventory.map(item => (
+                <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors group">
                   <td className="px-6 py-4">
-                    <p className="font-bold text-slate-700 uppercase text-xs">{item.name}</p>
-                    <p className="text-[9px] text-slate-400 font-mono">ID: {item.id}</p>
+                    <p className="font-bold text-slate-700 dark:text-slate-200 uppercase text-xs">{item.name}</p>
+                    <p className="text-[9px] text-slate-400 dark:text-slate-500 font-mono">ID: {item.id}</p>
                   </td>
-                  <td className="px-6 py-4 font-mono font-bold text-slate-600 text-xs">{item.quantity} {item.unit}</td>
+                  <td className="px-6 py-4 font-mono font-bold text-slate-600 dark:text-slate-400 text-xs">{item.quantity} {item.unit}</td>
                   <td className="px-6 py-4">
                     {item.quantity <= item.minStock ? (
-                      <span className="bg-red-50 text-red-600 px-2 py-1 rounded-md text-[9px] font-black uppercase">Crítico</span>
+                      <span className="bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2 py-1 rounded-md text-[9px] font-black uppercase">Crítico</span>
                     ) : (
-                      <span className="bg-emerald-50 text-emerald-600 px-2 py-1 rounded-md text-[9px] font-black uppercase">Normal</span>
+                      <span className="bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 px-2 py-1 rounded-md text-[9px] font-black uppercase">Normal</span>
                     )}
                   </td>
                   <td className="px-6 py-4 text-right">
@@ -198,7 +198,7 @@ const Inventory: React.FC = () => {
                   </td>
                 </tr>
               )) : (
-                <tr><td colSpan={4} className="px-6 py-12 text-center text-slate-400 text-xs italic">Nenhum insumo cadastrado.</td></tr>
+                <tr><td colSpan={4} className="px-6 py-12 text-center text-slate-400 dark:text-slate-500 text-xs italic">Nenhum insumo cadastrado.</td></tr>
               )}</tbody>
             </table>
           </div>
@@ -206,28 +206,28 @@ const Inventory: React.FC = () => {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 overflow-y-auto pb-10">
           {products.map(product => (
-            <div key={product.id} className="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 p-6 flex flex-col group hover:shadow-xl hover:border-blue-100 transition-all">
-              <div className="relative mb-4 bg-slate-50 rounded-3xl overflow-hidden aspect-square flex items-center justify-center border border-slate-50 group-hover:scale-[1.02] transition-transform">
+            <div key={product.id} className="bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-sm border border-slate-100 dark:border-slate-800 p-6 flex flex-col group hover:shadow-xl hover:border-blue-100 dark:hover:border-blue-900 transition-all">
+              <div className="relative mb-4 bg-slate-50 dark:bg-slate-800 rounded-3xl overflow-hidden aspect-square flex items-center justify-center border border-slate-50 dark:border-slate-800 group-hover:scale-[1.02] transition-transform">
                 <img src={formatImageUrl(product.imageUrl)} onError={e => e.currentTarget.src = PLACEHOLDER_FOOD_IMAGE} className="w-full h-full object-contain" />
               </div>
-              <h4 className="font-black text-slate-800 text-sm uppercase mb-1 h-10 line-clamp-2 leading-tight">{product.name}</h4>
-              <p className="text-lg font-black text-blue-600 mb-6">R$ {product.price.toFixed(2)}</p>
+              <h4 className="font-black text-slate-800 dark:text-white text-sm uppercase mb-1 h-10 line-clamp-2 leading-tight">{product.name}</h4>
+              <p className="text-lg font-black text-blue-600 dark:text-blue-500 mb-6">R$ {product.price.toFixed(2)}</p>
               <div className="flex gap-1.5">
-                <button onClick={() => openProdModal(product)} className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-2xl text-[9px] font-black uppercase transition-all flex items-center justify-center gap-1.5" title="Editar">
+                <button onClick={() => openProdModal(product)} className="flex-1 py-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-2xl text-[9px] font-black uppercase transition-all flex items-center justify-center gap-1.5" title="Editar">
                   <Icons.Edit className="w-3.5 h-3.5 flex-shrink-0" />
                   <span className="truncate">Editar</span>
                 </button>
-                <button onClick={() => { setEditingProduct(product); setTempRecipe(product.recipe || []); setIsRecipeModalOpen(true); }} className="flex-1 py-3 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-2xl text-[9px] font-black uppercase transition-all flex items-center justify-center gap-1.5" title="Ficha Técnica">
+                <button onClick={() => { setEditingProduct(product); setTempRecipe(product.recipe || []); setIsRecipeModalOpen(true); }} className="flex-1 py-3 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-600 dark:text-blue-400 rounded-2xl text-[9px] font-black uppercase transition-all flex items-center justify-center gap-1.5" title="Ficha Técnica">
                   <Icons.View className="w-3.5 h-3.5 flex-shrink-0" />
                   <span className="truncate">Ficha</span>
                 </button>
-                <button onClick={() => deleteProd(product.id)} className="w-12 py-3 bg-red-50 hover:bg-red-100 text-red-600 rounded-2xl transition-all flex items-center justify-center flex-shrink-0" title="Excluir">
+                <button onClick={() => deleteProd(product.id)} className="w-12 py-3 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 rounded-2xl transition-all flex items-center justify-center flex-shrink-0" title="Excluir">
                   <Icons.Delete className="w-4 h-4" />
                 </button>
               </div>
             </div>
           ))}
-          <button onClick={() => openProdModal()} className="border-2 border-dashed border-slate-200 rounded-[2.5rem] flex flex-col items-center justify-center h-full min-h-[300px] text-slate-400 font-black uppercase gap-2 hover:bg-slate-50 hover:border-blue-200 hover:text-blue-400 transition-all text-[10px] tracking-widest">
+          <button onClick={() => openProdModal()} className="border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-[2.5rem] flex flex-col items-center justify-center h-full min-h-[300px] text-slate-400 dark:text-slate-500 font-black uppercase gap-2 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:border-blue-200 dark:hover:border-blue-900 hover:text-blue-400 transition-all text-[10px] tracking-widest">
             <span className="text-3xl">+</span>
             Adicionar Produto
           </button>
@@ -237,20 +237,22 @@ const Inventory: React.FC = () => {
       {/* MODAL INSUMO */}
       {isInvModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-          <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in duration-200">
-            <div className="p-8 border-b border-slate-50 bg-slate-50 flex justify-between items-center">
-              <h3 className="text-xl font-black text-slate-800 uppercase tracking-tighter">{editingItem ? 'Editar Insumo' : 'Novo Insumo'}</h3>
-              <button onClick={() => setIsInvModalOpen(false)} className="p-2 text-slate-400 hover:text-slate-600"><svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>
+          <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in duration-200 border border-transparent dark:border-slate-800">
+            <div className="p-8 border-b border-slate-50 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 flex justify-between items-center">
+              <h3 className="text-xl font-black text-slate-800 dark:text-white uppercase tracking-tighter">{editingItem ? 'Editar Insumo' : 'Novo Insumo'}</h3>
+              <button onClick={() => setIsInvModalOpen(false)} className="p-2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
+                <Icons.Close className="h-6 w-6" />
+              </button>
             </div>
             <form onSubmit={saveInvItem} className="p-10 space-y-6">
               <div className="space-y-1">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nome do Insumo</label>
-                <input type="text" required value={invFormData.name} onChange={e => setInvFormData({ ...invFormData, name: e.target.value })} className="w-full p-4 bg-slate-100 border-none rounded-2xl focus:ring-2 focus:ring-blue-500 font-bold text-sm" placeholder="Ex: Pão Brioche" />
+                <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Nome do Insumo</label>
+                <input type="text" required value={invFormData.name} onChange={e => setInvFormData({ ...invFormData, name: e.target.value })} className="w-full p-4 bg-slate-100 dark:bg-slate-800 border-none rounded-2xl focus:ring-2 focus:ring-blue-500 font-bold text-sm text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600" placeholder="Ex: Pão Brioche" />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Unidade</label>
-                  <select value={invFormData.unit} onChange={e => setInvFormData({ ...invFormData, unit: e.target.value as UnitType })} className="w-full p-4 bg-slate-100 border-none rounded-2xl focus:ring-2 focus:ring-blue-500 font-bold text-sm">
+                  <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Unidade</label>
+                  <select value={invFormData.unit} onChange={e => setInvFormData({ ...invFormData, unit: e.target.value as UnitType })} className="w-full p-4 bg-slate-100 dark:bg-slate-800 border-none rounded-2xl focus:ring-2 focus:ring-blue-500 font-bold text-sm text-slate-800 dark:text-white">
                     <option value="G">Grama (g)</option>
                     <option value="ML">Mililitro (ml)</option>
                     <option value="UN">Unidade (un)</option>
@@ -259,21 +261,21 @@ const Inventory: React.FC = () => {
                   </select>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Estoque Atual</label>
-                  <input type="number" required step="0.01" value={invFormData.quantity} onChange={e => setInvFormData({ ...invFormData, quantity: parseFloat(e.target.value) })} className="w-full p-4 bg-slate-100 border-none rounded-2xl focus:ring-2 focus:ring-blue-500 font-bold text-sm" />
+                  <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Estoque Atual</label>
+                  <input type="number" required step="0.01" value={invFormData.quantity} onChange={e => setInvFormData({ ...invFormData, quantity: parseFloat(e.target.value) })} className="w-full p-4 bg-slate-100 dark:bg-slate-800 border-none rounded-2xl focus:ring-2 focus:ring-blue-500 font-bold text-sm text-slate-800 dark:text-white" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Estoque Mínimo</label>
-                  <input type="number" required step="0.01" value={invFormData.minStock} onChange={e => setInvFormData({ ...invFormData, minStock: parseFloat(e.target.value) })} className="w-full p-4 bg-slate-100 border-none rounded-2xl focus:ring-2 focus:ring-blue-500 font-bold text-sm" />
+                  <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Estoque Mínimo</label>
+                  <input type="number" required step="0.01" value={invFormData.minStock} onChange={e => setInvFormData({ ...invFormData, minStock: parseFloat(e.target.value) })} className="w-full p-4 bg-slate-100 dark:bg-slate-800 border-none rounded-2xl focus:ring-2 focus:ring-blue-500 font-bold text-sm text-slate-800 dark:text-white" />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Custo Médio</label>
-                  <input type="number" required step="0.01" value={invFormData.cost} onChange={e => setInvFormData({ ...invFormData, cost: parseFloat(e.target.value) })} className="w-full p-4 bg-slate-100 border-none rounded-2xl focus:ring-2 focus:ring-blue-500 font-bold text-sm" />
+                  <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Custo Médio</label>
+                  <input type="number" required step="0.01" value={invFormData.cost} onChange={e => setInvFormData({ ...invFormData, cost: parseFloat(e.target.value) })} className="w-full p-4 bg-slate-100 dark:bg-slate-800 border-none rounded-2xl focus:ring-2 focus:ring-blue-500 font-bold text-sm text-slate-800 dark:text-white" />
                 </div>
               </div>
-              <button type="submit" className="w-full py-5 bg-blue-600 text-white text-xs font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-blue-100 hover:bg-blue-700 transition-all">Salvar Insumo</button>
+              <button type="submit" className="w-full py-5 bg-blue-600 text-white text-xs font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-blue-100 dark:shadow-blue-900/20 hover:bg-blue-700 transition-all">Salvar Insumo</button>
             </form>
           </div>
         </div>
@@ -282,55 +284,57 @@ const Inventory: React.FC = () => {
       {/* MODAL PRODUTO */}
       {isProdModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-          <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in duration-200">
-            <div className="p-8 border-b border-slate-50 bg-slate-50 flex justify-between items-center">
-              <h3 className="text-xl font-black text-slate-800 uppercase tracking-tighter">{editingProduct ? 'Editar' : 'Novo'} Produto</h3>
-              <button onClick={() => setIsProdModalOpen(false)} className="p-2 text-slate-400 hover:text-slate-600"><svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>
+          <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in duration-200 border border-transparent dark:border-slate-800">
+            <div className="p-8 border-b border-slate-50 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 flex justify-between items-center">
+              <h3 className="text-xl font-black text-slate-800 dark:text-white uppercase tracking-tighter">{editingProduct ? 'Editar' : 'Novo'} Produto</h3>
+              <button onClick={() => setIsProdModalOpen(false)} className="p-2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
+                <Icons.Close className="h-6 w-6" />
+              </button>
             </div>
             <form onSubmit={saveProduct} className="p-10 space-y-5">
               <div className="space-y-1">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nome do Produto</label>
-                <input type="text" placeholder="Ex: Burger Bacon" required value={prodFormData.name} onChange={e => setProdFormData({ ...prodFormData, name: e.target.value })} className="w-full p-4 bg-slate-100 border-none rounded-2xl focus:ring-2 focus:ring-blue-500 font-bold text-sm" />
+                <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Nome do Produto</label>
+                <input type="text" placeholder="Ex: Burger Bacon" required value={prodFormData.name} onChange={e => setProdFormData({ ...prodFormData, name: e.target.value })} className="w-full p-4 bg-slate-100 dark:bg-slate-800 border-none rounded-2xl focus:ring-2 focus:ring-blue-500 font-bold text-sm text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600" />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Preço de Venda</label>
-                  <input type="number" step="0.01" placeholder="R$ 0,00" required value={prodFormData.price} onChange={e => setProdFormData({ ...prodFormData, price: parseFloat(e.target.value) })} className="w-full p-4 bg-slate-100 border-none rounded-2xl focus:ring-2 focus:ring-blue-500 font-bold text-sm" />
+                  <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Preço de Venda</label>
+                  <input type="number" step="0.01" placeholder="R$ 0,00" required value={prodFormData.price} onChange={e => setProdFormData({ ...prodFormData, price: parseFloat(e.target.value) })} className="w-full p-4 bg-slate-100 dark:bg-slate-800 border-none rounded-2xl focus:ring-2 focus:ring-blue-500 font-bold text-sm text-slate-800 dark:text-white" />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Categoria</label>
-                  <input type="text" placeholder="Ex: Burgers" value={prodFormData.category} onChange={e => setProdFormData({ ...prodFormData, category: e.target.value })} className="w-full p-4 bg-slate-100 border-none rounded-2xl focus:ring-2 focus:ring-blue-500 font-bold text-sm" />
+                  <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Categoria</label>
+                  <input type="text" placeholder="Ex: Burgers" value={prodFormData.category} onChange={e => setProdFormData({ ...prodFormData, category: e.target.value })} className="w-full p-4 bg-slate-100 dark:bg-slate-800 border-none rounded-2xl focus:ring-2 focus:ring-blue-500 font-bold text-sm text-slate-800 dark:text-white" />
                 </div>
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Imagem do Produto</label>
+                <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Imagem do Produto</label>
                 <div className="flex gap-2">
-                  <input type="text" value={prodFormData.imageUrl} onChange={e => setProdFormData({ ...prodFormData, imageUrl: e.target.value })} className="flex-1 p-4 bg-slate-100 border-none rounded-2xl text-[10px] font-bold" placeholder="URL da imagem..." />
-                  <button type="button" onClick={() => fileInputRef.current?.click()} className="p-4 bg-blue-600 text-white rounded-2xl text-[10px] font-black">UP</button>
+                  <input type="text" value={prodFormData.imageUrl} onChange={e => setProdFormData({ ...prodFormData, imageUrl: e.target.value })} className="flex-1 p-4 bg-slate-100 dark:bg-slate-800 border-none rounded-2xl text-[10px] font-bold text-slate-800 dark:text-white" placeholder="URL da imagem..." />
+                  <button type="button" onClick={() => fileInputRef.current?.click()} className="p-4 bg-blue-600 text-white rounded-2xl text-[10px] font-black shadow-lg shadow-blue-100 dark:shadow-blue-900/20">UP</button>
                   <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileUpload} />
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-slate-50 space-y-4">
-                <p className="text-[9px] font-black text-blue-600 uppercase tracking-[0.2em] mb-2">Informações Fiscais</p>
+              <div className="pt-4 border-t border-slate-50 dark:border-slate-800 space-y-4">
+                <p className="text-[9px] font-black text-blue-600 dark:text-blue-500 uppercase tracking-[0.2em] mb-2">Informações Fiscais</p>
                 <div className="grid grid-cols-3 gap-3">
                   <div className="space-y-1">
-                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">NCM</label>
-                    <input type="text" placeholder="00000000" value={prodFormData.ncm} onChange={e => setProdFormData({ ...prodFormData, ncm: e.target.value })} className="w-full p-3 bg-slate-50 border-none rounded-xl font-bold text-xs" />
+                    <label className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">NCM</label>
+                    <input type="text" placeholder="00000000" value={prodFormData.ncm} onChange={e => setProdFormData({ ...prodFormData, ncm: e.target.value })} className="w-full p-3 bg-slate-50 dark:bg-slate-800/50 border-none rounded-xl font-bold text-xs text-slate-800 dark:text-white" />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">CFOP</label>
-                    <input type="text" placeholder="5102" value={prodFormData.cfop} onChange={e => setProdFormData({ ...prodFormData, cfop: e.target.value })} className="w-full p-3 bg-slate-50 border-none rounded-xl font-bold text-xs" />
+                    <label className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">CFOP</label>
+                    <input type="text" placeholder="5102" value={prodFormData.cfop} onChange={e => setProdFormData({ ...prodFormData, cfop: e.target.value })} className="w-full p-3 bg-slate-50 dark:bg-slate-800/50 border-none rounded-xl font-bold text-xs text-slate-800 dark:text-white" />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">CEST</label>
-                    <input type="text" placeholder="0000000" value={prodFormData.cest} onChange={e => setProdFormData({ ...prodFormData, cest: e.target.value })} className="w-full p-3 bg-slate-50 border-none rounded-xl font-bold text-xs" />
+                    <label className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">CEST</label>
+                    <input type="text" placeholder="0000000" value={prodFormData.cest} onChange={e => setProdFormData({ ...prodFormData, cest: e.target.value })} className="w-full p-3 bg-slate-50 dark:bg-slate-800/50 border-none rounded-xl font-bold text-xs text-slate-800 dark:text-white" />
                   </div>
                 </div>
               </div>
               <div className="flex gap-4 pt-4">
-                <button type="button" onClick={() => setIsProdModalOpen(false)} className="flex-1 py-4 font-black text-slate-400 uppercase text-[10px]">Cancelar</button>
-                <button type="submit" className="flex-1 py-4 bg-blue-600 text-white font-black rounded-2xl shadow-xl shadow-blue-100 uppercase text-[10px] tracking-widest">Salvar Produto</button>
+                <button type="button" onClick={() => setIsProdModalOpen(false)} className="flex-1 py-4 font-black text-slate-400 dark:text-slate-500 uppercase text-[10px]">Cancelar</button>
+                <button type="submit" className="flex-1 py-4 bg-blue-600 text-white font-black rounded-2xl shadow-xl shadow-blue-100 dark:shadow-blue-900/20 uppercase text-[10px] tracking-widest">Salvar Produto</button>
               </div>
             </form>
           </div>
@@ -340,27 +344,29 @@ const Inventory: React.FC = () => {
       {/* MODAL FICHA TÉCNICA - ATUALIZADO COM DESPERDÍCIO */}
       {isRecipeModalOpen && editingProduct && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-          <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in duration-200">
-            <div className="p-8 border-b border-slate-50 bg-slate-50 flex justify-between items-center">
-              <h3 className="text-xl font-black text-slate-800 uppercase tracking-tighter">Ficha Técnica: {editingProduct.name}</h3>
-              <button onClick={() => setIsRecipeModalOpen(false)} className="p-2 text-slate-400 hover:text-slate-600"><svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>
+          <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in duration-200 border border-transparent dark:border-slate-800">
+            <div className="p-8 border-b border-slate-50 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 flex justify-between items-center">
+              <h3 className="text-xl font-black text-slate-800 dark:text-white uppercase tracking-tighter">Ficha Técnica: {editingProduct.name}</h3>
+              <button onClick={() => setIsRecipeModalOpen(false)} className="p-2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
+                <Icons.Close className="h-6 w-6" />
+              </button>
             </div>
             <div className="p-8 space-y-6 max-h-[60vh] overflow-y-auto">
               {tempRecipe.length > 0 ? tempRecipe.map((item, index) => (
-                <div key={index} className="flex gap-3 items-end bg-slate-50 p-5 rounded-3xl border border-slate-100">
+                <div key={index} className="flex gap-3 items-end bg-slate-50 dark:bg-slate-800/40 p-5 rounded-3xl border border-slate-100 dark:border-slate-800">
                   <div className="flex-1 space-y-1">
-                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Insumo</label>
-                    <select value={item.inventoryItemId} onChange={e => { const updated = [...tempRecipe]; updated[index].inventoryItemId = e.target.value; setTempRecipe(updated); }} className="w-full p-3 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none">
+                    <label className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Insumo</label>
+                    <select value={item.inventoryItemId} onChange={e => { const updated = [...tempRecipe]; updated[index].inventoryItemId = e.target.value; setTempRecipe(updated); }} className="w-full p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold outline-none text-slate-800 dark:text-white">
                       <option value="">Selecione...</option>
                       {inventory.map(inv => <option key={inv.id} value={inv.id}>{inv.name} ({inv.unit})</option>)}
                     </select>
                   </div>
                   <div className="w-20 space-y-1">
-                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Qtd</label>
-                    <input type="number" step="0.01" value={item.quantity} onChange={e => { const updated = [...tempRecipe]; updated[index].quantity = parseFloat(e.target.value) || 0; setTempRecipe(updated); }} className="w-full p-3 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none" />
+                    <label className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Qtd</label>
+                    <input type="number" step="0.01" value={item.quantity} onChange={e => { const updated = [...tempRecipe]; updated[index].quantity = parseFloat(e.target.value) || 0; setTempRecipe(updated); }} className="w-full p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold outline-none text-slate-800 dark:text-white" />
                   </div>
                   <div className="w-24 space-y-1">
-                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Desp. (%)</label>
+                    <label className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Desp. (%)</label>
                     <input
                       type="number"
                       step="1"
@@ -372,19 +378,19 @@ const Inventory: React.FC = () => {
                         updated[index].wasteFactor = 1 + (percentage / 100);
                         setTempRecipe(updated);
                       }}
-                      className="w-full p-3 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none"
+                      className="w-full p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold outline-none text-slate-800 dark:text-white"
                     />
                   </div>
-                  <button onClick={() => setTempRecipe(tempRecipe.filter((_, i) => i !== index))} className="p-3 text-red-400 hover:bg-red-50 rounded-xl transition-all"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>
+                  <button onClick={() => setTempRecipe(tempRecipe.filter((_, i) => i !== index))} className="p-3 text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-all"><Icons.Delete className="h-5 w-5" /></button>
                 </div>
               )) : (
-                <p className="text-center text-slate-400 text-xs italic py-10">Nenhum insumo vinculado a esta receita.</p>
+                <p className="text-center text-slate-400 dark:text-slate-500 text-xs italic py-10">Nenhum insumo vinculado a esta receita.</p>
               )}
-              <button onClick={() => setTempRecipe([...tempRecipe, { inventoryItemId: inventory[0]?.id || '', quantity: 0, wasteFactor: 1 }])} className="w-full py-6 border-2 border-dashed border-slate-200 rounded-3xl text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] hover:text-blue-600 hover:border-blue-200 transition-all">+ Adicionar Insumo à Receita</button>
+              <button onClick={() => setTempRecipe([...tempRecipe, { inventoryItemId: inventory[0]?.id || '', quantity: 0, wasteFactor: 1 }])} className="w-full py-6 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-3xl text-slate-400 dark:text-slate-500 text-[10px] font-black uppercase tracking-[0.2em] hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-200 dark:hover:border-blue-900 transition-all font-bold">+ Adicionar Insumo à Receita</button>
             </div>
-            <div className="p-8 border-t border-slate-50 flex gap-4">
-              <button onClick={() => setIsRecipeModalOpen(false)} className="flex-1 py-4 text-slate-400 font-black uppercase text-[10px]">Cancelar</button>
-              <button onClick={saveRecipe} className="flex-1 py-4 bg-slate-900 text-white font-black rounded-2xl shadow-xl uppercase text-[10px] tracking-widest">Atualizar Ficha Técnica</button>
+            <div className="p-8 border-t border-slate-50 dark:border-slate-800 flex gap-4 bg-slate-50 dark:bg-slate-900">
+              <button onClick={() => setIsRecipeModalOpen(false)} className="flex-1 py-4 text-slate-400 dark:text-slate-500 font-black uppercase text-[10px]">Cancelar</button>
+              <button onClick={saveRecipe} className="flex-1 py-4 bg-slate-900 dark:bg-blue-600 text-white font-black rounded-2xl shadow-xl uppercase text-[10px] tracking-widest hover:bg-slate-800 dark:hover:bg-blue-700 transition-all">Atualizar Ficha Técnica</button>
             </div>
           </div>
         </div>
