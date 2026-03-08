@@ -98,13 +98,13 @@ const SalesMonitor: React.FC = () => {
 
   const renderPaymentEditor = () => (
     <div className="mt-2 pt-2 border-t border-dashed no-print w-full">
-      <div className="flex justify-between items-center bg-slate-50 p-2 rounded-lg border border-slate-100">
+      <div className="flex justify-between items-center bg-slate-50 dark:bg-slate-800 p-2 rounded-lg border border-slate-100 dark:border-slate-700">
         {editingPaymentMethod ? (
           <div className="flex gap-2 w-full">
             <select
               value={newPaymentMethod}
               onChange={(e) => setNewPaymentMethod(e.target.value)}
-              className="flex-1 text-[9px] font-black uppercase p-1 rounded border outline-none cursor-pointer"
+              className="flex-1 text-[9px] font-black uppercase p-1 rounded border dark:border-slate-700 bg-white dark:bg-slate-900 dark:text-white outline-none cursor-pointer"
               disabled={isSavingPayment}
             >
               <option value="DINHEIRO">Dinheiro</option>
@@ -148,7 +148,7 @@ const SalesMonitor: React.FC = () => {
             </button>
             <button
               onClick={() => setEditingPaymentMethod(false)}
-              className="bg-slate-200 text-slate-600 px-2 py-1 rounded text-[8px] font-black uppercase"
+              className="bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-2 py-1 rounded text-[8px] font-black uppercase"
             >
               X
             </button>
@@ -195,18 +195,18 @@ const SalesMonitor: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full gap-6 animate-in fade-in duration-500 relative">
-      <div className="flex-1 bg-white rounded-[3rem] shadow-sm border border-slate-100 overflow-hidden flex flex-col">
-        <div className="p-8 border-b border-slate-50 bg-slate-50 flex justify-between items-center">
+      <div className="flex-1 bg-white dark:bg-slate-900 rounded-[3rem] shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden flex flex-col">
+        <div className="p-8 border-b border-slate-50 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 flex justify-between items-center">
           <div>
-            <h3 className="font-black text-slate-800 uppercase tracking-tighter text-xl">Monitor de Vendas e Fluxo</h3>
-            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Acompanhamento de status e finalizações em tempo real</p>
+            <h3 className="font-black text-slate-800 dark:text-white uppercase tracking-tighter text-xl">Monitor de Vendas e Fluxo</h3>
+            <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest">Acompanhamento de status e finalizações em tempo real</p>
           </div>
         </div>
-        <div className="flex-1 overflow-auto p-4 sm:p-8 bg-slate-50/30">
-          <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 flex flex-col h-full overflow-hidden animate-in fade-in duration-500 relative">
+        <div className="flex-1 overflow-auto p-4 sm:p-8 bg-slate-50/30 dark:bg-slate-900/50">
+          <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-sm border border-slate-100 dark:border-slate-800 flex flex-col h-full overflow-hidden animate-in fade-in duration-500 relative">
             {isLoading && (
-              <div className="absolute top-0 left-0 w-full h-1 bg-indigo-100 overflow-hidden z-50">
-                <div className="h-full bg-indigo-600 animate-[loading_2s_infinite]"></div>
+              <div className="absolute top-0 left-0 w-full h-1 bg-indigo-100 dark:bg-indigo-900/40 overflow-hidden z-50">
+                <div className="h-full bg-indigo-600 dark:bg-indigo-500 animate-[loading_2s_infinite]"></div>
               </div>
             )}
             <style>{`
@@ -218,41 +218,41 @@ const SalesMonitor: React.FC = () => {
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse min-w-[700px] sm:min-w-0">
                 <thead>
-                  <tr className="bg-slate-50/50 border-b border-slate-100">
-                    <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</th>
-                    <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Cliente / Mesa</th>
-                    <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Itens</th>
-                    <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Total</th>
+                  <tr className="bg-slate-50/50 dark:bg-slate-800/30 border-b border-slate-100 dark:border-slate-800">
+                    <th className="px-8 py-5 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Status</th>
+                    <th className="px-8 py-5 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Cliente / Mesa</th>
+                    <th className="px-8 py-5 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Itens</th>
+                    <th className="px-8 py-5 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest text-right">Total</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-50">
+                <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
                   {orders.map(order => {
                     const isRecentlyChanged = changedOrderIds.has(order.id);
                     const blinkClass = isRecentlyChanged ? 'animate-notify-turquoise' : '';
 
                     return (
-                      <tr key={order.id} className="hover:bg-slate-50/50 group transition-colors">
+                      <tr key={order.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 group transition-colors">
                         <td className="px-8 py-5">
                           <div className="flex justify-start">
-                            <span className={`text-[8px] sm:text-[9px] font-black px-2 sm:px-4 py-1.5 sm:py-2 rounded-xl text-white uppercase shadow-sm transition-all duration-300 ${blinkClass} ${order.status === OrderStatus.DELIVERED ? 'bg-slate-900' :
+                            <span className={`text-[8px] sm:text-[9px] font-black px-2 sm:px-4 py-1.5 sm:py-2 rounded-xl text-white uppercase shadow-sm transition-all duration-300 ${blinkClass} ${order.status === OrderStatus.DELIVERED ? 'bg-slate-900 dark:bg-slate-950' :
                               order.status === OrderStatus.READY ? 'bg-emerald-500' :
                                 order.status === OrderStatus.PARTIALLY_READY ? 'bg-orange-500' :
                                   order.status === OrderStatus.PREPARING ? 'bg-blue-500' :
-                                    order.status === OrderStatus.REOPENED ? 'bg-amber-500' : 'bg-slate-400'
+                                    order.status === OrderStatus.REOPENED ? 'bg-amber-500' : 'bg-slate-400 dark:bg-slate-600'
                               }`}>
                               {OrderStatusLabels[order.status]}
                             </span>
                           </div>
                         </td>
                         <td className="px-8 py-5">
-                          <p className="font-black text-slate-800 text-[11px] uppercase tracking-tighter">{order.clientName} {order.tableNumber ? `(Mesa ${order.tableNumber})` : ''}</p>
-                          <div className="flex flex-wrap items-center gap-2 mt-1.5 text-[9px] text-slate-400 font-black uppercase tracking-widest">
+                          <p className="font-black text-slate-800 dark:text-white text-[11px] uppercase tracking-tighter">{order.clientName} {order.tableNumber ? `(Mesa ${order.tableNumber})` : ''}</p>
+                          <div className="flex flex-wrap items-center gap-2 mt-1.5 text-[9px] text-slate-400 dark:text-slate-500 font-black uppercase tracking-widest">
                             <span>{new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' }).format(new Date(order.createdAt))}</span>
-                            <span className="text-slate-200">•</span>
+                            <span className="text-slate-200 dark:text-slate-800">•</span>
                             <span>{getFriendlySaleType(order.type)}</span>
-                            <span className="text-blue-600 font-bold">R$ {order.total.toFixed(2)}</span>
+                            <span className="text-blue-600 dark:text-blue-400 font-bold">R$ {order.total.toFixed(2)}</span>
                             {order.nfeStatus === 'EMITTED' && (
-                              <span className="px-1.5 py-0.5 bg-emerald-100 text-emerald-700 text-[8px] font-black rounded-md flex items-center gap-1">
+                              <span className="px-1.5 py-0.5 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 text-[8px] font-black rounded-md flex items-center gap-1">
                                 <Icons.QrCode className="w-2 h-2" />
                                 NFC-E
                               </span>
@@ -260,7 +260,7 @@ const SalesMonitor: React.FC = () => {
                           </div>
                         </td>
                         <td className="px-8 py-5">
-                          <div className="text-[10px] text-slate-500 font-bold uppercase truncate max-w-[200px]">
+                          <div className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase truncate max-w-[200px]">
                             {Object.values(order.items.reduce((acc: Record<string, { name: string, q: number }>, it) => {
                               const p = products.find(prod => prod.id === it.productId);
                               const name = p?.name || '...';
@@ -271,7 +271,7 @@ const SalesMonitor: React.FC = () => {
                           </div>
                         </td>
                         <td className="px-8 py-5">
-                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                          <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                             {order.deliveryFee ? `Entrega: R$ ${order.deliveryFee.toFixed(2)}` : ''}
                             {order.type === SaleType.TABLE ? `${order.deliveryFee ? ' | ' : ''}Serviço: R$ ${(order.appliedServiceFee || 0).toFixed(2)}` : ''}
                           </p>
@@ -287,7 +287,7 @@ const SalesMonitor: React.FC = () => {
                                 setNewPaymentMethod(order.paymentMethod || 'DINHEIRO');
                                 setEditingServiceFee(false);
                                 setNewServiceFeeValue((order.appliedServiceFee || 0).toString());
-                              }} className="p-2.5 text-blue-600 hover:bg-blue-50 rounded-2xl border border-blue-100 shadow-sm transition-all active:scale-95" title="Reemitir Cupom Simples">
+                              }} className="p-2.5 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/40 rounded-2xl border border-blue-100 dark:border-blue-900/30 shadow-sm transition-all active:scale-95" title="Reemitir Cupom Simples">
                                 <Icons.Print className="w-5 h-5" />
                               </button>
 
@@ -299,7 +299,7 @@ const SalesMonitor: React.FC = () => {
                                   setNewPaymentMethod(order.paymentMethod || 'DINHEIRO');
                                   setEditingServiceFee(false);
                                   setNewServiceFeeValue((order.appliedServiceFee || 0).toString());
-                                }} className="p-2.5 text-emerald-600 hover:bg-emerald-50 rounded-2xl border border-emerald-100 shadow-sm transition-all active:scale-95" title="Reemitir Cupom Fiscal (NFC-e)">
+                                }} className="p-2.5 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/40 rounded-2xl border border-emerald-100 dark:border-emerald-900/30 shadow-sm transition-all active:scale-95" title="Reemitir Cupom Fiscal (NFC-e)">
                                   <Icons.Print className="w-5 h-5" />
                                 </button>
                               )}
@@ -322,7 +322,7 @@ const SalesMonitor: React.FC = () => {
           </div>
 
           {printingOrder && businessSettings && (
-            <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
+            <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/80 dark:bg-slate-950/90 backdrop-blur-md">
               <div className="relative w-full max-w-[80mm] bg-white p-8 border border-dashed shadow-2xl font-receipt text-[11px] text-black is-receipt animate-in zoom-in duration-200">
                 {isNfceVisual ? (
                   <div className="space-y-4 font-mono text-[10px] leading-tight text-black">
@@ -452,7 +452,7 @@ const SalesMonitor: React.FC = () => {
                               step="0.01"
                               value={newServiceFeeValue}
                               onChange={(e) => setNewServiceFeeValue(e.target.value)}
-                              className="w-16 text-[10px] font-black text-right p-1 rounded border outline-none"
+                              className="w-16 text-[10px] font-black text-right p-1 rounded border dark:border-slate-700 bg-white dark:bg-slate-900 dark:text-white outline-none"
                               disabled={isSavingServiceFee}
                             />
                             <button
@@ -485,10 +485,9 @@ const SalesMonitor: React.FC = () => {
                             </button>
                             <button
                               onClick={() => {
-                                setEditingServiceFee(false);
                                 setNewServiceFeeValue((printingOrder.appliedServiceFee || 0).toString());
                               }}
-                              className="bg-slate-200 text-slate-600 px-2 py-1 rounded text-[8px] font-black uppercase"
+                              className="bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-2 py-1 rounded text-[8px] font-black uppercase"
                             >
                               X
                             </button>
@@ -528,7 +527,7 @@ const SalesMonitor: React.FC = () => {
                   </button>
                   <button
                     onClick={() => setPrintingOrder(null)}
-                    className="bg-slate-50 text-slate-400 py-4 rounded-[22px] font-receipt font-black uppercase text-[11px] hover:bg-slate-100 active:scale-95 transition-all flex items-center justify-center"
+                    className="bg-slate-50 dark:bg-slate-800 text-slate-400 dark:text-slate-500 py-4 rounded-[22px] font-receipt font-black uppercase text-[11px] hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-95 transition-all flex items-center justify-center"
                   >
                     FECHAR
                   </button>

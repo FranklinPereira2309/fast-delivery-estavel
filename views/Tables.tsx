@@ -597,17 +597,17 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
       <CustomAlert {...alertConfig} onConfirm={alertConfig.onConfirm} onCancel={alertConfig.onCancel} />
 
       {/* Header Gestão de Mesas */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm gap-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-sm gap-6">
         <div>
-          <h2 className="text-2xl font-black text-slate-800 uppercase tracking-tighter">Gestão de Mesas</h2>
-          <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">Painel de Atendimento em Tempo Real</p>
+          <h2 className="text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tighter">Gestão de Mesas</h2>
+          <p className="text-xs text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest">Painel de Atendimento em Tempo Real</p>
         </div>
         <div className="flex flex-col xl:flex-row items-stretch xl:items-center gap-6 w-full sm:w-auto">
           <div className="grid grid-cols-2 sm:flex gap-4">
-            <div className="flex items-center gap-1.5"><span className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce"></span><span className="text-[10px] font-bold uppercase text-slate-400">Livre</span></div>
-            <div className="flex items-center gap-1.5"><span className="w-2 h-2 bg-fuchsia-600 rounded-full animate-bounce"></span><span className="text-[10px] font-bold uppercase text-slate-400">App Digital</span></div>
-            <div className="flex items-center gap-1.5"><span className="w-2 h-2 bg-red-600 rounded-full animate-bounce"></span><span className="text-[10px] font-bold uppercase text-slate-400">Ocupada</span></div>
-            <div className="flex items-center gap-1.5"><span className="w-2 h-2 bg-orange-500 rounded-full animate-bounce"></span><span className="text-[10px] font-bold uppercase text-slate-400">Checkout</span></div>
+            <div className="flex items-center gap-1.5"><span className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce"></span><span className="text-[10px] font-bold uppercase text-slate-400 dark:text-slate-500">Livre</span></div>
+            <div className="flex items-center gap-1.5"><span className="w-2 h-2 bg-fuchsia-600 rounded-full animate-bounce"></span><span className="text-[10px] font-bold uppercase text-slate-400 dark:text-slate-500">App Digital</span></div>
+            <div className="flex items-center gap-1.5"><span className="w-2 h-2 bg-red-600 rounded-full animate-bounce"></span><span className="text-[10px] font-bold uppercase text-slate-400 dark:text-slate-500">Ocupada</span></div>
+            <div className="flex items-center gap-1.5"><span className="w-2 h-2 bg-orange-500 rounded-full animate-bounce"></span><span className="text-[10px] font-bold uppercase text-slate-400 dark:text-slate-500">Checkout</span></div>
           </div>
 
           <button
@@ -615,13 +615,13 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
               setShowFeedbacks(true);
               setHasNewFeedback(false);
             }}
-            className={`flex items-center justify-center gap-2 px-6 py-3 rounded-2xl transition-all font-black uppercase text-[10px] relative ${hasNewFeedback ? 'bg-indigo-600 text-white animate-moderate-blink shadow-lg shadow-indigo-200' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
+            className={`flex items-center justify-center gap-2 px-6 py-3 rounded-2xl transition-all font-black uppercase text-[10px] relative ${hasNewFeedback ? 'bg-indigo-600 text-white animate-moderate-blink shadow-lg shadow-indigo-200' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'}`}
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
             </svg>
             Mensagens do Dia
-            {hasNewFeedback && <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-white animate-ping"></span>}
+            {hasNewFeedback && <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-white dark:border-slate-900 animate-ping"></span>}
           </button>
         </div>
       </div>
@@ -663,7 +663,7 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
               setClientSearch('');
               setSelectedClient(null);
             }}
-              className={`relative h-44 rounded-[2.5rem] border-4 transition-all duration-300 flex flex-col items-center justify-center gap-2 shadow-sm ${status === 'available' ? 'bg-white border-emerald-50 text-emerald-600 hover:border-emerald-300' :
+              className={`relative h-44 rounded-[2.5rem] border-4 transition-all duration-300 flex flex-col items-center justify-center gap-2 shadow-sm ${status === 'available' ? 'bg-white dark:bg-slate-800 border-emerald-50 dark:border-emerald-900/30 text-emerald-600 dark:text-emerald-400 hover:border-emerald-300 dark:hover:border-emerald-500' :
                 status === 'occupied' ? 'bg-red-600 border-red-700 text-white hover:bg-red-700' :
                   status === 'pending_digital' ? 'bg-[#C026D3] border-fuchsia-700 text-white hover:bg-fuchsia-700 shadow-[0_0_15px_rgba(192,38,211,0.4)]' :
                     'bg-orange-500 border-orange-600 text-white hover:bg-orange-600 animate-moderate-blink'
@@ -684,13 +684,13 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
       {/* MODAL GESTÃO DE MESA SELECIONADA */}
       {selectedTable !== null && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-0 md:p-4 bg-slate-900/60 backdrop-blur-sm">
-          <div className="bg-white rounded-none md:rounded-[3rem] shadow-2xl w-full max-w-5xl h-full md:h-[90vh] flex flex-col overflow-hidden animate-in zoom-in duration-200 border border-white/20">
-            <div className="p-4 md:p-8 border-b bg-slate-50 flex justify-between items-center shrink-0">
+          <div className="bg-white dark:bg-slate-900 rounded-none md:rounded-[3rem] shadow-2xl w-full max-w-5xl h-full md:h-[90vh] flex flex-col overflow-hidden animate-in zoom-in duration-200 border border-white/20 dark:border-slate-800">
+            <div className="p-4 md:p-8 border-b dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 flex justify-between items-center shrink-0">
               <div className="flex items-center gap-6">
                 <div className={`w-12 h-12 md:w-16 md:h-16 rounded-xl md:rounded-2xl flex items-center justify-center text-white text-xl md:text-3xl font-black shadow-xl ${getTableStatus(selectedTable) === 'available' ? 'bg-emerald-500' : getTableStatus(selectedTable) === 'pending_digital' ? 'bg-[#C026D3]' : 'bg-red-600'}`}>{selectedTable}</div>
                 <div>
-                  <h3 className="text-lg md:text-2xl font-black text-slate-800 uppercase tracking-tighter">Mesa {selectedTable}</h3>
-                  <p className="text-[9px] md:text-xs text-slate-400 font-bold uppercase tracking-widest">{getSessForTable(selectedTable)?.startTime ? `Aberta às ${new Date(getSessForTable(selectedTable)!.startTime).toLocaleTimeString()}` : 'Aguardando Atendimento'}</p>
+                  <h3 className="text-lg md:text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tighter">Mesa {selectedTable}</h3>
+                  <p className="text-[9px] md:text-xs text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest">{getSessForTable(selectedTable)?.startTime ? `Aberta às ${new Date(getSessForTable(selectedTable)!.startTime).toLocaleTimeString()}` : 'Aguardando Atendimento'}</p>
                 </div>
               </div>
               <div className="flex items-center gap-4">
@@ -710,40 +710,40 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
                     Transferir
                   </button>
                 )}
-                <button onClick={() => setSelectedTable(null)} className="p-4 bg-slate-200 text-slate-500 rounded-2xl hover:bg-slate-300 hover:text-slate-800 transition-all font-black uppercase text-xs tracking-widest flex items-center gap-2">Sair ✗</button>
+                <button onClick={() => setSelectedTable(null)} className="p-4 bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded-2xl hover:bg-slate-300 dark:hover:bg-slate-700 hover:text-slate-800 dark:hover:text-white transition-all font-black uppercase text-xs tracking-widest flex items-center gap-2">Sair ✗</button>
               </div>
             </div>
 
             <div className="flex flex-col md:flex-row flex-1 min-h-0">
-              <div className="flex md:flex-col w-full md:w-24 bg-slate-100 border-b md:border-b-0 md:border-r shrink-0">
-                <button onClick={() => setActiveModalTab('LAUNCH')} className={`flex-1 flex flex-col items-center justify-center py-3 md:py-0 gap-1 transition-all ${activeModalTab === 'LAUNCH' ? 'bg-white text-blue-600 border-b-4 md:border-b-0 md:border-r-4 border-blue-600 shadow-inner' : 'text-slate-400 hover:bg-slate-200'}`}><Icons.Dashboard /><span className="text-[8px] md:text-[10px] font-black uppercase">Lançar</span></button>
-                <button onClick={() => setActiveModalTab('REMOVE')} className={`flex-1 flex flex-col items-center justify-center py-3 md:py-0 gap-1 transition-all ${activeModalTab === 'REMOVE' ? 'bg-white text-red-600 border-b-4 md:border-b-0 md:border-r-4 border-red-600 shadow-inner' : 'text-slate-400 hover:bg-slate-200'}`}><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg><span className="text-[8px] md:text-[10px] font-black uppercase">Estornar</span></button>
-                <button onClick={() => setActiveModalTab('CONSUMPTION')} className={`flex-1 flex flex-col items-center justify-center py-3 md:py-0 gap-1 transition-all ${activeModalTab === 'CONSUMPTION' ? 'bg-white text-indigo-600 border-b-4 md:border-b-0 md:border-r-4 border-indigo-600 shadow-inner' : 'text-slate-400 hover:bg-slate-200'}`}><Icons.View /><span className="text-[8px] md:text-[10px] font-black uppercase">Consumo</span></button>
-                <button onClick={() => setActiveModalTab('CHECKOUT')} className={`flex-1 flex flex-col items-center justify-center py-3 md:py-0 gap-1 transition-all ${activeModalTab === 'CHECKOUT' ? 'bg-white text-emerald-600 border-b-4 md:border-b-0 md:border-r-4 border-emerald-600 shadow-inner' : 'text-slate-400 hover:bg-slate-200'}`}><Icons.Print /><span className="text-[8px] md:text-[10px] font-black uppercase">Fechar</span></button>
+              <div className="flex md:flex-col w-full md:w-24 bg-slate-100 dark:bg-slate-800 border-b md:border-b-0 md:border-r dark:border-slate-700 shrink-0">
+                <button onClick={() => setActiveModalTab('LAUNCH')} className={`flex-1 flex flex-col items-center justify-center py-3 md:py-0 gap-1 transition-all ${activeModalTab === 'LAUNCH' ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 border-b-4 md:border-b-0 md:border-r-4 border-blue-600 shadow-inner' : 'text-slate-400 dark:text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700'}`}><Icons.Dashboard /><span className="text-[8px] md:text-[10px] font-black uppercase">Lançar</span></button>
+                <button onClick={() => setActiveModalTab('REMOVE')} className={`flex-1 flex flex-col items-center justify-center py-3 md:py-0 gap-1 transition-all ${activeModalTab === 'REMOVE' ? 'bg-white dark:bg-slate-900 text-red-600 dark:text-red-400 border-b-4 md:border-b-0 md:border-r-4 border-red-600 shadow-inner' : 'text-slate-400 dark:text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700'}`}><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg><span className="text-[8px] md:text-[10px] font-black uppercase">Estornar</span></button>
+                <button onClick={() => setActiveModalTab('CONSUMPTION')} className={`flex-1 flex flex-col items-center justify-center py-3 md:py-0 gap-1 transition-all ${activeModalTab === 'CONSUMPTION' ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 border-b-4 md:border-b-0 md:border-r-4 border-indigo-600 shadow-inner' : 'text-slate-400 dark:text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700'}`}><Icons.View /><span className="text-[8px] md:text-[10px] font-black uppercase">Consumo</span></button>
+                <button onClick={() => setActiveModalTab('CHECKOUT')} className={`flex-1 flex flex-col items-center justify-center py-3 md:py-0 gap-1 transition-all ${activeModalTab === 'CHECKOUT' ? 'bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 border-b-4 md:border-b-0 md:border-r-4 border-emerald-600 shadow-inner' : 'text-slate-400 dark:text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700'}`}><Icons.Print /><span className="text-[8px] md:text-[10px] font-black uppercase">Fechar</span></button>
               </div>
 
               <div className="flex-1 p-4 md:p-12 overflow-y-auto relative">
                 {activeModalTab === 'LAUNCH' && (
                   <div className="space-y-8">
                     {getTableStatus(selectedTable) === 'billing' && (
-                      <div className="absolute inset-0 z-10 bg-white/60 backdrop-blur-[2px] flex items-center justify-center rounded-[2rem] p-8">
-                        <div className="bg-red-50 p-8 rounded-[2rem] border border-red-200 text-center max-w-sm shadow-xl animate-in zoom-in duration-300">
-                          <div className="text-red-500 mb-4 flex justify-center"><Icons.Dashboard /></div>
-                          <h4 className="text-lg font-black text-red-700 uppercase mb-2">Mesa Bloqueada</h4>
-                          <p className="text-[11px] font-bold text-red-600 uppercase">Esta mesa encontra-se em pré-fechamento. Para lançar novos itens, você deve Reabri-la pela área do PDV.</p>
+                      <div className="absolute inset-0 z-10 bg-white/60 dark:bg-slate-900/60 backdrop-blur-[2px] flex items-center justify-center rounded-[2rem] p-8">
+                        <div className="bg-red-50 dark:bg-red-900/20 p-8 rounded-[2rem] border border-red-200 dark:border-red-900/30 text-center max-w-sm shadow-xl animate-in zoom-in duration-300">
+                          <div className="text-red-500 dark:text-red-400 mb-4 flex justify-center"><Icons.Dashboard /></div>
+                          <h4 className="text-lg font-black text-red-700 dark:text-red-300 uppercase mb-2">Mesa Bloqueada</h4>
+                          <p className="text-[11px] font-bold text-red-600 dark:text-red-400 uppercase">Esta mesa encontra-se em pré-fechamento. Para lançar novos itens, você deve Reabri-la pela área do PDV.</p>
                         </div>
                       </div>
                     )}
                     {getSessForTable(selectedTable)?.hasPendingDigital && !getSessForTable(selectedTable)?.isSoftRejected && (
-                      <div className="bg-fuchsia-50 border-2 border-fuchsia-200 rounded-3xl p-6 shadow-sm overflow-hidden mb-8">
+                      <div className="bg-fuchsia-50 dark:bg-fuchsia-900/20 border-2 border-fuchsia-200 dark:border-fuchsia-900/40 rounded-3xl p-6 shadow-sm overflow-hidden mb-8">
                         <div className="flex items-center gap-4 mb-4">
                           <div className="bg-fuchsia-600 text-white p-3 rounded-2xl shadow-lg"><Icons.Dashboard /></div>
                           <div>
-                            <h4 className="text-lg font-black text-fuchsia-800 uppercase tracking-tighter">Pedidos do Cardápio Digital</h4>
-                            <p className="text-[10px] font-bold text-fuchsia-600/80 uppercase">Confira os itens e selecione o Garçom abaixo para Aprovar</p>
+                            <h4 className="text-lg font-black text-fuchsia-800 dark:text-fuchsia-300 uppercase tracking-tighter">Pedidos do Cardápio Digital</h4>
+                            <p className="text-[10px] font-bold text-fuchsia-600/80 dark:text-fuchsia-400 uppercase">Confira os itens e selecione o Garçom abaixo para Aprovar</p>
                           </div>
                         </div>
-                        <div className="bg-white rounded-2xl p-4 space-y-2 mb-4">
+                        <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 space-y-2 mb-4">
                           {(() => {
                             try {
                               const parsed = JSON.parse(getSessForTable(selectedTable)?.pendingReviewItems || '[]');
@@ -751,9 +751,9 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
                               return parsed.map((it: any, i: number) => {
                                 const prod = products.find(p => p.id === it.productId);
                                 return (
-                                  <div key={i} className="flex flex-col bg-slate-50 p-3 rounded-xl border border-slate-100">
-                                    <p className="font-black text-slate-800 text-sm">{it.quantity}x <span className="uppercase">{prod?.name || 'Item Desconhecido'}</span></p>
-                                    {it.observations && <span className="text-[10px] text-orange-500 font-bold bg-orange-50 px-2 py-1 rounded-lg mt-1 w-fit">Obs: {it.observations}</span>}
+                                  <div key={i} className="flex flex-col bg-slate-50 dark:bg-slate-700/50 p-3 rounded-xl border border-slate-100 dark:border-slate-700">
+                                    <p className="font-black text-slate-800 dark:text-white text-sm">{it.quantity}x <span className="uppercase">{prod?.name || 'Item Desconhecido'}</span></p>
+                                    {it.observations && <span className="text-[10px] text-orange-500 font-bold bg-orange-50 dark:bg-orange-950/40 px-2 py-1 rounded-lg mt-1 w-fit">Obs: {it.observations}</span>}
                                   </div>
                                 );
                               });
@@ -768,9 +768,9 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
                         </div>
                       </div>
                     )}
-                    <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm mb-6">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Selecione o Garçom da Mesa:</label>
-                      <select disabled={getTableStatus(selectedTable) === 'billing'} value={selectedWaiterId} onChange={(e) => setSelectedWaiterId(e.target.value)} className="w-full max-w-sm p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-blue-100 transition-all outline-none disabled:opacity-50">
+                    <div className="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-100 dark:border-slate-700 shadow-sm mb-6">
+                      <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest block mb-2">Selecione o Garçom da Mesa:</label>
+                      <select disabled={getTableStatus(selectedTable) === 'billing'} value={selectedWaiterId} onChange={(e) => setSelectedWaiterId(e.target.value)} className="w-full max-w-sm p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900 transition-all outline-none disabled:opacity-50 dark:text-white">
                         <option value="">Selecione...</option>
                         {waiters.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
                       </select>
@@ -783,17 +783,17 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
                             setSelectedProductForLaunch(prod);
                             setModalObservation('');
                           }}
-                          className={`p-5 bg-white border rounded-[2.5rem] shadow-sm transition-all duration-200 text-left group relative overflow-hidden active:scale-95 hover:scale-[1.02] ${lastAddedProduct === prod.id
-                            ? 'border-emerald-500 ring-4 ring-emerald-50 scale-95'
-                            : 'border-slate-100 hover:border-blue-200 hover:shadow-lg'
+                          className={`p-5 bg-white dark:bg-slate-800 border rounded-[2.5rem] shadow-sm transition-all duration-200 text-left group relative overflow-hidden active:scale-95 hover:scale-[1.02] ${lastAddedProduct === prod.id
+                            ? 'border-emerald-500 ring-4 ring-emerald-50 dark:ring-emerald-900/20 scale-95'
+                            : 'border-slate-100 dark:border-slate-700 hover:border-blue-200 dark:hover:border-blue-500 hover:shadow-lg'
                             }`}
                         >
-                          <div className="aspect-square mb-4 bg-slate-50 rounded-3xl flex items-center justify-center overflow-hidden">
+                          <div className="aspect-square mb-4 bg-slate-50 dark:bg-slate-900 rounded-3xl flex items-center justify-center overflow-hidden">
                             <img src={formatImageUrl(prod.imageUrl)} onError={e => e.currentTarget.src = PLACEHOLDER_FOOD_IMAGE} className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500" />
                           </div>
-                          <p className="text-[11px] font-black text-slate-800 uppercase line-clamp-1">{prod.name}</p>
+                          <p className="text-[11px] font-black text-slate-800 dark:text-white uppercase line-clamp-1">{prod.name}</p>
                           <div className="flex justify-between items-center mt-1">
-                            <p className="text-sm font-black text-blue-600">R$ {prod.price.toFixed(2)}</p>
+                            <p className="text-sm font-black text-blue-600 dark:text-blue-400">R$ {prod.price.toFixed(2)}</p>
                             {lastAddedProduct === prod.id && (
                               <span className="bg-emerald-500 text-white text-[8px] font-black px-2 py-1 rounded-full animate-bounce">OK!</span>
                             )}
@@ -806,28 +806,28 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
 
                 {activeModalTab === 'REMOVE' && (
                   <div className="space-y-3">
-                    <div className="bg-red-50 p-6 rounded-[2.5rem] border border-red-100 flex items-center gap-4 mb-4"><div className="bg-red-500 p-4 rounded-2xl text-white shadow-lg shrink-0"><svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg></div><p className="text-red-700 text-sm font-black uppercase">Estorno por Unidade (Auditado)</p></div>
-                    {getSessForTable(selectedTable)?.items.map(item => (<div key={item.uid} className="flex justify-between items-center p-6 bg-white border border-slate-100 rounded-3xl shadow-sm"><div className="flex-1 min-w-0"><p className="font-black text-slate-800 uppercase text-sm truncate">{products.find(p => p.id === item.productId)?.name}</p><p className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-widest">{item.price.toFixed(2)} • {item.isReady ? 'CONCLUÍDO' : 'PENDENTE'}</p></div><button onClick={() => removeProduct(item.uid)} className="p-4 bg-red-50 text-red-600 rounded-2xl hover:bg-red-500 hover:text-white transition-all shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button></div>))}
+                    <div className="bg-red-50 dark:bg-red-900/20 p-6 rounded-[2.5rem] border border-red-100 dark:border-red-900/30 flex items-center gap-4 mb-4"><div className="bg-red-500 p-4 rounded-2xl text-white shadow-lg shrink-0"><svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg></div><p className="text-red-700 dark:text-red-300 text-sm font-black uppercase">Estorno por Unidade (Auditado)</p></div>
+                    {getSessForTable(selectedTable)?.items.map(item => (<div key={item.uid} className="flex justify-between items-center p-6 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-3xl shadow-sm"><div className="flex-1 min-w-0"><p className="font-black text-slate-800 dark:text-white uppercase text-sm truncate">{products.find(p => p.id === item.productId)?.name}</p><p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mt-1 uppercase tracking-widest">{item.price.toFixed(2)} • {item.isReady ? 'CONCLUÍDO' : 'PENDENTE'}</p></div><button onClick={() => removeProduct(item.uid)} className="p-4 bg-red-50 dark:bg-red-900/40 text-red-600 dark:text-red-400 rounded-2xl hover:bg-red-500 dark:hover:bg-red-600 hover:text-white transition-all shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button></div>))}
                   </div>
                 )}
 
                 {activeModalTab === 'CONSUMPTION' && (
                   <div className="space-y-6">
-                    <div className="flex justify-between items-center"><div><h4 className="text-xl font-black text-slate-800 uppercase tracking-tighter">Prévia de Consumo</h4><p className="text-xs text-slate-400 font-bold uppercase tracking-widest">Conferência Agrupada dos Itens</p></div><button onClick={() => setShowConsumptionTicket(true)} className="px-6 py-4 bg-indigo-600 text-white rounded-2xl text-[10px] font-black uppercase shadow-xl hover:bg-indigo-700 transition-all flex items-center gap-2"><Icons.Print /> Cupom de Conferência</button></div>
-                    <div className="bg-slate-50 rounded-[2rem] p-8 border border-slate-100 space-y-3 font-receipt shadow-inner">
+                    <div className="flex justify-between items-center"><div><h4 className="text-xl font-black text-slate-800 dark:text-white uppercase tracking-tighter">Prévia de Consumo</h4><p className="text-xs text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest">Conferência Agrupada dos Itens</p></div><button onClick={() => setShowConsumptionTicket(true)} className="px-6 py-4 bg-indigo-600 text-white rounded-2xl text-[10px] font-black uppercase shadow-xl hover:bg-indigo-700 transition-all flex items-center gap-2"><Icons.Print /> Cupom de Conferência</button></div>
+                    <div className="bg-slate-50 dark:bg-slate-800/50 rounded-[2rem] p-8 border border-slate-100 dark:border-slate-700 space-y-3 font-receipt shadow-inner">
                       {getGroupedItems(getSessForTable(selectedTable)?.items || []).map((it, idx) => (
-                        <div key={idx} className="flex justify-between border-b border-dashed border-slate-200 pb-2">
-                          <span className="font-bold text-[13px]">{it.quantity}x {it.product?.name.toUpperCase()}</span>
-                          <span className="font-black text-[13px]">R$ {(it.quantity * it.price).toFixed(2)}</span>
+                        <div key={idx} className="flex justify-between border-b border-dashed border-slate-200 dark:border-slate-700 pb-2">
+                          <span className="font-bold text-[13px] dark:text-slate-200">{it.quantity}x {it.product?.name.toUpperCase()}</span>
+                          <span className="font-black text-[13px] dark:text-slate-100">R$ {(it.quantity * it.price).toFixed(2)}</span>
                         </div>
                       ))}
                       {settings.serviceFeeStatus && (
-                        <div className="flex justify-between border-b border-dashed border-slate-200 pb-2 text-slate-500">
+                        <div className="flex justify-between border-b border-dashed border-slate-200 dark:border-slate-700 pb-2 text-slate-500 dark:text-slate-400">
                           <span className="font-bold text-[11px] uppercase">Taxa de Serviço ({settings.serviceFeePercentage || 10}%)</span>
                           <span className="font-black text-[12px]">R$ {((getSessForTable(selectedTable)?.items.reduce((acc, it) => acc + (it.price * it.quantity), 0) || 0) * (settings.serviceFeePercentage || 10) / 100).toFixed(2)}</span>
                         </div>
                       )}
-                      <div className="pt-6 flex justify-between items-end"><span className="font-black text-[11px] uppercase opacity-50">Total Mesa:</span><span className="text-4xl font-black text-indigo-600">R$ {(
+                      <div className="pt-6 flex justify-between items-end"><span className="font-black text-[11px] dark:text-slate-400 uppercase opacity-50">Total Mesa:</span><span className="text-4xl font-black text-indigo-600 dark:text-indigo-400">R$ {(
                         (getSessForTable(selectedTable)?.items.reduce((acc, it) => acc + (it.price * it.quantity), 0) || 0) +
                         (settings.serviceFeeStatus ? ((getSessForTable(selectedTable)?.items.reduce((acc, it) => acc + (it.price * it.quantity), 0) || 0) * (settings.serviceFeePercentage || 10) / 100) : 0)
                       ).toFixed(2)}</span></div>
@@ -837,20 +837,20 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
 
                 {activeModalTab === 'CHECKOUT' && (
                   <div className="flex flex-col items-center py-4">
-                    <div className="text-center mb-8"><p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Valor Total da Conta</p><h4 className="text-6xl font-black text-slate-900 tracking-tighter">R$ {(
+                    <div className="text-center mb-8"><p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Valor Total da Conta</p><h4 className="text-6xl font-black text-slate-900 dark:text-white tracking-tighter">R$ {(
                       (getSessForTable(selectedTable)?.items.reduce((acc, it) => acc + (it.price * it.quantity), 0) || 0) +
                       (settings.serviceFeeStatus ? ((getSessForTable(selectedTable)?.items.reduce((acc, it) => acc + (it.price * it.quantity), 0) || 0) * (settings.serviceFeePercentage || 10) / 100) : 0)
                     ).toFixed(2)}</h4></div>
-                    <div className="w-full max-w-2xl bg-slate-50 p-8 rounded-[2rem] border border-slate-100 space-y-6">
-                      <div className="flex items-center justify-between"><label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Identificação do Cliente</label><button onClick={() => { setIsUnregisteredClient(!isUnregisteredClient); setSelectedClient(null); setManualClientName(''); setManualClientPhone(''); setManualClientAddress(''); setManualClientCep(''); setClientSearch(''); setManualClientEmail(''); setManualClientDocument(''); }} className={`text-[9px] font-black uppercase px-2 py-1 rounded-lg transition-all ${isUnregisteredClient ? 'bg-blue-600 text-white shadow-md' : 'bg-slate-200 text-slate-500'}`}>{isUnregisteredClient ? 'Mudar para Base' : 'Cliente Avulso?'}</button></div>
+                    <div className="w-full max-w-2xl bg-slate-50 dark:bg-slate-800/50 p-8 rounded-[2rem] border border-slate-100 dark:border-slate-700 space-y-6">
+                      <div className="flex items-center justify-between"><label className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Identificação do Cliente</label><button onClick={() => { setIsUnregisteredClient(!isUnregisteredClient); setSelectedClient(null); setManualClientName(''); setManualClientPhone(''); setManualClientAddress(''); setManualClientCep(''); setClientSearch(''); setManualClientEmail(''); setManualClientDocument(''); }} className={`text-[9px] font-black uppercase px-2 py-1 rounded-lg transition-all ${isUnregisteredClient ? 'bg-blue-600 text-white shadow-md' : 'bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400'}`}>{isUnregisteredClient ? 'Mudar para Base' : 'Cliente Avulso?'}</button></div>
                       {isUnregisteredClient ? (
                         <div className="space-y-4 animate-in zoom-in-95">
                           <div className="flex flex-col md:flex-row gap-4">
                             <div className="flex-1 space-y-1.5">
-                              <label className={`text-[9px] font-black uppercase tracking-widest ml-1 ${errors.manualClientName ? 'text-red-500' : 'text-slate-400'}`}>Nome Completo *</label>
+                              <label className={`text-[9px] font-black uppercase tracking-widest ml-1 ${errors.manualClientName ? 'text-red-500' : 'text-slate-400 dark:text-slate-500'}`}>Nome Completo *</label>
                               <input
                                 type="text"
-                                className={`w-full p-4 md:p-5 bg-white border-2 rounded-2xl text-xs font-black outline-none focus:ring-4 focus:ring-blue-50 transition-all ${errors.manualClientName ? 'border-red-500 animate-shake' : 'border-slate-200'}`}
+                                className={`w-full p-4 md:p-5 bg-white dark:bg-slate-900 border-2 rounded-2xl text-xs font-black outline-none focus:ring-4 focus:ring-blue-50 dark:focus:ring-blue-900/20 transition-all dark:text-white ${errors.manualClientName ? 'border-red-500 animate-shake' : 'border-slate-200 dark:border-slate-700'}`}
                                 placeholder="Nome do Cliente"
                                 value={manualClientName}
                                 onChange={e => {
@@ -860,10 +860,10 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
                               />
                             </div>
                             <div className="w-full md:w-1/3 space-y-1.5">
-                              <label className={`text-[9px] font-black uppercase tracking-widest ml-1 ${errors.manualClientPhone ? 'text-red-500' : 'text-slate-400'}`}>Telefone *</label>
+                              <label className={`text-[9px] font-black uppercase tracking-widest ml-1 ${errors.manualClientPhone ? 'text-red-500' : 'text-slate-400 dark:text-slate-500'}`}>Telefone *</label>
                               <input
                                 type="text"
-                                className={`w-full p-4 md:p-5 bg-white border-2 rounded-2xl text-xs font-black outline-none focus:ring-4 focus:ring-blue-50 transition-all ${errors.manualClientPhone ? 'border-red-500 animate-shake' : 'border-slate-200'}`}
+                                className={`w-full p-4 md:p-5 bg-white dark:bg-slate-900 border-2 rounded-2xl text-xs font-black outline-none focus:ring-4 focus:ring-blue-50 dark:focus:ring-blue-900/20 transition-all dark:text-white ${errors.manualClientPhone ? 'border-red-500 animate-shake' : 'border-slate-200 dark:border-slate-700'}`}
                                 placeholder="(00) 9 0000-0000"
                                 value={manualClientPhone}
                                 onChange={e => {
@@ -875,10 +875,10 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
                           </div>
                           <div className="flex flex-col md:flex-row gap-4">
                             <div className="flex-1 space-y-1.5">
-                              <label className={`text-[9px] font-black uppercase tracking-widest ml-1 ${errors.manualClientEmail ? 'text-red-500' : 'text-slate-400'}`}>E-mail</label>
+                              <label className={`text-[9px] font-black uppercase tracking-widest ml-1 ${errors.manualClientEmail ? 'text-red-500' : 'text-slate-400 dark:text-slate-500'}`}>E-mail</label>
                               <input
                                 type="email"
-                                className={`w-full p-4 md:p-5 bg-white border-2 rounded-2xl text-xs font-black outline-none focus:ring-4 focus:ring-blue-50 transition-all ${errors.manualClientEmail ? 'border-red-500 animate-shake' : 'border-slate-200'}`}
+                                className={`w-full p-4 md:p-5 bg-white dark:bg-slate-900 border-2 rounded-2xl text-xs font-black outline-none focus:ring-4 focus:ring-blue-50 dark:focus:ring-blue-900/20 transition-all dark:text-white ${errors.manualClientEmail ? 'border-red-500 animate-shake' : 'border-slate-200 dark:border-slate-700'}`}
                                 placeholder="Email"
                                 value={manualClientEmail}
                                 onChange={e => {
@@ -888,10 +888,10 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
                               />
                             </div>
                             <div className="flex-1 space-y-1.5">
-                              <label className={`text-[9px] font-black uppercase tracking-widest ml-1 ${errors.manualClientDocument ? 'text-red-500' : 'text-slate-400'}`}>CPF / CNPJ</label>
+                              <label className={`text-[9px] font-black uppercase tracking-widest ml-1 ${errors.manualClientDocument ? 'text-red-500' : 'text-slate-400 dark:text-slate-500'}`}>CPF / CNPJ</label>
                               <input
                                 type="text"
-                                className={`w-full p-4 md:p-5 bg-white border-2 rounded-2xl text-xs font-black outline-none focus:ring-4 focus:ring-blue-50 transition-all ${errors.manualClientDocument ? 'border-red-500 animate-shake' : 'border-slate-200'}`}
+                                className={`w-full p-4 md:p-5 bg-white dark:bg-slate-900 border-2 rounded-2xl text-xs font-black outline-none focus:ring-4 focus:ring-blue-50 dark:focus:ring-blue-900/20 transition-all dark:text-white ${errors.manualClientDocument ? 'border-red-500 animate-shake' : 'border-slate-200 dark:border-slate-700'}`}
                                 placeholder="000.000.000-00"
                                 value={manualClientDocument}
                                 onChange={e => {
@@ -904,10 +904,10 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
                           <div className="space-y-4">
                             <div className="flex flex-col md:flex-row gap-4">
                               <div className="w-full md:w-32 shrink-0 relative">
-                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">CEP</label>
+                                <label className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">CEP</label>
                                 <input
                                   type="text"
-                                  className={`w-full p-4 md:p-5 bg-white border border-slate-200 rounded-2xl text-xs font-black outline-none focus:ring-4 focus:ring-blue-50 transition-all ${isLoadingCep ? 'opacity-50' : ''}`}
+                                  className={`w-full p-4 md:p-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs font-black outline-none focus:ring-4 focus:ring-blue-50 dark:focus:ring-blue-900/20 transition-all dark:text-white ${isLoadingCep ? 'opacity-50' : ''}`}
                                   placeholder="00000000"
                                   maxLength={8}
                                   value={manualClientCep}
@@ -940,10 +940,10 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
                                 )}
                               </div>
                               <div className="flex-1">
-                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Logradouro</label>
+                                <label className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Logradouro</label>
                                 <input
                                   type="text"
-                                  className="w-full p-4 md:p-5 bg-white border border-slate-200 rounded-2xl text-xs font-black outline-none focus:ring-4 focus:ring-blue-50 transition-all"
+                                  className="w-full p-4 md:p-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs font-black outline-none focus:ring-4 focus:ring-blue-50 dark:focus:ring-blue-900/20 transition-all dark:text-white"
                                   placeholder="Rua / Avenida"
                                   value={manualClientStreet}
                                   onChange={e => setManualClientStreet(e.target.value)}
@@ -953,20 +953,20 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
 
                             <div className="flex flex-col md:flex-row gap-4">
                               <div className="w-full md:w-24 shrink-0">
-                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Número</label>
+                                <label className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Número</label>
                                 <input
                                   type="text"
-                                  className="w-full p-4 md:p-5 bg-white border border-slate-200 rounded-2xl text-xs font-black outline-none focus:ring-4 focus:ring-blue-50 transition-all"
+                                  className="w-full p-4 md:p-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs font-black outline-none focus:ring-4 focus:ring-blue-50 dark:focus:ring-blue-900/20 transition-all dark:text-white"
                                   placeholder="123"
                                   value={manualClientNumber}
                                   onChange={e => setManualClientNumber(e.target.value)}
                                 />
                               </div>
                               <div className="flex-1">
-                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Bairro</label>
+                                <label className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Bairro</label>
                                 <input
                                   type="text"
-                                  className="w-full p-4 md:p-5 bg-white border border-slate-200 rounded-2xl text-xs font-black outline-none focus:ring-4 focus:ring-blue-50 transition-all"
+                                  className="w-full p-4 md:p-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs font-black outline-none focus:ring-4 focus:ring-blue-50 dark:focus:ring-blue-900/20 transition-all dark:text-white"
                                   placeholder="Bairro"
                                   value={manualClientNeighborhood}
                                   onChange={e => setManualClientNeighborhood(e.target.value)}
@@ -976,20 +976,20 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
 
                             <div className="flex flex-col md:flex-row gap-4">
                               <div className="flex-1">
-                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Cidade</label>
+                                <label className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Cidade</label>
                                 <input
                                   type="text"
-                                  className="w-full p-4 md:p-5 bg-white border border-slate-200 rounded-2xl text-xs font-black outline-none focus:ring-4 focus:ring-blue-50 transition-all"
+                                  className="w-full p-4 md:p-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs font-black outline-none focus:ring-4 focus:ring-blue-50 dark:focus:ring-blue-900/20 transition-all dark:text-white"
                                   placeholder="Cidade"
                                   value={manualClientCity}
                                   onChange={e => setManualClientCity(e.target.value)}
                                 />
                               </div>
                               <div className="w-full md:w-16 shrink-0">
-                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">UF</label>
+                                <label className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">UF</label>
                                 <input
                                   type="text"
-                                  className="w-full p-4 md:p-5 bg-white border border-slate-200 rounded-2xl text-xs font-black outline-none focus:ring-4 focus:ring-blue-50 transition-all"
+                                  className="w-full p-4 md:p-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs font-black outline-none focus:ring-4 focus:ring-blue-50 dark:focus:ring-blue-900/20 transition-all dark:text-white"
                                   placeholder="SP"
                                   maxLength={2}
                                   value={manualClientState}
@@ -999,26 +999,26 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
                             </div>
 
                             <div className="space-y-1">
-                              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Complemento / Referência</label>
+                              <label className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Complemento / Referência</label>
                               <input
                                 type="text"
                                 placeholder="Ex: Próximo ao mercado..."
                                 value={manualClientComplement}
                                 onChange={e => setManualClientComplement(e.target.value)}
-                                className="w-full p-4 bg-white border border-slate-200 rounded-2xl text-[11px] font-black outline-none focus:ring-4 focus:ring-blue-50 transition-all"
+                                className="w-full p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-[11px] font-black outline-none focus:ring-4 focus:ring-blue-50 dark:focus:ring-blue-900/20 transition-all dark:text-white"
                               />
                             </div>
                           </div>
                         </div>
                       ) : (
                         <div className="relative animate-in zoom-in-95">
-                          <input type="text" className="w-full p-4 bg-white border border-slate-200 rounded-2xl text-[11px] font-black uppercase outline-none focus:ring-4 focus:ring-emerald-50 transition-all" placeholder="Pesquisar por Nome ou Fone..." value={clientSearch} onChange={(e) => { setClientSearch(e.target.value); setShowClientList(true); }} />
+                          <input type="text" className="w-full p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-[11px] font-black uppercase outline-none focus:ring-4 focus:ring-emerald-50 dark:focus:ring-emerald-900/20 transition-all dark:text-white" placeholder="Pesquisar por Nome ou Fone..." value={clientSearch} onChange={(e) => { setClientSearch(e.target.value); setShowClientList(true); }} />
                           {showClientList && clientSearch && (
-                            <div className="absolute z-30 w-full bg-white border border-slate-200 rounded-2xl shadow-2xl max-h-56 overflow-y-auto mt-3 p-2">
-                              {clients.filter(c => c.name.toLowerCase().includes(clientSearch.toLowerCase())).map(c => (<button key={c.id} onClick={() => { setSelectedClient(c); setClientSearch(c.name); setShowClientList(false); }} className="w-full text-left p-4 hover:bg-slate-50 border-b border-slate-50 last:border-0 rounded-2xl"><p className="text-xs font-black text-slate-800 uppercase tracking-tighter">{c.name}</p><p className="text-[10px] text-slate-400 font-bold">{c.phone}</p></button>))}
+                            <div className="absolute z-30 w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl max-h-56 overflow-y-auto mt-3 p-2">
+                              {clients.filter(c => c.name.toLowerCase().includes(clientSearch.toLowerCase())).map(c => (<button key={c.id} onClick={() => { setSelectedClient(c); setClientSearch(c.name); setShowClientList(false); }} className="w-full text-left p-4 hover:bg-slate-50 dark:hover:bg-slate-700 border-b border-slate-50 dark:border-slate-700 last:border-0 rounded-2xl"><p className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-tighter">{c.name}</p><p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold">{c.phone}</p></button>))}
                             </div>
                           )}
-                          {selectedClient && <div className="mt-4 bg-emerald-50 p-4 rounded-2xl border border-emerald-100 flex justify-between items-center animate-in fade-in"><div className="flex-1 min-w-0"><p className="text-[10px] font-black text-emerald-700 uppercase">{selectedClient.name}</p><p className="text-[8px] text-emerald-400 truncate uppercase">{formatAddress(selectedClient)}</p></div><button onClick={() => setSelectedClient(null)} className="text-emerald-400 font-black px-2 text-xl">×</button></div>}
+                          {selectedClient && <div className="mt-4 bg-emerald-50 dark:bg-emerald-900/20 p-4 rounded-2xl border border-emerald-100 dark:border-emerald-900/30 flex justify-between items-center animate-in fade-in"><div className="flex-1 min-w-0"><p className="text-[10px] font-black text-emerald-700 dark:text-emerald-400 uppercase">{selectedClient.name}</p><p className="text-[8px] text-emerald-400 dark:text-emerald-500 truncate uppercase">{formatAddress(selectedClient)}</p></div><button onClick={() => setSelectedClient(null)} className="text-emerald-400 font-black px-2 text-xl">×</button></div>}
                         </div>
                       )}
                       <button onClick={() => { const sess = getSessForTable(selectedTable!); if (sess) startBillingRequest(sess); }} disabled={getSessForTable(selectedTable)?.items.length === 0} className="w-full py-5 bg-orange-500 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-xl shadow-orange-100 hover:bg-orange-600 transition-all active:scale-95 disabled:opacity-50">Solicitar Pré-Fechamento / Ir para Cupom</button>
@@ -1034,17 +1034,17 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
       {/* MODAL DE OBSERVAÇÃO PARA LANÇAMENTO */}
       {selectedProductForLaunch !== null && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in zoom-in duration-200">
-          <div className="bg-white rounded-[2rem] shadow-2xl p-8 w-full max-w-sm border border-white/20">
-            <h3 className="text-lg font-black text-slate-800 uppercase mb-2 tracking-tighter text-center">Lançar Item</h3>
-            <p className="text-center text-[10px] font-bold text-slate-400 uppercase mb-6">{selectedProductForLaunch.name}</p>
+          <div className="bg-white dark:bg-slate-900 rounded-[2rem] shadow-2xl p-8 w-full max-w-sm border border-white/20 dark:border-slate-800">
+            <h3 className="text-lg font-black text-slate-800 dark:text-white uppercase mb-2 tracking-tighter text-center">Lançar Item</h3>
+            <p className="text-center text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase mb-6">{selectedProductForLaunch.name}</p>
             <div className="space-y-6">
               <div>
-                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 block">Deseja adicionar alguma observação?</label>
-                <input autoFocus type="text" placeholder="Ex: Sem sal, bem passado..." value={modalObservation} onChange={(e) => setModalObservation(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && confirmLaunchProduct()} className="w-full p-4 bg-slate-100 rounded-2xl border-none focus:ring-2 focus:ring-blue-600 font-bold text-sm outline-none placeholder:font-normal" maxLength={60} />
+                <label className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2 block">Deseja adicionar alguma observação?</label>
+                <input autoFocus type="text" placeholder="Ex: Sem sal, bem passado..." value={modalObservation} onChange={(e) => setModalObservation(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && confirmLaunchProduct()} className="w-full p-4 bg-slate-100 dark:bg-slate-800 rounded-2xl border-none focus:ring-2 focus:ring-blue-600 dark:focus:ring-blue-500 font-bold text-sm outline-none placeholder:font-normal dark:text-white" maxLength={60} />
               </div>
               <div className="flex gap-2">
-                <button onClick={() => setSelectedProductForLaunch(null)} className="flex-1 py-4 font-black text-[10px] uppercase text-slate-400 hover:text-slate-600 transition-colors">Cancelar</button>
-                <button onClick={confirmLaunchProduct} className="flex-1 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-black text-[10px] uppercase shadow-xl hover:shadow-blue-200 transition-all active:scale-95">Confirmar ✓</button>
+                <button onClick={() => setSelectedProductForLaunch(null)} className="flex-1 py-4 font-black text-[10px] uppercase text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">Cancelar</button>
+                <button onClick={confirmLaunchProduct} className="flex-1 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-black text-[10px] uppercase shadow-xl hover:shadow-blue-200 dark:hover:shadow-blue-900/40 transition-all active:scale-95">Confirmar ✓</button>
               </div>
             </div>
           </div>
@@ -1134,15 +1134,15 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
       {showFeedbacks && (
         <div className="fixed inset-0 z-[100] flex items-center justify-end p-4 bg-slate-900/60 backdrop-blur-sm">
           <div className="absolute inset-0" onClick={() => setShowFeedbacks(false)} />
-          <div className="bg-white rounded-[3rem] shadow-2xl w-full max-w-md h-[95vh] flex flex-col overflow-hidden animate-in slide-in-from-right duration-300 relative border-l border-white/20">
-            <div className="p-8 border-b bg-indigo-50 flex justify-between items-center">
+          <div className="bg-white dark:bg-slate-900 rounded-[3rem] shadow-2xl w-full max-w-md h-[95vh] flex flex-col overflow-hidden animate-in slide-in-from-right duration-300 relative border-l border-white/20 dark:border-slate-800">
+            <div className="p-8 border-b dark:border-slate-800 bg-indigo-50 dark:bg-indigo-950/20 flex justify-between items-center">
               <div>
-                <h3 className="text-xl font-black text-indigo-900 uppercase tracking-tighter">Mensagens dos Clientes</h3>
-                <p className="text-[9px] font-bold text-indigo-400 uppercase tracking-widest">Feedbacks e Sugestões do dia</p>
+                <h3 className="text-xl font-black text-indigo-900 dark:text-indigo-100 uppercase tracking-tighter">Mensagens dos Clientes</h3>
+                <p className="text-[9px] font-bold text-indigo-400 dark:text-indigo-500 uppercase tracking-widest">Feedbacks e Sugestões do dia</p>
               </div>
               <button
                 onClick={() => setShowFeedbacks(false)}
-                className="p-3 bg-white text-slate-400 rounded-2xl hover:text-slate-600 transition-all shadow-sm"
+                className="p-3 bg-white dark:bg-slate-800 text-slate-400 dark:text-slate-500 rounded-2xl hover:text-slate-600 dark:hover:text-slate-300 transition-all shadow-sm"
               >
                 ✕
               </button>
@@ -1151,15 +1151,15 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
             <div className="flex-1 overflow-y-auto p-6 space-y-4">
               {feedbacks.length > 0 ? (
                 feedbacks.map((fb, i) => (
-                  <div key={fb.id} className="bg-slate-50 border border-slate-100 p-5 rounded-[2rem] shadow-sm animate-in fade-in slide-in-from-bottom-2" style={{ animationDelay: `${i * 50}ms` }}>
+                  <div key={fb.id} className="bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700 p-5 rounded-[2rem] shadow-sm animate-in fade-in slide-in-from-bottom-2" style={{ animationDelay: `${i * 50}ms` }}>
                     <div className="flex justify-between items-start mb-3">
                       <div className="flex items-center gap-2">
                         <div className="bg-indigo-600 text-white w-8 h-8 rounded-xl flex items-center justify-center text-[10px] font-black">M{fb.tableNumber}</div>
-                        <span className="text-xs font-black text-slate-800 uppercase tracking-tight">{fb.name || 'Cliente Anônimo'}</span>
+                        <span className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-tight">{fb.name || 'Cliente Anônimo'}</span>
                       </div>
-                      <span className="text-[8px] font-bold text-slate-400 uppercase">{new Date(fb.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                      <span className="text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase">{new Date(fb.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                     </div>
-                    <p className="text-sm font-bold text-slate-600 leading-relaxed bg-white/50 p-4 rounded-2xl border border-slate-50 italic">
+                    <p className="text-sm font-bold text-slate-600 dark:text-slate-300 leading-relaxed bg-white/50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-50 dark:border-slate-700 italic">
                       "{fb.message}"
                     </p>
                   </div>
@@ -1182,15 +1182,15 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
       {/* MODAL DE TRANSFERENCIA */}
       {transferModal.isOpen && transferModal.sourceTable !== null && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-          <div className="bg-white p-8 rounded-[3rem] shadow-2xl w-full max-w-md animate-in zoom-in duration-200 text-center border border-white/20">
-            <div className="text-orange-500 mb-6 flex justify-center"><Icons.Dashboard /></div>
-            <h3 className="text-2xl font-black text-slate-800 uppercase tracking-tighter mb-2">Transferir Mesa {transferModal.sourceTable}</h3>
-            <p className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-6 px-4">Digite o número da mesa de destino (Livre)</p>
+          <div className="bg-white dark:bg-slate-900 p-8 rounded-[3rem] shadow-2xl w-full max-w-md animate-in zoom-in duration-200 text-center border border-white/20 dark:border-slate-800">
+            <div className="text-orange-500 dark:text-orange-400 mb-6 flex justify-center"><Icons.Dashboard /></div>
+            <h3 className="text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tighter mb-2">Transferir Mesa {transferModal.sourceTable}</h3>
+            <p className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-6 px-4">Digite o número da mesa de destino (Livre)</p>
 
             <input
               autoFocus
               type="number"
-              className="w-full text-center text-4xl font-black text-slate-800 bg-slate-50 border-2 border-slate-200 rounded-3xl p-6 mb-8 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/20 outline-none transition-all placeholder:text-slate-300"
+              className="w-full text-center text-4xl font-black text-slate-800 dark:text-white bg-slate-50 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-3xl p-6 mb-8 focus:border-orange-500 dark:focus:border-orange-400 focus:ring-4 focus:ring-orange-500/20 dark:focus:ring-orange-900/40 outline-none transition-all placeholder:text-slate-300 dark:placeholder:text-slate-600"
               placeholder="00"
               value={transferTargetStr}
               onChange={e => setTransferTargetStr(e.target.value)}
@@ -1230,7 +1230,7 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
             <div className="flex gap-4">
               <button
                 onClick={() => setTransferModal({ isOpen: false, sourceTable: null })}
-                className="flex-1 py-5 text-slate-400 font-black uppercase text-xs tracking-widest hover:bg-slate-50 rounded-2xl transition-all"
+                className="flex-1 py-5 text-slate-400 dark:text-slate-500 font-black uppercase text-xs tracking-widest hover:bg-slate-50 dark:hover:bg-slate-800 rounded-2xl transition-all"
               >
                 Cancelar
               </button>
