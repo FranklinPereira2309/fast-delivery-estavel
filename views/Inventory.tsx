@@ -357,12 +357,21 @@ const Inventory: React.FC = () => {
       {/* MODAL FICHA TÉCNICA - ATUALIZADO COM DESPERDÍCIO */}
       {isRecipeModalOpen && editingProduct && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-          <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in duration-200 border border-transparent dark:border-slate-800">
+          <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl w-full max-w-xl overflow-hidden animate-in zoom-in duration-200 border border-transparent dark:border-slate-800">
             <div className="p-8 border-b border-slate-50 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 flex justify-between items-center">
               <h3 className="text-xl font-black text-slate-800 dark:text-white uppercase tracking-tighter">Ficha Técnica: {editingProduct.name}</h3>
-              <button onClick={() => setIsRecipeModalOpen(false)} className="p-2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
-                <Icons.X className="h-6 w-6" />
-              </button>
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={saveRecipe}
+                  className="w-12 h-12 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full flex items-center justify-center shadow-lg shadow-emerald-200 dark:shadow-emerald-900/40 transition-all active:scale-95"
+                  title="Atualizar Ficha Técnica"
+                >
+                  <Icons.Check className="h-6 w-6" />
+                </button>
+                <button onClick={() => setIsRecipeModalOpen(false)} className="p-2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
+                  <Icons.X className="h-6 w-6" />
+                </button>
+              </div>
             </div>
             <div className="p-8 space-y-6 max-h-[60vh] overflow-y-auto">
               {tempRecipe.length > 0 ? tempRecipe.map((item, index) => (
@@ -400,10 +409,6 @@ const Inventory: React.FC = () => {
                 <p className="text-center text-slate-400 dark:text-slate-500 text-xs italic py-10">Nenhum insumo vinculado a esta receita.</p>
               )}
               <button onClick={() => setTempRecipe([...tempRecipe, { inventoryItemId: inventory[0]?.id || '', quantity: 0, wasteFactor: 1 }])} className="w-full py-6 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-3xl text-slate-400 dark:text-slate-500 text-[10px] font-black uppercase tracking-[0.2em] hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-200 dark:hover:border-blue-900 transition-all font-bold">+ Adicionar Insumo à Receita</button>
-            </div>
-            <div className="p-8 border-t border-slate-50 dark:border-slate-800 flex gap-4 bg-slate-50 dark:bg-slate-900">
-              <button onClick={() => setIsRecipeModalOpen(false)} className="flex-1 py-4 text-slate-400 dark:text-slate-500 font-black uppercase text-[10px]">Cancelar</button>
-              <button onClick={saveRecipe} className="flex-1 py-4 bg-slate-900 dark:bg-blue-600 text-white font-black rounded-2xl shadow-xl uppercase text-[10px] tracking-widest hover:bg-slate-800 dark:hover:bg-blue-700 transition-all">Atualizar Ficha Técnica</button>
             </div>
           </div>
         </div>
