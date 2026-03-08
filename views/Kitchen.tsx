@@ -191,38 +191,49 @@ const Kitchen: React.FC = () => {
                 className={`bg-white dark:bg-slate-800 rounded-[2rem] border-2 transition-all flex flex-col overflow-hidden shadow-sm hover:shadow-xl ${viewTab === 'FILA' ? 'border-blue-100 dark:border-blue-900/30' : 'border-slate-100 dark:border-slate-700 opacity-90'
                   } ${viewTab === 'FILA' && !acknowledgedOrders.has(order.id) ? 'animate-moderate-blink border-blue-400 dark:border-blue-500' : ''}`}
               >
-                <div className={`flex flex-col ${viewTab === 'FILA' ? 'p-6 bg-blue-50 dark:bg-blue-900/20' : 'p-4 bg-slate-50 dark:bg-slate-900 border-b border-slate-100 dark:border-slate-700'}`}>
+                <div className={`flex flex-col ${viewTab === 'FILA' ? 'p-6 bg-blue-50 dark:bg-blue-900/20' : 'p-6 bg-white dark:bg-slate-900'}`}>
                   <div className="flex justify-between items-start">
-                    <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest truncate max-w-[150px]">
-                      {order.type === SaleType.TABLE ? getWaiterName(order.waiterId) : (order.id.split('-')[1] || order.id)}
-                    </p>
-                    <span className="text-[10px] font-black bg-white dark:bg-blue-900/40 px-3 py-1 rounded-full text-blue-600 dark:text-blue-400 shadow-sm uppercase">
-                      {new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' }).format(new Date(order.createdAt))}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center mt-2">
-                    <h4 className={`${viewTab === 'FILA' ? 'text-lg' : 'text-sm'} font-black text-slate-800 dark:text-white uppercase`}>
-                      {translateOrderType(order.type)} {order.tableNumber ? `- MESA ${order.tableNumber}` : ''}
-                      {order.status === OrderStatus.REOPENED && (
-                        <span className="ml-2 inline-block px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-md text-[8px] font-black animate-pulse">REABERTA</span>
+                    <div>
+                      <h4 className={`${viewTab === 'FILA' ? 'text-lg' : 'text-xl'} font-black text-slate-800 dark:text-white uppercase tracking-tighter`}>
+                        {translateOrderType(order.type)} {order.tableNumber ? `- MESA ${order.tableNumber}` : ''}
+                        {order.status === OrderStatus.REOPENED && (
+                          <span className="ml-2 inline-block px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-md text-[8px] font-black animate-pulse">REABERTA</span>
+                        )}
+                      </h4>
+                      <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest truncate max-w-[150px]">
+                        {order.clientName || 'Cliente Direto'}
+                      </p>
+                      {viewTab === 'HISTORICO' && (
+                        <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase mt-1">Data: {new Date(order.createdAt).toLocaleDateString('pt-BR')}</p>
                       )}
-                    </h4>
-                    {viewTab === 'HISTORICO' && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setExpandedOrders(prev => ({ ...prev, [order.id]: !prev[order.id] }));
-                        }}
-                        className="p-2 hover:bg-white dark:hover:bg-slate-800 rounded-xl transition-all text-slate-400 dark:text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 shadow-sm border border-transparent hover:border-slate-100 dark:hover:border-slate-700"
-                      >
-                        {expandedOrders[order.id] ? <Icons.ChevronUp className="w-4 h-4" /> : <Icons.ChevronDown className="w-4 h-4" />}
-                      </button>
+                    </div>
+                    {viewTab === 'FILA' ? (
+                      <span className="text-[10px] font-black bg-white dark:bg-blue-900/40 px-3 py-1 rounded-full text-blue-600 dark:text-blue-400 shadow-sm uppercase">
+                        {new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' }).format(new Date(order.createdAt))}
+                      </span>
+                    ) : (
+                      <div className="px-3 py-1.5 rounded-xl text-[10px] font-black uppercase text-white shadow-sm bg-emerald-500">
+                        CONCLUÍDO
+                      </div>
                     )}
                   </div>
-                  <p className={`${viewTab === 'FILA' ? 'text-[10px]' : 'text-[9px]'} font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tight truncate`}>{order.clientName}</p>
                 </div>
 
-                <div className={`${viewTab === 'FILA' ? 'p-4 md:p-6' : 'p-3'} flex-1 flex flex-col min-h-0`}>
+                {viewTab === 'HISTORICO' && (
+                  <div className="px-6 pb-2">
+                    <div className="flex items-center gap-3 p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800 rounded-2xl">
+                      <div className="w-10 h-10 bg-emerald-600 rounded-full flex items-center justify-center text-white font-black uppercase shadow-md">
+                        {getWaiterName(order.waiterId).charAt(0)}
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-[9px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-0.5">Responsável:</p>
+                        <p className="text-xs font-black text-emerald-900 dark:text-emerald-300 truncate">{getWaiterName(order.waiterId)}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div className={`${viewTab === 'FILA' ? 'p-4 md:p-6' : 'p-6 pt-2'} flex-1 flex flex-col min-h-0`}>
                   {viewTab === 'FILA' && (
                     <div className="flex justify-between items-center mb-3">
                       <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
@@ -231,7 +242,7 @@ const Kitchen: React.FC = () => {
                     </div>
                   )}
                   {(viewTab === 'FILA' || expandedOrders[order.id]) && (
-                    <div className={`space-y-3 overflow-y-auto pr-1 custom-scrollbar ${viewTab === 'FILA' ? 'max-h-[350px] md:max-h-[450px]' : 'max-h-[200px] animate-in slide-in-from-top-2 duration-300'}`}>
+                    <div className={`space-y-3 overflow-y-auto pr-1 custom-scrollbar ${viewTab === 'FILA' ? 'max-h-[350px] md:max-h-[450px]' : 'max-h-[250px] animate-in slide-in-from-top-2 duration-300'}`}>
 
                       {order.items.filter(it => viewTab === 'FILA' ? !it.isReady : it.isReady).map((item, idx) => {
                         const product = products.find(p => p.id === item.productId);
@@ -275,7 +286,7 @@ const Kitchen: React.FC = () => {
                                     </div>
                                   )}
                                   {item.isReady && (
-                                    <p className="text-[8px] text-emerald-500 dark:text-emerald-400 font-black uppercase mt-2">Pronto em: {new Date(item.readyAt!).toLocaleTimeString()}</p>
+                                    <p className="text-[8px] text-emerald-500 dark:text-emerald-400 font-black uppercase mt-2">Pronto em: {new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' }).format(new Date(item.readyAt!))}</p>
                                   )}
                                 </div>
                               </div>
@@ -296,7 +307,7 @@ const Kitchen: React.FC = () => {
                   )}
                 </div>
 
-                {viewTab === 'FILA' && (
+                {viewTab === 'FILA' ? (
                   <div className="p-4 md:p-6 bg-slate-50/50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-700 shrink-0">
                     {!order.items.every(it => it.isReady) && (
                       <button
@@ -307,6 +318,30 @@ const Kitchen: React.FC = () => {
                         Concluir Selecionados
                       </button>
                     )}
+                  </div>
+                ) : (
+                  <div className="p-6 border-t border-slate-50 dark:border-slate-800 flex justify-between items-center mt-auto">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] text-slate-400 dark:text-slate-500 uppercase font-black">Total:</span>
+                      <span className="text-sm font-black text-slate-900 dark:text-white">R$ {(order.total || 0).toFixed(2)}</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        title="Imprimir Cupom"
+                        className="p-2 text-slate-400 dark:text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 transition-all"
+                      >
+                        <Icons.Print size={18} />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setExpandedOrders(prev => ({ ...prev, [order.id]: !prev[order.id] }));
+                        }}
+                        className={`p-2 rounded-xl transition-all border shadow-sm ${expandedOrders[order.id] ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400' : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-400 dark:text-slate-500'}`}
+                      >
+                        {expandedOrders[order.id] ? <Icons.ChevronUp size={16} /> : <Icons.ChevronDown size={16} />}
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
