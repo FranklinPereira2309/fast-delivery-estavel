@@ -2389,7 +2389,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       {/* MODAL DE REVISÃO E RELATÓRIO DE CAIXA */}
       {
         isReviewModalOpen && reviewSession && (
-          <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/40 animate-in fade-in duration-300 p-2 print:p-0 print:bg-transparent print:items-start print:relative print:z-auto">
+          <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/40 animate-in fade-in duration-300 p-2 print:p-0 print:bg-white print:items-start print:static print:z-auto print-modal">
             <div className="bg-white w-full max-w-[650px] border border-slate-300 shadow-xl flex flex-col max-h-[98vh] print:max-h-none print:h-auto print:shadow-none print:border-none print:w-full print:m-0 rounded-2xl print:rounded-none">
               <div className="flex-1 p-4 lg:p-6 space-y-4 overflow-y-auto print:overflow-visible custom-scrollbar">
                 {/* Formal Header */}
