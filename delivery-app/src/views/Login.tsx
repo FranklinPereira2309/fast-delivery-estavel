@@ -163,7 +163,7 @@ const Login: React.FC = () => {
                 </button>
 
                 <div className="text-center mb-10">
-                    <h1 className="text-3xl font-black text-slate-800 uppercase tracking-tighter italic">Delivery Fast</h1>
+                    <h1 className="text-3xl font-black text-slate-800 uppercase tracking-tighter italic">Delivery App</h1>
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2">
                         {view === 'LOGIN' ? 'Acesso do Cliente' : 'Troca de Senha Obrigatória'}
                     </p>

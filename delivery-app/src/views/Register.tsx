@@ -172,7 +172,7 @@ const Register: React.FC = () => {
 
                 <div className="flex flex-col items-center mb-10 text-center">
                     <h1 className="text-3xl lg:text-4xl font-black text-slate-800 tracking-tighter uppercase mb-2">Criar Conta</h1>
-                    <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest">Faça parte do Delivery Fast</p>
+                    <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest">Faça parte do Delivery App</p>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-5">
