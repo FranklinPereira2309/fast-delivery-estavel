@@ -467,19 +467,19 @@ const OperatingHoursSettings: React.FC<{ settings: BusinessSettings, setSettings
                 </div>
             </div>
 
-            <div className={`p-6 rounded-3xl border-2 transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${settings.isManuallyClosed ? 'bg-red-50 border-red-200' : 'bg-blue-50 border-blue-200'}`}>
-                <div>
-                    <h4 className={`text-lg font-black uppercase tracking-tight ${settings.isManuallyClosed ? 'text-red-800' : 'text-blue-800'}`}>
+            <div className={`p-4 sm:p-6 rounded-3xl border-2 transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${settings.isManuallyClosed ? 'bg-red-50 border-red-200' : 'bg-blue-50 border-blue-200'}`}>
+                <div className="flex-1">
+                    <h4 className={`text-base sm:text-lg font-black uppercase tracking-tight ${settings.isManuallyClosed ? 'text-red-800' : 'text-blue-800'}`}>
                         {settings.isManuallyClosed ? 'Loja Fechada Manualmente' : 'Controle Manual: Loja Aberta'}
                     </h4>
-                    <p className={`text-[10px] font-bold uppercase tracking-widest ${settings.isManuallyClosed ? 'text-red-500' : 'text-blue-500'}`}>
+                    <p className={`text-[9px] sm:text-[10px] font-bold uppercase tracking-widest ${settings.isManuallyClosed ? 'text-red-500' : 'text-blue-500'}`}>
                         {settings.isManuallyClosed ? 'Nenhum pedido digital será aceito até que você reabra.' : 'Seguindo a programação normal de dias e horários.'}
                     </p>
                 </div>
                 <button
                     type="button"
                     onClick={() => setSettings({ ...settings, isManuallyClosed: !settings.isManuallyClosed })}
-                    className={`w-full sm:w-auto px-8 py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest transition-all shadow-xl ${settings.isManuallyClosed ? 'bg-red-600 text-white hover:bg-red-700 shadow-red-200' : 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-200'}`}
+                    className={`w-full sm:w-auto px-6 sm:px-8 py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest transition-all shadow-xl ${settings.isManuallyClosed ? 'bg-red-600 text-white hover:bg-red-700 shadow-red-200' : 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-200'}`}
                 >
                     {settings.isManuallyClosed ? 'Reabrir Loja Agora' : 'Fechar Loja Temporariamente'}
                 </button>
@@ -592,13 +592,13 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings, onReset }) =
             <div className="flex-1 overflow-y-auto pr-4 custom-scrollbar">
                 {activeSubTab === 'EMPRESA' && (
                     <div className="bg-white p-10 rounded-[3rem] shadow-sm border border-slate-100 max-w-4xl">
-                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-10 gap-4">
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-10 gap-6">
                             <div>
-                                <h3 className="text-2xl font-black text-slate-800 uppercase tracking-tighter">Identidade do Negócio</h3>
+                                <h3 className="text-xl sm:text-2xl font-black text-slate-800 uppercase tracking-tighter">Identidade do Negócio</h3>
                                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Aparecerá nos cupons e relatórios do sistema</p>
                             </div>
                             {storeStatus && (
-                                <div className={`flex items-center gap-3 px-6 py-3 rounded-2xl border transition-all ${storeStatus.status === 'online' ? 'bg-emerald-50 border-emerald-100' : 'bg-red-50 border-red-100'}`}>
+                                <div className={`flex items-center gap-3 px-4 sm:px-6 py-3 rounded-2xl border transition-all ${storeStatus.status === 'online' ? 'bg-emerald-50 border-emerald-100' : 'bg-red-50 border-red-100'}`}>
                                     <div className={`w-2 h-2 rounded-full ${storeStatus.status === 'online' ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`}></div>
                                     <span className={`text-[10px] font-black uppercase tracking-widest ${storeStatus.status === 'online' ? 'text-emerald-600' : 'text-red-600'}`}>
                                         Loja {storeStatus.status === 'online' ? 'Online' : 'Offline'}
@@ -632,12 +632,12 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings, onReset }) =
                                     <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Troco Máximo (R$)</h4>
                                     <input type="number" className="w-full p-4 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-blue-50 transition-all font-bold text-sm" value={settings.maxChange || 191} onChange={e => setSettings({ ...settings, maxChange: parseFloat(e.target.value) || 0 })} />
                                 </div>
-                                <div className="space-y-2 col-span-1 md:col-span-2 p-6 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                                    <div>
+                                <div className="space-y-2 col-span-1 md:col-span-2 p-4 sm:p-6 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                                    <div className="flex-1">
                                         <h4 className="text-[12px] font-black text-slate-800 uppercase tracking-widest">Cobrar Taxa de Serviço Opcional</h4>
                                         <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase">Aplica % de comissão na venda pelo PDV de Mesas e Menu Digital</p>
                                     </div>
-                                    <div className="flex items-center gap-4">
+                                    <div className="flex items-center justify-between sm:justify-end w-full sm:w-auto gap-4">
                                         <div className="flex items-center gap-2">
                                             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">%</span>
                                             <input
@@ -831,9 +831,9 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings, onReset }) =
                 {activeSubTab === 'HORARIOS' && <OperatingHoursSettings settings={settings} setSettings={setSettings} onSave={handleSaveSettings} />}
 
                 {activeSubTab === 'FISCAL' && (
-                    <div className="bg-white p-10 rounded-[3rem] shadow-sm border border-slate-100 max-w-4xl animate-in fade-in">
+                    <div className="bg-white p-6 sm:p-10 rounded-[3rem] shadow-sm border border-slate-100 max-w-4xl animate-in fade-in">
                         <div className="mb-10">
-                            <h3 className="text-2xl font-black text-slate-800 uppercase tracking-tighter">Configurações Fiscais</h3>
+                            <h3 className="text-xl sm:text-2xl font-black text-slate-800 uppercase tracking-tighter">Configurações Fiscais</h3>
                             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Credenciais para emissão de NFC-e (Nota Fiscal de Consumidor Eletrônica)</p>
                         </div>
                         <form onSubmit={handleSaveSettings} className="space-y-8">
@@ -894,14 +894,14 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings, onReset }) =
                             <h3 className="text-2xl font-black mb-2 text-blue-600 uppercase tracking-tighter">Manutenção e Backup</h3>
                             <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mb-10">Gerencie a segurança dos seus dados</p>
 
-                            <div className="p-8 bg-blue-50 rounded-3xl border border-blue-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                                <div>
+                            <div className="p-5 sm:p-8 bg-blue-50 rounded-3xl border border-blue-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+                                <div className="flex-1">
                                     <p className="text-sm font-black text-blue-900 uppercase tracking-tight">Cópia de Segurança (Backup):</p>
-                                    <p className="text-[10px] text-blue-700/60 font-bold mt-1 uppercase">Baixe um arquivo contendo todos os dados do sistema (pedidos, clientes, produtos).</p>
+                                    <p className="text-[9px] sm:text-[10px] text-blue-700/60 font-bold mt-1 uppercase">Baixe um arquivo contendo todos os dados do sistema (pedidos, clientes, produtos).</p>
                                 </div>
                                 <button
                                     onClick={handleBackup}
-                                    className="w-full sm:w-auto bg-blue-600 text-white px-8 py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-blue-700 transition-all shadow-xl shadow-blue-200 flex items-center justify-center gap-3"
+                                    className="w-full sm:w-auto bg-blue-600 text-white px-6 sm:px-8 py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-blue-700 transition-all shadow-xl shadow-blue-200 flex items-center justify-center gap-3"
                                 >
                                     <Icons.Download className="w-4 h-4" />
                                     Baixar Backup (.sql)
