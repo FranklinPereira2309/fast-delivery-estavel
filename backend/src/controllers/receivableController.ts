@@ -34,7 +34,7 @@ export const getReceivables = async (req: Request, res: Response) => {
 // Create a receivable manually (Optional/Future use if not created via Order)
 export const createReceivable = async (req: Request, res: Response) => {
     try {
-        const { clientId, orderId, amount, dueDate, observations } = req.body;
+        const { clientId, orderId, amount, dueDate, observations, user } = req.body;
 
         if (!clientId || !orderId || !amount || !dueDate) {
             return res.status(400).json({ error: 'Campos obrigatórios ausentes' });
@@ -51,6 +51,17 @@ export const createReceivable = async (req: Request, res: Response) => {
             include: { client: true }
         });
 
+        if (user) {
+            await prisma.auditLog.create({
+                data: {
+                    userId: user.id,
+                    userName: user.name,
+                    action: 'CREATE_RECEIVABLE',
+                    details: `Manual: Criado título de R$ ${parseFloat(amount).toFixed(2)} para o cliente ${(newReceivable as any).client?.name}.`
+                }
+            }).catch(e => console.error('Error creating audit log in createReceivable:', e));
+        }
+
         res.status(201).json(newReceivable);
     } catch (error) {
         console.error('Error creating receivable:', error);
@@ -62,7 +73,7 @@ export const createReceivable = async (req: Request, res: Response) => {
 export const updateReceivable = async (req: Request, res: Response) => {
     try {
         const id = req.params.id as string;
-        const { dueDate, observations, status } = req.body;
+        const { dueDate, observations, status, user } = req.body;
 
         const updated = await prisma.receivable.update({
             where: { id },
@@ -72,6 +83,17 @@ export const updateReceivable = async (req: Request, res: Response) => {
                 ...(status && { status })
             }
         });
+
+        if (user) {
+            await prisma.auditLog.create({
+                data: {
+                    userId: user.id,
+                    userName: user.name,
+                    action: 'UPDATE_RECEIVABLE',
+                    details: `Atualizado título ${id}. Novo status: ${status || 'N/A'}.`
+                }
+            }).catch(e => console.error('Error creating audit log in updateReceivable:', e));
+        }
 
         res.json(updated);
     } catch (error) {
@@ -84,7 +106,20 @@ export const updateReceivable = async (req: Request, res: Response) => {
 export const deleteReceivable = async (req: Request, res: Response) => {
     try {
         const id = req.params.id as string;
+        const { user } = req.body;
         await prisma.receivable.delete({ where: { id } });
+
+        if (user) {
+            await prisma.auditLog.create({
+                data: {
+                    userId: user.id,
+                    userName: user.name,
+                    action: 'DELETE_RECEIVABLE',
+                    details: `Excluído título ${id} permanentemente.`
+                }
+            }).catch(e => console.error('Error creating audit log in deleteReceivable:', e));
+        }
+
         res.json({ success: true });
     } catch (error) {
         console.error('Error deleting receivable:', error);

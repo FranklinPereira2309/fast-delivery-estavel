@@ -70,7 +70,6 @@ model User {
   active             Boolean    @default(true)
   permissions        String[]
   createdAt          DateTime   @default(now())
-  AuditLog           AuditLog[]
 }
 
 model Client {
@@ -284,7 +283,6 @@ model AuditLog {
   id        String   @id @default(uuid())
   timestamp DateTime @default(now())
   userId    String
-  user      User     @relation(fields: [userId], references: [id])
   userName  String
   action    String
   details   String

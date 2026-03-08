@@ -249,6 +249,15 @@ export const updateCashSession = async (req: Request, res: Response) => {
         }
     });
 
+    await prisma.auditLog.create({
+        data: {
+            userId: user.id,
+            userName: user.name,
+            action: 'UPDATE_CASH',
+            details: `Usuário revisou o fechamento do caixa ${id}. Nova diferença: R$ ${difference.toFixed(2)}.`
+        }
+    }).catch(e => console.error('Error creating audit log in updateCashSession:', e));
+
     res.json(updated);
 };
 
@@ -287,6 +296,16 @@ export const reopenCashSession = async (req: Request, res: Response) => {
     });
 
     res.json(session);
+
+    // Audit Log for Reopening
+    await prisma.auditLog.create({
+        data: {
+            userId: user.id || 'SYSTEM',
+            userName: user.name || 'Sistema',
+            action: 'REOPEN_CASH',
+            details: `Usuário reabriu o caixa ${sessionId} que estava fechado.`
+        }
+    }).catch(e => console.error('Error creating audit log in reopenCashSession:', e));
 };
 
 export const getCashSessions = async (req: Request, res: Response) => {

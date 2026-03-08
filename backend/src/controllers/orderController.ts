@@ -464,6 +464,25 @@ export const saveOrder = async (req: Request, res: Response) => {
             console.error('Socket error emitting orderStatusUpdated from saveOrder:', e);
         }
 
+        // Create audit log for creation/update
+        if (user || order.waiterId || result.waiterId) {
+            const auditUserId = user?.id || order.waiterId || result.waiterId || 'SYSTEM';
+            const auditUserName = user?.name || (result.waiterId ? 'Garçom' : 'Sistema');
+            const actionType = isNewItemsAdded ? 'CREATE_ORDER' : 'UPDATE_ORDER';
+            const details = isNewItemsAdded
+                ? `Pedido ${result.id} (${result.type}) criado. Total: R$ ${result.total.toFixed(2)}`
+                : `Pedido ${result.id} alterado. Novo total: R$ ${result.total.toFixed(2)}`;
+
+            await prisma.auditLog.create({
+                data: {
+                    userId: auditUserId,
+                    userName: auditUserName,
+                    action: actionType,
+                    details
+                }
+            }).catch(e => console.error('Error creating audit log in saveOrder:', e));
+        }
+
         res.json(mapOrderResponse(result));
     } catch (error: any) {
         res.status(500).json({ error: error.message });
@@ -720,6 +739,21 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
                         }
                     });
                 }
+            }
+
+            // Audit log for status change
+            if (user || order.waiterId || order.driverId) {
+                const auditUserId = user?.id || order.waiterId || order.driverId || 'SYSTEM';
+                const auditUserName = user?.name || (order.waiterId ? 'Garçom' : (order.driverId ? 'Entregador' : 'Sistema'));
+
+                await tx.auditLog.create({
+                    data: {
+                        userId: auditUserId,
+                        userName: auditUserName,
+                        action: 'UPDATE_ORDER_STATUS',
+                        details: `Status do pedido ${order.id} alterado de ${oldStatus || 'N/A'} para ${status}.`
+                    }
+                }).catch((e: any) => console.error('Error creating audit log in updateOrderStatus:', e));
             }
 
             return order;

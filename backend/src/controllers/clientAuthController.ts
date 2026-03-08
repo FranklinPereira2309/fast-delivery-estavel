@@ -87,6 +87,17 @@ export const loginClient = async (req: ExpressRequest, res: ExpressResponse) => 
         };
 
         const token = jwt.sign({ id: client.id, role: 'CLIENT' }, JWT_SECRET, { expiresIn: '30d' });
+
+        // Create a log entry
+        await prisma.auditLog.create({
+            data: {
+                userId: client.id,
+                userName: client.name,
+                action: 'LOGIN_CLIENT',
+                details: `Cliente ${client.name} acessou o delivery app.`
+            }
+        });
+
         res.json({ token, client: clientResponse });
     } catch (error) {
         console.error('Login Client Error:', error);

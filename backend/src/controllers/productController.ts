@@ -11,7 +11,7 @@ export const getAllProducts = async (req: Request, res: Response) => {
 
 export const saveProduct = async (req: Request, res: Response) => {
     const data = req.body;
-    const { recipe, ...productData } = data;
+    const { recipe, user, ...productData } = data;
 
     const product = await prisma.product.upsert({
         where: { id: data.id || '' },
@@ -39,10 +39,24 @@ export const saveProduct = async (req: Request, res: Response) => {
         include: { recipe: true }
     });
     res.json(product);
+
+    // Audit log
+    if (user) {
+        const isUpdate = !!data.id;
+        await prisma.auditLog.create({
+            data: {
+                userId: user.id,
+                userName: user.name,
+                action: isUpdate ? 'UPDATE_PRODUCT' : 'CREATE_PRODUCT',
+                details: `${isUpdate ? 'Atualizado' : 'Criado'} produto ${product.name}. Preço: R$ ${product.price.toFixed(2)}.`
+            }
+        }).catch(e => console.error('Error creating audit log in saveProduct:', e));
+    }
 };
 
 export const deleteProduct = async (req: Request, res: Response) => {
     const id = req.params.id as string;
+    const { user } = req.body;
     try {
         // Check if there are any order items linked to this product
         const linkedOrderItemsCount = await prisma.orderItem.count({
@@ -65,6 +79,19 @@ export const deleteProduct = async (req: Request, res: Response) => {
         });
 
         await prisma.product.delete({ where: { id } });
+
+        // Audit log
+        if (user) {
+            await prisma.auditLog.create({
+                data: {
+                    userId: user.id,
+                    userName: user.name,
+                    action: 'DELETE_PRODUCT',
+                    details: `Produto ID ${id} removido permanentemente.`
+                }
+            }).catch(e => console.error('Error creating audit log in deleteProduct:', e));
+        }
+
         res.json({ message: 'Produto removido permanentemente com sucesso.' });
     } catch (error: any) {
         console.error('Delete Product Error:', error);
