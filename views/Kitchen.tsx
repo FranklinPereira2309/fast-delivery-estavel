@@ -191,28 +191,27 @@ const Kitchen: React.FC = () => {
                 className={`bg-white dark:bg-slate-800 rounded-[2rem] border-2 transition-all flex flex-col overflow-hidden shadow-sm hover:shadow-xl ${viewTab === 'FILA' ? 'border-blue-100 dark:border-blue-900/30' : 'border-slate-100 dark:border-slate-700 opacity-90'
                   } ${viewTab === 'FILA' && !acknowledgedOrders.has(order.id) ? 'animate-moderate-blink border-blue-400 dark:border-blue-500' : ''}`}
               >
-                <div className={`flex flex-col ${viewTab === 'FILA' ? 'p-6 bg-blue-50 dark:bg-blue-900/20' : 'p-6 bg-white dark:bg-slate-900'}`}>
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h4 className={`${viewTab === 'FILA' ? 'text-lg' : 'text-xl'} font-black text-slate-800 dark:text-white uppercase tracking-tighter`}>
+                <div className={`flex flex-col ${viewTab === 'FILA' ? 'p-6 bg-blue-50 dark:bg-blue-900/20' : 'p-5 bg-white dark:bg-slate-900 border-b border-slate-50 dark:border-slate-800/50'}`}>
+                  <div className="flex justify-between items-start gap-2">
+                    <div className="flex-1 min-w-0">
+                      <h4 className={`${viewTab === 'FILA' ? 'text-lg' : 'text-base md:text-lg'} font-black text-slate-800 dark:text-white uppercase tracking-tighter truncate`}>
                         {translateOrderType(order.type)} {order.tableNumber ? `- MESA ${order.tableNumber}` : ''}
-                        {order.status === OrderStatus.REOPENED && (
-                          <span className="ml-2 inline-block px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-md text-[8px] font-black animate-pulse">REABERTA</span>
-                        )}
                       </h4>
-                      <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest truncate max-w-[150px]">
+                      <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest truncate">
                         {order.clientName || 'Cliente Direto'}
                       </p>
                       {viewTab === 'HISTORICO' && (
-                        <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase mt-1">Data: {new Date(order.createdAt).toLocaleDateString('pt-BR')}</p>
+                        <p className="text-[9px] text-slate-400 dark:text-slate-500 font-bold uppercase mt-1 flex items-center gap-1">
+                          <Icons.Clock size={10} /> {new Date(order.createdAt).toLocaleDateString('pt-BR')}
+                        </p>
                       )}
                     </div>
                     {viewTab === 'FILA' ? (
-                      <span className="text-[10px] font-black bg-white dark:bg-blue-900/40 px-3 py-1 rounded-full text-blue-600 dark:text-blue-400 shadow-sm uppercase">
+                      <span className="text-[10px] font-black bg-white dark:bg-blue-900/40 px-3 py-1 rounded-full text-blue-600 dark:text-blue-400 shadow-sm shrink-0">
                         {new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' }).format(new Date(order.createdAt))}
                       </span>
                     ) : (
-                      <div className="px-3 py-1.5 rounded-xl text-[10px] font-black uppercase text-white shadow-sm bg-emerald-500">
+                      <div className="px-2.5 py-1 rounded-lg text-[9px] font-black uppercase text-white shadow-sm bg-emerald-500 shrink-0">
                         CONCLUÍDO
                       </div>
                     )}
@@ -220,20 +219,20 @@ const Kitchen: React.FC = () => {
                 </div>
 
                 {viewTab === 'HISTORICO' && (
-                  <div className="px-6 pb-2">
-                    <div className="flex items-center gap-3 p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800 rounded-2xl">
-                      <div className="w-10 h-10 bg-emerald-600 rounded-full flex items-center justify-center text-white font-black uppercase shadow-md">
+                  <div className="px-5 pb-3 pt-4">
+                    <div className="flex items-center gap-3 p-3 bg-emerald-50/50 dark:bg-emerald-900/10 border border-emerald-100/50 dark:border-emerald-800/30 rounded-2xl">
+                      <div className="w-9 h-9 bg-emerald-600 rounded-full flex items-center justify-center text-white text-xs font-black uppercase shadow-sm shrink-0">
                         {getWaiterName(order.waiterId).charAt(0)}
                       </div>
-                      <div className="flex-1">
-                        <p className="text-[9px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-0.5">Responsável:</p>
-                        <p className="text-xs font-black text-emerald-900 dark:text-emerald-300 truncate">{getWaiterName(order.waiterId)}</p>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[8px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-0.5">Responsável:</p>
+                        <p className="text-[11px] font-black text-emerald-900 dark:text-emerald-300 truncate">{getWaiterName(order.waiterId)}</p>
                       </div>
                     </div>
                   </div>
                 )}
 
-                <div className={`${viewTab === 'FILA' ? 'p-4 md:p-6' : 'p-6 pt-2'} flex-1 flex flex-col min-h-0`}>
+                <div className={`${viewTab === 'FILA' ? 'p-4 md:p-6' : 'p-5 pt-0'} flex-1 flex flex-col min-h-0`}>
                   {viewTab === 'FILA' && (
                     <div className="flex justify-between items-center mb-3">
                       <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
@@ -242,15 +241,15 @@ const Kitchen: React.FC = () => {
                     </div>
                   )}
                   {(viewTab === 'FILA' || expandedOrders[order.id]) && (
-                    <div className={`space-y-3 overflow-y-auto pr-1 custom-scrollbar ${viewTab === 'FILA' ? 'max-h-[350px] md:max-h-[450px]' : 'max-h-[250px] animate-in slide-in-from-top-2 duration-300'}`}>
+                    <div className={`space-y-2 overflow-y-auto pr-1 custom-scrollbar ${viewTab === 'FILA' ? 'max-h-[350px] md:max-h-[450px]' : 'max-h-[220px] pb-2 mt-2 animate-in slide-in-from-top-2 duration-300'}`}>
 
                       {order.items.filter(it => viewTab === 'FILA' ? !it.isReady : it.isReady).map((item, idx) => {
                         const product = products.find(p => p.id === item.productId);
                         const isSelected = (selectedItems[order.id] || []).includes(item.uid);
 
                         return (
-                          <div key={item.uid} className="space-y-2 animate-in fade-in duration-300">
-                            <label className={`block cursor-pointer bg-white dark:bg-slate-900/40 p-5 md:p-4 rounded-2xl border transition-all shadow-sm ${isSelected ? 'border-blue-600 dark:border-blue-500 ring-2 ring-blue-50 dark:ring-blue-900/20' : 'border-slate-100 dark:border-slate-700 hover:border-blue-200 dark:hover:border-blue-800'
+                          <div key={item.uid} className="space-y-1 animate-in fade-in duration-300">
+                            <label className={`block cursor-pointer bg-white dark:bg-slate-900/40 p-3 rounded-xl border transition-all shadow-sm ${isSelected ? 'border-blue-600 dark:border-blue-500 ring-2 ring-blue-50 dark:ring-blue-900/20' : 'border-slate-100 dark:border-slate-800 hover:border-blue-100 dark:hover:border-blue-900/40'
                               }`}>
                               <div className="flex items-center gap-3">
                                 {viewTab === 'FILA' && (
@@ -261,32 +260,17 @@ const Kitchen: React.FC = () => {
                                     className="w-4 h-4 rounded-md border-slate-300 text-blue-600 focus:ring-blue-500"
                                   />
                                 )}
-                                <div className="flex-1">
-                                  <p className="font-black text-slate-800 dark:text-slate-200 uppercase text-xs">
-                                    <span className="text-blue-600 dark:text-blue-400 text-sm">{item.quantity}x</span> {product?.name}
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-black text-slate-700 dark:text-slate-300 uppercase text-[11px] truncate">
+                                    <span className="text-blue-600 dark:text-blue-400 text-xs">{item.quantity}x</span> {product?.name}
                                   </p>
                                   {item.observations && (
-                                    <p className="inline-block text-[10px] text-orange-600 dark:text-orange-400 font-bold bg-orange-100/50 dark:bg-orange-900/20 px-2 py-1 rounded-md mt-1 mb-1 border border-orange-200 dark:border-orange-900/30">
+                                    <p className="inline-block text-[9px] text-orange-600 dark:text-orange-400 font-bold bg-orange-100/50 dark:bg-orange-900/20 px-2 py-0.5 rounded-md mt-1 border border-orange-200/50 dark:border-orange-900/30">
                                       Obs: {item.observations}
                                     </p>
                                   )}
-                                  {product?.recipe && product.recipe.length > 0 && (
-                                    <div className="mt-2 pl-2 border-l-2 border-slate-200 dark:border-slate-700">
-                                      <p className="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase mb-1">Ficha Técnica:</p>
-                                      <ul className="space-y-0.5">
-                                        {product.recipe.map((rec, i) => {
-                                          const inv = inventory.find(invIt => invIt.id === rec.inventoryItemId);
-                                          return (
-                                            <li key={i} className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase list-inside list-disc">
-                                              {inv?.name || 'Ingrediente Desconhecido'} ({(rec.quantity * item.quantity).toFixed(2)}{inv?.unit})
-                                            </li>
-                                          );
-                                        })}
-                                      </ul>
-                                    </div>
-                                  )}
                                   {item.isReady && (
-                                    <p className="text-[8px] text-emerald-500 dark:text-emerald-400 font-black uppercase mt-2">Pronto em: {new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' }).format(new Date(item.readyAt!))}</p>
+                                    <p className="text-[8px] text-emerald-500 dark:text-emerald-400 font-black uppercase mt-1">Pronto em: {new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' }).format(new Date(item.readyAt!))}</p>
                                   )}
                                 </div>
                               </div>
@@ -314,21 +298,21 @@ const Kitchen: React.FC = () => {
                         onClick={() => markSelectedAsReady(order)}
                         className="w-full py-5 md:py-4 bg-blue-600 hover:bg-blue-700 text-white font-black text-sm md:text-xs uppercase rounded-2xl shadow-xl shadow-blue-200 dark:shadow-blue-900/20 transition-all active:scale-95 flex items-center justify-center gap-3"
                       >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 md:h-4 md:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                        <Icons.Check size={18} />
                         Concluir Selecionados
                       </button>
                     )}
                   </div>
                 ) : (
-                  <div className="p-6 border-t border-slate-50 dark:border-slate-800 flex justify-between items-center mt-auto">
+                  <div className="p-5 border-t border-slate-50 dark:border-slate-800/50 flex justify-between items-center mt-auto bg-slate-50/30 dark:bg-slate-900/30">
                     <div className="flex items-center gap-2">
-                      <span className="text-[10px] text-slate-400 dark:text-slate-500 uppercase font-black">Total:</span>
+                      <span className="text-[9px] text-slate-400 dark:text-slate-500 uppercase font-black tracking-widest">Total:</span>
                       <span className="text-sm font-black text-slate-900 dark:text-white">R$ {(order.total || 0).toFixed(2)}</span>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex items-center gap-2">
                       <button
                         title="Imprimir Cupom"
-                        className="p-2 text-slate-400 dark:text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 transition-all"
+                        className="p-2 text-slate-400 dark:text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 transition-all hover:bg-white dark:hover:bg-slate-800 rounded-lg"
                       >
                         <Icons.Print size={18} />
                       </button>
@@ -337,9 +321,9 @@ const Kitchen: React.FC = () => {
                           e.stopPropagation();
                           setExpandedOrders(prev => ({ ...prev, [order.id]: !prev[order.id] }));
                         }}
-                        className={`p-2 rounded-xl transition-all border shadow-sm ${expandedOrders[order.id] ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400' : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-400 dark:text-slate-500'}`}
+                        className={`px-3 py-2 rounded-xl transition-all border shadow-sm text-[10px] font-black uppercase flex items-center gap-2 ${expandedOrders[order.id] ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-blue-200'}`}
                       >
-                        {expandedOrders[order.id] ? <Icons.ChevronUp size={16} /> : <Icons.ChevronDown size={16} />}
+                        ITENS {expandedOrders[order.id] ? <Icons.ChevronUp size={14} /> : <Icons.ChevronDown size={14} />}
                       </button>
                     </div>
                   </div>
