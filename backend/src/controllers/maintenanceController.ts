@@ -10,6 +10,8 @@ export const resetSystem = async (req: Request, res: Response) => {
             // But TRUNCATE with CASCADE is the most efficient way in Postgres
 
             const tables = [
+                'SupportMessage',
+                'OrderMessage',
                 'OrderRejection',
                 'ChatMessage',
                 'AuditLog',
@@ -39,31 +41,32 @@ export const resetSystem = async (req: Request, res: Response) => {
             await tx.businessSettings.create({
                 data: {
                     key: 'main',
-                    name: 'Fast Food Express',
-                    cnpj: '12.345.678/0001-90',
-                    address: 'Av. Paulista, 1000 - São Paulo, SP',
-                    phone: '(11) 98888-7777',
-                    deliveryFee: 'R$ 8,00',
-                    tableCount: 10,
-                    geofenceRadius: 30,
+                    name: 'Delivery Fast',
+                    cnpj: '00.000.000/0000-00',
+                    address: 'Endereço da Empresa',
+                    phone: '(00) 00000-0000',
+                    deliveryFee: 'R$ 0,00',
+                    tableCount: 1,
+                    geofenceRadius: 150,
                     isManuallyClosed: false,
                     operatingHours: '[]',
-                    orderTimeoutMinutes: 5,
-                    maxChange: 191,
+                    orderTimeoutMinutes: 10,
+                    maxChange: 200,
                     serviceFeeStatus: true,
-                    serviceFeePercentage: 10
+                    serviceFeePercentage: 10,
+                    autoCloseTime: '00:00'
                 }
             });
 
-            // Create default Admin Master user
-            const hashedPassword = await bcrypt.hash('admin123', 10);
+            // Create default Admin Master user as requested
+            const hashedPassword = await bcrypt.hash('@F88321656f', 10);
             await tx.user.create({
                 data: {
                     email: 'admin@admin.com',
                     name: 'Administrador Master',
                     password: hashedPassword,
                     recoveryCode: 'ADMIN1',
-                    mustChangePassword: true,
+                    mustChangePassword: false,
                     permissions: [
                         'dashboard',
                         'pos',
