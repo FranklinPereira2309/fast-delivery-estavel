@@ -4,6 +4,7 @@ import { db } from '../services/db';
 import { User, Waiter, DeliveryDriver, BusinessSettings } from '../types';
 import { Icons } from '../constants';
 import CustomAlert from '../components/CustomAlert';
+import { useTheme } from '../components/ThemeProvider';
 import AuditLogs from './AuditLogs';
 
 // Sub-componente para Gestão de Garçons
