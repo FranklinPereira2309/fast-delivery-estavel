@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { db, BusinessSettings } from '../services/db';
-import { Order, OrderStatus, SaleType, Client, Product, DeliveryDriver, InventoryMovement, OrderRejection, CashSession, Receivable, User, Waiter } from '../types';
+import { db } from '../services/db';
+import { Order, OrderStatus, SaleType, Client, Product, DeliveryDriver, InventoryMovement, OrderRejection, CashSession, Receivable, User, Waiter, BusinessSettings } from '../types';
 import { Icons } from '../constants';
 import CustomAlert from '../components/CustomAlert';
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
@@ -1162,53 +1162,53 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
             )}
 
             {/* TABS HEADER - Added horizontal scroll for mobile */}
-            <div className="flex gap-4 border-b border-slate-200 pb-2 px-2 shrink-0 overflow-x-auto no-scrollbar">
-                <button onClick={() => setActiveTab('SALES')} className={`pb-4 text-[10px] sm:text-[12px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === 'SALES' ? 'text-blue-600 border-b-4 border-blue-600' : 'text-slate-400 hover:text-slate-600'}`}>Vendas</button>
-                <button onClick={() => setActiveTab('CLIENTS')} className={`pb-4 text-[10px] sm:text-[12px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === 'CLIENTS' ? 'text-blue-600 border-b-4 border-blue-600' : 'text-slate-400 hover:text-slate-600'}`}>Clientes</button>
-                <button onClick={() => setActiveTab('DRIVERS')} className={`pb-4 text-[10px] sm:text-[12px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === 'DRIVERS' ? 'text-blue-600 border-b-4 border-blue-600' : 'text-slate-400 hover:text-slate-600'}`}>Entregadores</button>
-                <button onClick={() => setActiveTab('INVENTORY')} className={`pb-4 text-[10px] sm:text-[12px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === 'INVENTORY' ? 'text-blue-600 border-b-4 border-blue-600' : 'text-slate-400 hover:text-slate-600'}`}>Insumos</button>
-                <button onClick={() => setActiveTab('CASH')} className={`pb-4 text-[10px] sm:text-[12px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === 'CASH' ? 'text-blue-600 border-b-4 border-blue-600' : 'text-slate-400 hover:text-slate-600'}`}>Caixa</button>
-                <button onClick={() => setActiveTab('RECEIVABLES')} className={`pb-4 text-[10px] sm:text-[12px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === 'RECEIVABLES' ? 'text-blue-600 border-b-4 border-blue-600' : 'text-slate-400 hover:text-slate-600'}`}>Recebimentos</button>
-                <button onClick={() => setActiveTab('WAITERS')} className={`pb-4 text-[10px] sm:text-[12px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === 'WAITERS' ? 'text-blue-600 border-b-4 border-blue-600' : 'text-slate-400 hover:text-slate-600'}`}>Comissões</button>
+            <div className="flex gap-4 border-b border-slate-200 dark:border-slate-800 pb-2 px-2 shrink-0 overflow-x-auto no-scrollbar">
+                <button onClick={() => setActiveTab('SALES')} className={`pb-4 text-[10px] sm:text-[12px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === 'SALES' ? 'text-blue-600 border-b-4 border-blue-600' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'}`}>Vendas</button>
+                <button onClick={() => setActiveTab('CLIENTS')} className={`pb-4 text-[10px] sm:text-[12px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === 'CLIENTS' ? 'text-blue-600 border-b-4 border-blue-600' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'}`}>Clientes</button>
+                <button onClick={() => setActiveTab('DRIVERS')} className={`pb-4 text-[10px] sm:text-[12px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === 'DRIVERS' ? 'text-blue-600 border-b-4 border-blue-600' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'}`}>Entregadores</button>
+                <button onClick={() => setActiveTab('INVENTORY')} className={`pb-4 text-[10px] sm:text-[12px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === 'INVENTORY' ? 'text-blue-600 border-b-4 border-blue-600' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'}`}>Insumos</button>
+                <button onClick={() => setActiveTab('CASH')} className={`pb-4 text-[10px] sm:text-[12px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === 'CASH' ? 'text-blue-600 border-b-4 border-blue-600' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'}`}>Caixa</button>
+                <button onClick={() => setActiveTab('RECEIVABLES')} className={`pb-4 text-[10px] sm:text-[12px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === 'RECEIVABLES' ? 'text-blue-600 border-b-4 border-blue-600' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'}`}>Recebimentos</button>
+                <button onClick={() => setActiveTab('WAITERS')} className={`pb-4 text-[10px] sm:text-[12px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === 'WAITERS' ? 'text-blue-600 border-b-4 border-blue-600' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'}`}>Comissões</button>
             </div>
 
             <div className="flex-1">
 
                 {/* CARD RELATÓRIO DE VENDAS */}
                 {activeTab === 'SALES' && (
-                    <div className="bg-white p-4 sm:p-10 rounded-2xl sm:rounded-[3rem] shadow-sm border border-slate-100 flex flex-col h-max max-w-4xl animate-in fade-in zoom-in-95">
+                    <div className="bg-white dark:bg-slate-900/50 p-4 sm:p-10 rounded-2xl sm:rounded-[3rem] shadow-sm border border-slate-100 dark:border-slate-800 flex flex-col h-max max-w-4xl animate-in fade-in zoom-in-95">
                         <div className="mb-6 sm:mb-8">
-                            <h3 className="text-xl sm:text-2xl font-black text-slate-800 uppercase tracking-tighter flex items-center gap-3">
-                                <span className="p-2 sm:p-3 bg-blue-50 text-blue-600 rounded-2xl"><Icons.Dashboard /></span>
+                            <h3 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tighter flex items-center gap-3">
+                                <span className="p-2 sm:p-3 bg-blue-50 dark:bg-blue-900/20 text-blue-600 rounded-2xl"><Icons.Dashboard /></span>
                                 Relatório de Vendas
                             </h3>
-                            <p className="text-[8px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-2 ml-10 sm:ml-14">Análise financeira detalhada por período</p>
+                            <p className="text-[8px] sm:text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest mt-2 ml-10 sm:ml-14">Análise financeira detalhada por período</p>
                         </div>
 
                         <div className="space-y-4 sm:space-y-6">
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Início</label>
-                                    <input type="date" value={salesStartDate} onChange={e => setSalesStartDate(e.target.value)} className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-sm" />
+                                    <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Início</label>
+                                    <input type="date" value={salesStartDate} onChange={e => setSalesStartDate(e.target.value)} className="w-full p-4 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl font-bold text-sm text-slate-800 dark:text-slate-200" />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Fim</label>
-                                    <input type="date" value={salesEndDate} onChange={e => setSalesEndDate(e.target.value)} className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-sm" />
+                                    <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Fim</label>
+                                    <input type="date" value={salesEndDate} onChange={e => setSalesEndDate(e.target.value)} className="w-full p-4 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl font-bold text-sm text-slate-800 dark:text-slate-200" />
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Pagamento</label>
-                                    <select value={salesPayment} onChange={e => setSalesPayment(e.target.value)} className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-sm">
+                                    <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Pagamento</label>
+                                    <select value={salesPayment} onChange={e => setSalesPayment(e.target.value)} className="w-full p-4 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl font-bold text-sm text-slate-800 dark:text-slate-200">
                                         {uniquePaymentMethods.map(pm => (
                                             <option key={pm} value={pm}>{pm}</option>
                                         ))}
                                     </select>
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Modalidade</label>
-                                    <select value={salesModality} onChange={e => setSalesModality(e.target.value)} className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-sm">
+                                    <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Modalidade</label>
+                                    <select value={salesModality} onChange={e => setSalesModality(e.target.value)} className="w-full p-4 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl font-bold text-sm text-slate-800 dark:text-slate-200">
                                         <option value="TODOS">TODOS</option>
                                         <option value={SaleType.COUNTER}>BALCÃO</option>
                                         <option value={SaleType.TABLE}>MESA</option>
@@ -1219,8 +1219,8 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
 
                             <div className="grid grid-cols-1 gap-4">
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Origem do Pedido (Cardápio Digital)</label>
-                                    <select value={salesOrigin} onChange={e => setSalesOrigin(e.target.value as any)} className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-sm">
+                                    <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Origem do Pedido (Cardápio Digital)</label>
+                                    <select value={salesOrigin} onChange={e => setSalesOrigin(e.target.value as any)} className="w-full p-4 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl font-bold text-sm text-slate-800 dark:text-slate-200">
                                         <option value="TODOS">TODOS OS PEDIDOS</option>
                                         <option value="FISICO">APENAS ATENDIMENTO FÍSICO/GARÇOM</option>
                                         <option value="DIGITAL">APENAS CARDÁPIO DIGITAL</option>
@@ -1241,23 +1241,23 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
 
                 {/* CARD LISTA DE CLIENTES */}
                 {activeTab === 'CLIENTS' && (
-                    <div className="bg-white p-4 sm:p-10 rounded-2xl sm:rounded-[3rem] shadow-sm border border-slate-100 flex flex-col h-max max-w-4xl animate-in fade-in zoom-in-95">
+                    <div className="bg-white dark:bg-slate-900/50 p-4 sm:p-10 rounded-2xl sm:rounded-[3rem] shadow-sm border border-slate-100 dark:border-slate-800 flex flex-col h-max max-w-4xl animate-in fade-in zoom-in-95">
                         <div className="mb-6 sm:mb-8">
-                            <h3 className="text-xl sm:text-2xl font-black text-slate-800 uppercase tracking-tighter flex items-center gap-3">
-                                <span className="p-2 sm:p-3 bg-blue-50 text-blue-600 rounded-2xl"><Icons.CRM /></span>
+                            <h3 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tighter flex items-center gap-3">
+                                <span className="p-2 sm:p-3 bg-blue-50 dark:bg-blue-900/20 text-blue-600 rounded-2xl"><Icons.CRM /></span>
                                 Lista de Clientes
                             </h3>
-                            <p className="text-[8px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-2 ml-10 sm:ml-14">Fidelidade e contatos registrados</p>
+                            <p className="text-[8px] sm:text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest mt-2 ml-10 sm:ml-14">Fidelidade e contatos registrados</p>
                         </div>
 
                         <div className="space-y-4 sm:space-y-6">
                             <div className="space-y-2 relative">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Buscar Cliente (Opcional)</label>
+                                <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Buscar Cliente (Opcional)</label>
                                 {selectedClient ? (
-                                    <div className="flex items-center justify-between p-4 bg-blue-50 border border-blue-100 rounded-2xl">
+                                    <div className="flex items-center justify-between p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/30 rounded-2xl">
                                         <div className="flex flex-col">
-                                            <span className="font-bold text-sm text-blue-900">{selectedClient.name}</span>
-                                            <span className="text-xs text-blue-600">{selectedClient.phone}</span>
+                                            <span className="font-bold text-sm text-blue-900 dark:text-blue-100">{selectedClient.name}</span>
+                                            <span className="text-xs text-blue-600 dark:text-blue-400">{selectedClient.phone}</span>
                                         </div>
                                         <button
                                             onClick={() => {
@@ -1281,10 +1281,10 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
                                                 setShowClientDropdown(true);
                                             }}
                                             onFocus={() => setShowClientDropdown(true)}
-                                            className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-sm"
+                                            className="w-full p-4 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl font-bold text-sm text-slate-800 dark:text-slate-200"
                                         />
                                         {showClientDropdown && clientSearch && (
-                                            <div className="absolute z-10 w-full mt-2 bg-white rounded-2xl shadow-xl border border-slate-100 max-h-48 overflow-y-auto">
+                                            <div className="absolute z-10 w-full mt-2 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 max-h-48 overflow-y-auto">
                                                 {clients.filter(c => c.name.toLowerCase().includes(clientSearch.toLowerCase()) || c.phone.includes(clientSearch)).length > 0 ? (
                                                     clients.filter(c => c.name.toLowerCase().includes(clientSearch.toLowerCase()) || c.phone.includes(clientSearch)).map(client => (
                                                         <div
@@ -1294,10 +1294,10 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
                                                                 setShowClientDropdown(false);
                                                                 setClientSearch(client.name);
                                                             }}
-                                                            className="p-3 hover:bg-slate-50 cursor-pointer border-b border-slate-50 last:border-none flex flex-col"
+                                                            className="p-3 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer border-b border-slate-50 dark:border-slate-800 last:border-none flex flex-col"
                                                         >
-                                                            <span className="font-bold text-sm text-slate-700">{client.name}</span>
-                                                            <span className="text-xs text-slate-400">{client.phone}</span>
+                                                            <span className="font-bold text-sm text-slate-700 dark:text-slate-200">{client.name}</span>
+                                                            <span className="text-xs text-slate-400 dark:text-slate-500">{client.phone}</span>
                                                         </div>
                                                     ))
                                                 ) : (
@@ -1334,30 +1334,30 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
 
                 {/* CARD RELATÓRIO DE ENTREGADORES */}
                 {activeTab === 'DRIVERS' && (
-                    <div className="bg-white p-4 sm:p-10 rounded-2xl sm:rounded-[3rem] shadow-sm border border-slate-100 flex flex-col h-max max-w-4xl animate-in fade-in zoom-in-95">
+                    <div className="bg-white dark:bg-slate-900/50 p-4 sm:p-10 rounded-2xl sm:rounded-[3rem] shadow-sm border border-slate-100 dark:border-slate-800 flex flex-col h-max max-w-4xl animate-in fade-in zoom-in-95">
                         <div className="mb-6 sm:mb-8">
-                            <h3 className="text-xl sm:text-2xl font-black text-slate-800 uppercase tracking-tighter flex items-center gap-3">
-                                <span className="p-2 sm:p-3 bg-blue-50 text-blue-600 rounded-2xl"><Icons.Logistics /></span>
+                            <h3 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tighter flex items-center gap-3">
+                                <span className="p-2 sm:p-3 bg-blue-50 dark:bg-blue-900/20 text-blue-600 rounded-2xl"><Icons.Logistics /></span>
                                 Relatório de Entregadores
                             </h3>
-                            <p className="text-[8px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-2 ml-10 sm:ml-14">Histórico de entregas e conferência de rotas</p>
+                            <p className="text-[8px] sm:text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest mt-2 ml-10 sm:ml-14">Histórico de entregas e conferência de rotas</p>
                         </div>
 
                         <div className="space-y-4 sm:space-y-6">
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Início</label>
-                                    <input type="date" value={driverStartDate} onChange={e => setDriverStartDate(e.target.value)} className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-sm" />
+                                    <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Início</label>
+                                    <input type="date" value={driverStartDate} onChange={e => setDriverStartDate(e.target.value)} className="w-full p-4 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl font-bold text-sm text-slate-800 dark:text-slate-200" />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Fim</label>
-                                    <input type="date" value={driverEndDate} onChange={e => setDriverEndDate(e.target.value)} className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-sm" />
+                                    <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Fim</label>
+                                    <input type="date" value={driverEndDate} onChange={e => setDriverEndDate(e.target.value)} className="w-full p-4 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl font-bold text-sm text-slate-800 dark:text-slate-200" />
                                 </div>
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Entregador</label>
-                                <select value={selectedDriverId} onChange={e => setSelectedDriverId(e.target.value)} className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-sm">
+                                <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Entregador</label>
+                                <select value={selectedDriverId} onChange={e => setSelectedDriverId(e.target.value)} className="w-full p-4 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl font-bold text-sm text-slate-800 dark:text-slate-200">
                                     <option value="TODOS">TODOS OS ENTREGADORES</option>
                                     {drivers.map(d => (
                                         <option key={d.id} value={d.id}>{d.name} ({d.vehicle.plate})</option>
@@ -1378,24 +1378,24 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
 
                 {/* CARD RELATÓRIO DE MOVIMENTAÇÃO DE INSUMOS */}
                 {activeTab === 'INVENTORY' && (
-                    <div className="bg-white p-4 sm:p-10 rounded-2xl sm:rounded-[3rem] shadow-sm border border-slate-100 flex flex-col h-max max-w-4xl animate-in fade-in zoom-in-95">
+                    <div className="bg-white dark:bg-slate-900/50 p-4 sm:p-10 rounded-2xl sm:rounded-[3rem] shadow-sm border border-slate-100 dark:border-slate-800 flex flex-col h-max max-w-4xl animate-in fade-in zoom-in-95">
                         <div className="mb-6 sm:mb-8">
-                            <h3 className="text-xl sm:text-2xl font-black text-slate-800 uppercase tracking-tighter flex items-center gap-3">
-                                <span className="p-2 sm:p-3 bg-blue-50 text-blue-600 rounded-2xl"><Icons.Inventory /></span>
+                            <h3 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tighter flex items-center gap-3">
+                                <span className="p-2 sm:p-3 bg-blue-50 dark:bg-blue-900/20 text-blue-600 rounded-2xl"><Icons.Inventory /></span>
                                 Movimentação de Insumos
                             </h3>
-                            <p className="text-[8px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-2 ml-10 sm:ml-14">Rastreabilidade completa de estoque (entradas e saídas)</p>
+                            <p className="text-[8px] sm:text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest mt-2 ml-10 sm:ml-14">Rastreabilidade completa de estoque (entradas e saídas)</p>
                         </div>
 
                         <div className="space-y-4 sm:space-y-6">
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Início</label>
-                                    <input type="date" value={inventoryStartDate} onChange={e => setInventoryStartDate(e.target.value)} className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-sm" />
+                                    <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Início</label>
+                                    <input type="date" value={inventoryStartDate} onChange={e => setInventoryStartDate(e.target.value)} className="w-full p-4 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl font-bold text-sm text-slate-800 dark:text-slate-200" />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Fim</label>
-                                    <input type="date" value={inventoryEndDate} onChange={e => setInventoryEndDate(e.target.value)} className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-sm" />
+                                    <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Fim</label>
+                                    <input type="date" value={inventoryEndDate} onChange={e => setInventoryEndDate(e.target.value)} className="w-full p-4 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl font-bold text-sm text-slate-800 dark:text-slate-200" />
                                 </div>
                             </div>
                         </div>
@@ -1412,32 +1412,32 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
 
                 {/* CARD RELATÓRIO DE MOVIMENTAÇÃO DE CAIXA */}
                 {activeTab === 'CASH' && (
-                    <div className="bg-white p-4 sm:p-10 rounded-2xl sm:rounded-[3rem] shadow-sm border border-slate-100 flex flex-col h-max max-w-4xl animate-in fade-in zoom-in-95">
+                    <div className="bg-white dark:bg-slate-900/50 p-4 sm:p-10 rounded-2xl sm:rounded-[3rem] shadow-sm border border-slate-100 dark:border-slate-800 flex flex-col h-max max-w-4xl animate-in fade-in zoom-in-95">
                         <div className="mb-6 sm:mb-8">
-                            <h3 className="text-xl sm:text-2xl font-black text-slate-800 uppercase tracking-tighter flex items-center gap-3">
-                                <span className="p-2 sm:p-3 bg-blue-50 text-blue-600 rounded-2xl"><Icons.Dashboard /></span>
+                            <h3 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tighter flex items-center gap-3">
+                                <span className="p-2 sm:p-3 bg-blue-50 dark:bg-blue-900/20 text-blue-600 rounded-2xl"><Icons.Dashboard /></span>
                                 Movimentação de Caixa
                             </h3>
-                            <p className="text-[8px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-2 ml-10 sm:ml-14">Histórico de aberturas, fechamentos e conciliação</p>
+                            <p className="text-[8px] sm:text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest mt-2 ml-10 sm:ml-14">Histórico de aberturas, fechamentos e conciliação</p>
                         </div>
 
                         <div className="space-y-4 sm:space-y-6">
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Início</label>
-                                    <input type="date" value={cashStartDate} onChange={e => setCashStartDate(e.target.value)} className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-sm" />
+                                    <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Início</label>
+                                    <input type="date" value={cashStartDate} onChange={e => setCashStartDate(e.target.value)} className="w-full p-4 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl font-bold text-sm text-slate-800 dark:text-slate-200" />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Fim</label>
-                                    <input type="date" value={cashEndDate} onChange={e => setCashEndDate(e.target.value)} className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-sm" />
+                                    <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Fim</label>
+                                    <input type="date" value={cashEndDate} onChange={e => setCashEndDate(e.target.value)} className="w-full p-4 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl font-bold text-sm text-slate-800 dark:text-slate-200" />
                                 </div>
                             </div>
                         </div>
 
                         {cashSessions.length > 0 && (
-                            <div className="mt-8 overflow-x-auto border border-slate-100 rounded-3xl">
+                            <div className="mt-8 overflow-x-auto border border-slate-100 dark:border-slate-800 rounded-3xl">
                                 <table className="w-full text-left">
-                                    <thead className="bg-slate-50 text-[10px] font-black text-slate-400 p-4 border-b border-slate-100">
+                                    <thead className="bg-slate-50 dark:bg-slate-800/50 text-[10px] font-black text-slate-400 dark:text-slate-500 p-4 border-b border-slate-100 dark:border-slate-800">
                                         <tr>
                                             <th className="p-4 uppercase tracking-widest">Abertura</th>
                                             <th className="p-4 uppercase tracking-widest">Fechamento</th>
@@ -1446,14 +1446,14 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
                                             <th className="p-4 uppercase tracking-widest text-right">Ações</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="text-[11px] font-bold text-slate-600 divide-y divide-slate-50">
+                                    <tbody className="text-[11px] font-bold text-slate-600 dark:text-slate-300 divide-y divide-slate-50 dark:divide-slate-800">
                                         {cashSessions.map(s => (
-                                            <tr key={s.id} className="hover:bg-slate-50/50 transition-colors">
+                                            <tr key={s.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
                                                 <td className="p-4">{new Date(s.openedAt).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}</td>
                                                 <td className="p-4">{s.closedAt ? new Date(s.closedAt).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : 'Em Aberto'}</td>
                                                 <td className="p-4">R$ {s.totalSales?.toFixed(2) || (s.status === 'OPEN' ? 'Processando...' : '0,00')}</td>
                                                 <td className="p-4">
-                                                    <span className={`px-3 py-1 rounded-full text-[8px] uppercase tracking-widest font-black ${s.status === 'OPEN' ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-400'}`}>
+                                                    <span className={`px-3 py-1 rounded-full text-[8px] uppercase tracking-widest font-black ${s.status === 'OPEN' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400' : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500'}`}>
                                                         {s.status === 'OPEN' ? 'Aberto' : 'Fechado'}
                                                     </span>
                                                 </td>
@@ -1462,14 +1462,14 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
                                                         <>
                                                             <button
                                                                 onClick={() => handleEditReport(s)}
-                                                                className="p-2 bg-amber-50 text-amber-600 rounded-lg hover:bg-amber-600 hover:text-white transition-all text-[8px] uppercase font-black flex items-center gap-1"
+                                                                className="p-2 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 rounded-lg hover:bg-amber-600 dark:hover:bg-amber-500 hover:text-white transition-all text-[8px] uppercase font-black flex items-center gap-1"
                                                             >
                                                                 <Icons.Edit />
                                                                 Editar
                                                             </button>
                                                             <button
                                                                 onClick={() => handleReopen(s.id)}
-                                                                className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all text-[8px] uppercase font-black"
+                                                                className="p-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-600 dark:hover:bg-blue-500 hover:text-white transition-all text-[8px] uppercase font-black"
                                                             >
                                                                 Reabrir
                                                             </button>
@@ -1492,64 +1492,64 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
                         </button>
                         {/* MODAL DE EDIÇÃO DO RELATÓRIO DE CAIXA */}
                         {isEditReportModalOpen && editingSession && (
-                            <div className="fixed inset-0 z-[130] flex items-center justify-center p-4 sm:p-12 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
-                                <div className="bg-white rounded-2xl sm:rounded-[4rem] shadow-2xl w-full max-w-2xl flex flex-col overflow-hidden max-h-[90vh]">
-                                    <div className="p-6 sm:p-10 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+                            <div className="fixed inset-0 z-[130] flex items-center justify-center p-4 sm:p-12 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-300">
+                                <div className="bg-white dark:bg-slate-900 rounded-2xl sm:rounded-[4rem] shadow-2xl w-full max-w-2xl flex flex-col overflow-hidden max-h-[90vh] border border-transparent dark:border-slate-800">
+                                    <div className="p-6 sm:p-10 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 flex justify-between items-center">
                                         <div className="flex flex-col">
-                                            <h3 className="text-xl sm:text-2xl font-black text-slate-900 uppercase tracking-tighter flex items-center gap-3">
-                                                <span className="p-2 sm:p-3 bg-amber-50 text-amber-600 rounded-2xl"><Icons.Edit /></span>
+                                            <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tighter flex items-center gap-3">
+                                                <span className="p-2 sm:p-3 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 rounded-2xl"><Icons.Edit /></span>
                                                 Corrigir Caixa
                                             </h3>
-                                            <p className="text-[8px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-2 ml-10 sm:ml-14">Apenas Admin Master pode autorizar e salvar alterações</p>
+                                            <p className="text-[8px] sm:text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest mt-2 ml-10 sm:ml-14">Apenas Admin Master pode autorizar e salvar alterações</p>
                                         </div>
-                                        <button onClick={() => setIsEditReportModalOpen(false)} className="sm:hidden p-2 text-slate-400 hover:text-slate-600"><Icons.Close /></button>
+                                        <button onClick={() => setIsEditReportModalOpen(false)} className="sm:hidden p-2 text-slate-400 hover:text-slate-600"><Icons.X /></button>
                                     </div>
 
                                     <div className="p-6 sm:p-10 space-y-4 sm:space-y-8 overflow-y-auto">
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                                             <div className="space-y-2">
-                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Dinheiro (R$)</label>
+                                                <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Dinheiro (R$)</label>
                                                 <input
                                                     type="text"
                                                     value={editingSession.reportedCash || 0}
                                                     onChange={e => setEditingSession({ ...editingSession, reportedCash: parseFloat(e.target.value.replace(',', '.')) || 0 })}
-                                                    className="w-full p-5 bg-slate-50 border-none rounded-[1.5rem] font-bold text-lg"
+                                                    className="w-full p-5 bg-slate-50 dark:bg-slate-800 border-none rounded-[1.5rem] font-bold text-lg text-slate-800 dark:text-slate-200"
                                                 />
                                             </div>
                                             <div className="space-y-2">
-                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Pix (R$)</label>
+                                                <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Pix (R$)</label>
                                                 <input
                                                     type="text"
                                                     value={editingSession.reportedPix || 0}
                                                     onChange={e => setEditingSession({ ...editingSession, reportedPix: parseFloat(e.target.value.replace(',', '.')) || 0 })}
-                                                    className="w-full p-5 bg-slate-50 border-none rounded-[1.5rem] font-bold text-lg"
+                                                    className="w-full p-5 bg-slate-50 dark:bg-slate-800 border-none rounded-[1.5rem] font-bold text-lg text-slate-800 dark:text-slate-200"
                                                 />
                                             </div>
                                             <div className="space-y-2">
-                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Crédito (R$)</label>
+                                                <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Crédito (R$)</label>
                                                 <input
                                                     type="text"
                                                     value={editingSession.reportedCredit || 0}
                                                     onChange={e => setEditingSession({ ...editingSession, reportedCredit: parseFloat(e.target.value.replace(',', '.')) || 0 })}
-                                                    className="w-full p-5 bg-slate-50 border-none rounded-[1.5rem] font-bold text-lg"
+                                                    className="w-full p-5 bg-slate-50 dark:bg-slate-800 border-none rounded-[1.5rem] font-bold text-lg text-slate-800 dark:text-slate-200"
                                                 />
                                             </div>
                                             <div className="space-y-2">
-                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Débito (R$)</label>
+                                                <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Débito (R$)</label>
                                                 <input
                                                     type="text"
                                                     value={editingSession.reportedDebit || 0}
                                                     onChange={e => setEditingSession({ ...editingSession, reportedDebit: parseFloat(e.target.value.replace(',', '.')) || 0 })}
-                                                    className="w-full p-5 bg-slate-50 border-none rounded-[1.5rem] font-bold text-lg"
+                                                    className="w-full p-5 bg-slate-50 dark:bg-slate-800 border-none rounded-[1.5rem] font-bold text-lg text-slate-800 dark:text-slate-200"
                                                 />
                                             </div>
                                             <div className="space-y-2">
-                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Outros (R$)</label>
+                                                <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Outros (R$)</label>
                                                 <input
                                                     type="text"
                                                     value={editingSession.reportedOthers || 0}
                                                     onChange={e => setEditingSession({ ...editingSession, reportedOthers: parseFloat(e.target.value.replace(',', '.')) || 0 })}
-                                                    className="w-full p-4 sm:p-5 bg-slate-50 border-none rounded-xl sm:rounded-[1.5rem] font-bold text-base sm:text-lg text-emerald-600"
+                                                    className="w-full p-4 sm:p-5 bg-slate-50 dark:bg-slate-800 border-none rounded-xl sm:rounded-[1.5rem] font-bold text-base sm:text-lg text-emerald-600 dark:text-emerald-400"
                                                 />
                                             </div>
                                             <div className="space-y-2">
@@ -1558,47 +1558,47 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
                                                     type="text"
                                                     value={editingSession.reportedFiado || 0}
                                                     onChange={e => setEditingSession({ ...editingSession, reportedFiado: parseFloat(e.target.value.replace(',', '.')) || 0 })}
-                                                    className="w-full p-5 bg-blue-50 border-none rounded-[1.5rem] font-bold text-lg text-blue-700"
+                                                    className="w-full p-5 bg-blue-50 dark:bg-blue-900/20 border-none rounded-[1.5rem] font-bold text-lg text-blue-700 dark:text-blue-400"
                                                 />
                                             </div>
                                         </div>
 
                                         <div className="space-y-2">
-                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Observações do Admin</label>
+                                            <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Observações do Admin</label>
                                             <textarea
                                                 value={editingSession.observations || ''}
                                                 onChange={e => setEditingSession({ ...editingSession, observations: e.target.value })}
                                                 placeholder="Motivo da correção..."
-                                                className="w-full p-5 bg-slate-50 border-none rounded-[1.5rem] font-bold text-sm min-h-[100px]"
+                                                className="w-full p-5 bg-slate-50 dark:bg-slate-800 border-none rounded-[1.5rem] font-bold text-sm min-h-[100px] text-slate-800 dark:text-slate-200"
                                             />
                                         </div>
 
-                                        <div className="space-y-2 pt-4 border-t border-slate-100">
-                                            <label className="text-[10px] font-black text-red-400 uppercase tracking-widest ml-1 underline">Senha do Admin Master</label>
+                                        <div className="space-y-2 pt-4 border-t border-slate-100 dark:border-slate-800">
+                                            <label className="text-[10px] font-black text-red-400 dark:text-red-500 uppercase tracking-widest ml-1 underline">Senha do Admin Master</label>
                                             <input
                                                 type="password"
                                                 placeholder="Digite a senha para autorizar"
                                                 value={adminPassword}
                                                 onChange={e => setAdminPassword(e.target.value)}
-                                                className="w-full p-5 bg-red-50 text-red-900 border-none rounded-[1.5rem] font-black placeholder:text-red-200"
+                                                className="w-full p-5 bg-red-50 dark:bg-red-900/20 text-red-900 dark:text-red-100 border-none rounded-[1.5rem] font-black placeholder:text-red-200 dark:placeholder:text-red-900"
                                             />
                                         </div>
                                     </div>
 
-                                    <div className="p-6 sm:p-10 border-t border-slate-100 bg-slate-50 flex gap-4 mt-auto">
+                                    <div className="p-6 sm:p-10 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 flex gap-4 mt-auto">
                                         <button
                                             onClick={() => {
                                                 setIsEditReportModalOpen(false);
                                                 setEditingSession(null);
                                                 setAdminPassword('');
                                             }}
-                                            className="hidden sm:flex flex-1 py-5 bg-white text-slate-400 rounded-3xl font-black uppercase text-xs tracking-widest border border-slate-200 hover:bg-slate-100 transition-all items-center justify-center"
+                                            className="hidden sm:flex flex-1 py-5 bg-white dark:bg-slate-800 text-slate-400 dark:text-slate-500 rounded-3xl font-black uppercase text-xs tracking-widest border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all items-center justify-center"
                                         >
                                             Cancelar
                                         </button>
                                         <button
                                             onClick={handleSaveEdit}
-                                            className="flex-[2] py-4 sm:py-5 bg-slate-900 text-white rounded-2xl sm:rounded-3xl font-black uppercase text-[10px] sm:text-xs tracking-widest hover:bg-black transition-all shadow-xl shadow-slate-900/20"
+                                            className="flex-[2] py-4 sm:py-5 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 rounded-2xl sm:rounded-3xl font-black uppercase text-[10px] sm:text-xs tracking-widest hover:bg-black dark:hover:bg-white transition-all shadow-xl shadow-slate-900/20"
                                         >
                                             Salvar Alterações
                                         </button>
@@ -1611,31 +1611,31 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
 
                 {/* CARD RELATÓRIO DE RECEBIMENTOS (FIADO) */}
                 {activeTab === 'RECEIVABLES' && (
-                    <div className="bg-white p-4 sm:p-10 rounded-2xl sm:rounded-[3rem] shadow-sm border border-slate-100 flex flex-col h-max animate-in fade-in zoom-in-95">
+                    <div className="bg-white dark:bg-slate-900/50 p-4 sm:p-10 rounded-2xl sm:rounded-[3rem] shadow-sm border border-slate-100 dark:border-slate-800 flex flex-col h-max animate-in fade-in zoom-in-95">
                         <div className="mb-6 sm:mb-8">
-                            <h3 className="text-xl sm:text-2xl font-black text-slate-800 uppercase tracking-tighter flex items-center gap-3">
-                                <span className="p-2 sm:p-3 bg-blue-50 text-blue-600 rounded-2xl"><Icons.Receivables /></span>
+                            <h3 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tighter flex items-center gap-3">
+                                <span className="p-2 sm:p-3 bg-blue-50 dark:bg-blue-900/20 text-blue-600 rounded-2xl"><Icons.Receivables /></span>
                                 Recebimentos
                             </h3>
-                            <p className="text-[8px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-2 ml-10 sm:ml-14">Clientes com débitos pendentes</p>
+                            <p className="text-[8px] sm:text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest mt-2 ml-10 sm:ml-14">Clientes com débitos pendentes</p>
                         </div>
 
                         <div className="space-y-4 sm:space-y-6 mb-8">
                             <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                                 <div className="space-y-2 col-span-1">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Início (Pedido)</label>
-                                    <input type="date" value={receivableStartDate} onChange={e => setReceivableStartDate(e.target.value)} className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-sm" />
+                                    <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Início (Pedido)</label>
+                                    <input type="date" value={receivableStartDate} onChange={e => setReceivableStartDate(e.target.value)} className="w-full p-4 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl font-bold text-sm text-slate-800 dark:text-slate-200" />
                                 </div>
                                 <div className="space-y-2 col-span-1">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Fim (Pedido)</label>
-                                    <input type="date" value={receivableEndDate} onChange={e => setReceivableEndDate(e.target.value)} className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-sm" />
+                                    <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Fim (Pedido)</label>
+                                    <input type="date" value={receivableEndDate} onChange={e => setReceivableEndDate(e.target.value)} className="w-full p-4 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl font-bold text-sm text-slate-800 dark:text-slate-200" />
                                 </div>
                                 <div className="space-y-2 col-span-2">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Status de Vencimento</label>
+                                    <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Status de Vencimento</label>
                                     <select
                                         value={receivableFilterStatus}
                                         onChange={e => setReceivableFilterStatus(e.target.value as any)}
-                                        className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-sm"
+                                        className="w-full p-4 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl font-bold text-sm text-slate-800 dark:text-slate-200"
                                     >
                                         <option value="ALL">TODOS OS PENDENTES</option>
                                         <option value="OVERDUE">APENAS VENCIDOS</option>
@@ -1645,9 +1645,9 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
                             </div>
                         </div>
 
-                        <div className="overflow-x-auto border border-slate-100 rounded-3xl">
+                        <div className="overflow-x-auto border border-slate-100 dark:border-slate-800 rounded-3xl">
                             <table className="w-full text-left">
-                                <thead className="bg-slate-50 text-[10px] font-black text-slate-400 p-4 border-b border-slate-100">
+                                <thead className="bg-slate-50 dark:bg-slate-800/50 text-[10px] font-black text-slate-400 dark:text-slate-500 p-4 border-b border-slate-100 dark:border-slate-800">
                                     <tr>
                                         <th className="p-4 uppercase tracking-widest">Cliente / Telefone</th>
                                         <th className="p-4 uppercase tracking-widest">Data Pedido</th>
@@ -1656,7 +1656,7 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
                                         <th className="p-4 uppercase tracking-widest">Valor</th>
                                     </tr>
                                 </thead>
-                                <tbody className="text-[11px] font-bold text-slate-600 divide-y divide-slate-50">
+                                <tbody className="text-[11px] font-bold text-slate-600 dark:text-slate-300 divide-y divide-slate-50 dark:divide-slate-800">
                                     {receivables
                                         .filter(r => {
                                             const withinDate = getLocalIsoDate(new Date(r.createdAt)) >= receivableStartDate && getLocalIsoDate(new Date(r.createdAt)) <= receivableEndDate;
@@ -1671,22 +1671,22 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
                                             const isOverdue = new Date(r.dueDate) < new Date();
                                             const createdAt = new Date(r.createdAt);
                                             return (
-                                                <tr key={r.id} className="hover:bg-slate-50/50 transition-colors">
+                                                <tr key={r.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
                                                     <td className="p-4">
                                                         <div className="flex flex-col">
-                                                            <span className="text-slate-800">{r.client?.name || 'N/A'}</span>
-                                                            <span className="text-[9px] text-slate-400">{r.client?.phone || 'N/A'}</span>
+                                                            <span className="text-slate-800 dark:text-slate-200">{r.client?.name || 'N/A'}</span>
+                                                            <span className="text-[9px] text-slate-400 dark:text-slate-500">{r.client?.phone || 'N/A'}</span>
                                                         </div>
                                                     </td>
                                                     <td className="p-4">
                                                         <div className="flex flex-col">
                                                             <span>{createdAt.toLocaleDateString('pt-BR')}</span>
-                                                            <span className="text-[9px] text-slate-400">{createdAt.toLocaleTimeString('pt-BR').substring(0, 5)}</span>
+                                                            <span className="text-[9px] text-slate-400 dark:text-slate-500">{createdAt.toLocaleTimeString('pt-BR').substring(0, 5)}</span>
                                                         </div>
                                                     </td>
                                                     <td className="p-4">{new Date(r.dueDate).toLocaleDateString('pt-BR')}</td>
                                                     <td className="p-4">
-                                                        <span className={`px-2 py-1 rounded-lg text-[9px] uppercase font-black ${isOverdue ? 'bg-red-50 text-red-500' : 'bg-emerald-50 text-emerald-500'}`}>
+                                                        <span className={`px-2 py-1 rounded-lg text-[9px] uppercase font-black ${isOverdue ? 'bg-red-50 dark:bg-red-900/20 text-red-500 dark:text-red-400' : 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-500 dark:text-emerald-400'}`}>
                                                             {isOverdue ? 'Vencido' : 'Em Dia'}
                                                         </span>
                                                     </td>
@@ -1710,33 +1710,33 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
 
                 {/* CARD RELATÓRIO DE COMISSÕES POR GARÇOM */}
                 {activeTab === 'WAITERS' && (
-                    <div className="bg-white p-4 sm:p-10 rounded-2xl sm:rounded-[3rem] shadow-sm border border-slate-100 flex flex-col h-max max-w-4xl animate-in fade-in zoom-in-95">
+                    <div className="bg-white dark:bg-slate-900/50 p-4 sm:p-10 rounded-2xl sm:rounded-[3rem] shadow-sm border border-slate-100 dark:border-slate-800 flex flex-col h-max max-w-4xl animate-in fade-in zoom-in-95">
                         <div className="mb-6 sm:mb-8">
-                            <h3 className="text-xl sm:text-2xl font-black text-slate-800 uppercase tracking-tighter flex items-center gap-3">
-                                <span className="p-2 sm:p-3 bg-blue-50 text-blue-600 rounded-2xl"><Icons.User /></span>
+                            <h3 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tighter flex items-center gap-3">
+                                <span className="p-2 sm:p-3 bg-blue-50 dark:bg-blue-900/20 text-blue-600 rounded-2xl"><Icons.User /></span>
                                 Comissões por Garçom
                             </h3>
-                            <p className="text-[8px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-2 ml-10 sm:ml-14">Resumo de desempenho e taxas de serviço por período</p>
+                            <p className="text-[8px] sm:text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest mt-2 ml-10 sm:ml-14">Resumo de desempenho e taxas de serviço por período</p>
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Início</label>
-                                <input type="date" value={waiterStartDate} onChange={e => setWaiterStartDate(e.target.value)} className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-sm" />
+                                <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Início</label>
+                                <input type="date" value={waiterStartDate} onChange={e => setWaiterStartDate(e.target.value)} className="w-full p-4 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl font-bold text-sm text-slate-800 dark:text-slate-200" />
                             </div>
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Fim</label>
-                                <input type="date" value={waiterEndDate} onChange={e => setWaiterEndDate(e.target.value)} className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-sm" />
+                                <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Fim</label>
+                                <input type="date" value={waiterEndDate} onChange={e => setWaiterEndDate(e.target.value)} className="w-full p-4 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl font-bold text-sm text-slate-800 dark:text-slate-200" />
                             </div>
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Filtrar por Garçom</label>
+                                <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Filtrar por Garçom</label>
                                 <select
                                     value={selectedWaiterId}
                                     onChange={e => setSelectedWaiterId(e.target.value)}
-                                    className="w-full p-4 bg-slate-50 border-none rounded-xl sm:rounded-2xl font-bold text-sm"
+                                    className="w-full p-4 bg-slate-50 dark:bg-slate-800 border-none rounded-xl sm:rounded-2xl font-bold text-sm text-slate-800 dark:text-slate-200"
                                 >
                                     <option value="TODOS">TODOS OS GARÇONS</option>
                                     {waiters.map(w => (
@@ -1745,11 +1745,11 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
                                 </select>
                             </div>
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Tipo de Relatório</label>
+                                <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Tipo de Relatório</label>
                                 <select
                                     value={waiterReportType}
                                     onChange={e => setWaiterReportType(e.target.value as 'CONSOLIDADO' | 'ANALITICO')}
-                                    className="w-full p-4 bg-slate-50 border-none rounded-xl sm:rounded-2xl font-bold text-sm"
+                                    className="w-full p-4 bg-slate-50 dark:bg-slate-800 border-none rounded-xl sm:rounded-2xl font-bold text-sm text-slate-800 dark:text-slate-200"
                                 >
                                     <option value="CONSOLIDADO">RESUMO CONSOLIDADO</option>
                                     <option value="ANALITICO">DETALHADO ANALÍTICO</option>
@@ -1778,12 +1778,12 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
             {/* MODAL DE PREVIEW DO PDF */}
             {
                 pdfPreviewUrl && (
-                    <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 sm:p-12 bg-slate-900/90 backdrop-blur-xl animate-in fade-in duration-300">
-                        <div className="bg-white rounded-2xl sm:rounded-[4rem] shadow-2xl w-full max-w-5xl h-full flex flex-col overflow-hidden max-h-[95vh]">
-                            <div className="p-4 sm:p-8 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-50">
+                    <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 sm:p-12 bg-slate-900/90 dark:bg-slate-950/90 backdrop-blur-xl animate-in fade-in duration-300">
+                        <div className="bg-white dark:bg-slate-900 rounded-2xl sm:rounded-[4rem] shadow-2xl w-full max-w-5xl h-full flex flex-col overflow-hidden max-h-[95vh] border border-transparent dark:border-slate-800">
+                            <div className="p-4 sm:p-8 border-b border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-50 dark:bg-slate-800/50">
                                 <div>
-                                    <h3 className="text-lg sm:text-xl font-black text-slate-900 uppercase tracking-tighter">Visualização do Relatório</h3>
-                                    <p className="text-[8px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-widest">Documento gerado localmente em alta resolução</p>
+                                    <h3 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">Visualização do Relatório</h3>
+                                    <p className="text-[8px] sm:text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest">Documento gerado localmente em alta resolução</p>
                                 </div>
                                 <div className="flex gap-2 sm:gap-3 w-full sm:w-auto">
                                     <button
@@ -1808,13 +1808,13 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
                                             setPdfPreviewUrl(null);
                                             setPreviewType(null);
                                         }}
-                                        className="flex-1 sm:flex-none bg-white text-slate-400 px-4 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest border border-slate-200 hover:bg-slate-50 transition-all flex items-center justify-center"
+                                        className="flex-1 sm:flex-none bg-white dark:bg-slate-800 text-slate-400 dark:text-slate-500 px-4 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all flex items-center justify-center"
                                     >
                                         Fechar
                                     </button>
                                 </div>
                             </div>
-                            <div className="flex-1 bg-slate-200 p-8 flex justify-center items-center">
+                            <div className="flex-1 bg-slate-200 dark:bg-slate-950 p-8 flex justify-center items-center">
                                 <iframe
                                     src={pdfPreviewUrl}
                                     className="w-full h-full rounded-2xl shadow-xl bg-white"

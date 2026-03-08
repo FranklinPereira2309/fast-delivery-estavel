@@ -268,6 +268,7 @@ export interface CashSession {
   reportedCredit?: number;
   reportedDebit?: number;
   reportedOthers?: number;
+  reportedFiado?: number;
 
   // Calculated by System
   systemCash?: number;

@@ -459,7 +459,7 @@ class APIDBService {
     return session;
   }
 
-  public async closeCashSession(sessionId: string, reports: { cash: number, pix: number, credit: number, debit: number, others?: number, observations?: string }, user: User): Promise<CashSession> {
+  public async closeCashSession(sessionId: string, reports: { cash: number, pix: number, credit: number, debit: number, others?: number, fiado?: number, observations?: string }, user: User): Promise<CashSession> {
     const session = await this.request<CashSession>(`/cash/close`, {
       method: 'POST',
       body: JSON.stringify({ sessionId, ...reports, user })
@@ -472,7 +472,7 @@ class APIDBService {
     return this.request<{ systemCash: number, systemPix: number, systemCredit: number, systemDebit: number, systemOthers: number, totalSales: number }>('/cash/preview');
   }
 
-  public async updateCashSession(data: { id: string, cash: number, pix: number, credit: number, debit: number, others?: number, observations?: string, user: User }): Promise<CashSession> {
+  public async updateCashSession(data: { id: string, cash: number, pix: number, credit: number, debit: number, others?: number, fiado?: number, observations?: string, user: User }): Promise<CashSession> {
     const session = await this.request<CashSession>('/cash/update', {
       method: 'PATCH',
       body: JSON.stringify(data)

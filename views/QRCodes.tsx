@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { db, BusinessSettings } from '../services/db';
+import { db } from '../services/db';
+import { BusinessSettings } from '../types';
 import { Icons } from '../constants';
 
 const QRCodes: React.FC = () => {
@@ -32,8 +33,8 @@ const QRCodes: React.FC = () => {
     return (
         <div className="flex flex-col h-full gap-8 relative">
             {isLoading && (
-                <div className="absolute top-0 left-0 w-full h-1 bg-indigo-100 overflow-hidden z-50">
-                    <div className="h-full bg-indigo-600 animate-[loading_2s_infinite]"></div>
+                <div className="absolute top-0 left-0 w-full h-1 bg-indigo-100 dark:bg-blue-900/20 overflow-hidden z-50">
+                    <div className="h-full bg-indigo-600 dark:bg-blue-600 animate-[loading_2s_infinite]"></div>
                 </div>
             )}
             <style>{`
@@ -43,10 +44,10 @@ const QRCodes: React.FC = () => {
                 }
             `}</style>
             {/* Header (Oculto na impressão) */}
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm print:hidden gap-4">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center bg-white dark:bg-slate-900/50 p-6 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-sm print:hidden gap-4">
                 <div>
-                    <h2 className="text-2xl font-black text-slate-800 uppercase tracking-tighter">QR Codes das Mesas</h2>
-                    <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">
+                    <h2 className="text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tighter">QR Codes das Mesas</h2>
+                    <p className="text-xs text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest">
                         Gere e imprima os QR Codes para o Menu Digital
                     </p>
                 </div>
@@ -70,13 +71,13 @@ const QRCodes: React.FC = () => {
                     return (
                         <div
                             key={tableNum}
-                            className="bg-white p-6 rounded-[2rem] border-2 border-dashed border-slate-200 flex flex-col items-center justify-center gap-4 print:border-solid print:border-black print:rounded-xl print:p-4 break-inside-avoid"
+                            className="bg-white dark:bg-slate-900 p-6 rounded-[2rem] border-2 border-dashed border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center gap-4 print:border-solid print:border-black print:rounded-xl print:p-4 break-inside-avoid"
                         >
                             <div className="text-center">
-                                <h3 className="text-xl font-black text-slate-800 uppercase tracking-tighter print:text-lg">
+                                <h3 className="text-xl font-black text-slate-800 dark:text-white uppercase tracking-tighter print:text-lg">
                                     Mesa {tableNum}
                                 </h3>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest print:text-[8px]">
+                                <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest print:text-[8px]">
                                     Escaneie para Pedir
                                 </p>
                             </div>
@@ -91,8 +92,8 @@ const QRCodes: React.FC = () => {
                                 />
                             </div>
 
-                            <div className="text-center mt-2 opacity-30 print:opacity-100 print:mt-1">
-                                <p className="text-[8px] font-bold uppercase tracking-widest break-all w-full select-all">
+                            <div className="text-center mt-2 opacity-30 dark:opacity-50 print:opacity-100 print:mt-1">
+                                <p className="text-[8px] font-bold uppercase tracking-widest break-all w-full select-all text-slate-700 dark:text-slate-500">
                                     {tableUrl}
                                 </p>
                             </div>
