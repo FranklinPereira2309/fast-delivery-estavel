@@ -2372,13 +2372,13 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       {/* MODAL DE REVISÃO E RELATÓRIO DE CAIXA */}
       {
         isReviewModalOpen && reviewSession && (
-          <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300 p-4">
-            <div className="bg-white w-full max-w-[700px] border border-slate-200 shadow-2xl flex flex-col max-h-[95vh] print-container relative overflow-hidden rounded-[2rem]">
-              <div className="flex-1 p-8 lg:p-12 space-y-8 overflow-y-auto">
+          <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/40 animate-in fade-in duration-300 p-4 no-print">
+            <div className="bg-white w-full max-w-[900px] border border-slate-300 shadow-xl flex flex-col max-h-[95vh] relative overflow-hidden rounded-3xl">
+              <div className="flex-1 p-10 lg:p-16 space-y-10 overflow-y-auto">
                 {/* Formal Header */}
-                <div className="border-b-2 border-slate-900 pb-6">
-                  <div className="flex justify-between items-start mb-4">
-                    <h1 className="text-3xl font-black text-slate-900 uppercase tracking-tighter">Relatório do Caixa</h1>
+                <div className="border-b border-slate-900 pb-8">
+                  <div className="flex justify-between items-start mb-6">
+                    <h1 className="text-4xl font-bold text-slate-900 tracking-tight">Relatório de Fechamento de Caixa</h1>
                     <button
                       onClick={() => {
                         setIsReviewModalOpen(false);
@@ -2386,95 +2386,117 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                         setAdminPassword('');
                         setClosingReport({ cash: '', pix: '', credit: '', debit: '', others: '', observations: '' });
                       }}
-                      className="w-10 h-10 flex items-center justify-center bg-slate-100 rounded-full text-slate-400 hover:bg-red-50 hover:text-red-500 transition-all font-black text-xl no-print"
+                      className="w-12 h-12 flex items-center justify-center bg-slate-100 rounded-full text-slate-400 hover:bg-red-50 hover:text-red-500 transition-all text-2xl no-print"
                     >
                       ×
                     </button>
                   </div>
 
-                  <div className="flex flex-col sm:flex-row justify-between items-end gap-4">
-                    <div className="text-[10px] font-bold text-slate-600 uppercase tracking-widest space-y-1">
-                      <div><span className="opacity-50">Estabelecimento:</span> {businessSettings?.name || 'Fast Food Express'}</div>
-                      <div><span className="opacity-50">ID da Sessão:</span> {reviewSession.id.substring(0, 8)}</div>
-                      <div><span className="opacity-50">Operador:</span> {reviewSession.closedByName}</div>
+                  <div className="grid grid-cols-2 gap-8 text-xs font-medium text-slate-700">
+                    <div className="space-y-2">
+                      <div className="flex justify-between border-b border-slate-100 pb-1">
+                        <span className="text-slate-400 uppercase tracking-wider text-[10px]">Estabelecimento</span>
+                        <span className="font-bold">{businessSettings?.name || 'Fast Food Express'}</span>
+                      </div>
+                      <div className="flex justify-between border-b border-slate-100 pb-1">
+                        <span className="text-slate-400 uppercase tracking-wider text-[10px]">Identificador</span>
+                        <span className="font-bold font-mono">{reviewSession.id.substring(0, 8).toUpperCase()}</span>
+                      </div>
+                      <div className="flex justify-between border-b border-slate-100 pb-1">
+                        <span className="text-slate-400 uppercase tracking-wider text-[10px]">Operador Responsável</span>
+                        <span className="font-bold">{reviewSession.closedByName}</span>
+                      </div>
                     </div>
-                    <div className="text-[10px] font-bold text-slate-600 uppercase tracking-widest text-right space-y-1">
-                      <div><span className="opacity-50">Data:</span> {new Date(reviewSession.closedAt || Date.now()).toLocaleDateString('pt-BR')}</div>
-                      <div><span className="opacity-50">Hora:</span> {new Date(reviewSession.closedAt || Date.now()).toLocaleTimeString('pt-BR')}</div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between border-b border-slate-100 pb-1">
+                        <span className="text-slate-400 uppercase tracking-wider text-[10px]">Data do Fechamento</span>
+                        <span className="font-bold">{new Date(reviewSession.closedAt || Date.now()).toLocaleDateString('pt-BR')}</span>
+                      </div>
+                      <div className="flex justify-between border-b border-slate-100 pb-1">
+                        <span className="text-slate-400 uppercase tracking-wider text-[10px]">Horário</span>
+                        <span className="font-bold">{new Date(reviewSession.closedAt || Date.now()).toLocaleTimeString('pt-BR')}</span>
+                      </div>
+                      <div className="flex justify-between border-b border-slate-100 pb-1">
+                        <span className="text-slate-400 uppercase tracking-wider text-[10px]">Status</span>
+                        <span className="font-bold text-emerald-700">FECHADO</span>
+                      </div>
                     </div>
                   </div>
                 </div>
 
                 {/* Values Table */}
-                <div className="border border-slate-200 rounded-xl overflow-hidden">
-                  <table className="w-full border-collapse">
-                    <thead>
-                      <tr className="bg-slate-50 border-b border-slate-200">
-                        <th className="py-3 px-6 text-left text-[10px] font-black uppercase tracking-widest text-slate-500">Categoria</th>
-                        <th className="py-3 px-6 text-right text-[10px] font-black uppercase tracking-widest text-slate-500">Valor Informado</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      <tr>
-                        <td className="py-4 px-6 text-xs font-bold uppercase text-slate-700">Dinheiro</td>
-                        <td className="py-4 px-6 text-right text-sm font-black text-slate-900 italic">R$ {reviewSession.reportedCash.toFixed(2)}</td>
-                      </tr>
-                      <tr>
-                        <td className="py-4 px-6 text-xs font-bold uppercase text-slate-700">PIX</td>
-                        <td className="py-4 px-6 text-right text-sm font-black text-slate-900 italic">R$ {reviewSession.reportedPix.toFixed(2)}</td>
-                      </tr>
-                      <tr>
-                        <td className="py-4 px-6 text-xs font-bold uppercase text-slate-700">Crédito</td>
-                        <td className="py-4 px-6 text-right text-sm font-black text-slate-900 italic">R$ {reviewSession.reportedCredit.toFixed(2)}</td>
-                      </tr>
-                      <tr>
-                        <td className="py-4 px-6 text-xs font-bold uppercase text-slate-700">Débito</td>
-                        <td className="py-4 px-6 text-right text-sm font-black text-slate-900 italic">R$ {(reviewSession.reportedDebit || 0).toFixed(2)}</td>
-                      </tr>
-                      <tr className="bg-slate-50/50">
-                        <td className="py-4 px-6 text-xs font-black uppercase text-emerald-600">Outros</td>
-                        <td className="py-4 px-6 text-right text-sm font-black text-emerald-700 italic">R$ {(reviewSession.reportedOthers || 0).toFixed(2)}</td>
-                      </tr>
-                    </tbody>
-                  </table>
+                <div className="space-y-4">
+                  <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest px-2">Detalhamento por Categoria</h3>
+                  <div className="border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+                    <table className="w-full border-collapse">
+                      <thead>
+                        <tr className="bg-slate-50 border-b border-slate-200">
+                          <th className="py-4 px-8 text-left text-[11px] font-bold uppercase tracking-widest text-slate-600">Categoria de Recebimento</th>
+                          <th className="py-4 px-8 text-right text-[11px] font-bold uppercase tracking-widest text-slate-600">Valor Total Informado</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 italic">
+                        <tr className="hover:bg-slate-50 transition-colors">
+                          <td className="py-5 px-8 text-sm font-semibold text-slate-700">Dinheiro em Espécie</td>
+                          <td className="py-5 px-8 text-right text-lg font-bold text-slate-900 border-l border-slate-50">R$ {reviewSession.reportedCash.toFixed(2)}</td>
+                        </tr>
+                        <tr className="hover:bg-slate-50 transition-colors">
+                          <td className="py-5 px-8 text-sm font-semibold text-slate-700">Pagamentos via PIX</td>
+                          <td className="py-5 px-8 text-right text-lg font-bold text-slate-900 border-l border-slate-50">R$ {reviewSession.reportedPix.toFixed(2)}</td>
+                        </tr>
+                        <tr className="hover:bg-slate-50 transition-colors">
+                          <td className="py-5 px-8 text-sm font-semibold text-slate-700">Cartão de Crédito</td>
+                          <td className="py-5 px-8 text-right text-lg font-bold text-slate-900 border-l border-slate-50">R$ {reviewSession.reportedCredit.toFixed(2)}</td>
+                        </tr>
+                        <tr className="hover:bg-slate-50 transition-colors">
+                          <td className="py-5 px-8 text-sm font-semibold text-slate-700">Cartão de Débito</td>
+                          <td className="py-5 px-8 text-right text-lg font-bold text-slate-900 border-l border-slate-50">R$ {(reviewSession.reportedDebit || 0).toFixed(2)}</td>
+                        </tr>
+                        <tr className="bg-slate-50/80 hover:bg-slate-100 transition-colors border-t border-slate-200">
+                          <td className="py-5 px-8 text-sm font-bold text-slate-600 italic">Outras Categorias</td>
+                          <td className="py-5 px-8 text-right text-lg font-bold text-slate-800 border-l border-slate-50">R$ {(reviewSession.reportedOthers || 0).toFixed(2)}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
 
                 {/* Summary Section */}
-                <div className="pt-8 space-y-4">
-                  <div className="flex justify-between items-center px-6">
-                    <span className="text-xs font-black uppercase tracking-widest text-slate-400">Total Informado</span>
-                    <span className="text-3xl font-black text-slate-900 italic">R$ {((reviewSession.reportedCash || 0) + (reviewSession.reportedPix || 0) + (reviewSession.reportedCredit || 0) + (reviewSession.reportedDebit || 0) + (reviewSession.reportedOthers || 0)).toFixed(2)}</span>
+                <div className="grid grid-cols-2 gap-10 pt-4">
+                  <div className="bg-slate-50 border border-slate-200 rounded-3xl p-8 flex flex-col justify-center">
+                    <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-2">Total Consolidado</span>
+                    <span className="text-5xl font-bold text-slate-900 tracking-tight italic">R$ {((reviewSession.reportedCash || 0) + (reviewSession.reportedPix || 0) + (reviewSession.reportedCredit || 0) + (reviewSession.reportedDebit || 0) + (reviewSession.reportedOthers || 0)).toFixed(2)}</span>
                   </div>
 
-                  <div className={`flex justify-between items-center px-6 py-5 rounded-[1.5rem] border ${reviewSession.difference === 0 ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : (reviewSession.difference > 0 ? 'bg-blue-50 border-blue-200 text-blue-800' : 'bg-red-50 border-red-200 text-red-800')}`}>
+                  <div className={`border rounded-3xl p-8 flex flex-col justify-center ${reviewSession.difference === 0 ? 'bg-white border-slate-300' : 'bg-white border-slate-900 border-2'}`}>
                     <div>
-                      <span className="text-[10px] font-black uppercase tracking-widest opacity-60">Diferença (vs Sistema)</span>
-                      <div className="text-[10px] font-bold uppercase mt-1">
-                        {reviewSession.difference === 0 ? '✓ Conformidade' : (reviewSession.difference > 0 ? '↑ Sobra' : '↓ Falta')}
+                      <span className="text-[11px] font-bold uppercase tracking-widest text-slate-500">Diferença vs Sistema</span>
+                      <div className="text-xs font-bold uppercase mt-1 tracking-wider">
+                        {reviewSession.difference === 0 ? 'Conformidade de Caixa' : (reviewSession.difference > 0 ? 'Excedente (Sobra)' : 'Ajuste (Falta)')}
                       </div>
                     </div>
-                    <span className="text-2xl font-black italic">R$ {reviewSession.difference.toFixed(2)}</span>
+                    <span className="text-4xl font-bold text-slate-900 mt-2 italic">R$ {reviewSession.difference.toFixed(2)}</span>
                   </div>
                 </div>
 
                 {/* Informações Complementares Section */}
                 {((reviewSession.systemFiado || 0) > 0 || (reviewSession.orphanSales || 0) > 0) && (
-                  <div className="mt-8 pt-6 border-t border-slate-100">
-                    <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Informações Complementares</h4>
-                    <div className="space-y-3">
+                  <div className="space-y-4">
+                    <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest px-2">Informações Complementares</h4>
+                    <div className="grid grid-cols-2 gap-4">
                       {(reviewSession.systemFiado || 0) > 0 && (
-                        <div className="flex justify-between items-center bg-slate-50 px-4 py-3 rounded-xl border border-slate-100">
-                          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Vendas a Prazo (FIADO)</span>
-                          <span className="text-sm font-black text-slate-700 italic">R$ {reviewSession.systemFiado!.toFixed(2)}</span>
+                        <div className="flex justify-between items-center bg-white px-6 py-4 rounded-2xl border border-slate-200">
+                          <span className="text-[11px] font-semibold text-slate-600 uppercase">Vendas a Prazo (FIADO)</span>
+                          <span className="text-base font-bold text-slate-800">R$ {reviewSession.systemFiado!.toFixed(2)}</span>
                         </div>
                       )}
                       {(reviewSession.orphanSales || 0) > 0 && (
-                        <div className="flex justify-between items-start bg-amber-50 px-4 py-3 rounded-xl border border-amber-100">
+                        <div className="flex justify-between items-center bg-white px-6 py-4 rounded-2xl border border-slate-900">
                           <div className="flex flex-col">
-                            <span className="text-[10px] font-bold text-amber-700 uppercase tracking-wider">Vendas sem Sessão Aberta</span>
-                            <span className="text-[9px] text-amber-600 font-medium italic">Ocorridas antes da abertura oficial</span>
+                            <span className="text-[11px] font-bold text-slate-900 uppercase">Vendas sem Sessão Aberta</span>
+                            <span className="text-[10px] text-slate-500 font-medium italic">Ocorridas antes da abertura oficial</span>
                           </div>
-                          <span className="text-sm font-black text-amber-800 italic">R$ {reviewSession.orphanSales!.toFixed(2)}</span>
+                          <span className="text-base font-bold text-slate-900">R$ {reviewSession.orphanSales!.toFixed(2)}</span>
                         </div>
                       )}
                     </div>
@@ -2482,14 +2504,16 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                 )}
 
                 {reviewSession.observations && (
-                  <div className="mt-8 border-t border-dashed border-slate-200 pt-6">
-                    <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Observações</h4>
-                    <p className="text-xs text-slate-600 italic leading-relaxed">{reviewSession.observations}</p>
+                  <div className="space-y-3 pb-4">
+                    <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest px-2">Notas e Observações do Operador</h4>
+                    <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200">
+                      <p className="text-sm text-slate-700 italic leading-relaxed">{reviewSession.observations}</p>
+                    </div>
                   </div>
                 )}
 
                 {/* Buttons Area */}
-                <div className="grid grid-cols-2 gap-4 no-print mt-8">
+                <div className="grid grid-cols-2 gap-6 no-print pt-6 border-t border-slate-100">
                   <button
                     onClick={() => {
                       setClosingReport({
@@ -2502,17 +2526,17 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                       });
                       setIsAdjustModalOpen(true);
                     }}
-                    className="bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-[22px] font-black uppercase text-[10px] tracking-widest transition-all active:scale-95 flex items-center justify-center gap-2"
+                    className="bg-white border border-slate-300 text-slate-600 py-5 rounded-2xl font-bold uppercase text-[11px] tracking-widest transition-all active:scale-95 flex items-center justify-center gap-3 hover:bg-slate-50 shadow-sm"
                   >
-                    <Icons.Dashboard /> AJUSTES
+                    <Icons.Dashboard className="w-4 h-4" /> Realizar Ajustes
                   </button>
                   <button
                     onClick={() => {
                       window.print();
                     }}
-                    className="bg-slate-900 text-white py-4 rounded-[22px] font-receipt font-black uppercase text-[11px] hover:bg-black active:scale-95 transition-all flex items-center justify-center"
+                    className="bg-slate-900 text-white py-5 rounded-2xl font-bold uppercase text-[11px] tracking-widest hover:bg-black active:scale-95 transition-all flex items-center justify-center gap-3 shadow-lg shadow-slate-200"
                   >
-                    IMPRIMIR
+                    Gerar Impressão (Fisica)
                   </button>
                 </div>
               </div>
