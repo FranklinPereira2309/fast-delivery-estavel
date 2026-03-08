@@ -113,6 +113,14 @@ const QRCodes: React.FC = () => {
           /* Força a visibilidade Apenas da área de QR Codes */
           #print-area, #print-area * {
             visibility: visible !important;
+            background-color: transparent !important;
+            color: black !important;
+            border-color: black !important;
+          }
+
+          #print-area > div {
+             background-color: white !important;
+             border: 1px solid black !important;
           }
           
           #print-area {
