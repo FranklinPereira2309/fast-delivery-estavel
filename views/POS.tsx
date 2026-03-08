@@ -2372,13 +2372,13 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       {/* MODAL DE REVISÃO E RELATÓRIO DE CAIXA */}
       {
         isReviewModalOpen && reviewSession && (
-          <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/40 animate-in fade-in duration-300 p-4 print-modal print:bg-white print:static print:transform-none">
-            <div className="bg-white w-full max-w-[650px] border border-slate-300 shadow-xl flex flex-col max-h-[95vh] print:max-h-none print:h-auto print:shadow-none print:border-none print:w-full print:m-0 rounded-3xl print:rounded-none">
-              <div className="flex-1 p-6 lg:p-8 space-y-6 overflow-y-auto print:overflow-visible">
+          <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/40 animate-in fade-in duration-300 p-2 print:p-0 print:bg-transparent print:items-start print:relative print:z-auto">
+            <div className="bg-white w-full max-w-[650px] border border-slate-300 shadow-xl flex flex-col max-h-[98vh] print:max-h-none print:h-auto print:shadow-none print:border-none print:w-full print:m-0 rounded-2xl print:rounded-none">
+              <div className="flex-1 p-4 lg:p-6 space-y-4 overflow-y-auto print:overflow-visible custom-scrollbar">
                 {/* Formal Header */}
-                <div className="border-b border-slate-900 pb-4">
-                  <div className="flex justify-between items-start mb-4">
-                    <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Relatório de Fechamento de Caixa</h1>
+                <div className="border-b border-slate-900 pb-2">
+                  <div className="flex justify-between items-start mb-2">
+                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Relatório de Fechamento de Caixa</h1>
                     <button
                       onClick={() => {
                         setIsReviewModalOpen(false);
@@ -2386,13 +2386,13 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                         setAdminPassword('');
                         setClosingReport({ cash: '', pix: '', credit: '', debit: '', others: '', observations: '' });
                       }}
-                      className="w-10 h-10 flex items-center justify-center bg-slate-100 rounded-full text-slate-400 hover:bg-red-50 hover:text-red-500 transition-all text-xl print:hidden"
+                      className="w-8 h-8 flex items-center justify-center bg-slate-100 rounded-full text-slate-400 hover:bg-red-50 hover:text-red-500 transition-all text-lg print:hidden"
                     >
                       ×
                     </button>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4 text-xs font-medium text-slate-700">
+                  <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-[11px] font-medium text-slate-700">
                     <div className="space-y-2">
                       <div className="flex justify-between border-b border-slate-100 pb-1">
                         <span className="text-slate-400 uppercase tracking-wider text-[10px]">Estabelecimento</span>
@@ -2425,36 +2425,36 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                 </div>
 
                 {/* Values Table */}
-                <div className="space-y-2">
-                  <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest px-2">Detalhamento por Categoria</h3>
-                  <div className="border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                <div className="space-y-1">
+                  <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Detalhamento por Categoria</h3>
+                  <div className="border border-slate-200 rounded-lg overflow-hidden shadow-sm">
                     <table className="w-full border-collapse">
                       <thead>
                         <tr className="bg-slate-50 border-b border-slate-200">
-                          <th className="py-2 px-4 text-left text-[11px] font-bold uppercase tracking-widest text-slate-600">Categoria de Recebimento</th>
-                          <th className="py-2 px-4 text-right text-[11px] font-bold uppercase tracking-widest text-slate-600">Valor Total Informado</th>
+                          <th className="py-1.5 px-3 text-left text-[10px] font-bold uppercase tracking-widest text-slate-600">Categoria de Recebimento</th>
+                          <th className="py-1.5 px-3 text-right text-[10px] font-bold uppercase tracking-widest text-slate-600">Valor Total Informado</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 italic">
                         <tr className="hover:bg-slate-50 transition-colors">
-                          <td className="py-3 px-4 text-sm font-semibold text-slate-700">Dinheiro em Espécie</td>
-                          <td className="py-3 px-4 text-right text-base font-bold text-slate-900 border-l border-slate-50">R$ {reviewSession.reportedCash.toFixed(2)}</td>
+                          <td className="py-2 px-3 text-xs font-semibold text-slate-700">Dinheiro em Espécie</td>
+                          <td className="py-2 px-3 text-right text-sm font-bold text-slate-900 border-l border-slate-50">R$ {reviewSession.reportedCash.toFixed(2)}</td>
                         </tr>
                         <tr className="hover:bg-slate-50 transition-colors">
-                          <td className="py-3 px-4 text-sm font-semibold text-slate-700">Pagamentos via PIX</td>
-                          <td className="py-3 px-4 text-right text-base font-bold text-slate-900 border-l border-slate-50">R$ {reviewSession.reportedPix.toFixed(2)}</td>
+                          <td className="py-2 px-3 text-xs font-semibold text-slate-700">Pagamentos via PIX</td>
+                          <td className="py-2 px-3 text-right text-sm font-bold text-slate-900 border-l border-slate-50">R$ {reviewSession.reportedPix.toFixed(2)}</td>
                         </tr>
                         <tr className="hover:bg-slate-50 transition-colors">
-                          <td className="py-3 px-4 text-sm font-semibold text-slate-700">Cartão de Crédito</td>
-                          <td className="py-3 px-4 text-right text-base font-bold text-slate-900 border-l border-slate-50">R$ {reviewSession.reportedCredit.toFixed(2)}</td>
+                          <td className="py-2 px-3 text-xs font-semibold text-slate-700">Cartão de Crédito</td>
+                          <td className="py-2 px-3 text-right text-sm font-bold text-slate-900 border-l border-slate-50">R$ {reviewSession.reportedCredit.toFixed(2)}</td>
                         </tr>
                         <tr className="hover:bg-slate-50 transition-colors">
-                          <td className="py-3 px-4 text-sm font-semibold text-slate-700">Cartão de Débito</td>
-                          <td className="py-3 px-4 text-right text-base font-bold text-slate-900 border-l border-slate-50">R$ {(reviewSession.reportedDebit || 0).toFixed(2)}</td>
+                          <td className="py-2 px-3 text-xs font-semibold text-slate-700">Cartão de Débito</td>
+                          <td className="py-2 px-3 text-right text-sm font-bold text-slate-900 border-l border-slate-50">R$ {(reviewSession.reportedDebit || 0).toFixed(2)}</td>
                         </tr>
                         <tr className="bg-slate-50/80 hover:bg-slate-100 transition-colors border-t border-slate-200">
-                          <td className="py-3 px-4 text-sm font-bold text-slate-600 italic">Outras Categorias</td>
-                          <td className="py-3 px-4 text-right text-base font-bold text-slate-800 border-l border-slate-50">R$ {(reviewSession.reportedOthers || 0).toFixed(2)}</td>
+                          <td className="py-2 px-3 text-xs font-bold text-slate-600 italic">Outras Categorias</td>
+                          <td className="py-2 px-3 text-right text-sm font-bold text-slate-800 border-l border-slate-50">R$ {(reviewSession.reportedOthers || 0).toFixed(2)}</td>
                         </tr>
                       </tbody>
                     </table>
@@ -2462,41 +2462,41 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                 </div>
 
                 {/* Summary Section */}
-                <div className="grid grid-cols-2 gap-4 pt-2">
-                  <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex flex-col justify-center">
-                    <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-1">Total Consolidado</span>
-                    <span className="text-3xl font-bold text-slate-900 tracking-tight italic">R$ {((reviewSession.reportedCash || 0) + (reviewSession.reportedPix || 0) + (reviewSession.reportedCredit || 0) + (reviewSession.reportedDebit || 0) + (reviewSession.reportedOthers || 0)).toFixed(2)}</span>
+                <div className="grid grid-cols-2 gap-3 pt-1">
+                  <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 flex flex-col justify-center">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-0.5">Total Consolidado</span>
+                    <span className="text-2xl font-bold text-slate-900 tracking-tight italic">R$ {((reviewSession.reportedCash || 0) + (reviewSession.reportedPix || 0) + (reviewSession.reportedCredit || 0) + (reviewSession.reportedDebit || 0) + (reviewSession.reportedOthers || 0)).toFixed(2)}</span>
                   </div>
 
-                  <div className={`border rounded-2xl p-4 flex flex-col justify-center ${reviewSession.difference === 0 ? 'bg-white border-slate-300' : 'bg-white border-slate-900 border-2'}`}>
+                  <div className={`border rounded-xl p-3 flex flex-col justify-center ${reviewSession.difference === 0 ? 'bg-white border-slate-300' : 'bg-white border-slate-900 border-2'}`}>
                     <div>
-                      <span className="text-[11px] font-bold uppercase tracking-widest text-slate-500">Diferença vs Sistema</span>
-                      <div className="text-[10px] font-bold uppercase mt-1 tracking-wider">
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Diferença vs Sistema</span>
+                      <div className="text-[9px] font-bold uppercase mt-0.5 tracking-wider">
                         {reviewSession.difference === 0 ? 'Conformidade de Caixa' : (reviewSession.difference > 0 ? 'Excedente (Sobra)' : 'Ajuste (Falta)')}
                       </div>
                     </div>
-                    <span className="text-2xl font-bold text-slate-900 mt-1 italic">R$ {reviewSession.difference.toFixed(2)}</span>
+                    <span className="text-xl font-bold text-slate-900 mt-0.5 italic">R$ {reviewSession.difference.toFixed(2)}</span>
                   </div>
                 </div>
 
                 {/* Informações Complementares Section */}
                 {((reviewSession.systemFiado || 0) > 0 || (reviewSession.orphanSales || 0) > 0) && (
-                  <div className="space-y-4">
-                    <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest px-2">Informações Complementares</h4>
-                    <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Informações Complementares</h4>
+                    <div className="grid grid-cols-2 gap-3">
                       {(reviewSession.systemFiado || 0) > 0 && (
-                        <div className="flex justify-between items-center bg-white px-6 py-4 rounded-2xl border border-slate-200">
-                          <span className="text-[11px] font-semibold text-slate-600 uppercase">Vendas a Prazo (FIADO)</span>
-                          <span className="text-base font-bold text-slate-800">R$ {reviewSession.systemFiado!.toFixed(2)}</span>
+                        <div className="flex justify-between items-center bg-white px-4 py-2 rounded-xl border border-slate-200">
+                          <span className="text-[10px] font-semibold text-slate-600 uppercase">Vendas a Prazo (FIADO)</span>
+                          <span className="text-sm font-bold text-slate-800">R$ {reviewSession.systemFiado!.toFixed(2)}</span>
                         </div>
                       )}
                       {(reviewSession.orphanSales || 0) > 0 && (
-                        <div className="flex justify-between items-center bg-white px-6 py-4 rounded-2xl border border-slate-900">
+                        <div className="flex justify-between items-center bg-white px-4 py-2 rounded-xl border border-slate-900">
                           <div className="flex flex-col">
-                            <span className="text-[11px] font-bold text-slate-900 uppercase">Vendas sem Sessão Aberta</span>
-                            <span className="text-[10px] text-slate-500 font-medium italic">Ocorridas antes da abertura oficial</span>
+                            <span className="text-[10px] font-bold text-slate-900 uppercase">Vendas sem Sessão Aberta</span>
+                            <span className="text-[9px] text-slate-500 font-medium italic">Ocorridas antes da abertura oficial</span>
                           </div>
-                          <span className="text-base font-bold text-slate-900">R$ {reviewSession.orphanSales!.toFixed(2)}</span>
+                          <span className="text-sm font-bold text-slate-900">R$ {reviewSession.orphanSales!.toFixed(2)}</span>
                         </div>
                       )}
                     </div>
@@ -2513,7 +2513,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                 )}
 
                 {/* Buttons Area */}
-                <div className="grid grid-cols-2 gap-4 print:hidden pt-4 border-t border-slate-100">
+                <div className="grid grid-cols-2 gap-3 print:hidden pt-3 border-t border-slate-100">
                   <button
                     onClick={() => {
                       setClosingReport({
@@ -2526,15 +2526,15 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                       });
                       setIsAdjustModalOpen(true);
                     }}
-                    className="bg-white border border-slate-300 text-slate-600 py-3 rounded-xl font-bold uppercase text-[11px] tracking-widest transition-all active:scale-95 flex items-center justify-center gap-3 hover:bg-slate-50 shadow-sm"
+                    className="bg-white border border-slate-300 text-slate-600 py-2.5 rounded-xl font-bold uppercase text-[10px] tracking-widest transition-all active:scale-95 flex items-center justify-center gap-2 hover:bg-slate-50 shadow-sm"
                   >
-                    <Icons.Dashboard className="w-4 h-4" /> Realizar Ajustes
+                    <Icons.Dashboard className="w-3.5 h-3.5" /> Ajustes
                   </button>
                   <button
                     onClick={() => {
                       setTimeout(() => window.print(), 100);
                     }}
-                    className="bg-slate-900 text-white py-3 rounded-xl font-bold uppercase text-[11px] tracking-widest hover:bg-black active:scale-95 transition-all flex items-center justify-center gap-3 shadow-md shadow-slate-200"
+                    className="bg-slate-900 text-white py-2.5 rounded-xl font-bold uppercase text-[10px] tracking-widest hover:bg-black active:scale-95 transition-all flex items-center justify-center gap-2 shadow-md shadow-slate-200"
                   >
                     Imprimir
                   </button>
