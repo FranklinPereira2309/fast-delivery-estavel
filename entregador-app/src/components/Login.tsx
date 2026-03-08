@@ -91,7 +91,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
 
                 <div className="bg-white p-10 rounded-[2.5rem] shadow-2xl">
                     <div className="flex flex-col items-center mb-10 text-center">
-                        <h2 className="text-3xl font-black text-slate-900 tracking-tighter uppercase leading-none">DRIVER APP</h2>
+                        <h2 className="text-3xl font-black text-slate-900 tracking-tighter uppercase leading-none">ENTREGADOR APP</h2>
                         <p className="text-slate-400 text-[10px] font-black mt-3 tracking-[0.2em] uppercase">
                             {view === 'LOGIN' ? 'Acesso ao Sistema' :
                                 view === 'FORGOT' ? 'Recuperação de Acesso' :

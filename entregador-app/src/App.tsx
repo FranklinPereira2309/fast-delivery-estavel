@@ -359,7 +359,7 @@ const App: React.FC = () => {
       {/* HEADER COMPACTO */}
       <header className="bg-white px-6 py-4 flex justify-between items-center shadow-sm z-20 border-b border-slate-100 shrink-0">
         <div className="flex flex-col">
-          <h1 className="text-xl font-black text-slate-900 tracking-tighter leading-none">DRIVER <span className="text-blue-600">APP</span></h1>
+          <h1 className="text-xl font-black text-slate-900 tracking-tighter leading-none">ENTREGADOR <span className="text-blue-600">APP</span></h1>
           <div className="flex items-center gap-1.5 mt-1">
             <div className={`w-1.5 h-1.5 rounded-full ${storeStatus.status === 'online' ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`} />
             <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Loja {storeStatus.status === 'online' ? 'Aberta' : 'Fechada'}</span>
