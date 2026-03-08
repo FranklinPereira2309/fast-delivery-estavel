@@ -11,4 +11,6 @@ router.post('/reopen', cashController.reopenCashSession);
 router.post('/close', cashController.closeCashSession);
 router.patch('/update', cashController.updateCashSession);
 
+router.post('/auto-close', cashController.manualAutoClose);
+
 export default router;

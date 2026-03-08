@@ -2,6 +2,9 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import compression from 'compression';
+import cron from 'node-cron';
+import { autoCloseCashSessions } from './controllers/cashController';
+import prisma from './prisma';
 
 import authRoutes from './routes/authRoutes';
 import userRoutes from './routes/userRoutes';
@@ -88,4 +91,23 @@ server.listen(port, () => {
     console.log(`Server running on port ${port}`);
     loadSettingsToCache();
     startOrderTimeoutService();
+
+    // Auto closure cron job (every minute)
+    cron.schedule('* * * * *', async () => {
+        try {
+            const settings = await prisma.businessSettings.findFirst() as any;
+            const autoCloseTime = settings?.autoCloseTime || '00:00';
+
+            const now = new Date();
+            const brasiliaTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
+            const currentHHmm = brasiliaTime.getHours().toString().padStart(2, '0') + ':' + brasiliaTime.getMinutes().toString().padStart(2, '0');
+
+            if (currentHHmm === autoCloseTime) {
+                console.log(`[CRON] Starting auto cash closure at ${currentHHmm}`);
+                await autoCloseCashSessions();
+            }
+        } catch (err) {
+            console.error('[CRON] Error in auto closure task:', err);
+        }
+    });
 });

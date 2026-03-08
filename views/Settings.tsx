@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
-import { db, BusinessSettings } from '../services/db';
-import { User, Waiter, DeliveryDriver } from '../types';
+import { db } from '../services/db';
+import { User, Waiter, DeliveryDriver, BusinessSettings } from '../types';
 import { Icons } from '../constants';
 import CustomAlert from '../components/CustomAlert';
 import AuditLogs from './AuditLogs';
@@ -631,6 +631,10 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings, onReset }) =
                                 <div className="space-y-2">
                                     <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Troco Máximo (R$)</h4>
                                     <input type="number" className="w-full p-4 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-blue-50 transition-all font-bold text-sm" value={settings.maxChange || 191} onChange={e => setSettings({ ...settings, maxChange: parseFloat(e.target.value) || 0 })} />
+                                </div>
+                                <div className="space-y-2">
+                                    <h4 className="text-[10px] font-black text-blue-600 uppercase tracking-widest ml-1">Horário de Auto Fechamento (Cash)</h4>
+                                    <input type="time" className="w-full p-4 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-blue-50 transition-all font-bold text-sm" value={settings.autoCloseTime || '00:00'} onChange={e => setSettings({ ...settings, autoCloseTime: e.target.value })} />
                                 </div>
                                 <div className="space-y-2 col-span-1 md:col-span-2 p-4 sm:p-6 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                                     <div className="flex-1">

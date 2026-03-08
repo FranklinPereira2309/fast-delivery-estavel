@@ -303,3 +303,60 @@ export const getCashSessions = async (req: Request, res: Response) => {
     });
     res.json(sessions);
 };
+
+export const autoCloseCashSessions = async () => {
+    const settings = await prisma.businessSettings.findFirst() as any;
+    const autoCloseTime = settings?.autoCloseTime || '00:00';
+
+    const openSessions = await prisma.cashSession.findMany({
+        where: { status: 'OPEN' }
+    });
+
+    for (const session of openSessions) {
+        const totals = await calculateSessionTotals(session.openedAt);
+
+        await prisma.cashSession.update({
+            where: { id: session.id },
+            data: {
+                closedAt: new Date(),
+                closedBy: 'SYSTEM',
+                closedByName: 'SISTEMA (Auto Fechamento)',
+                status: 'CLOSED',
+                reportedCash: totals.systemCash,
+                reportedPix: totals.systemPix,
+                reportedCredit: totals.systemCredit,
+                reportedDebit: totals.systemDebit,
+                reportedOthers: totals.systemOthers,
+                reportedFiado: totals.systemFiado,
+                systemCash: totals.systemCash,
+                systemPix: totals.systemPix,
+                systemCredit: totals.systemCredit,
+                systemDebit: totals.systemDebit,
+                systemOthers: totals.systemOthers,
+                systemFiado: totals.systemFiado,
+                orphanSales: totals.orphanSales,
+                totalSales: totals.totalSales,
+                difference: 0,
+                observations: 'Auto Fechamento do Caixa'
+            }
+        });
+
+        await prisma.auditLog.create({
+            data: {
+                userId: 'SYSTEM',
+                userName: 'SISTEMA',
+                action: 'CLOSE_CASH_AUTO',
+                details: `Sistema realizou o fechamento automático do caixa às ${autoCloseTime}`
+            }
+        });
+    }
+};
+
+export const manualAutoClose = async (req: Request, res: Response) => {
+    try {
+        await autoCloseCashSessions();
+        res.json({ message: 'Auto fechamento processado com sucesso.' });
+    } catch (error: any) {
+        res.status(500).json({ message: 'Erro ao processar auto fechamento', error: error.message });
+    }
+};

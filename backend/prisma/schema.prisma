@@ -320,6 +320,7 @@ model BusinessSettings {
   enableDigitalMenu    Boolean @default(true)
   enableWaiterApp      Boolean @default(true)
   enableDriverApp      Boolean @default(true)
+  autoCloseTime        String  @default("00:00")
 }
 
 model ChatMessage {

@@ -97,6 +97,7 @@ export interface BusinessSettings {
   enableDigitalMenu?: boolean;
   enableWaiterApp?: boolean;
   enableDriverApp?: boolean;
+  autoCloseTime?: string;
 }
 
 export interface Waiter {

@@ -2435,7 +2435,12 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                       </div>
                       <div className="flex justify-between border-b border-slate-100 pb-1">
                         <span className="text-slate-400 uppercase tracking-wider text-[10px]">Status</span>
-                        <span className="font-bold text-emerald-700">FECHADO</span>
+                        <div className="flex flex-col items-end">
+                          <span className="font-bold text-emerald-700">FECHADO</span>
+                          {reviewSession.observations?.includes('Auto Fechamento') && (
+                            <span className="text-[7px] bg-amber-100 text-amber-700 font-black px-1.5 py-0.5 rounded-full uppercase tracking-widest mt-0.5 animate-pulse">Auto Fechamento</span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -2532,6 +2537,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                 {/* Buttons Area */}
                 <div className="grid grid-cols-2 gap-3 print:hidden pt-3 border-t border-slate-100">
                   <button
+                    disabled={reviewSession.observations?.includes('Auto Fechamento') && currentUser.name !== 'Administrador Master'}
                     onClick={() => {
                       setClosingReport({
                         cash: String(reviewSession.reportedCash || 0),
@@ -2543,7 +2549,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                       });
                       setIsAdjustModalOpen(true);
                     }}
-                    className="bg-white border border-slate-300 text-slate-600 py-2.5 rounded-xl font-bold uppercase text-[10px] tracking-widest transition-all active:scale-95 flex items-center justify-center gap-2 hover:bg-slate-50 shadow-sm"
+                    className={`bg-white border border-slate-300 text-slate-600 py-2.5 rounded-xl font-bold uppercase text-[10px] tracking-widest transition-all active:scale-95 flex items-center justify-center gap-2 hover:bg-slate-50 shadow-sm ${reviewSession.observations?.includes('Auto Fechamento') && currentUser.name !== 'Administrador Master' ? 'opacity-50 cursor-not-allowed grayscale' : ''}`}
                   >
                     <Icons.Dashboard className="w-3.5 h-3.5" /> Ajustes
                   </button>
