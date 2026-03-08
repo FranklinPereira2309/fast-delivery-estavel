@@ -45,22 +45,31 @@ export const openCashSession = async (req: Request, res: Response) => {
 };
 
 const calculateSessionTotals = async (openedAt: Date) => {
-    // Get the start of the day for orphan sales detection
+    // Get the last closed session to determine the start of the orphan window
+    const lastSession = await prisma.cashSession.findFirst({
+        where: { status: 'CLOSED' },
+        orderBy: { closedAt: 'desc' }
+    });
+
+    // Start of the day for fallback if no last session
     const startOfDay = new Date(openedAt);
     startOfDay.setHours(0, 0, 0, 0);
 
-    // Get all orders from the start of the day until now
-    const allOrdersOfDay = await prisma.order.findMany({
+    // Orphan window starts after the last session closed, or at midnight if no last session
+    const orphanStart = lastSession?.closedAt ? new Date(lastSession.closedAt) : startOfDay;
+
+    // Get all orders from the start of the orphan window until now
+    const allOrdersSinceStart = await prisma.order.findMany({
         where: {
-            createdAt: { gte: startOfDay },
+            createdAt: { gte: orphanStart },
             status: 'DELIVERED'
         }
     });
 
-    // Orders within the session
-    const sessionOrders = allOrdersOfDay.filter(o => o.createdAt >= openedAt);
-    // Orders before the session opened (orphans)
-    const orphanOrders = allOrdersOfDay.filter(o => o.createdAt < openedAt);
+    // Orders within the current open session
+    const sessionOrders = allOrdersSinceStart.filter(o => o.createdAt >= openedAt);
+    // Orders between the last closure and current opening (orphans)
+    const orphanOrders = allOrdersSinceStart.filter(o => o.createdAt < openedAt);
 
     const normalizePaymentMethod = (method: string): string => {
         const m = method.toUpperCase();
