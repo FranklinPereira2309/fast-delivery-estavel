@@ -4,11 +4,17 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { db } from '../services/db';
 import { Order, OrderStatus, SaleType } from '../types';
 import { Icons } from '../constants';
+import { useTheme } from '../components/ThemeProvider';
 
 const Dashboard: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [clientCount, setClientCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const { theme } = useTheme();
+
+  const isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  const gridColor = isDark ? '#1e293b' : '#f1f5f9';
+  const labelColor = isDark ? '#64748b' : '#94a3b8';
 
   useEffect(() => {
     const fetchData = async () => {
@@ -184,12 +190,13 @@ const Dashboard: React.FC = () => {
                     <stop offset="95%" stopColor="#4f46e5" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 700 }} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 700 }} />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={gridColor} />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: labelColor, fontSize: 10, fontWeight: 700 }} dy={10} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fill: labelColor, fontSize: 10, fontWeight: 700 }} />
                 <Tooltip
-                  contentStyle={{ borderRadius: '20px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)', padding: '15px' }}
+                  contentStyle={{ borderRadius: '20px', border: 'none', backgroundColor: isDark ? '#0f172a' : '#ffffff', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)', padding: '15px' }}
                   itemStyle={{ fontWeight: 800, fontSize: '12px', textTransform: 'uppercase' }}
+                  labelStyle={{ color: isDark ? '#cbd5e1' : '#64748b', fontWeight: 700, marginBottom: '5px' }}
                 />
                 <Area type="monotone" dataKey="vendas" stroke="#4f46e5" strokeWidth={4} fillOpacity={1} fill="url(#colorSales)" />
               </AreaChart>
@@ -198,31 +205,32 @@ const Dashboard: React.FC = () => {
         </div>
 
         {/* Gráfico de Volume de Pedidos */}
-        <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 flex flex-col">
-          <h3 className="text-slate-800 font-black uppercase tracking-tight text-lg mb-1">Volume de Pedidos</h3>
-          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-8">Frequência diária</p>
+        <div className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] shadow-sm border border-slate-100 dark:border-slate-800 transition-colors flex flex-col">
+          <h3 className="text-slate-800 dark:text-white font-black uppercase tracking-tight text-lg mb-1">Volume de Pedidos</h3>
+          <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest mb-8">Frequência diária</p>
           <div className="flex-1 min-h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 700 }} />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={gridColor} />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: labelColor, fontSize: 10, fontWeight: 700 }} />
                 <Tooltip
-                  cursor={{ fill: '#f8fafc' }}
-                  contentStyle={{ borderRadius: '20px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }}
+                  cursor={{ fill: isDark ? '#1e293b' : '#f8fafc' }}
+                  contentStyle={{ borderRadius: '20px', border: 'none', backgroundColor: isDark ? '#0f172a' : '#ffffff', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }}
+                  labelStyle={{ color: isDark ? '#cbd5e1' : '#64748b' }}
                 />
                 <Bar dataKey="pedidos" radius={[10, 10, 0, 0]}>
                   {chartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={index === chartData.length - 1 ? '#4f46e5' : '#e2e8f0'} />
+                    <Cell key={`cell-${index}`} fill={index === chartData.length - 1 ? '#4f46e5' : isDark ? '#334155' : '#e2e8f0'} />
                   ))}
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
           </div>
-          <div className="mt-6 pt-6 border-t border-slate-50">
+          <div className="mt-6 pt-6 border-t border-slate-50 dark:border-slate-800">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Performance Semanal</span>
+              <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Performance Semanal</span>
             </div>
-            <div className="w-full h-2 bg-slate-100 rounded-full mt-2 overflow-hidden">
+            <div className="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full mt-2 overflow-hidden">
               <div className="h-full bg-blue-500 rounded-full transition-all duration-500" style={{ width: `${Math.min(100, (stats.ordersToday / 20) * 100)}%` }}></div>
             </div>
           </div>
@@ -231,10 +239,10 @@ const Dashboard: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Análise por Tipo de Pagamento */}
-        <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 flex flex-col">
+        <div className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] shadow-sm border border-slate-100 dark:border-slate-800 transition-colors flex flex-col">
           <div className="mb-6">
-            <h3 className="text-slate-800 font-black uppercase tracking-tight text-lg">Mix de Pagamentos</h3>
-            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Volume financeiro por método</p>
+            <h3 className="text-slate-800 dark:text-white font-black uppercase tracking-tight text-lg">Mix de Pagamentos</h3>
+            <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest">Volume financeiro por método</p>
           </div>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
@@ -253,20 +261,21 @@ const Dashboard: React.FC = () => {
                   ))}
                 </Pie>
                 <Tooltip
-                  contentStyle={{ borderRadius: '15px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                  contentStyle={{ borderRadius: '15px', border: 'none', backgroundColor: isDark ? '#0f172a' : '#ffffff', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                  itemStyle={{ color: isDark ? '#cbd5e1' : '#1e293b' }}
                   formatter={(value: number) => `R$ ${value.toFixed(2)}`}
                 />
-                <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px', fontSize: '10px', fontWeight: 800, textTransform: 'uppercase' }} />
+                <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px', fontSize: '10px', fontWeight: 800, textTransform: 'uppercase', color: labelColor }} />
               </PieChart>
             </ResponsiveContainer>
           </div>
         </div>
 
         {/* Acompanhamento do Delivery */}
-        <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 flex flex-col">
+        <div className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] shadow-sm border border-slate-100 dark:border-slate-800 transition-colors flex flex-col">
           <div className="mb-6">
-            <h3 className="text-slate-800 font-black uppercase tracking-tight text-lg">Canais de Venda</h3>
-            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Comparativo Delivery vs Salão/Balcão</p>
+            <h3 className="text-slate-800 dark:text-white font-black uppercase tracking-tight text-lg">Canais de Venda</h3>
+            <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest">Comparativo Delivery vs Salão/Balcão</p>
           </div>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
@@ -285,16 +294,17 @@ const Dashboard: React.FC = () => {
                   ))}
                 </Pie>
                 <Tooltip
-                  contentStyle={{ borderRadius: '15px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                  contentStyle={{ borderRadius: '15px', border: 'none', backgroundColor: isDark ? '#0f172a' : '#ffffff', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                  itemStyle={{ color: isDark ? '#cbd5e1' : '#1e293b' }}
                 />
               </PieChart>
             </ResponsiveContainer>
           </div>
           <div className="mt-4 grid grid-cols-3 gap-2">
             {deliveryData.map((item, i) => (
-              <div key={i} className="text-center p-3 rounded-2xl bg-slate-50 border border-slate-100">
-                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">{item.name}</p>
-                <p className="text-sm font-black text-slate-800">{item.value} <span className="text-[9px] opacity-50">PED</span></p>
+              <div key={i} className="text-center p-3 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700">
+                <p className="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">{item.name}</p>
+                <p className="text-sm font-black text-slate-800 dark:text-white">{item.value} <span className="text-[9px] opacity-50">PED</span></p>
               </div>
             ))}
           </div>

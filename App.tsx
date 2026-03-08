@@ -113,14 +113,6 @@ const App: React.FC = () => {
     }
   };
 
-  if (isSplashVisible) return <SplashScreen />;
-
-  if (isLoading || !settings) return <div className="h-screen w-screen flex items-center justify-center bg-slate-50 text-slate-400 font-medium">Carregando sistema...</div>;
-
-  if (!currentUser) {
-    return <Login onLoginSuccess={handleLogin} />;
-  }
-
   const renderContent = () => {
     if (!currentUser.permissions.includes(activeTab)) {
       return (
@@ -162,32 +154,38 @@ const App: React.FC = () => {
 
   return (
     <ThemeProvider defaultTheme="system" storageKey="app-theme">
-      <Layout activeTab={activeTab} setActiveTab={setActiveTab} currentUser={currentUser} onLogout={handleLogout}>
-        {renderContent()}
-        <CustomAlert
-          isOpen={isResetAlertOpen}
-          title="⚠️ ATENÇÃO CRÍTICA"
-          message="Esta ação irá apagar TODOS os dados do sistema e restaurar os padrões de fábrica. Após confirmar, você precisará logar novamente como Admin Master."
-          type="DANGER"
-          onConfirm={handleResetSystem}
-          onCancel={() => {
-            setIsResetAlertOpen(false);
-            setResetPassword('');
-          }}
-          showInput={true}
-          inputValue={resetPassword}
-          onInputChange={(e) => setResetPassword(e.target.value)}
-          inputPlaceholder="Senha do Admin Master"
-          inputType="password"
-        />
-        <CustomAlert
-          isOpen={isSavedAlertOpen}
-          title="SUCESSO"
-          message="As configurações do estabelecimento foram atualizadas com sucesso no banco de dados local."
-          type="SUCCESS"
-          onConfirm={() => setIsSavedAlertOpen(false)}
-        />
-      </Layout>
+      {isSplashVisible ? (
+        <SplashScreen />
+      ) : !currentUser ? (
+        <Login onLoginSuccess={handleLogin} />
+      ) : (
+        <Layout activeTab={activeTab} setActiveTab={setActiveTab} currentUser={currentUser} onLogout={handleLogout}>
+          {renderContent()}
+          <CustomAlert
+            isOpen={isResetAlertOpen}
+            title="⚠️ ATENÇÃO CRÍTICA"
+            message="Esta ação irá apagar TODOS os dados do sistema e restaurar os padrões de fábrica. Após confirmar, você precisará logar novamente como Admin Master."
+            type="DANGER"
+            onConfirm={handleResetSystem}
+            onCancel={() => {
+              setIsResetAlertOpen(false);
+              setResetPassword('');
+            }}
+            showInput={true}
+            inputValue={resetPassword}
+            onInputChange={(e) => setResetPassword(e.target.value)}
+            inputPlaceholder="Senha do Admin Master"
+            inputType="password"
+          />
+          <CustomAlert
+            isOpen={isSavedAlertOpen}
+            title="SUCESSO"
+            message="As configurações do estabelecimento foram atualizadas com sucesso no banco de dados local."
+            type="SUCCESS"
+            onConfirm={() => setIsSavedAlertOpen(false)}
+          />
+        </Layout>
+      )}
     </ThemeProvider>
   );
 };
