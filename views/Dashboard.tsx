@@ -182,7 +182,7 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
           <div className="h-80 w-full">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
               <AreaChart data={chartData}>
                 <defs>
                   <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
@@ -209,7 +209,7 @@ const Dashboard: React.FC = () => {
           <h3 className="text-slate-800 dark:text-white font-black uppercase tracking-tight text-lg mb-1">Volume de Pedidos</h3>
           <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest mb-8">Frequência diária</p>
           <div className="flex-1 min-h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
               <BarChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={gridColor} />
                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: labelColor, fontSize: 10, fontWeight: 700 }} />
@@ -245,7 +245,7 @@ const Dashboard: React.FC = () => {
             <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest">Volume financeiro por método</p>
           </div>
           <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
               <PieChart>
                 <Pie
                   data={paymentData}
@@ -278,7 +278,7 @@ const Dashboard: React.FC = () => {
             <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest">Comparativo Delivery vs Salão/Balcão</p>
           </div>
           <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
               <PieChart>
                 <Pie
                   data={deliveryData}

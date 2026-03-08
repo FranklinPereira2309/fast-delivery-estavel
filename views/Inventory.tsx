@@ -241,7 +241,7 @@ const Inventory: React.FC = () => {
             <div className="p-8 border-b border-slate-50 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 flex justify-between items-center">
               <h3 className="text-xl font-black text-slate-800 dark:text-white uppercase tracking-tighter">{editingItem ? 'Editar Insumo' : 'Novo Insumo'}</h3>
               <button onClick={() => setIsInvModalOpen(false)} className="p-2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
-                <Icons.Close className="h-6 w-6" />
+                <Icons.X className="h-6 w-6" />
               </button>
             </div>
             <form onSubmit={saveInvItem} className="p-10 space-y-6">
@@ -288,7 +288,7 @@ const Inventory: React.FC = () => {
             <div className="p-8 border-b border-slate-50 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 flex justify-between items-center">
               <h3 className="text-xl font-black text-slate-800 dark:text-white uppercase tracking-tighter">{editingProduct ? 'Editar' : 'Novo'} Produto</h3>
               <button onClick={() => setIsProdModalOpen(false)} className="p-2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
-                <Icons.Close className="h-6 w-6" />
+                <Icons.X className="h-6 w-6" />
               </button>
             </div>
             <form onSubmit={saveProduct} className="p-10 space-y-5">
@@ -348,7 +348,7 @@ const Inventory: React.FC = () => {
             <div className="p-8 border-b border-slate-50 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 flex justify-between items-center">
               <h3 className="text-xl font-black text-slate-800 dark:text-white uppercase tracking-tighter">Ficha Técnica: {editingProduct.name}</h3>
               <button onClick={() => setIsRecipeModalOpen(false)} className="p-2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
-                <Icons.Close className="h-6 w-6" />
+                <Icons.X className="h-6 w-6" />
               </button>
             </div>
             <div className="p-8 space-y-6 max-h-[60vh] overflow-y-auto">
