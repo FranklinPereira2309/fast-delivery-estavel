@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Required for manual toggle of dark mode in Tailwind v4 */
+@custom-variant dark (&:is(.dark *));
+
 @layer base {
     button {
         @apply cursor-pointer;
@@ -7,9 +10,6 @@
 }
 
 @theme {
-    /* Required for manual toggle of dark mode in Tailwind v4 */
-    @custom-variant dark (&:is(.dark *));
-
     --color-blue-50: #eef2ff;
     --color-blue-100: #e0e7ff;
     --color-blue-200: #c7d2fe;
