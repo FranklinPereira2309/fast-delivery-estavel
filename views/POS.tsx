@@ -1182,14 +1182,14 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                 </div>
               </div>
 
-              <div className="flex gap-2 bg-slate-100 p-1.5 rounded-2xl">
+              <div className="flex gap-2 bg-slate-100 dark:bg-slate-800 p-1.5 rounded-2xl">
                 <button
                   onClick={() => {
                     setIsAvulso(false);
                     setSelectedClient(null);
                     setClientSearch('');
                   }}
-                  className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${!isAvulso ? 'bg-white text-blue-600 shadow-md' : 'text-slate-400'}`}
+                  className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${!isAvulso ? 'bg-white dark:bg-slate-700 text-blue-600 shadow-md' : 'text-slate-400 dark:text-slate-500'}`}
                 >
                   Buscar Cliente
                 </button>
@@ -1199,7 +1199,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                     setSelectedClient(null);
                     setClientSearch('');
                   }}
-                  className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${isAvulso ? 'bg-white text-blue-600 shadow-md' : 'text-slate-400'}`}
+                  className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${isAvulso ? 'bg-white dark:bg-slate-700 text-blue-600 shadow-md' : 'text-slate-400 dark:text-slate-500'}`}
                 >
                   Novo / Avulso
                 </button>

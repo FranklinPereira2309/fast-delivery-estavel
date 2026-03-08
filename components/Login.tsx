@@ -121,19 +121,19 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
   );
 
   return (
-    <div className="min-h-screen w-screen flex items-center justify-center bg-slate-900 overflow-hidden relative p-4">
+    <div className="min-h-screen w-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900 overflow-hidden relative p-4 transition-colors duration-300">
       {/* Background decoration */}
-      <div className="absolute top-0 right-0 -mr-40 -mt-40 w-96 h-96 bg-blue-600/20 rounded-full blur-[100px]"></div>
-      <div className="absolute bottom-0 left-0 -ml-40 -mb-40 w-96 h-96 bg-indigo-600/20 rounded-full blur-[100px]"></div>
+      <div className="absolute top-0 right-0 -mr-40 -mt-40 w-96 h-96 bg-blue-600/10 dark:bg-blue-600/20 rounded-full blur-[100px]"></div>
+      <div className="absolute bottom-0 left-0 -ml-40 -mb-40 w-96 h-96 bg-indigo-600/10 dark:bg-indigo-600/20 rounded-full blur-[100px]"></div>
 
       <div className="w-full max-w-md relative z-10">
-        <div className="bg-white/10 backdrop-blur-xl p-8 md:p-10 rounded-[2.5rem] shadow-2xl border border-white/10">
+        <div className="bg-white dark:bg-white/10 backdrop-blur-xl p-8 md:p-10 rounded-[2.5rem] shadow-2xl border border-slate-200 dark:border-white/10 transition-all">
           <div className="flex flex-col items-center mb-10 text-center">
             <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center shadow-xl shadow-blue-900/40 mb-4 transform -rotate-6">
               <span className="text-white text-3xl font-black">DF</span>
             </div>
-            <h1 className="text-2xl font-black text-white tracking-tight">DELIVERY FAST</h1>
-            <p className="text-slate-400 text-sm font-medium mt-1">
+            <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">DELIVERY FAST</h1>
+            <p className="text-slate-500 dark:text-slate-400 text-sm font-medium mt-1">
               {view === 'LOGIN' && 'Gerencie seu negócio com inteligência'}
               {view === 'FORGOT' && 'Recuperação de Acesso'}
               {view === 'RESET' && 'Definir Nova Senha'}
@@ -156,7 +156,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                   type="email"
                   required
                   placeholder="usuario@fast.com"
-                  className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl focus:ring-2 focus:ring-blue-500 transition-all text-white font-medium outline-none"
+                  className="w-full p-4 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl focus:ring-2 focus:ring-blue-500 transition-all text-slate-900 dark:text-white font-medium outline-none"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
@@ -178,7 +178,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                     type={showPassword ? "text" : "password"}
                     required
                     placeholder="••••••••"
-                    className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl focus:ring-2 focus:ring-blue-500 transition-all text-white font-medium outline-none pr-12"
+                    className="w-full p-4 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl focus:ring-2 focus:ring-blue-500 transition-all text-slate-900 dark:text-white font-medium outline-none pr-12"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                   />

@@ -5,6 +5,7 @@ import { User, Order, OrderStatus, TableSession, SaleType, BusinessSettings } fr
 import { useDigitalAlert } from '../hooks/useDigitalAlert';
 import { audioAlert } from '../services/audioAlert';
 import { socket, chatUnreadManager, clientChatUnreadManager, feedbackUnreadManager } from '../services/socket';
+import { useTheme } from './ThemeProvider';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -26,6 +27,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
   const [shouldBlinkPOSFeedback, setShouldBlinkPOSFeedback] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
   const [settings, setSettings] = useState<BusinessSettings | null>(null);
+  const { theme, toggleTheme } = useTheme();
   const { isAlerting } = useDigitalAlert();
   const lastOrdersMap = useRef<Record<string, { status: OrderStatus, itemCount: number }>>({});
   const isFirstRun = useRef(true);
@@ -236,9 +238,9 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
   });
 
   return (
-    <div className="flex h-screen bg-slate-50 overflow-hidden">
+    <div className="flex h-screen bg-slate-50 dark:bg-slate-950 overflow-hidden transition-colors duration-300">
       {/* Sidebar */}
-      <aside className={`${isSidebarCollapsed ? 'w-20' : 'w-64'} bg-slate-900 text-white flex flex-col shadow-xl shrink-0 transition-all duration-300 ease-in-out`}>
+      <aside className={`${isSidebarCollapsed ? 'w-20' : 'w-64'} bg-slate-900 text-white flex flex-col shadow-xl shrink-0 transition-all duration-300 ease-in-out border-r border-slate-800`}>
         <div
           onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
           className="px-3 py-4 flex items-center justify-between overflow-hidden cursor-pointer hover:bg-slate-800/10 transition-colors group/logo"
@@ -313,9 +315,9 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
       </aside>
 
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <header className="h-20 bg-white border-b border-slate-200 flex items-center justify-between px-8 shrink-0 shadow-sm z-10">
+        <header className="h-20 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-8 shrink-0 shadow-sm z-10 transition-colors duration-300">
           <div className="flex items-center gap-6">
-            <h2 className="text-xl font-black text-slate-900 uppercase tracking-tighter">
+            <h2 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tighter transition-colors">
               {navItems.find(i => i.id === activeTab)?.label || 'Acesso Negado'}
             </h2>
 
@@ -327,10 +329,10 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
                 {currentUser.name.substring(0, 2)}
               </div>
               <div className="hidden sm:block">
-                <p className="text-sm font-black text-slate-900 uppercase tracking-tighter leading-tight">{currentUser.name}</p>
+                <p className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tighter leading-tight transition-colors">{currentUser.name}</p>
                 <div className="flex items-center gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                  <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Sessão Ativa</p>
+                  <p className="text-[9px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest transition-colors">Sessão Ativa</p>
                 </div>
               </div>
               <button
@@ -344,16 +346,24 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
                 <span className="text-[10px] font-black uppercase tracking-widest hidden lg:block">Sair</span>
               </button>
             </div>
+
+            <button
+              onClick={toggleTheme}
+              className="ml-4 p-3 bg-slate-50 dark:bg-slate-800 text-slate-400 dark:text-slate-300 hover:text-blue-600 dark:hover:text-amber-400 hover:bg-blue-50 dark:hover:bg-slate-700 rounded-xl transition-all flex items-center justify-center"
+              title="Alternar Tema"
+            >
+              {theme === 'dark' ? <Icons.Sun /> : <Icons.Moon />}
+            </button>
           </div>
 
           <div className="hidden xl:flex items-center gap-4">
-            <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 bg-slate-50 border border-slate-100 px-4 py-2 rounded-xl uppercase tracking-widest">
-              Email: <span className="text-slate-900">{currentUser.email}</span>
+            <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 px-4 py-2 rounded-xl uppercase tracking-widest transition-colors">
+              Email: <span className="text-slate-900 dark:text-slate-300">{currentUser.email}</span>
             </div>
           </div>
         </header>
 
-        <section className="flex-1 overflow-y-auto p-8" onClick={() => {
+        <section className="flex-1 overflow-y-auto p-8 dark:bg-slate-950 transition-colors duration-300" onClick={() => {
           if (activeTab === 'kitchen') setShouldBlinkKitchen(false);
           if (activeTab === 'tables') setShouldBlinkTables(false);
           if (activeTab === 'logistics') setShouldBlinkLogistics(false);

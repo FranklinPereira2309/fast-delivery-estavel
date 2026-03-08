@@ -3,6 +3,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell, PieChart, Pie, Legend } from 'recharts';
 import { db } from '../services/db';
 import { Order, OrderStatus, SaleType } from '../types';
+import { Icons } from '../constants';
 
 const Dashboard: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -108,34 +109,70 @@ const Dashboard: React.FC = () => {
     <div className="space-y-8 animate-in fade-in duration-500 pb-12">
       {/* Cards de Métricas Reais */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {[
-          { label: 'Receita (Hoje)', value: `R$ ${stats.revenueToday.toFixed(2)}`, color: 'text-emerald-600', bg: 'bg-emerald-50', icon: '💰' },
-          { label: 'Pedidos (Hoje)', value: stats.ordersToday.toString(), color: 'text-blue-600', bg: 'bg-blue-50', icon: '📦' },
-          { label: 'Ticket Médio', value: `R$ ${stats.avgTicket.toFixed(2)}`, color: 'text-orange-600', bg: 'bg-orange-50', icon: '🎫' },
-          { label: 'Base de Clientes', value: stats.totalClients.toString(), color: 'text-indigo-600', bg: 'bg-indigo-50', icon: '👥' },
-        ].map((stat, i) => (
-          <div key={i} className="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 group hover:shadow-xl transition-all">
-            <div className="flex justify-between items-start mb-4">
-              <span className={`p-3 rounded-2xl ${stat.bg} text-xl`}>{stat.icon}</span>
-              <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Tempo Real</span>
+        <div className="bg-white dark:bg-slate-900 p-8 rounded-[3rem] shadow-sm border border-slate-100 dark:border-slate-800 transition-colors">
+          <div className="flex items-center gap-4 mb-6">
+            <div className="w-12 h-12 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-2xl flex items-center justify-center">
+              <Icons.DollarSign size={24} /> {/* Changed from POS to DollarSign for revenue */}
             </div>
-            <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest">{stat.label}</p>
-            <p className={`text-3xl font-black mt-1 tracking-tighter ${stat.color}`}>{stat.value}</p>
+            <div>
+              <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest">Receita (Hoje)</p>
+              <h3 className="text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tighter">
+                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(stats.revenueToday)}
+              </h3>
+            </div>
           </div>
-        ))}
+        </div>
+
+        <div className="bg-white dark:bg-slate-900 p-8 rounded-[3rem] shadow-sm border border-slate-100 dark:border-slate-800 transition-colors">
+          <div className="flex items-center gap-4 mb-6">
+            <div className="w-12 h-12 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-2xl flex items-center justify-center">
+              <Icons.Package size={24} /> {/* Changed from Check to Package for orders */}
+            </div>
+            <div>
+              <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest">Pedidos (Hoje)</p>
+              <h3 className="text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tighter">{stats.ordersToday}</h3>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-slate-900 p-8 rounded-[3rem] shadow-sm border border-slate-100 dark:border-slate-800 transition-colors">
+          <div className="flex items-center gap-4 mb-6">
+            <div className="w-12 h-12 bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-2xl flex items-center justify-center">
+              <Icons.Ticket size={24} /> {/* Changed from Clock to Ticket for avg ticket */}
+            </div>
+            <div>
+              <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest">Ticket Médio</p>
+              <h3 className="text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tighter">
+                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(stats.avgTicket)}
+              </h3>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-slate-900 p-8 rounded-[3rem] shadow-sm border border-slate-100 dark:border-slate-800 transition-colors">
+          <div className="flex items-center gap-4 mb-6">
+            <div className="w-12 h-12 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-2xl flex items-center justify-center">
+              <Icons.Users size={24} /> {/* Changed from Clock to Users for clients */}
+            </div>
+            <div>
+              <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest">Base de Clientes</p>
+              <h3 className="text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tighter">{stats.totalClients}</h3>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Gráfico de Vendas de 7 dias */}
-        <div className="lg:col-span-2 bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
+        <div className="lg:col-span-2 bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] shadow-sm border border-slate-100 dark:border-slate-800 transition-colors">
           <div className="flex justify-between items-end mb-8">
             <div>
-              <h3 className="text-slate-800 font-black uppercase tracking-tight text-lg">Fluxo Financeiro</h3>
-              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Últimos 7 dias de operação</p>
+              <h3 className="text-slate-800 dark:text-white font-black uppercase tracking-tight text-lg">Fluxo Financeiro</h3>
+              <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest">Últimos 7 dias de operação</p>
             </div>
             <div className="text-right">
-              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Total Semana</p>
-              <p className="text-2xl font-black text-slate-900">R$ {chartData.reduce((acc, d) => acc + d.vendas, 0).toFixed(2)}</p>
+              <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest">Total Semana</p>
+              <p className="text-2xl font-black text-slate-900 dark:text-white">R$ {chartData.reduce((acc, d) => acc + d.vendas, 0).toFixed(2)}</p>
             </div>
           </div>
           <div className="h-80 w-full">

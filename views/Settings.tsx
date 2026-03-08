@@ -526,9 +526,10 @@ interface SettingsProps {
 }
 
 const Settings: React.FC<SettingsProps> = ({ settings, setSettings, onReset }) => {
-    const [activeSubTab, setActiveSubTab] = useState<'EMPRESA' | 'HORARIOS' | 'FISCAL' | 'GARCONS' | 'USUARIOS' | 'AUDITORIA' | 'AVANCADO'>('EMPRESA');
+    const [activeSubTab, setActiveSubTab] = useState<'EMPRESA' | 'HORARIOS' | 'FISCAL' | 'GARCONS' | 'USUARIOS' | 'AUDITORIA' | 'AVANCADO' | 'APARENCIA'>('EMPRESA');
     const [isSavedAlertOpen, setIsSavedAlertOpen] = useState(false);
     const [storeStatus, setStoreStatus] = useState<{ status: string, is_manually_closed: boolean } | null>(null);
+    const { theme, setTheme } = useTheme();
 
     useEffect(() => {
         const fetchStatus = async () => {
@@ -564,6 +565,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings, onReset }) =
         { id: 'USUARIOS', label: 'Usuários', icon: Icons.POS },
         { id: 'AUDITORIA', label: 'Auditoria', icon: Icons.View },
         { id: 'AVANCADO', label: 'Avançado', icon: Icons.Settings },
+        { id: 'APARENCIA', label: 'Aparência', icon: Icons.Sun },
     ];
 
     return (
@@ -909,6 +911,42 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings, onReset }) =
                 {activeSubTab === 'GARCONS' && <WaiterManagement />}
                 {activeSubTab === 'USUARIOS' && <UserManagementInternal />}
                 {activeSubTab === 'AUDITORIA' && <div className="bg-white p-8 rounded-[3rem] border border-slate-100"><AuditLogs /></div>}
+
+                {activeSubTab === 'APARENCIA' && (
+                    <div className="bg-white dark:bg-slate-900 p-10 rounded-[3rem] shadow-sm border border-slate-100 dark:border-slate-800 max-w-4xl transition-colors duration-300">
+                        <div className="mb-10">
+                            <h3 className="text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tighter">Aparência do Sistema</h3>
+                            <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest">Personalize como o sistema é exibido neste dispositivo</p>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            {[
+                                { id: 'light', label: 'Modo Claro', icon: Icons.Sun, desc: 'Ideal para ambientes muito iluminados.' },
+                                { id: 'dark', label: 'Modo Escuro', icon: Icons.Moon, desc: 'Melhor para ambientes escuros e menor cansaço visual.' },
+                                { id: 'system', label: 'Tema do Sistema', icon: Icons.Dashboard, desc: 'Segue as configurações do seu Windows ou navegador.' }
+                            ].map((t) => (
+                                <button
+                                    key={t.id}
+                                    onClick={() => setTheme(t.id as any)}
+                                    className={`p-6 rounded-3xl border-2 transition-all flex flex-col gap-4 text-left group ${theme === t.id
+                                        ? 'bg-blue-600 border-blue-600 text-white'
+                                        : 'bg-slate-50 dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-blue-400'
+                                        }`}
+                                >
+                                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-colors ${theme === t.id ? 'bg-white/20' : 'bg-white dark:bg-slate-700 shadow-sm'}`}>
+                                        <t.icon className={theme === t.id ? 'text-white' : 'text-blue-600 dark:text-blue-400'} size={24} />
+                                    </div>
+                                    <div>
+                                        <p className="font-black uppercase text-xs tracking-tight">{t.label}</p>
+                                        <p className={`text-[10px] font-bold mt-1 leading-tight ${theme === t.id ? 'text-white/70' : 'text-slate-400 dark:text-slate-500'}`}>
+                                            {t.desc}
+                                        </p>
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )}
 
                 {activeSubTab === 'AVANCADO' && (
                     <div className="max-w-4xl space-y-8">
