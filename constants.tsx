@@ -187,5 +187,10 @@ export const Icons = {
     <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" {...props}>
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
     </svg>
+  ),
+  MoneyBag: (props: any) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" {...props}>
+      <path d="M12.5 2C10.57 2 9 3.57 9 5.5c0 .35.05.69.15 1H5v2h14V6.5h-4.15c.1-.31.15-.65.15-1 0-1.93-1.57-3.5-3.5-3.5zm0 2c.83 0 1.5.67 1.5 1.5S13.33 7 12.5 7 11 6.33 11 5.5 11.67 4 12.5 4zM5 10v1c0 4.42 3.58 8 8 8s8-3.58 8-8v-1H5zm8 6c-3.31 0-6-2.69-6-6h12c0 3.31-2.69 6-6 6zm1-4.5c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5.67 1.5 1.5 1.5 1.5-.67 1.5-1.5z" />
+    </svg>
   )
 };

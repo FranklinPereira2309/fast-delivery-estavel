@@ -1521,50 +1521,59 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
             </div>
           </div>
 
-          {/* CASH REGISTER STATUS & TOGGLE */}
-          <div className="bg-white p-4 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col gap-3">
-            <div className={`flex items-center justify-between p-3 rounded-2xl transition-all ${activeCashSession ? 'bg-emerald-50 border border-emerald-100' : 'bg-red-50 border border-red-100'}`}>
-              <div className="flex items-center gap-2">
-                <div className={`w-2 h-2 rounded-full ${activeCashSession ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`}></div>
-                <span className={`text-[10px] font-black uppercase tracking-widest ${activeCashSession ? 'text-emerald-700' : 'text-red-700'}`}>
-                  {activeCashSession ? 'Caixa Aberto' : 'Caixa Fechado'}
-                </span>
+          {/* CASH REGISTER STATUS CARD (REDESIGNED) */}
+          <div className="bg-white p-5 rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-100/50 flex flex-col gap-4 relative overflow-hidden group">
+            <div className={`flex flex-col items-center justify-center p-6 rounded-[2rem] transition-all duration-500 border-2 ${activeCashSession ? 'bg-emerald-50/50 border-emerald-100 shadow-inner' : 'bg-red-50/50 border-red-100 shadow-inner'}`}>
+              <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-4 transition-all duration-500 ${activeCashSession ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-200 animate-pulse' : 'bg-red-500 text-white shadow-lg shadow-red-200'}`}>
+                <Icons.MoneyBag className="w-8 h-8" />
               </div>
-              <button
-                onClick={() => {
-                  if (activeCashSession) {
-                    setAuthModalAction('CLOSE_CASH');
-                    setIsAuthModalOpen(true);
-                  } else {
-                    setAuthModalAction('OPEN_CASH');
-                    setIsAuthModalOpen(true);
-                  }
-                }}
-                className={`w-12 h-6 rounded-full transition-all relative ${activeCashSession ? 'bg-emerald-600 ring-4 ring-emerald-500/20' : 'bg-slate-300'}`}
-              >
-                <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all shadow-sm ${activeCashSession ? 'left-7' : 'left-1'}`}></div>
-              </button>
+
+              <div className="text-center">
+                <span className={`text-[10px] font-black uppercase tracking-[0.2em] block mb-1 ${activeCashSession ? 'text-emerald-600' : 'text-red-600'}`}>
+                  {activeCashSession ? 'Operação Ativa' : 'Terminal Bloqueado'}
+                </span>
+                <h4 className={`text-xl font-black uppercase tracking-tighter ${activeCashSession ? 'text-emerald-900' : 'text-red-900'}`}>
+                  {activeCashSession ? 'Caixa Aberto' : 'Caixa Fechado'}
+                </h4>
+              </div>
             </div>
 
             {activeCashSession ? (
-              <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100">
-                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Iniciado em</p>
-                <p className="text-[10px] font-black text-slate-600 uppercase">
-                  {new Date(activeCashSession.openedAt).toLocaleString('pt-BR')}
-                </p>
+              <div className="space-y-3">
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex items-center justify-between">
+                  <div>
+                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Vendedor</p>
+                    <p className="text-[10px] font-black text-slate-700 uppercase">{currentUser.name}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Início</p>
+                    <p className="text-[10px] font-black text-slate-700 uppercase">
+                      {new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' }).format(new Date(activeCashSession.openedAt))}
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => { setAuthModalAction('CLOSE_CASH'); setIsAuthModalOpen(true); }}
+                  className="w-full py-4 bg-slate-900 hover:bg-red-600 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2 group border border-slate-800"
+                >
+                  <Icons.Dashboard className="w-3.5 h-3.5 group-hover:rotate-12 transition-transform" />
+                  Encerrar Turno
+                </button>
               </div>
             ) : (
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-3">
                 <button
                   onClick={() => { setIsOpeningModalOpen(true); setAdminPassword(''); setSystemPreview(null); }}
-                  className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2 group"
+                  className="w-full py-5 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black uppercase text-[10px] tracking-[0.1em] transition-all shadow-xl shadow-blue-100 active:scale-95 flex items-center justify-center gap-3 group"
                 >
-                  <Icons.Dashboard className="w-3 h-3 group-hover:rotate-12 transition-transform" />
-                  Abrir Caixa
+                  <div className="bg-white/20 p-2 rounded-xl group-hover:bg-white/30 transition-colors">
+                    <Icons.Dashboard className="w-4 h-4" />
+                  </div>
+                  Abrir Caixa Agora
                 </button>
                 <button
                   onClick={async () => {
-                    // Fetch last session for review
                     const sessions = await db.getCashSessions();
                     if (sessions.length > 0) {
                       setReviewSession(sessions[0]);
@@ -1573,6 +1582,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                         pix: sessions[0].reportedPix.toString(),
                         credit: sessions[0].reportedCredit.toString(),
                         debit: sessions[0].reportedDebit.toString(),
+                        others: (sessions[0].reportedOthers || 0).toString(),
                         observations: sessions[0].observations || ''
                       });
                       setIsReviewModalOpen(true);
@@ -1580,37 +1590,19 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                       showAlert("Aviso", "Nenhum caixa anterior encontrado para revisar.", "INFO");
                     }
                   }}
-                  className="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-2xl font-black uppercase text-[9px] tracking-widest transition-all flex items-center justify-center gap-2 group"
+                  className="w-full py-3.5 bg-slate-50 hover:bg-slate-100 text-slate-500 rounded-2xl font-black uppercase text-[9px] tracking-widest transition-all flex items-center justify-center gap-2 border border-slate-100"
                 >
                   <Icons.View className="w-3 h-3" />
-                  Revisar Último Caixa
+                  Histórico / Revisão
                 </button>
               </div>
-            )}
-
-            {activeCashSession && (
-              <button
-                onClick={() => { setAuthModalAction('CLOSE_CASH'); setIsAuthModalOpen(true); }}
-                className="w-full py-4 bg-slate-900 border border-slate-800 hover:bg-orange-600 hover:border-orange-500 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2 group"
-              >
-                <Icons.Dashboard className="w-3 h-3 group-hover:rotate-12 transition-transform" />
-                Fechar Caixa
-              </button>
             )}
           </div>
         </div>
 
-        <div className="flex-1 flex flex-col min-w-0 relative">
+        <div className={`flex-1 flex flex-col min-w-0 relative transition-all duration-500 ${!activeCashSession ? 'grayscale pointer-events-none opacity-40' : ''}`}>
           {!activeCashSession && (
-            <div className="absolute inset-0 z-10 bg-slate-50/70 backdrop-blur-[2px] rounded-3xl flex items-center justify-center">
-              <div className="bg-white p-6 rounded-3xl shadow-xl border border-red-100 flex flex-col items-center gap-3 animate-in zoom-in duration-300">
-                <div className="w-12 h-12 bg-red-50 text-red-500 rounded-full flex items-center justify-center font-black text-2xl">🔒</div>
-                <div className="text-center">
-                  <h3 className="font-black text-slate-800 uppercase tracking-tighter">Vendas Bloqueadas</h3>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase mt-1">Abra o caixa no painel para iniciar as operações.</p>
-                </div>
-              </div>
-            </div>
+            <div className="absolute inset-0 z-10 bg-slate-50/10 backdrop-blur-[1px] rounded-[3rem]"></div>
           )}
           <div className="flex gap-2 mb-6 overflow-x-auto pb-2 shrink-0">
             {['Todos', ...Array.from(new Set(products.map(p => p.category)))].map(cat => (
@@ -1630,27 +1622,9 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
           </div>
         </div>
 
-        <div className="w-80 lg:w-80 xl:w-96 bg-white rounded-3xl border border-slate-100 shadow-sm flex flex-col shrink-0 overflow-hidden relative border-l-4 border-l-blue-600/10">
+        <div className={`w-80 lg:w-80 xl:w-96 bg-white rounded-3xl border border-slate-100 shadow-sm flex flex-col shrink-0 overflow-hidden relative border-l-4 border-l-blue-600/10 transition-all duration-500 ${!activeCashSession ? 'grayscale pointer-events-none opacity-40' : ''}`}>
           {!activeCashSession && (
-            <div className="absolute inset-0 z-20 bg-slate-50/80 backdrop-blur-[2px] rounded-r-3xl flex items-center justify-center">
-              <div className="bg-white p-8 rounded-3xl shadow-2xl border border-red-100 flex flex-col items-center gap-4 text-center max-w-[80%]">
-                <div className="w-16 h-16 bg-red-100 text-red-600 rounded-2xl flex items-center justify-center text-3xl shadow-inner animate-pulse">
-                  💰
-                </div>
-                <div>
-                  <h3 className="text-xl font-black text-slate-800 uppercase tracking-tighter">Caixa Fechado</h3>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase mt-2 px-4 leading-relaxed">
-                    Você deve abrir o caixa informando o saldo inicial antes de registrar itens e recebimentos.
-                  </p>
-                </div>
-                <button
-                  onClick={() => { setAuthModalAction('OPEN_CASH'); setIsAuthModalOpen(true); }}
-                  className="mt-2 text-[10px] font-black uppercase text-blue-600 bg-blue-50 px-6 py-3 rounded-full hover:bg-blue-600 hover:text-white transition-colors"
-                >
-                  Abrir Caixa Agora
-                </button>
-              </div>
-            </div>
+            <div className="absolute inset-0 z-20 bg-slate-50/10 backdrop-blur-[1px]"></div>
           )}
           {isLoadingOrder && (
             <div className="absolute inset-0 z-20 bg-white/80 backdrop-blur-sm flex items-center justify-center animate-in fade-in duration-300">
