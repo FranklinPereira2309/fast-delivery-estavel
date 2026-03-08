@@ -635,7 +635,19 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
     setEditingOrderId(null);
     if (!keepPrinting) setPrintingOrder(null);
     setIsAvulso(false);
-    setAvulsoData({ name: '', phone: '', address: '', cep: '', email: '', document: '' });
+    setAvulsoData({
+      phone: '',
+      name: '',
+      email: '',
+      document: '',
+      cep: '',
+      street: '',
+      addressNumber: '',
+      neighborhood: '',
+      city: '',
+      state: '',
+      complement: ''
+    });
     setManualDeliveryFee(null);
     setPayments([]);
     setCurrentPaymentAmount('');
@@ -643,6 +655,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
     setPaymentData({ receivedAmount: '' });
     setEmitNfce(false);
     setSystemPreview(null);
+    setErrors({});
   };
 
   const handleOpenCash = async () => {
@@ -1660,6 +1673,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                       if (saleType === SaleType.TABLE && tableNumber) return showAlert("Bloqueado", "Limpe a mesa atual antes de mudar a modalidade.", "DANGER");
                       if (isPaymentModalOpen) return showAlert("Bloqueado", "Cancele o pagamento atual antes de mudar a modalidade.", "DANGER");
                       setSaleType(type);
+                      setErrors({});
                       if (type !== SaleType.TABLE) {
                         setTableNumber('');
                         setTableNumberInput('');
@@ -1690,7 +1704,10 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                   </div>
 
                   <button
-                    onClick={() => setIsClientModalOpen(true)}
+                    onClick={() => {
+                      setIsClientModalOpen(true);
+                      setErrors({});
+                    }}
                     className={`w-full p-4 rounded-2xl border-2 transition-all flex items-center justify-between group ${selectedClient || (isAvulso && avulsoData.name) ? 'bg-blue-50 border-blue-200 shadow-sm' : 'bg-slate-50 border-dashed border-slate-200 hover:border-blue-300'}`}
                   >
                     <div className="flex items-center gap-3">
