@@ -19,6 +19,7 @@ const Kitchen: React.FC = () => {
   // Controle de seleção local por pedido: { orderId: [uids selecionados] }
   const [selectedItems, setSelectedItems] = useState<Record<string, string[]>>({});
   const [acknowledgedOrders, setAcknowledgedOrders] = useState<Set<string>>(new Set());
+  const [expandedOrders, setExpandedOrders] = useState<Record<string, boolean>>({});
 
   const prevItemCounts = useRef<Record<string, number>>({});
   const lastOrdersCount = useRef<number>(0);
@@ -188,7 +189,7 @@ const Kitchen: React.FC = () => {
             className={`bg-white rounded-[2rem] border-2 transition-all flex flex-col overflow-hidden shadow-sm hover:shadow-xl ${viewTab === 'FILA' ? 'border-blue-100' : 'border-slate-100 opacity-90'
               } ${viewTab === 'FILA' && !acknowledgedOrders.has(order.id) ? 'animate-moderate-blink border-blue-400' : ''}`}
           >
-            <div className={`p-6 flex flex-col ${viewTab === 'FILA' ? 'bg-blue-50' : 'bg-slate-50'}`}>
+            <div className={`flex flex-col ${viewTab === 'FILA' ? 'p-6 bg-blue-50' : 'p-4 bg-slate-50 border-b border-slate-100'}`}>
               <div className="flex justify-between items-start">
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest truncate max-w-[150px]">
                   {order.type === SaleType.TABLE ? getWaiterName(order.waiterId) : (order.id.split('-')[1] || order.id)}
@@ -197,75 +198,91 @@ const Kitchen: React.FC = () => {
                   {new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' }).format(new Date(order.createdAt))}
                 </span>
               </div>
-              <h4 className="font-black text-slate-800 uppercase text-lg mt-2">
-                {translateOrderType(order.type)} {order.tableNumber ? `- MESA ${order.tableNumber}` : ''}
-                {order.status === OrderStatus.REOPENED && (
-                  <span className="ml-2 inline-block px-2 py-0.5 bg-amber-100 text-amber-600 rounded-md text-[8px] font-black animate-pulse">REABERTA</span>
+              <div className="flex justify-between items-center mt-2">
+                <h4 className={`${viewTab === 'FILA' ? 'text-lg' : 'text-sm'} font-black text-slate-800 uppercase`}>
+                  {translateOrderType(order.type)} {order.tableNumber ? `- MESA ${order.tableNumber}` : ''}
+                  {order.status === OrderStatus.REOPENED && (
+                    <span className="ml-2 inline-block px-2 py-0.5 bg-amber-100 text-amber-600 rounded-md text-[8px] font-black animate-pulse">REABERTA</span>
+                  )}
+                </h4>
+                {viewTab === 'HISTORICO' && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setExpandedOrders(prev => ({ ...prev, [order.id]: !prev[order.id] }));
+                    }}
+                    className="p-2 hover:bg-white rounded-xl transition-all text-slate-400 hover:text-blue-600 shadow-sm border border-transparent hover:border-slate-100"
+                  >
+                    {expandedOrders[order.id] ? <Icons.ChevronUp className="w-4 h-4" /> : <Icons.ChevronDown className="w-4 h-4" />}
+                  </button>
                 )}
-              </h4>
-              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tight truncate">{order.clientName}</p>
+              </div>
+              <p className={`${viewTab === 'FILA' ? 'text-[10px]' : 'text-[9px]'} font-bold text-slate-500 uppercase tracking-tight truncate`}>{order.clientName}</p>
             </div>
 
-            <div className="p-4 md:p-6 flex-1 flex flex-col min-h-0">
-              <div className="flex justify-between items-center mb-3">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                  {viewTab === 'FILA' ? 'Itens Pendentes' : 'Itens Produzidos'}
-                </p>
-              </div>
+            <div className={`${viewTab === 'FILA' ? 'p-4 md:p-6' : 'p-3'} flex-1 flex flex-col min-h-0`}>
+              {viewTab === 'FILA' && (
+                <div className="flex justify-between items-center mb-3">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                    Itens Pendentes
+                  </p>
+                </div>
+              )}
+              {(viewTab === 'FILA' || expandedOrders[order.id]) && (
+                <div className={`space-y-3 overflow-y-auto pr-1 custom-scrollbar ${viewTab === 'FILA' ? 'max-h-[350px] md:max-h-[450px]' : 'max-h-[200px] animate-in slide-in-from-top-2 duration-300'}`}>
 
-              <div className="space-y-3 overflow-y-auto pr-1 custom-scrollbar max-h-[350px] md:max-h-[450px]">
+                  {order.items.filter(it => viewTab === 'FILA' ? !it.isReady : it.isReady).map((item, idx) => {
+                    const product = products.find(p => p.id === item.productId);
+                    const isSelected = (selectedItems[order.id] || []).includes(item.uid);
 
-                {order.items.filter(it => viewTab === 'FILA' ? !it.isReady : it.isReady).map((item, idx) => {
-                  const product = products.find(p => p.id === item.productId);
-                  const isSelected = (selectedItems[order.id] || []).includes(item.uid);
-
-                  return (
-                    <div key={item.uid} className="space-y-2 animate-in fade-in duration-300">
-                      <label className={`block cursor-pointer bg-white p-5 md:p-4 rounded-2xl border transition-all shadow-sm ${isSelected ? 'border-blue-600 ring-2 ring-blue-50' : 'border-slate-100 hover:border-blue-200'
-                        }`}>
-                        <div className="flex items-center gap-3">
-                          {viewTab === 'FILA' && (
-                            <input
-                              type="checkbox"
-                              checked={isSelected}
-                              onChange={() => toggleItemSelection(order.id, item.uid)}
-                              className="w-4 h-4 rounded-md border-slate-300 text-blue-600 focus:ring-blue-500"
-                            />
-                          )}
-                          <div className="flex-1">
-                            <p className="font-black text-slate-800 uppercase text-xs">
-                              <span className="text-blue-600 text-sm">{item.quantity}x</span> {product?.name}
-                            </p>
-                            {item.observations && (
-                              <p className="inline-block text-[10px] text-orange-600 font-bold bg-orange-100/50 px-2 py-1 rounded-md mt-1 mb-1 border border-orange-200">
-                                Obs: {item.observations}
+                    return (
+                      <div key={item.uid} className="space-y-2 animate-in fade-in duration-300">
+                        <label className={`block cursor-pointer bg-white p-5 md:p-4 rounded-2xl border transition-all shadow-sm ${isSelected ? 'border-blue-600 ring-2 ring-blue-50' : 'border-slate-100 hover:border-blue-200'
+                          }`}>
+                          <div className="flex items-center gap-3">
+                            {viewTab === 'FILA' && (
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={() => toggleItemSelection(order.id, item.uid)}
+                                className="w-4 h-4 rounded-md border-slate-300 text-blue-600 focus:ring-blue-500"
+                              />
+                            )}
+                            <div className="flex-1">
+                              <p className="font-black text-slate-800 uppercase text-xs">
+                                <span className="text-blue-600 text-sm">{item.quantity}x</span> {product?.name}
                               </p>
-                            )}
-                            {product?.recipe && product.recipe.length > 0 && (
-                              <div className="mt-2 pl-2 border-l-2 border-slate-200">
-                                <p className="text-[8px] font-black text-slate-400 uppercase mb-1">Ficha Técnica:</p>
-                                <ul className="space-y-0.5">
-                                  {product.recipe.map((rec, i) => {
-                                    const inv = inventory.find(invIt => invIt.id === rec.inventoryItemId);
-                                    return (
-                                      <li key={i} className="text-[9px] font-bold text-slate-500 uppercase list-inside list-disc">
-                                        {inv?.name || 'Ingrediente Desconhecido'} ({(rec.quantity * item.quantity).toFixed(2)}{inv?.unit})
-                                      </li>
-                                    );
-                                  })}
-                                </ul>
-                              </div>
-                            )}
-                            {item.isReady && (
-                              <p className="text-[8px] text-emerald-500 font-black uppercase mt-2">Pronto em: {new Date(item.readyAt!).toLocaleTimeString()}</p>
-                            )}
+                              {item.observations && (
+                                <p className="inline-block text-[10px] text-orange-600 font-bold bg-orange-100/50 px-2 py-1 rounded-md mt-1 mb-1 border border-orange-200">
+                                  Obs: {item.observations}
+                                </p>
+                              )}
+                              {product?.recipe && product.recipe.length > 0 && (
+                                <div className="mt-2 pl-2 border-l-2 border-slate-200">
+                                  <p className="text-[8px] font-black text-slate-400 uppercase mb-1">Ficha Técnica:</p>
+                                  <ul className="space-y-0.5">
+                                    {product.recipe.map((rec, i) => {
+                                      const inv = inventory.find(invIt => invIt.id === rec.inventoryItemId);
+                                      return (
+                                        <li key={i} className="text-[9px] font-bold text-slate-500 uppercase list-inside list-disc">
+                                          {inv?.name || 'Ingrediente Desconhecido'} ({(rec.quantity * item.quantity).toFixed(2)}{inv?.unit})
+                                        </li>
+                                      );
+                                    })}
+                                  </ul>
+                                </div>
+                              )}
+                              {item.isReady && (
+                                <p className="text-[8px] text-emerald-500 font-black uppercase mt-2">Pronto em: {new Date(item.readyAt!).toLocaleTimeString()}</p>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      </label>
-                    </div>
-                  );
-                })}
-              </div>
+                        </label>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
 
               {viewTab === 'FILA' && order.items.some(it => it.isReady) && (
                 <div className="pt-4 border-t border-slate-100">
