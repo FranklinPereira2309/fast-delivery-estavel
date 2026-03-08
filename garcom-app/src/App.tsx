@@ -279,7 +279,7 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1.5 min-w-0">
-              <h1 className="text-sm font-black text-slate-900 uppercase tracking-tighter truncate">App Garçom</h1>
+              <h1 className="text-sm font-black text-slate-900 uppercase tracking-tighter truncate">GARÇOM APP</h1>
               <div className={`shrink-0 flex items-center gap-1 px-1.5 py-0.5 rounded-full ${storeStatus.status === 'online' ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
                 <div className={`w-1 h-1 rounded-full ${storeStatus.status === 'online' ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`}></div>
                 <span className="text-[7px] sm:text-[8px] font-black uppercase tracking-widest">{storeStatus.status === 'online' ? 'On' : 'Off'}</span>
