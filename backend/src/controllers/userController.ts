@@ -36,9 +36,14 @@ export const saveUser = async (req: Request, res: Response) => {
         // Se for novo usuário e não veio senha, ou mesmo se veio, garantimos o hash
         const passwordToHash = userData.password || '123';
         userData.password = await bcrypt.hash(passwordToHash, 10);
-    } else if (userData.password && !userData.password.startsWith('$2')) {
-        // Se for atualização e enviou uma senha nova (não hasheada)
-        userData.password = await bcrypt.hash(userData.password, 10);
+    } else {
+        // Se for atualização
+        if (userData.password && !userData.password.startsWith('$2')) {
+            userData.password = await bcrypt.hash(userData.password, 10);
+        } else if (!userData.password || userData.password === "") {
+            // Se for string vazia ou nula/indefinida, removemos do objeto para não sobrescrever o hash atual
+            delete userData.password;
+        }
     }
 
     const { id, ...rest } = userData;
