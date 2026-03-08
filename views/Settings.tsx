@@ -909,11 +909,11 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings, onReset }) =
                             </div>
                         </div>
 
-                        <div className="bg-white p-10 rounded-[3rem] shadow-sm border border-slate-100">
-                            <h3 className="text-2xl font-black mb-2 text-red-600 uppercase tracking-tighter">Zona de Risco Crítico</h3>
-                            <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mb-10">Estas ações são irreversíveis e apagam dados permanentemente</p>
+                        <div className="bg-white p-5 sm:p-10 rounded-[3rem] shadow-sm border border-slate-100">
+                            <h3 className="text-xl sm:text-2xl font-black mb-2 text-red-600 uppercase tracking-tighter">Zona de Risco Crítico</h3>
+                            <p className="text-[10px] sm:text-xs text-slate-400 font-bold uppercase tracking-widest mb-6 sm:mb-10">Estas ações são irreversíveis e apagam dados permanentemente</p>
 
-                            <div className="p-8 bg-red-50 rounded-3xl border border-red-100">
+                            <div className="p-5 sm:p-8 bg-red-50 rounded-3xl border border-red-100">
                                 <p className="text-sm font-bold text-red-900 mb-6 uppercase tracking-tight">Reinicialização Total do Sistema:</p>
                                 <p className="text-xs text-red-700/60 font-medium mb-8 leading-relaxed">A reinicialização apagará permanentemente todos os pedidos, clientes, estoque e configurações customizadas. O sistema retornará ao estado de instalação inicial.</p>
                                 <button
