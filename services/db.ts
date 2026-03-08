@@ -25,7 +25,8 @@ const DEFAULT_SETTINGS: BusinessSettings = {
   enableDeliveryApp: true,
   enableDigitalMenu: true,
   enableWaiterApp: true,
-  enableDriverApp: true
+  enableDriverApp: true,
+  qrCodeBaseUrl: ''
 };
 
 class APIDBService {

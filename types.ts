@@ -99,6 +99,7 @@ export interface BusinessSettings {
   enableDriverApp?: boolean;
   autoCloseTime?: string;
   waiterLockEnabled?: boolean;
+  qrCodeBaseUrl?: string;
 }
 
 export interface Waiter {

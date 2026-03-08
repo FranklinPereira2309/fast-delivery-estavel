@@ -25,8 +25,8 @@ const QRCodes: React.FC = () => {
 
     if (!settings) return null;
 
-    // Base da URL do cardápio digital (via Variável de Ambiente ou Local)
-    const MENU_BASE_URL = import.meta.env.VITE_MENU_URL || 'http://localhost:5173';
+    // Base da URL do cardápio digital (via Configuração, Variável de Ambiente ou Local)
+    const MENU_BASE_URL = settings.qrCodeBaseUrl || import.meta.env.VITE_MENU_URL || 'http://localhost:5173';
 
     const tables = Array.from({ length: settings.tableCount }).map((_, i) => i + 1);
 

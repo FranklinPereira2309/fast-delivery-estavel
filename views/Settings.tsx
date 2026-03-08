@@ -639,6 +639,17 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings, onReset }) =
                                     <h4 className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest ml-1">Horário de Auto Fechamento (Cash)</h4>
                                     <input type="time" className="w-full p-4 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl focus:ring-4 focus:ring-blue-50 dark:focus:ring-blue-900/20 transition-all font-bold text-sm text-slate-800 dark:text-white" value={settings.autoCloseTime || '00:00'} onChange={e => setSettings({ ...settings, autoCloseTime: e.target.value })} />
                                 </div>
+                                <div className="space-y-2 col-span-1 md:col-span-2">
+                                    <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">URL Base do Cardápio (QR Code)</label>
+                                    <input
+                                        type="text"
+                                        placeholder="Ex: https://meucardapio.com"
+                                        className="w-full p-4 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl focus:ring-4 focus:ring-blue-50 dark:focus:ring-blue-900/20 transition-all font-bold text-sm text-slate-800 dark:text-white"
+                                        value={settings.qrCodeBaseUrl || ''}
+                                        onChange={e => setSettings({ ...settings, qrCodeBaseUrl: e.target.value })}
+                                    />
+                                    <p className="text-[9px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest ml-1">Esta URL será usada como base para todos os QR Codes gerados nas mesas.</p>
+                                </div>
                                 <div className="space-y-2 col-span-1 md:col-span-2 p-4 sm:p-6 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                                     <div className="flex-1">
                                         <h4 className="text-[12px] font-black text-slate-800 dark:text-white uppercase tracking-widest">Cobrar Taxa de Serviço Opcional</h4>
