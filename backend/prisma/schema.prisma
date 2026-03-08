@@ -321,6 +321,7 @@ model BusinessSettings {
   enableWaiterApp      Boolean @default(true)
   enableDriverApp      Boolean @default(true)
   autoCloseTime        String  @default("00:00")
+  waiterLockEnabled    Boolean @default(true)
 }
 
 model ChatMessage {

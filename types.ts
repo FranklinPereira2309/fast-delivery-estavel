@@ -98,6 +98,7 @@ export interface BusinessSettings {
   enableWaiterApp?: boolean;
   enableDriverApp?: boolean;
   autoCloseTime?: string;
+  waiterLockEnabled?: boolean;
 }
 
 export interface Waiter {

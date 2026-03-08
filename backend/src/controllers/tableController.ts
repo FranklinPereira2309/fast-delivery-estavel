@@ -132,8 +132,11 @@ export const saveTableSession = async (req: Request, res: Response) => {
             }
 
             // Regra de Negócio: Somente o garçom responsável ou se a mesa estiver livre (novo atendimento)
+            const settings = await tx.businessSettings.findFirst();
+            const waiterLockEnabled = settings?.waiterLockEnabled !== false;
+
             const isAdmin = sessionData.userPermissions?.includes('admin');
-            if (!isAdmin && existingSession && existingSession.waiterId && waiterId && existingSession.waiterId !== waiterId) {
+            if (waiterLockEnabled && !isAdmin && existingSession && existingSession.waiterId && waiterId && existingSession.waiterId !== waiterId) {
                 // Check if they are actually the same person by email (safety)
                 const currentWaiter = await tx.waiter.findUnique({ where: { id: existingSession.waiterId } });
                 const actingWaiter = await tx.waiter.findUnique({ where: { id: waiterId } });
@@ -343,17 +346,19 @@ export const deleteTableSession = async (req: Request, res: Response) => {
     // Buscar sessão antes de deletar para saber se era digital
     const session = await prisma.tableSession.findUnique({ where: { tableNumber: tableNum } });
 
-    const { waiterId, userPermissions } = req.body || {};
-    const isAdmin = userPermissions?.includes('admin');
-    if (!isAdmin && session?.waiterId && waiterId && session.waiterId !== waiterId) {
-        const currentWaiter = await prisma.waiter.findUnique({ where: { id: session.waiterId } });
-        const actingWaiter = await prisma.waiter.findUnique({ where: { id: waiterId } });
-        if (currentWaiter?.email?.toLowerCase() !== actingWaiter?.email?.toLowerCase()) {
-            return res.status(403).json({ error: 'Apenas o garçom responsável por esta mesa pode realizar esta ação.' });
-        }
-    }
-
     try {
+        const settings = await prisma.businessSettings.findFirst();
+        const waiterLockEnabled = settings?.waiterLockEnabled !== false;
+
+        const { waiterId, userPermissions } = req.body || {};
+        const isAdmin = userPermissions?.includes('admin');
+        if (waiterLockEnabled && !isAdmin && session?.waiterId && waiterId && session.waiterId !== waiterId) {
+            const currentWaiter = await prisma.waiter.findUnique({ where: { id: session.waiterId } });
+            const actingWaiter = await prisma.waiter.findUnique({ where: { id: waiterId } });
+            if (currentWaiter?.email?.toLowerCase() !== actingWaiter?.email?.toLowerCase()) {
+                return res.status(403).json({ error: 'Apenas o garçom responsável por esta mesa pode realizar esta ação.' });
+            }
+        }
         const rejectionMessage = cancellation === 'true' ? "Procure o Garçom, seu pedido foi Rejeitado!" : undefined;
 
         if (rejectionMessage) {
@@ -410,9 +415,12 @@ export const transferTableSession = async (req: Request, res: Response) => {
                 throw new Error('Mesa de origem não encontrada ou vazia');
             }
 
+            const settings = await tx.businessSettings.findFirst();
+            const waiterLockEnabled = settings?.waiterLockEnabled !== false;
+
             // Regra de Negócio: Somente o garçom responsável pode transferir
             const isAdmin = userPermissions?.includes('admin');
-            if (!isAdmin && waiterId && sourceSession.waiterId && sourceSession.waiterId !== waiterId) {
+            if (waiterLockEnabled && !isAdmin && waiterId && sourceSession.waiterId && sourceSession.waiterId !== waiterId) {
                 const currentWaiter = await tx.waiter.findUnique({ where: { id: sourceSession.waiterId } });
                 const actingWaiter = await tx.waiter.findUnique({ where: { id: waiterId } });
                 if (currentWaiter?.email?.toLowerCase() !== actingWaiter?.email?.toLowerCase()) {
@@ -519,7 +527,10 @@ export const requestCheckout = async (req: Request, res: Response) => {
         const isAdmin = userPermissions?.includes('admin');
         const existing = await prisma.tableSession.findUnique({ where: { tableNumber: tableNum } });
 
-        if (!isAdmin && existing?.waiterId && waiterId && existing.waiterId !== waiterId) {
+        const settings = await prisma.businessSettings.findFirst();
+        const waiterLockEnabled = settings?.waiterLockEnabled !== false;
+
+        if (waiterLockEnabled && !isAdmin && existing?.waiterId && waiterId && existing.waiterId !== waiterId) {
             const currentWaiter = await prisma.waiter.findUnique({ where: { id: existing.waiterId } });
             const actingWaiter = await prisma.waiter.findUnique({ where: { id: waiterId } });
             if (currentWaiter?.email?.toLowerCase() !== actingWaiter?.email?.toLowerCase()) {

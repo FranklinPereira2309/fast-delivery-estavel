@@ -744,34 +744,52 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings, onReset }) =
                             <div className="pt-8 border-t border-slate-100">
                                 <div className="flex justify-between items-center mb-6">
                                     <div>
-                                        <h4 className="text-sm font-black text-slate-800 uppercase tracking-tighter">Segurança do App Garçom</h4>
-                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Configure a tela de privacidade contra inatividade</p>
+                                        <h4 className="text-sm font-black text-slate-800 uppercase tracking-tighter">Regras & Segurança do App Garçom</h4>
+                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Configure o comportamento e privacidade do atendimento</p>
                                     </div>
                                 </div>
-                                <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 space-y-6">
-                                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col justify-between gap-4">
                                         <div>
-                                            <h4 className="text-[12px] font-black text-slate-800 uppercase tracking-widest">Ativar Tela de Privacidade</h4>
-                                            <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase">Bloqueia automaticamente o App Garçom após período de inatividade.</p>
+                                            <h4 className="text-[12px] font-black text-slate-800 uppercase tracking-widest">Travar Mesa por Garçom</h4>
+                                            <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase">Apenas o garçom que iniciou o atendimento pode alterar a mesa.</p>
                                         </div>
-                                        <button
-                                            type="button"
-                                            className={`w-14 h-8 rounded-full transition-all relative ${settings.waiterPrivacyEnabled ? 'bg-emerald-500' : 'bg-slate-200'}`}
-                                            onClick={() => setSettings({ ...settings, waiterPrivacyEnabled: !settings.waiterPrivacyEnabled })}
-                                        >
-                                            <div className={`absolute top-1 w-6 h-6 rounded-full bg-white transition-all ${settings.waiterPrivacyEnabled ? 'left-7' : 'left-1'}`}></div>
-                                        </button>
+                                        <div className="flex justify-end">
+                                            <button
+                                                type="button"
+                                                className={`w-14 h-8 rounded-full transition-all relative ${settings.waiterLockEnabled !== false ? 'bg-emerald-500' : 'bg-slate-200'}`}
+                                                onClick={() => setSettings({ ...settings, waiterLockEnabled: settings.waiterLockEnabled === false ? true : false })}
+                                            >
+                                                <div className={`absolute top-1 w-6 h-6 rounded-full bg-white transition-all ${settings.waiterLockEnabled !== false ? 'left-7' : 'left-1'}`}></div>
+                                            </button>
+                                        </div>
                                     </div>
 
-                                    <div className={`transition-all duration-300 ${settings.waiterPrivacyEnabled ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Tempo de Inatividade para Bloqueio (Segundos)</label>
-                                        <input
-                                            type="number"
-                                            className="w-full xl:w-1/3 mt-2 p-4 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-50 transition-all font-bold text-sm"
-                                            value={settings.waiterPrivacyTimer}
-                                            onChange={e => setSettings({ ...settings, waiterPrivacyTimer: parseInt(e.target.value) || 60 })}
-                                            disabled={!settings.waiterPrivacyEnabled}
-                                        />
+                                    <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 space-y-6">
+                                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                                            <div>
+                                                <h4 className="text-[12px] font-black text-slate-800 uppercase tracking-widest">Ativar Tela de Privacidade</h4>
+                                                <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase">Bloqueia o App Garçom após período de inatividade.</p>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                className={`w-14 h-8 rounded-full transition-all relative ${settings.waiterPrivacyEnabled ? 'bg-emerald-500' : 'bg-slate-200'}`}
+                                                onClick={() => setSettings({ ...settings, waiterPrivacyEnabled: !settings.waiterPrivacyEnabled })}
+                                            >
+                                                <div className={`absolute top-1 w-6 h-6 rounded-full bg-white transition-all ${settings.waiterPrivacyEnabled ? 'left-7' : 'left-1'}`}></div>
+                                            </button>
+                                        </div>
+
+                                        <div className={`transition-all duration-300 ${settings.waiterPrivacyEnabled ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Tempo de Inatividade (Segundos)</label>
+                                            <input
+                                                type="number"
+                                                className="w-full mt-2 p-4 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-50 transition-all font-bold text-sm"
+                                                value={settings.waiterPrivacyTimer}
+                                                onChange={e => setSettings({ ...settings, waiterPrivacyTimer: parseInt(e.target.value) || 60 })}
+                                                disabled={!settings.waiterPrivacyEnabled}
+                                            />
+                                        </div>
                                     </div>
                                 </div>
                             </div>
