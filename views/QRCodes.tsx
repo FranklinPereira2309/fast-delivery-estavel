@@ -94,7 +94,7 @@ const QRCodes: React.FC = () => {
 
                             <div className="text-center mt-2 opacity-30 dark:opacity-50 print:opacity-100 print:mt-1">
                                 <p className="text-[8px] font-bold uppercase tracking-widest break-all w-full select-all text-slate-700 dark:text-slate-500">
-                                    {tableUrl}
+                                    {MENU_BASE_URL}
                                 </p>
                             </div>
                         </div>
