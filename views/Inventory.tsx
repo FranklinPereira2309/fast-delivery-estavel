@@ -287,11 +287,20 @@ const Inventory: React.FC = () => {
           <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in duration-200 border border-transparent dark:border-slate-800">
             <div className="p-8 border-b border-slate-50 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 flex justify-between items-center">
               <h3 className="text-xl font-black text-slate-800 dark:text-white uppercase tracking-tighter">{editingProduct ? 'Editar' : 'Novo'} Produto</h3>
-              <button onClick={() => setIsProdModalOpen(false)} className="p-2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
-                <Icons.X className="h-6 w-6" />
-              </button>
+              <div className="flex items-center gap-4">
+                <button
+                  type="submit"
+                  form="product-form"
+                  className="w-12 h-12 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full flex items-center justify-center shadow-lg shadow-emerald-200 dark:shadow-emerald-900/40 transition-all active:scale-95"
+                >
+                  <Icons.Check className="h-6 w-6" />
+                </button>
+                <button onClick={() => setIsProdModalOpen(false)} className="p-2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
+                  <Icons.X className="h-6 w-6" />
+                </button>
+              </div>
             </div>
-            <form onSubmit={saveProduct} className="p-10 space-y-5">
+            <form id="product-form" onSubmit={saveProduct} className="p-10 space-y-5">
               <div className="space-y-1">
                 <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Nome do Produto</label>
                 <input type="text" placeholder="Ex: Burger Bacon" required value={prodFormData.name} onChange={e => setProdFormData({ ...prodFormData, name: e.target.value })} className="w-full p-4 bg-slate-100 dark:bg-slate-800 border-none rounded-2xl focus:ring-2 focus:ring-blue-500 font-bold text-sm text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600" />
@@ -331,10 +340,6 @@ const Inventory: React.FC = () => {
                     <input type="text" placeholder="0000000" value={prodFormData.cest} onChange={e => setProdFormData({ ...prodFormData, cest: e.target.value })} className="w-full p-3 bg-slate-50 dark:bg-slate-800/50 border-none rounded-xl font-bold text-xs text-slate-800 dark:text-white" />
                   </div>
                 </div>
-              </div>
-              <div className="flex gap-4 pt-4">
-                <button type="button" onClick={() => setIsProdModalOpen(false)} className="flex-1 py-4 font-black text-slate-400 dark:text-slate-500 uppercase text-[10px]">Cancelar</button>
-                <button type="submit" className="flex-1 py-4 bg-blue-600 text-white font-black rounded-2xl shadow-xl shadow-blue-100 dark:shadow-blue-900/20 uppercase text-[10px] tracking-widest">Salvar Produto</button>
               </div>
             </form>
           </div>
