@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import prisma from '../prisma';
+import bcrypt from 'bcryptjs';
 
 export const getAllUsers = async (req: Request, res: Response) => {
     const users = await prisma.user.findMany();
@@ -32,6 +33,12 @@ export const saveUser = async (req: Request, res: Response) => {
         userData.recoveryCode = generateRecoveryCode();
         userData.mustChangePassword = true;
         userData.active = true;
+        // Se for novo usuário e não veio senha, ou mesmo se veio, garantimos o hash
+        const passwordToHash = userData.password || '123';
+        userData.password = await bcrypt.hash(passwordToHash, 10);
+    } else if (userData.password && !userData.password.startsWith('$2')) {
+        // Se for atualização e enviou uma senha nova (não hasheada)
+        userData.password = await bcrypt.hash(userData.password, 10);
     }
 
     const { id, ...rest } = userData;
@@ -62,11 +69,12 @@ export const toggleUserStatus = async (req: Request, res: Response) => {
 export const resetUser = async (req: Request, res: Response) => {
     const { id } = req.body;
     const recoveryCode = generateRecoveryCode();
+    const hashedPassword = await bcrypt.hash('123', 10);
     const user = await prisma.user.update({
         where: { id },
         data: {
             recoveryCode,
-            password: '123',
+            password: hashedPassword,
             mustChangePassword: true
         }
     });
