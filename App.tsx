@@ -22,19 +22,19 @@ import CustomAlert from './components/CustomAlert';
 import { ThemeProvider } from './components/ThemeProvider';
 
 const SplashScreen: React.FC = () => (
-  <div className="fixed inset-0 z-[9999] bg-slate-900 flex flex-col items-center justify-center animate-in fade-in duration-500 p-4">
+  <div className="fixed inset-0 z-[9999] bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center animate-in fade-in duration-500 p-4 transition-colors duration-500">
     <div className="relative">
       <div className="w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 bg-blue-600 rounded-2xl sm:rounded-3xl flex items-center justify-center shadow-2xl shadow-blue-500/20 transform -rotate-12 animate-bounce">
         <span className="text-3xl sm:text-4xl md:text-5xl text-white font-black">DF</span>
       </div>
-      <div className="absolute -bottom-1 -right-1 sm:-bottom-2 sm:-right-2 w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 bg-emerald-500 rounded-full border-4 border-slate-900 animate-pulse"></div>
+      <div className="absolute -bottom-1 -right-1 sm:-bottom-2 sm:-right-2 w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 bg-emerald-500 rounded-full border-4 border-slate-50 dark:border-slate-950 animate-pulse"></div>
     </div>
     <div className="mt-6 sm:mt-8 text-center px-4">
-      <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-white tracking-tighter uppercase mb-2">Delivery Fast</h1>
+      <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-slate-900 dark:text-white tracking-tighter uppercase mb-2">Delivery Fast</h1>
       <div className="h-1 w-8 sm:w-12 bg-blue-500 mx-auto rounded-full mb-3 sm:mb-4"></div>
-      <p className="text-slate-500 text-[8px] sm:text-[10px] md:text-xs font-black uppercase tracking-[0.2em] sm:tracking-[0.3em]">Fransoft Developer®</p>
+      <p className="text-slate-500 dark:text-slate-400 text-[8px] sm:text-[10px] md:text-xs font-black uppercase tracking-[0.2em] sm:tracking-[0.3em]">Fransoft Developer®</p>
     </div>
-    <div className="absolute bottom-10 sm:bottom-12 w-32 sm:w-48 md:w-64 h-1 bg-slate-800 rounded-full overflow-hidden">
+    <div className="absolute bottom-10 sm:bottom-12 w-32 sm:w-48 md:w-64 h-1 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
       <div className="h-full bg-blue-600 animate-[loading_3s_ease-in-out_forwards]"></div>
     </div>
     <style>{`
