@@ -5,3 +5,23 @@
         @apply cursor-pointer;
     }
 }
+
+@media print {
+    body * {
+        visibility: hidden;
+    }
+
+    .print-modal,
+    .print-modal * {
+        visibility: visible;
+    }
+
+    .print-modal {
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100vw !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+}
