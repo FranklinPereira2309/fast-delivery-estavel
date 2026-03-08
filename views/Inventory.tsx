@@ -237,14 +237,23 @@ const Inventory: React.FC = () => {
       {/* MODAL INSUMO */}
       {isInvModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-          <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in duration-200 border border-transparent dark:border-slate-800">
+          <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in duration-200 border border-transparent dark:border-slate-800">
             <div className="p-8 border-b border-slate-50 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 flex justify-between items-center">
               <h3 className="text-xl font-black text-slate-800 dark:text-white uppercase tracking-tighter">{editingItem ? 'Editar Insumo' : 'Novo Insumo'}</h3>
-              <button onClick={() => setIsInvModalOpen(false)} className="p-2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
-                <Icons.X className="h-6 w-6" />
-              </button>
+              <div className="flex items-center gap-4">
+                <button
+                  type="submit"
+                  form="inv-item-form"
+                  className="w-12 h-12 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full flex items-center justify-center shadow-lg shadow-emerald-200 dark:shadow-emerald-900/40 transition-all active:scale-95"
+                >
+                  <Icons.Check className="h-6 w-6" />
+                </button>
+                <button onClick={() => setIsInvModalOpen(false)} className="p-2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
+                  <Icons.X className="h-6 w-6" />
+                </button>
+              </div>
             </div>
-            <form onSubmit={saveInvItem} className="p-10 space-y-6">
+            <form id="inv-item-form" onSubmit={saveInvItem} className="p-8 space-y-5">
               <div className="space-y-1">
                 <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Nome do Insumo</label>
                 <input type="text" required value={invFormData.name} onChange={e => setInvFormData({ ...invFormData, name: e.target.value })} className="w-full p-4 bg-slate-100 dark:bg-slate-800 border-none rounded-2xl focus:ring-2 focus:ring-blue-500 font-bold text-sm text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600" placeholder="Ex: Pão Brioche" />
@@ -275,7 +284,6 @@ const Inventory: React.FC = () => {
                   <input type="number" required step="0.01" value={invFormData.cost} onChange={e => setInvFormData({ ...invFormData, cost: parseFloat(e.target.value) })} className="w-full p-4 bg-slate-100 dark:bg-slate-800 border-none rounded-2xl focus:ring-2 focus:ring-blue-500 font-bold text-sm text-slate-800 dark:text-white" />
                 </div>
               </div>
-              <button type="submit" className="w-full py-5 bg-blue-600 text-white text-xs font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-blue-100 dark:shadow-blue-900/20 hover:bg-blue-700 transition-all">Salvar Insumo</button>
             </form>
           </div>
         </div>
