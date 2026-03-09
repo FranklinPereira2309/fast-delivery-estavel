@@ -315,9 +315,9 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
       </aside>
 
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <header className="h-20 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-8 shrink-0 shadow-sm z-10 transition-colors duration-300">
-          <div className="flex items-center gap-6">
-            <h2 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tighter transition-colors">
+        <header className="h-16 md:h-20 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-4 md:px-8 shrink-0 shadow-sm z-10 transition-colors duration-300">
+          <div className="flex items-center gap-2 md:gap-6 min-w-0">
+            <h2 className="text-xs md:text-xl font-black text-slate-900 dark:text-white uppercase tracking-tighter transition-colors truncate">
               {navItems.find(i => i.id === activeTab)?.label || 'Acesso Negado'}
             </h2>
 
@@ -337,10 +337,10 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
               </div>
               <button
                 onClick={onLogout}
-                className="ml-2 p-3 bg-slate-50 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all flex items-center gap-2 group/logout"
+                className="ml-1 md:ml-2 p-2.5 md:p-3 bg-slate-50 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all flex items-center gap-2 group/logout"
                 title="Sair do Sistema"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 transition-transform group-hover/logout:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 md:h-5 w-4 md:w-5 transition-transform group-hover/logout:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                 </svg>
                 <span className="text-[10px] font-black uppercase tracking-widest hidden lg:block">Sair</span>
@@ -349,10 +349,10 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
 
             <button
               onClick={toggleTheme}
-              className="ml-4 p-3 bg-slate-50 dark:bg-slate-800 text-slate-400 dark:text-slate-300 hover:text-blue-600 dark:hover:text-amber-400 hover:bg-blue-50 dark:hover:bg-slate-700 rounded-xl transition-all flex items-center justify-center"
+              className="ml-2 md:ml-4 p-2.5 md:p-3 bg-slate-50 dark:bg-slate-800 text-slate-400 dark:text-slate-300 hover:text-blue-600 dark:hover:text-amber-400 hover:bg-blue-50 dark:hover:bg-slate-700 rounded-xl transition-all flex items-center justify-center"
               title="Alternar Tema"
             >
-              {theme === 'dark' ? <Icons.Sun /> : <Icons.Moon />}
+              {theme === 'dark' ? <Icons.Sun className="w-4 md:w-5 h-4 md:h-5" /> : <Icons.Moon className="w-4 md:w-5 h-4 md:h-5" />}
             </button>
           </div>
 
@@ -363,7 +363,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
           </div>
         </header>
 
-        <section className="flex-1 overflow-y-auto p-8 dark:bg-slate-950 transition-colors duration-300" onClick={() => {
+        <section className="flex-1 overflow-y-auto p-4 md:p-8 dark:bg-slate-950 transition-colors duration-300" onClick={() => {
           if (activeTab === 'kitchen') setShouldBlinkKitchen(false);
           if (activeTab === 'tables') setShouldBlinkTables(false);
           if (activeTab === 'logistics') setShouldBlinkLogistics(false);
