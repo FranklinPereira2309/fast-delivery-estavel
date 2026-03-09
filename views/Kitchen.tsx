@@ -17,11 +17,11 @@ const Kitchen: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [businessSettings, setBusinessSettings] = useState<BusinessSettings | null>(null);
   const [printingOrder, setPrintingOrder] = useState<Order | null>(null);
+  const [viewingItemsOrder, setViewingItemsOrder] = useState<Order | null>(null);
 
   // Controle de seleção local por pedido: { orderId: [uids selecionados] }
   const [selectedItems, setSelectedItems] = useState<Record<string, string[]>>({});
   const [acknowledgedOrders, setAcknowledgedOrders] = useState<Set<string>>(new Set());
-  const [expandedOrders, setExpandedOrders] = useState<Record<string, boolean>>({});
 
   const prevItemCounts = useRef<Record<string, number>>({});
   const lastOrdersCount = useRef<number>(0);
@@ -187,87 +187,55 @@ const Kitchen: React.FC = () => {
 
       <div className="flex-1 min-h-0 overflow-hidden">
         {orders.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 md:gap-x-6 gap-y-10 md:gap-y-14 h-full overflow-y-auto pr-2 custom-scrollbar content-start items-start pb-4">
-            {orders.map(order => (
-              <div
-                key={order.id}
-                onClick={() => {
-                  if (!acknowledgedOrders.has(order.id)) {
-                    setAcknowledgedOrders(prev => new Set(prev).add(order.id));
-                  }
-                }}
-                className={`bg-white dark:bg-slate-800 rounded-[2rem] border-2 transition-all flex flex-col overflow-hidden shadow-sm hover:shadow-xl ${viewTab === 'FILA' ? 'border-blue-100 dark:border-blue-900/30' : 'border-slate-100 dark:border-slate-700 opacity-90'
-                  } ${viewTab === 'FILA' && !acknowledgedOrders.has(order.id) ? 'animate-moderate-blink border-blue-400 dark:border-blue-500' : ''}`}
-              >
-                <div className={`flex flex-col ${viewTab === 'FILA' ? 'p-6 bg-blue-50 dark:bg-blue-900/20' : 'p-5 bg-white dark:bg-slate-900 border-b border-slate-50 dark:border-slate-800/50'}`}>
-                  <div className="flex justify-between items-start gap-2">
-                    <div className="flex-1 min-w-0">
-                      <h4 className={`${viewTab === 'FILA' ? 'text-lg' : 'text-base md:text-lg'} font-black text-slate-800 dark:text-white uppercase tracking-tighter truncate`}>
-                        {translateOrderType(order.type)} {order.tableNumber ? `- MESA ${order.tableNumber}` : ''}
-                      </h4>
-                      <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest truncate">
-                        {order.clientName || 'Cliente Direto'}
-                      </p>
-                      {viewTab === 'HISTORICO' && (
-                        <p className="text-[9px] text-slate-400 dark:text-slate-500 font-bold uppercase mt-1 flex items-center gap-1">
-                          <Icons.Clock size={10} /> {new Date(order.createdAt).toLocaleDateString('pt-BR')}
+          viewTab === 'FILA' ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 md:gap-x-6 gap-y-10 md:gap-y-14 h-full overflow-y-auto pr-2 custom-scrollbar content-start items-start pb-4">
+              {orders.map(order => (
+                <div
+                  key={order.id}
+                  onClick={() => {
+                    if (!acknowledgedOrders.has(order.id)) {
+                      setAcknowledgedOrders(prev => new Set(prev).add(order.id));
+                    }
+                  }}
+                  className={`bg-white dark:bg-slate-800 rounded-[2rem] border-2 transition-all flex flex-col overflow-hidden shadow-sm hover:shadow-xl border-blue-100 dark:border-blue-900/30 ${!acknowledgedOrders.has(order.id) ? 'animate-moderate-blink border-blue-400 dark:border-blue-500' : ''}`}
+                >
+                  <div className="flex flex-col p-6 bg-blue-50 dark:bg-blue-900/20">
+                    <div className="flex justify-between items-start gap-2">
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-lg font-black text-slate-800 dark:text-white uppercase tracking-tighter truncate">
+                          {translateOrderType(order.type)} {order.tableNumber ? `- MESA ${order.tableNumber}` : ''}
+                        </h4>
+                        <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest truncate">
+                          {order.clientName || 'Cliente Direto'}
                         </p>
-                      )}
-                    </div>
-                    {viewTab === 'FILA' ? (
+                      </div>
                       <span className="text-[10px] font-black bg-white dark:bg-blue-900/40 px-3 py-1 rounded-full text-blue-600 dark:text-blue-400 shadow-sm shrink-0">
                         {new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' }).format(new Date(order.createdAt))}
                       </span>
-                    ) : (
-                      <div className="px-2.5 py-1 rounded-lg text-[9px] font-black uppercase text-white shadow-sm bg-emerald-500 shrink-0">
-                        CONCLUÍDO
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {viewTab === 'HISTORICO' && expandedOrders[order.id] && (
-                  <div className="px-5 pb-3 pt-4 animate-in slide-in-from-top-2 duration-300">
-                    <div className="flex items-center gap-3 p-3 bg-emerald-50/50 dark:bg-emerald-900/10 border border-emerald-100/50 dark:border-emerald-800/30 rounded-2xl">
-                      <div className="w-9 h-9 bg-emerald-600 rounded-full flex items-center justify-center text-white text-xs font-black uppercase shadow-sm shrink-0">
-                        {getWaiterName(order.waiterId).charAt(0)}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[8px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-0.5">Responsável:</p>
-                        <p className="text-[11px] font-black text-emerald-900 dark:text-emerald-300 truncate">{getWaiterName(order.waiterId)}</p>
-                      </div>
                     </div>
                   </div>
-                )}
 
-                <div className={`${viewTab === 'FILA' ? 'p-4 md:p-6' : 'p-5 pt-0'} flex-1 flex flex-col min-h-0`}>
-                  {viewTab === 'FILA' && (
+                  <div className="p-4 md:p-6 flex-1 flex flex-col min-h-0">
                     <div className="flex justify-between items-center mb-3">
                       <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                         Itens Pendentes
                       </p>
                     </div>
-                  )}
-                  {(viewTab === 'FILA' || expandedOrders[order.id]) && (
-                    <div className={`space-y-2 overflow-y-auto pr-1 custom-scrollbar ${viewTab === 'FILA' ? 'max-h-[350px] md:max-h-[450px]' : 'max-h-[220px] pb-2 mt-2 animate-in slide-in-from-top-2 duration-300'}`}>
-
-                      {order.items.filter(it => viewTab === 'FILA' ? !it.isReady : it.isReady).map((item, idx) => {
+                    <div className="space-y-2 overflow-y-auto pr-1 custom-scrollbar max-h-[350px] md:max-h-[450px]">
+                      {order.items.filter(it => !it.isReady).map((item) => {
                         const product = products.find(p => p.id === item.productId);
                         const isSelected = (selectedItems[order.id] || []).includes(item.uid);
 
                         return (
                           <div key={item.uid} className="space-y-1 animate-in fade-in duration-300">
-                            <label className={`block cursor-pointer bg-white dark:bg-slate-900/40 p-3 rounded-xl border transition-all shadow-sm ${isSelected ? 'border-blue-600 dark:border-blue-500 ring-2 ring-blue-50 dark:ring-blue-900/20' : 'border-slate-100 dark:border-slate-800 hover:border-blue-100 dark:hover:border-blue-900/40'
-                              }`}>
+                            <label className={`block cursor-pointer bg-white dark:bg-slate-900/40 p-3 rounded-xl border transition-all shadow-sm ${isSelected ? 'border-blue-600 dark:border-blue-500 ring-2 ring-blue-50 dark:ring-blue-900/20' : 'border-slate-100 dark:border-slate-800 hover:border-blue-100 dark:hover:border-blue-900/40'}`}>
                               <div className="flex items-center gap-3">
-                                {viewTab === 'FILA' && (
-                                  <input
-                                    type="checkbox"
-                                    checked={isSelected}
-                                    onChange={() => toggleItemSelection(order.id, item.uid)}
-                                    className="w-4 h-4 rounded-md border-slate-300 text-blue-600 focus:ring-blue-500"
-                                  />
-                                )}
+                                <input
+                                  type="checkbox"
+                                  checked={isSelected}
+                                  onChange={() => toggleItemSelection(order.id, item.uid)}
+                                  className="w-4 h-4 rounded-md border-slate-300 text-blue-600 focus:ring-blue-500"
+                                />
                                 <div className="flex-1 min-w-0">
                                   <p className="font-black text-slate-700 dark:text-slate-300 uppercase text-[11px] truncate">
                                     <span className="text-blue-600 dark:text-blue-400 text-xs">{item.quantity}x</span> {product?.name}
@@ -277,9 +245,6 @@ const Kitchen: React.FC = () => {
                                       Obs: {item.observations}
                                     </p>
                                   )}
-                                  {item.isReady && (
-                                    <p className="text-[8px] text-emerald-500 dark:text-emerald-400 font-black uppercase mt-1">Pronto em: {new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' }).format(new Date(item.readyAt!))}</p>
-                                  )}
                                 </div>
                               </div>
                             </label>
@@ -287,19 +252,17 @@ const Kitchen: React.FC = () => {
                         );
                       })}
                     </div>
-                  )}
 
-                  {viewTab === 'FILA' && order.items.some(it => it.isReady) && (
-                    <div className="pt-4 border-t border-slate-100 dark:border-slate-700 mt-auto">
-                      <p className="text-[8px] font-black text-slate-300 dark:text-slate-600 uppercase tracking-widest mb-2">Itens já saíram:</p>
-                      {order.items.filter(it => it.isReady).map((it, i) => (
-                        <p key={it.uid} className="text-[10px] font-bold text-slate-300 dark:text-slate-600 line-through uppercase">{it.quantity}x {products.find(p => p.id === it.productId)?.name}</p>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                    {order.items.some(it => it.isReady) && (
+                      <div className="pt-4 border-t border-slate-100 dark:border-slate-700 mt-auto">
+                        <p className="text-[8px] font-black text-slate-300 dark:text-slate-600 uppercase tracking-widest mb-2">Itens já saíram:</p>
+                        {order.items.filter(it => it.isReady).map((it) => (
+                          <p key={it.uid} className="text-[10px] font-bold text-slate-300 dark:text-slate-600 line-through uppercase">{it.quantity}x {products.find(p => p.id === it.productId)?.name}</p>
+                        ))}
+                      </div>
+                    )}
+                  </div>
 
-                {viewTab === 'FILA' ? (
                   <div className="p-4 md:p-6 bg-slate-50/50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-700 shrink-0">
                     {!order.items.every(it => it.isReady) && (
                       <button
@@ -311,38 +274,80 @@ const Kitchen: React.FC = () => {
                       </button>
                     )}
                   </div>
-                ) : (
-                  <div className="p-4 border-t border-slate-50 dark:border-slate-800/50 flex flex-col gap-4 bg-slate-50/10 dark:bg-slate-900/10">
-                    {expandedOrders[order.id] && (
-                      <div className="flex justify-between items-center animate-in fade-in duration-300">
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="h-full overflow-auto bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm custom-scrollbar">
+              <table className="w-full text-left border-collapse min-w-[800px]">
+                <thead>
+                  <tr className="bg-slate-50/50 dark:bg-slate-800/30 border-b border-slate-100 dark:border-slate-800">
+                    <th className="px-8 py-5 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Status</th>
+                    <th className="px-8 py-5 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Tipo / Origem</th>
+                    <th className="px-8 py-5 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Atendimento</th>
+                    <th className="px-8 py-5 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Data / Hora</th>
+                    <th className="px-8 py-5 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Total</th>
+                    <th className="px-8 py-5 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest text-right">Ações</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
+                  {orders.map(order => (
+                    <tr key={order.id} className="hover:bg-slate-50/30 dark:hover:bg-slate-800/20 group transition-colors">
+                      <td className="px-8 py-5">
+                        <span className="px-3 py-1.5 rounded-xl text-[9px] font-black uppercase text-white shadow-sm bg-emerald-500">
+                          CONCLUÍDO
+                        </span>
+                      </td>
+                      <td className="px-8 py-5">
+                        <p className="font-black text-slate-800 dark:text-white text-[11px] uppercase tracking-tighter">
+                          {translateOrderType(order.type)} {order.tableNumber ? `(Mesa ${order.tableNumber})` : ''}
+                        </p>
+                        <p className="text-[9px] text-slate-400 dark:text-slate-500 font-bold uppercase truncate max-w-[150px]">
+                          {order.clientName || 'Cliente Direto'}
+                        </p>
+                      </td>
+                      <td className="px-8 py-5">
                         <div className="flex items-center gap-2">
-                          <span className="text-[9px] text-slate-400 dark:text-slate-500 uppercase font-black tracking-widest">Total:</span>
-                          <span className="text-sm font-black text-slate-900 dark:text-white">R$ {(order.total || 0).toFixed(2)}</span>
+                          <div className="w-6 h-6 bg-slate-100 dark:bg-slate-800 rounded-lg flex items-center justify-center text-[9px] font-black text-slate-500">
+                            {getWaiterName(order.waiterId).charAt(0)}
+                          </div>
+                          <p className="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase">
+                            {getWaiterName(order.waiterId)}
+                          </p>
                         </div>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); handlePrint(order); }}
-                          title="Imprimir Cupom"
-                          className="p-2.5 bg-white dark:bg-slate-800 text-slate-400 dark:text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 transition-all border border-slate-100 dark:border-slate-700 rounded-xl shadow-sm"
-                        >
-                          <Icons.Print size={18} />
-                        </button>
-                      </div>
-                    )}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setExpandedOrders(prev => ({ ...prev, [order.id]: !prev[order.id] }));
-                      }}
-                      className={`w-full py-3 rounded-2xl transition-all border shadow-sm text-[10px] font-black uppercase flex items-center justify-center gap-2 ${expandedOrders[order.id] ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-blue-200'}`}
-                    >
-                      {expandedOrders[order.id] ? 'Ocultar Detalhes' : 'Ver preparados'}
-                      {expandedOrders[order.id] ? <Icons.ChevronUp size={14} /> : <Icons.ChevronDown size={14} />}
-                    </button>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
+                      </td>
+                      <td className="px-8 py-5">
+                        <div className="space-y-0.5">
+                          <p className="text-[10px] font-bold text-slate-700 dark:text-slate-300">
+                            {new Date(order.createdAt).toLocaleDateString('pt-BR')}
+                          </p>
+                          <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase">
+                            {new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' }).format(new Date(order.createdAt))}
+                          </p>
+                        </div>
+                      </td>
+                      <td className="px-8 py-5">
+                        <p className="text-[11px] font-black text-blue-600 dark:text-blue-400">
+                          R$ {(order.total || 0).toFixed(2)}
+                        </p>
+                      </td>
+                      <td className="px-8 py-5">
+                        <div className="flex justify-end gap-2">
+                          <button
+                            onClick={() => setViewingItemsOrder(order)}
+                            className="p-2.5 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 bg-slate-50 dark:bg-slate-800/50 rounded-xl transition-all"
+                            title="Ver Itens / Imprimir Cupom"
+                          >
+                            <Icons.Print size={18} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )
         ) : (
           <div className="h-full flex flex-col items-center justify-center text-center bg-white dark:bg-slate-900 rounded-[3rem] border-2 border-dashed border-slate-100 dark:border-slate-800 p-8">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-24 w-24 mx-auto text-slate-100 dark:text-slate-800 mb-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
@@ -351,8 +356,81 @@ const Kitchen: React.FC = () => {
         )}
       </div>
 
+      {/* Modal de Itens Preparados */}
+      {viewingItemsOrder && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
+          <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in duration-200 border border-slate-100 dark:border-slate-800">
+            <div className="p-8 border-b border-slate-50 dark:border-slate-800 flex justify-between items-center">
+              <div>
+                <h3 className="text-xl font-black text-slate-800 dark:text-white uppercase tracking-tighter">Itens Preparados</h3>
+                <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest">
+                  {translateOrderType(viewingItemsOrder.type)} {viewingItemsOrder.tableNumber ? `- Mesa ${viewingItemsOrder.tableNumber}` : ''}
+                </p>
+              </div>
+              <button
+                onClick={() => setViewingItemsOrder(null)}
+                className="p-3 bg-slate-50 dark:bg-slate-800 text-slate-400 dark:text-slate-500 rounded-2xl hover:text-red-500 transition-all"
+              >
+                <Icons.X size={20} />
+              </button>
+            </div>
+
+            <div className="p-8 max-h-[60vh] overflow-y-auto custom-scrollbar">
+              <div className="space-y-3">
+                {viewingItemsOrder.items.filter(it => it.isReady).map((item) => {
+                  const product = products.find(p => p.id === item.productId);
+                  return (
+                    <div key={item.uid} className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 flex justify-between items-center">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-black text-slate-800 dark:text-slate-200 uppercase text-xs">
+                          <span className="text-blue-600 dark:text-blue-400">{item.quantity}x</span> {product?.name}
+                        </p>
+                        {item.observations && (
+                          <p className="text-[9px] text-orange-600 dark:text-orange-400 font-bold mt-1">
+                            Obs: {item.observations}
+                          </p>
+                        )}
+                      </div>
+                      <div className="text-right shrink-0 ml-4">
+                        <span className="text-[8px] font-black text-emerald-500 dark:text-emerald-400 uppercase bg-emerald-100 dark:bg-emerald-900/40 px-2 py-1 rounded-md">
+                          PRONTO
+                        </span>
+                        {item.readyAt && (
+                          <p className="text-[8px] text-slate-400 font-bold mt-1 italic">
+                            {new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' }).format(new Date(item.readyAt))}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="p-8 bg-slate-50/50 dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  handlePrint(viewingItemsOrder);
+                  setViewingItemsOrder(null);
+                }}
+                className="flex-1 py-4 bg-slate-900 dark:bg-blue-600 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl transition-all flex items-center justify-center gap-2"
+              >
+                <Icons.Print size={14} />
+                Imprimir Cupom
+              </button>
+              <button
+                onClick={() => setViewingItemsOrder(null)}
+                className="px-8 py-4 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded-2xl font-black uppercase text-[10px] tracking-widest border border-slate-200 dark:border-slate-700 transition-all"
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {printingOrder && businessSettings && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
           <div className="relative w-full max-w-[80mm] bg-white p-8 border border-dashed shadow-2xl font-receipt text-[11px] text-black print-container is-receipt animate-in zoom-in duration-200">
             <div className="text-center mb-6 border-b border-dashed pb-4">
               <h2 className="font-black text-sm uppercase tracking-tighter">{businessSettings.name}</h2>
