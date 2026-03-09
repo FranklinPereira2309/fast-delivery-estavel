@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Order, OrderStatus, OrderStatusLabels, Product, InventoryItem, User, SaleType, OrderItem, Waiter } from '../types';
+import { Order, OrderStatus, OrderStatusLabels, Product, InventoryItem, User, SaleType, OrderItem, Waiter, BusinessSettings } from '../types';
 import { db } from '../services/db';
 import { socket } from '../services/socket';
 import { Icons } from '../constants';
@@ -15,6 +15,8 @@ const Kitchen: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [viewTab, setViewTab] = useState<'FILA' | 'HISTORICO'>('FILA');
   const [isLoading, setIsLoading] = useState(false);
+  const [businessSettings, setBusinessSettings] = useState<BusinessSettings | null>(null);
+  const [printingOrder, setPrintingOrder] = useState<Order | null>(null);
 
   // Controle de seleção local por pedido: { orderId: [uids selecionados] }
   const [selectedItems, setSelectedItems] = useState<Record<string, string[]>>({});
@@ -48,6 +50,7 @@ const Kitchen: React.FC = () => {
       const allProducts = await db.getProducts();
       const allInventory = await db.getInventory();
       const allWaiters = await db.getWaiters();
+      const settings = await db.getSettings();
 
       // Filtro inteligente: Pedidos ativos (não finalizados ou cancelados) QUE POSSUEM itens em preparo
       const activeOrders = allOrders.filter(o =>
@@ -87,6 +90,7 @@ const Kitchen: React.FC = () => {
       setProducts(allProducts);
       setInventory(allInventory);
       setWaiters(allWaiters);
+      setBusinessSettings(settings);
     } catch (error) {
       console.error("Error refreshing Kitchen data:", error);
     } finally {
@@ -155,6 +159,10 @@ const Kitchen: React.FC = () => {
     await refreshData(false);
   };
 
+  const handlePrint = (order: Order) => {
+    setPrintingOrder(order);
+  };
+
 
   const translateOrderType = (type: SaleType | string) => {
     switch (type) {
@@ -179,7 +187,7 @@ const Kitchen: React.FC = () => {
 
       <div className="flex-1 min-h-0 overflow-hidden">
         {orders.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 h-full overflow-y-auto pr-2 custom-scrollbar content-start pb-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 h-full overflow-y-auto pr-2 custom-scrollbar content-start items-start pb-4">
             {orders.map(order => (
               <div
                 key={order.id}
@@ -312,7 +320,7 @@ const Kitchen: React.FC = () => {
                           <span className="text-sm font-black text-slate-900 dark:text-white">R$ {(order.total || 0).toFixed(2)}</span>
                         </div>
                         <button
-                          onClick={(e) => { e.stopPropagation(); /* Logic for printing if needed */ }}
+                          onClick={(e) => { e.stopPropagation(); handlePrint(order); }}
                           title="Imprimir Cupom"
                           className="p-2.5 bg-white dark:bg-slate-800 text-slate-400 dark:text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 transition-all border border-slate-100 dark:border-slate-700 rounded-xl shadow-sm"
                         >
@@ -342,6 +350,55 @@ const Kitchen: React.FC = () => {
           </div>
         )}
       </div>
+
+      {printingOrder && businessSettings && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
+          <div className="relative w-full max-w-[80mm] bg-white p-8 border border-dashed shadow-2xl font-receipt text-[11px] text-black print-container is-receipt animate-in zoom-in duration-200">
+            <div className="text-center mb-6 border-b border-dashed pb-4">
+              <h2 className="font-black text-sm uppercase tracking-tighter">{businessSettings.name}</h2>
+              <p className="text-[9px] font-bold mt-1 uppercase">Comprovante de Preparo</p>
+            </div>
+
+            <div className="space-y-1 mb-4">
+              <p>DATA: {new Date(printingOrder.createdAt).toLocaleString('pt-BR')}</p>
+              <p>TIPO: {translateOrderType(printingOrder.type)} {printingOrder.tableNumber ? `- MESA ${printingOrder.tableNumber}` : ''}</p>
+              <p>CLIENTE: {printingOrder.clientName || 'Cliente Direto'}</p>
+              {printingOrder.waiterId && (
+                <p>RESPONSÁVEL: {getWaiterName(printingOrder.waiterId)}</p>
+              )}
+            </div>
+
+            <div className="border-t border-dashed my-3 py-3">
+              {printingOrder.items.filter(it => it.isReady).map((it, idx) => (
+                <div key={idx} className="flex justify-between font-black uppercase py-0.5">
+                  <span>{it.quantity}X {(products.find(p => p.id === it.productId)?.name || 'Item').substring(0, 18)}</span>
+                  {it.readyAt && <span className="text-[8px] opacity-50">{new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' }).format(new Date(it.readyAt))}</span>}
+                </div>
+              ))}
+            </div>
+
+            <div className="flex justify-between items-end border-t border-dashed pt-4 mb-8">
+              <span className="font-black text-[10px] uppercase tracking-widest">TOTAL:</span>
+              <span className="text-2xl font-black">R$ {(printingOrder.total || 0).toFixed(2)}</span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 no-print mt-6">
+              <button
+                onClick={() => window.print()}
+                className="bg-slate-900 text-white py-4 rounded-[22px] font-receipt font-black uppercase text-[11px] shadow-xl hover:bg-black active:scale-95 transition-all flex items-center justify-center"
+              >
+                IMPRIMIR
+              </button>
+              <button
+                onClick={() => setPrintingOrder(null)}
+                className="bg-slate-50 text-slate-400 py-4 rounded-[22px] font-receipt font-black uppercase text-[11px] hover:bg-slate-100 active:scale-95 transition-all flex items-center justify-center"
+              >
+                FECHAR
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

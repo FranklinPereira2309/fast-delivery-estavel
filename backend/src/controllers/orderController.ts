@@ -16,13 +16,13 @@ const mapOrderResponse = (order: any) => {
 };
 
 export const getAllOrders = async (req: Request, res: Response) => {
-    const fortyEightHoursAgo = new Date(Date.now() - 48 * 60 * 60 * 1000);
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
     const orders = await prisma.order.findMany({
         where: {
             OR: [
                 { status: { notIn: ['DELIVERED', 'CANCELLED'] } },
-                { createdAt: { gte: fortyEightHoursAgo.toISOString() } }
+                { createdAt: { gte: sevenDaysAgo.toISOString() } }
             ]
         },
         include: {
