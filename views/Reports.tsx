@@ -173,6 +173,29 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
         }
     };
 
+    const isMobile = useMemo(() => /iPhone|iPad|iPod|Android/i.test(navigator.userAgent), []);
+
+    const handlePdfOutput = async (pdfDoc: PDFDocument, fileName: string, downloadOnly: boolean, type: any) => {
+        const pdfBytes = await pdfDoc.save();
+        const blob = new Blob([pdfBytes as any], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+
+        if (downloadOnly) {
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = fileName;
+            link.click();
+            setTimeout(() => URL.revokeObjectURL(url), 100);
+        } else {
+            setPreviewType(type);
+            setPdfPreviewUrl(url);
+            if (isMobile) {
+                // On mobile, some browsers might still block iframes or show them poorly
+                // We'll keep the modal but provide a primary action button inside it
+            }
+        }
+    };
+
     const getFriendlySaleType = (type: SaleType | string) => {
         switch (type) {
             case SaleType.COUNTER: return 'Balcão';
@@ -377,20 +400,7 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
                 y -= 20;
             }
 
-            const pdfBytes = await pdfDoc.save();
-            const blob = new Blob([pdfBytes as any], { type: 'application/pdf' });
-            const url = URL.createObjectURL(blob);
-
-            if (downloadOnly) {
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = `relatorio_vendas_${salesStartDate}_${salesEndDate}.pdf`;
-                link.click();
-                URL.revokeObjectURL(url);
-            } else {
-                setPreviewType('SALES');
-                setPdfPreviewUrl(url);
-            }
+            await handlePdfOutput(pdfDoc, `relatorio_vendas_${salesStartDate}_${salesEndDate}.pdf`, downloadOnly, 'SALES');
         } catch (error) {
             console.error('Erro ao gerar PDF:', error);
             alert('Erro ao gerar relatório.');
@@ -439,20 +449,7 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
                 y -= 18;
             }
 
-            const pdfBytes = await pdfDoc.save();
-            const blob = new Blob([pdfBytes as any], { type: 'application/pdf' });
-            const url = URL.createObjectURL(blob);
-
-            if (downloadOnly) {
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = `lista_clientes_${new Date().getTime()}.pdf`;
-                link.click();
-                URL.revokeObjectURL(url);
-            } else {
-                setPreviewType('CLIENTS');
-                setPdfPreviewUrl(url);
-            }
+            await handlePdfOutput(pdfDoc, `lista_clientes_${new Date().getTime()}.pdf`, downloadOnly, 'CLIENTS');
         } catch (error) {
             console.error('Erro ao gerar PDF:', error);
         }
@@ -517,20 +514,7 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
                 y -= 20;
             }
 
-            const pdfBytes = await pdfDoc.save();
-            const blob = new Blob([pdfBytes as any], { type: 'application/pdf' });
-            const url = URL.createObjectURL(blob);
-
-            if (downloadOnly) {
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = `relatorio_compras_${selectedClient.name.replace(/\s+/g, '_')}_${new Date().getTime()}.pdf`;
-                link.click();
-                URL.revokeObjectURL(url);
-            } else {
-                setPreviewType('CLIENT_ORDERS');
-                setPdfPreviewUrl(url);
-            }
+            await handlePdfOutput(pdfDoc, `relatorio_compras_${selectedClient.name.replace(/\s+/g, '_')}_${new Date().getTime()}.pdf`, downloadOnly, 'CLIENT_ORDERS');
         } catch (error) {
             console.error('Erro ao gerar PDF do cliente:', error);
             alert('Erro ao gerar relatório do cliente.');
@@ -659,20 +643,7 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
                 }
             }
 
-            const pdfBytes = await pdfDoc.save();
-            const blob = new Blob([pdfBytes as any], { type: 'application/pdf' });
-            const url = URL.createObjectURL(blob);
-
-            if (downloadOnly) {
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = `relatorio_entregadores_${driverStartDate}_${driverEndDate}.pdf`;
-                link.click();
-                URL.revokeObjectURL(url);
-            } else {
-                setPreviewType('DRIVERS');
-                setPdfPreviewUrl(url);
-            }
+            await handlePdfOutput(pdfDoc, `relatorio_entregadores_${driverStartDate}_${driverEndDate}.pdf`, downloadOnly, 'DRIVERS');
         } catch (error) {
             console.error('Erro ao gerar PDF de entregadores:', error);
             alert('Erro ao gerar relatório de entregadores.');
@@ -755,20 +726,7 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
                 y -= 18;
             }
 
-            const pdfBytes = await pdfDoc.save();
-            const blob = new Blob([pdfBytes as any], { type: 'application/pdf' });
-            const url = URL.createObjectURL(blob);
-
-            if (downloadOnly) {
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = `relatorio_recebiveis_${new Date().getTime()}.pdf`;
-                link.click();
-                URL.revokeObjectURL(url);
-            } else {
-                setPreviewType('RECEIVABLES');
-                setPdfPreviewUrl(url);
-            }
+            await handlePdfOutput(pdfDoc, `relatorio_recebiveis_${new Date().getTime()}.pdf`, downloadOnly, 'RECEIVABLES');
         } catch (error) {
             console.error('Erro ao gerar PDF de recebíveis:', error);
             alert('Erro ao gerar relatório de recebíveis.');
@@ -851,20 +809,7 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
                 }
             }
 
-            const pdfBytes = await pdfDoc.save();
-            const blob = new Blob([pdfBytes as any], { type: 'application/pdf' });
-            const url = URL.createObjectURL(blob);
-
-            if (downloadOnly) {
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = `relatorio_caixa_${cashStartDate}_${cashEndDate}.pdf`;
-                link.click();
-                URL.revokeObjectURL(url);
-            } else {
-                setPreviewType('CASH');
-                setPdfPreviewUrl(url);
-            }
+            await handlePdfOutput(pdfDoc, `relatorio_caixa_${cashStartDate}_${cashEndDate}.pdf`, downloadOnly, 'CASH');
         } catch (error) {
             console.error('Erro ao gerar PDF de caixa:', error);
             alert('Erro ao gerar relatório.');
@@ -924,20 +869,7 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
                 y -= 15;
             }
 
-            const pdfBytes = await pdfDoc.save();
-            const blob = new Blob([pdfBytes as any], { type: 'application/pdf' });
-            const url = URL.createObjectURL(blob);
-
-            if (downloadOnly) {
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = `movimentacao_estoque_${inventoryStartDate}_${inventoryEndDate}.pdf`;
-                link.click();
-                URL.revokeObjectURL(url);
-            } else {
-                setPreviewType('INVENTORY');
-                setPdfPreviewUrl(url);
-            }
+            await handlePdfOutput(pdfDoc, `movimentacao_estoque_${inventoryStartDate}_${inventoryEndDate}.pdf`, downloadOnly, 'INVENTORY');
         } catch (error) {
             console.error('Erro ao gerar PDF de estoque:', error);
             alert('Erro ao gerar relatório de estoque.');
@@ -1025,20 +957,7 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
             page.drawText(`R$ ${grandTotalSales.toFixed(2)}`, { x: 320, y, size: 10, font: fontBold });
             page.drawText(`R$ ${grandTotalCommission.toFixed(2)}`, { x: 450, y, size: 10, font: fontBold, color: rgb(0, 0.5, 0) });
 
-            const pdfBytes = await pdfDoc.save();
-            const blob = new Blob([pdfBytes as any], { type: 'application/pdf' });
-            const url = URL.createObjectURL(blob);
-
-            if (downloadOnly) {
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = `comissoes_garcom_${waiterStartDate}_${waiterEndDate}.pdf`;
-                link.click();
-                URL.revokeObjectURL(url);
-            } else {
-                setPreviewType('WAITERS');
-                setPdfPreviewUrl(url);
-            }
+            await handlePdfOutput(pdfDoc, `comissoes_garcom_${waiterStartDate}_${waiterEndDate}.pdf`, downloadOnly, 'WAITERS');
         } catch (error) {
             console.error('Erro ao gerar PDF de comissões:', error);
             alert('Erro ao gerar relatório de comissões.');
@@ -1128,20 +1047,7 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
             page.drawText(`R$ ${grandTotalSales.toFixed(2)}`, { x: 440, y, size: 9, font: fontBold });
             page.drawText(`R$ ${grandTotalCommission.toFixed(2)}`, { x: 500, y, size: 9, font: fontBold, color: rgb(0, 0.5, 0) });
 
-            const pdfBytes = await pdfDoc.save();
-            const blob = new Blob([pdfBytes as any], { type: 'application/pdf' });
-            const url = URL.createObjectURL(blob);
-
-            if (downloadOnly) {
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = `comissoes_analitico_${waiterStartDate}_${waiterEndDate}.pdf`;
-                link.click();
-                URL.revokeObjectURL(url);
-            } else {
-                setPreviewType('WAITERS_ANALYTICAL');
-                setPdfPreviewUrl(url);
-            }
+            await handlePdfOutput(pdfDoc, `comissoes_analitico_${waiterStartDate}_${waiterEndDate}.pdf`, downloadOnly, 'WAITERS_ANALYTICAL');
         } catch (error) {
             console.error('Erro ao gerar PDF analítico de comissões:', error);
             alert('Erro ao gerar relatório analítico.');
@@ -1814,12 +1720,30 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
                                     </button>
                                 </div>
                             </div>
-                            <div className="flex-1 bg-slate-200 dark:bg-slate-950 p-8 flex justify-center items-center">
-                                <iframe
-                                    src={pdfPreviewUrl}
-                                    className="w-full h-full rounded-2xl shadow-xl bg-white"
-                                    title="Report Preview"
-                                />
+                            <div className="flex-1 bg-slate-200 dark:bg-slate-950 p-4 sm:p-8 flex flex-col justify-center items-center overflow-hidden">
+                                {isMobile ? (
+                                    <div className="flex flex-col items-center justify-center gap-6 p-8 bg-white dark:bg-slate-900 rounded-[2rem] shadow-2xl text-center max-w-sm">
+                                        <div className="p-6 bg-blue-50 dark:bg-blue-900/20 text-blue-600 rounded-full animate-bounce">
+                                            <Icons.Print />
+                                        </div>
+                                        <div>
+                                            <h4 className="text-xl font-black text-slate-800 dark:text-white uppercase tracking-tighter">Relatório Pronto</h4>
+                                            <p className="text-sm text-slate-500 font-bold mt-2">Toque no botão abaixo para abrir o documento em tela cheia.</p>
+                                        </div>
+                                        <button
+                                            onClick={() => window.open(pdfPreviewUrl, '_blank')}
+                                            className="w-full py-5 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl transition-all"
+                                        >
+                                            Abrir Relatório
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <iframe
+                                        src={pdfPreviewUrl}
+                                        className="w-full h-full rounded-2xl shadow-xl bg-white"
+                                        title="Report Preview"
+                                    />
+                                )}
                             </div>
                         </div>
                     </div>
