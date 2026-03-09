@@ -1517,7 +1517,7 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
 
                 {/* CARD RELATÓRIO DE RECEBIMENTOS (FIADO) */}
                 {activeTab === 'RECEIVABLES' && (
-                    <div className="bg-white dark:bg-slate-900/50 p-4 sm:p-10 rounded-2xl sm:rounded-[3rem] shadow-sm border border-slate-100 dark:border-slate-800 flex flex-col h-max animate-in fade-in zoom-in-95">
+                    <div className="bg-white dark:bg-slate-900/50 p-4 sm:p-10 rounded-2xl sm:rounded-[3rem] shadow-sm border border-slate-100 dark:border-slate-800 flex flex-col h-max max-w-4xl animate-in fade-in zoom-in-95">
                         <div className="mb-6 sm:mb-8">
                             <h3 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tighter flex items-center gap-3">
                                 <span className="p-2 sm:p-3 bg-blue-50 dark:bg-blue-900/20 text-blue-600 rounded-2xl"><Icons.Receivables /></span>
