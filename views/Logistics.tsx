@@ -282,6 +282,7 @@ const Logistics: React.FC = () => {
   const [historyEndDate, setHistoryEndDate] = useState(getLocalIsoDate());
   const [historyDriverId, setHistoryDriverId] = useState<string>('TODOS');
   const [printingHistoryOrder, setPrintingHistoryOrder] = useState<Order | null>(null);
+  const [viewingHistoryOrder, setViewingHistoryOrder] = useState<Order | null>(null);
 
   // Chat States
   const [selectedDriver, setSelectedDriver] = useState<DeliveryDriver | null>(null);
@@ -661,162 +662,301 @@ const Logistics: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 pb-8">
-            {historyOrders.sort((a, b) => b.createdAt.localeCompare(a.createdAt)).map(order => (
-              <div key={order.id} className="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 flex flex-col gap-4 group hover:shadow-xl transition-all h-max">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h4 className="font-black text-slate-800 dark:text-white uppercase text-lg">{order.id.split('-')[1] || order.id}</h4>
-                    <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest">{order.clientName}</p>
-                    <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase mt-1">Data: {new Date(order.createdAt).toLocaleDateString('pt-BR')}</p>
-                  </div>
-                  <div className="px-3 py-1.5 rounded-xl text-[10px] font-black uppercase text-white shadow-sm bg-emerald-500">
-                    FINALIZADA
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3 p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800 rounded-2xl">
-                  <div className="w-10 h-10 bg-emerald-600 rounded-full flex items-center justify-center text-white font-black uppercase shadow-md">{getDriverName(order.driverId).charAt(0)}</div>
-                  <div className="flex-1">
-                    <p className="text-[9px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-0.5">Entregue por:</p>
-                    <p className="text-xs font-black text-emerald-900 dark:text-emerald-300 truncate">{getDriverName(order.driverId)}</p>
-                  </div>
-                </div>
-
-                <div className="flex justify-between items-center text-sm font-black text-slate-900 border-t border-slate-50 dark:border-slate-800 pt-3">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] text-slate-400 dark:text-slate-500 uppercase">Total:</span>
-                    <span className="text-slate-900 dark:text-white">R$ {order.total.toFixed(2)}</span>
-                  </div>
-                  <button
-                    onClick={() => setPrintingHistoryOrder(order)}
-                    className="p-2 text-slate-300 dark:text-slate-600 hover:text-blue-500 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-xl transition-all"
-                    title="Imprimir Cópia de Comprovante"
-                  >
-                    <Icons.Print />
-                  </button>
-                </div>
-              </div>
-            ))}
-            {historyOrders.length === 0 && (
-              <div className="col-span-full py-20 text-center bg-white dark:bg-slate-900 rounded-3xl border-2 border-dashed border-slate-100 dark:border-slate-800 mt-2">
-                <Icons.Clock className="w-12 h-12 mx-auto text-slate-200 dark:text-slate-800 mb-4" />
-                <p className="text-slate-400 dark:text-slate-600 font-bold uppercase tracking-widest text-xs">Nenhuma entrega no histórico.</p>
-              </div>
-            )}
+          <div className="flex-1 overflow-auto bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm custom-scrollbar">
+            <table className="w-full text-left border-collapse min-w-[900px]">
+              <thead>
+                <tr className="bg-slate-50/50 dark:bg-slate-800/30 border-b border-slate-100 dark:border-slate-800">
+                  <th className="px-8 py-5 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Status</th>
+                  <th className="px-8 py-5 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Cliente / Pedido</th>
+                  <th className="px-8 py-5 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Entregador</th>
+                  <th className="px-8 py-5 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Data / Hora</th>
+                  <th className="px-8 py-5 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Total</th>
+                  <th className="px-8 py-5 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest text-right">Ações</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
+                {historyOrders.sort((a, b) => b.createdAt.localeCompare(a.createdAt)).map(order => (
+                  <tr key={order.id} className="hover:bg-slate-50/30 dark:hover:bg-slate-800/20 group transition-colors">
+                    <td className="px-8 py-5 text-center">
+                      <span className="px-3 py-1.5 rounded-xl text-[9px] font-black uppercase text-white shadow-sm bg-emerald-500">
+                        ENTREGUE
+                      </span>
+                    </td>
+                    <td className="px-8 py-5">
+                      <p className="font-black text-slate-800 dark:text-white text-[11px] uppercase tracking-tighter">
+                        {order.id.split('-')[1] || order.id}
+                      </p>
+                      <p className="text-[9px] text-slate-400 dark:text-slate-500 font-bold uppercase truncate max-w-[180px]">
+                        {order.clientName}
+                      </p>
+                    </td>
+                    <td className="px-8 py-5">
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg flex items-center justify-center text-[9px] font-black text-emerald-600 dark:text-emerald-400">
+                          {getDriverName(order.driverId).charAt(0)}
+                        </div>
+                        <p className="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase">
+                          {getDriverName(order.driverId)}
+                        </p>
+                      </div>
+                    </td>
+                    <td className="px-8 py-5">
+                      <div className="space-y-0.5">
+                        <p className="text-[10px] font-bold text-slate-700 dark:text-slate-300">
+                          {new Date(order.createdAt).toLocaleDateString('pt-BR')}
+                        </p>
+                        <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase">
+                          {new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' }).format(new Date(order.createdAt))}
+                        </p>
+                      </div>
+                    </td>
+                    <td className="px-8 py-5">
+                      <p className="text-[11px] font-black text-blue-600 dark:text-blue-400">
+                        R$ {order.total.toFixed(2)}
+                      </p>
+                    </td>
+                    <td className="px-8 py-5">
+                      <div className="flex justify-end gap-2">
+                        <button
+                          onClick={() => setViewingHistoryOrder(order)}
+                          className="p-2.5 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 bg-slate-50 dark:bg-slate-800/50 rounded-xl transition-all"
+                          title="Ver Detalhes / Imprimir"
+                        >
+                          <Icons.Print size={18} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
+          {historyOrders.length === 0 && (
+            <div className="col-span-full py-20 text-center bg-white dark:bg-slate-900 rounded-3xl border-2 border-dashed border-slate-100 dark:border-slate-800 mt-2">
+              <Icons.Clock className="w-12 h-12 mx-auto text-slate-200 dark:text-slate-800 mb-4" />
+              <p className="text-slate-400 dark:text-slate-600 font-bold uppercase tracking-widest text-xs">Nenhuma entrega no histórico.</p>
+            </div>
+          )}
         </div>
       )
       }
 
+      {/* DETALHES DA ENTREGA (MODAL) */}
+      {viewingHistoryOrder && businessSettings && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="bg-white dark:bg-slate-900 rounded-[3rem] shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in duration-200 border border-transparent dark:border-slate-800">
+            <div className="p-10 pb-0 flex justify-between items-start">
+              <div>
+                <h3 className="text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tighter mb-1">Detalhes da Entrega</h3>
+                <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest px-1">Resumo completo do pedido finalizado</p>
+              </div>
+              <button
+                onClick={() => setViewingHistoryOrder(null)}
+                className="p-3 bg-slate-50 dark:bg-slate-800 text-slate-400 dark:text-slate-500 rounded-2xl hover:text-red-500 transition-all shadow-sm"
+              >
+                <Icons.X size={20} />
+              </button>
+            </div>
+
+            <div className="p-10 space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-slate-50 dark:bg-slate-800/50 p-5 rounded-[2rem] border border-slate-100 dark:border-slate-800">
+                  <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mb-3">Cliente / Destino</p>
+                  <p className="text-sm font-black text-slate-800 dark:text-white uppercase mb-1">{viewingHistoryOrder.clientName}</p>
+                  <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 leading-tight">
+                    {viewingHistoryOrder.clientAddress || 'Endereço não informado'}
+                  </p>
+                </div>
+                <div className="bg-slate-50 dark:bg-slate-800/50 p-5 rounded-[2rem] border border-slate-100 dark:border-slate-800">
+                  <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mb-3">Logística</p>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-emerald-600 rounded-full flex items-center justify-center text-white font-black uppercase text-sm shadow-md">
+                      {getDriverName(viewingHistoryOrder.driverId).charAt(0)}
+                    </div>
+                    <div>
+                      <p className="text-[11px] font-black text-slate-800 dark:text-white uppercase">{getDriverName(viewingHistoryOrder.driverId)}</p>
+                      <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase">Entregador</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Itens do Pedido</p>
+                <div className="bg-slate-50 dark:bg-slate-800/40 rounded-[2rem] border border-slate-100 dark:border-slate-800 overflow-hidden">
+                  <div className="max-h-[200px] overflow-y-auto p-4 custom-scrollbar">
+                    {viewingHistoryOrder.items.map((item, idx) => {
+                      const prod = products.find(p => p.id === item.productId);
+                      return (
+                        <div key={idx} className="flex justify-between items-center py-3 border-b border-slate-100 dark:border-slate-800 last:border-0 px-2">
+                          <div className="flex items-center gap-3">
+                            <span className="w-6 h-6 flex items-center justify-center bg-slate-900 dark:bg-blue-600 text-white text-[10px] font-black rounded-lg">
+                              {item.quantity}x
+                            </span>
+                            <span className="text-[11px] font-black text-slate-700 dark:text-slate-200 uppercase">{prod?.name || '...'}</span>
+                          </div>
+                          <span className="text-[11px] font-black text-slate-400 dark:text-slate-500">R$ {(item.quantity * item.price).toFixed(2)}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-6 border-t border-slate-100 dark:border-slate-800 grid grid-cols-2 gap-8 items-end">
+                <div className="space-y-2">
+                  <div className="flex justify-between text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                    <span>Taxa Entrega:</span>
+                    <span>R$ {(viewingHistoryOrder.deliveryFee || 0).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                    <span>Pagamento:</span>
+                    <span className="text-slate-800 dark:text-white font-black">{(paymentLabels[(viewingHistoryOrder.paymentMethod || '').toUpperCase()] || viewingHistoryOrder.paymentMethod || 'PENDENTE').toUpperCase()}</span>
+                  </div>
+                  <div className="flex justify-between items-center pt-2">
+                    <span className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-tighter">Total Geral:</span>
+                    <span className="text-xl font-black text-blue-600 dark:text-blue-400">R$ {viewingHistoryOrder.total.toFixed(2)}</span>
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      setPrintingHistoryOrder(viewingHistoryOrder);
+                      setViewingHistoryOrder(null);
+                    }}
+                    className="flex-1 py-4 bg-slate-900 dark:bg-blue-600 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-slate-500/20 dark:shadow-blue-900/40 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2"
+                  >
+                    <Icons.Print size={16} /> Imprimir Cupom
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* CUPOM DE ENTREGA AGRUPADO */}
-      {
-        printingOrder && businessSettings && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm">
-            <div className="relative w-full max-w-[80mm] bg-white rounded-[2rem] p-8 border border-dashed shadow-2xl font-receipt text-[11px] text-black print-container is-receipt animate-in zoom-in duration-200">
-              <div className="text-center mb-6 border-b border-dashed pb-4">
-                <h2 className="font-black text-sm uppercase tracking-tighter">{businessSettings.name}</h2>
-                <p className="text-[9px] font-bold mt-1 uppercase">Comprovante de Pagamento</p>
-              </div>
+      {printingOrder && businessSettings && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm">
+          <div className="relative w-full max-w-[80mm] bg-white rounded-[2rem] p-8 border border-dashed shadow-2xl font-receipt text-[11px] text-black print-container is-receipt animate-in zoom-in duration-200">
+            <div className="text-center mb-6 border-b border-dashed pb-4">
+              <h2 className="font-black text-sm uppercase tracking-tighter">{businessSettings.name}</h2>
+              <p className="text-[9px] font-bold mt-1 uppercase">Comprovante de Pagamento</p>
+            </div>
 
-              <div className="space-y-1 mb-4">
-                <p>DATA: {new Date(printingOrder.createdAt).toLocaleString('pt-BR')}</p>
-                <p>CLIENTE: {printingOrder.clientName}</p>
-                {printingOrder.clientPhone && <p>FONE: {printingOrder.clientPhone}</p>}
-                {printingOrder.clientAddress && (
-                  <p className="font-bold border-t border-dashed mt-2 pt-1 uppercase leading-tight">ENTREGA: {printingOrder.clientAddress}</p>
-                )}
-                {printingOrder.tableNumber && <p className="font-black">MESA: {printingOrder.tableNumber}</p>}
-                <p>PAGTO: {(paymentLabels[(printingOrder.paymentMethod || '').toUpperCase()] || printingOrder.paymentMethod || 'PENDENTE').toUpperCase()}</p>
-              </div>
+            <div className="space-y-1 mb-4">
+              <p>DATA: {new Date(printingOrder.createdAt).toLocaleString('pt-BR')}</p>
+              <p>CLIENTE: {printingOrder.clientName}</p>
+              {printingOrder.clientPhone && <p>FONE: {printingOrder.clientPhone}</p>}
+              {printingOrder.clientAddress && (
+                <p className="font-bold border-t border-dashed mt-2 pt-1 uppercase leading-tight">ENTREGA: {printingOrder.clientAddress}</p>
+              )}
+              {printingOrder.tableNumber && <p className="font-black">MESA: {printingOrder.tableNumber}</p>}
+              <p>PAGTO: {(paymentLabels[(printingOrder.paymentMethod || '').toUpperCase()] || printingOrder.paymentMethod || 'PENDENTE').toUpperCase()}</p>
+            </div>
 
+            <div className="border-t border-dashed my-3 py-3">
+              {Object.entries(printingOrder.items.reduce((acc: Record<string, any>, item) => {
+                const prod = products.find(p => p.id === item.productId);
+                if (!acc[item.productId]) {
+                  acc[item.productId] = { name: prod?.name || '...', quantity: 0, price: item.price };
+                }
+                acc[item.productId].quantity += item.quantity;
+                return acc;
+              }, {} as Record<string, any>)).map(([id, data]: [string, any]) => (
+                <div key={id} className="flex justify-between font-black uppercase py-0.5">
+                  <span>{data.quantity}x {data.name.substring(0, 18)}</span>
+                  <span>R$ {(data.quantity * data.price).toFixed(2)}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex justify-between items-center py-1">
+              <span className="text-[9px] uppercase font-bold">TAXA ENTREGA:</span>
+              <span className="font-bold">R$ {(printingOrder.deliveryFee || 0).toFixed(2)}</span>
+            </div>
+
+            <div className="flex justify-between items-end border-t border-dashed pt-4 mb-6">
+              <span className="font-black text-[9px] uppercase tracking-widest">TOTAL:</span>
+              <span className="text-2xl font-black">R$ {printingOrder.total.toFixed(2)}</span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 no-print mt-6">
+              <button
+                onClick={() => window.print()}
+                className="bg-slate-900 text-white py-4 rounded-[22px] font-receipt font-black uppercase text-[11px] shadow-xl hover:bg-black active:scale-95 transition-all flex items-center justify-center"
+              >
+                IMPRIMIR
+              </button>
+              <button
+                onClick={() => setPrintingOrder(null)}
+                className="bg-slate-50 text-slate-400 py-4 rounded-[22px] font-receipt font-black uppercase text-[11px] hover:bg-slate-100 active:scale-95 transition-all flex items-center justify-center"
+              >
+                FECHAR
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CUPOM DE HISTÓRICO RESUMIDO */}
+      {printingHistoryOrder && businessSettings && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm">
+          <div className="relative w-full max-w-[80mm] bg-white rounded-[2rem] p-8 border border-dashed shadow-2xl font-receipt text-[11px] text-black print-container is-receipt animate-in zoom-in duration-200">
+            <div className="text-center mb-6 border-b border-dashed pb-4">
+              <h2 className="font-black text-sm uppercase tracking-tighter">{businessSettings.name}</h2>
+              <p className="text-[9px] font-bold mt-1 uppercase">Cópia de Comprovante</p>
+            </div>
+
+            <div className="space-y-1 mb-4">
+              <p>DATA: {new Date(printingHistoryOrder.createdAt).toLocaleString('pt-BR')}</p>
+              <p>CLIENTE: {printingHistoryOrder.clientName}</p>
+              {printingHistoryOrder.clientPhone && <p>FONE: {printingHistoryOrder.clientPhone}</p>}
+              {printingHistoryOrder.clientAddress && (
+                <p className="font-bold border-t border-dashed mt-2 pt-1 uppercase leading-tight">ENTREGA: {printingHistoryOrder.clientAddress}</p>
+              )}
+              <p>PAGTO: {(paymentLabels[(printingHistoryOrder.paymentMethod || '').toUpperCase()] || printingHistoryOrder.paymentMethod || 'PENDENTE').toUpperCase()}</p>
+              <p className="font-bold border-t border-dashed mt-2 pt-1 uppercase">ENTREGADOR: {getDriverName(printingHistoryOrder.driverId)}</p>
+            </div>
+
+            {groupedPrintingItems.length > 0 && (
               <div className="border-t border-dashed my-3 py-3">
-                {groupedPrintingItems.map(([id, data]) => (
+                {groupedPrintingItems.map(([id, data]: [string, any]) => (
                   <div key={id} className="flex justify-between font-black uppercase py-0.5">
                     <span>{data.quantity}x {data.name.substring(0, 18)}</span>
                     <span>R$ {(data.quantity * data.price).toFixed(2)}</span>
                   </div>
                 ))}
               </div>
+            )}
 
-              <div className="flex justify-between items-center py-1">
-                <span className="text-[9px] uppercase font-bold">TAXA ENTREGA:</span>
-                <span className="font-bold">R$ {(printingOrder.deliveryFee || 0).toFixed(2)}</span>
-              </div>
+            <div className="flex justify-between items-center py-1">
+              <span className="text-[9px] uppercase font-bold">TAXA ENTREGA:</span>
+              <span className="font-bold">R$ {(printingHistoryOrder.deliveryFee || 0).toFixed(2)}</span>
+            </div>
 
-              <div className="flex justify-between items-end border-t border-dashed pt-4 mb-6">
-                <span className="font-black text-[9px] uppercase tracking-widest">TOTAL:</span>
-                <span className="text-2xl font-black">R$ {printingOrder.total.toFixed(2)}</span>
-              </div>
+            <div className="flex justify-between items-end border-t border-dashed pt-4 mb-6">
+              <span className="font-black text-[9px] uppercase tracking-widest">TOTAL:</span>
+              <span className="text-2xl font-black">R$ {printingHistoryOrder.total.toFixed(2)}</span>
+            </div>
 
-              <div className="grid grid-cols-2 gap-4 no-print mt-6">
-                <button
-                  onClick={() => window.print()}
-                  className="bg-slate-900 text-white py-4 rounded-[22px] font-receipt font-black uppercase text-[11px] shadow-xl hover:bg-black active:scale-95 transition-all flex items-center justify-center"
-                >
-                  IMPRIMIR
-                </button>
-                <button
-                  onClick={() => setPrintingOrder(null)}
-                  className="bg-slate-50 text-slate-400 py-4 rounded-[22px] font-receipt font-black uppercase text-[11px] hover:bg-slate-100 active:scale-95 transition-all flex items-center justify-center"
-                >
-                  FECHAR
-                </button>
-              </div>
+            <div className="grid grid-cols-2 gap-4 no-print mt-6">
+              <button
+                onClick={() => window.print()}
+                className="bg-slate-900 text-white py-4 rounded-[22px] font-receipt font-black uppercase text-[11px] shadow-xl hover:bg-black active:scale-95 transition-all flex items-center justify-center"
+              >
+                IMPRIMIR
+              </button>
+              <button
+                onClick={() => setPrintingHistoryOrder(null)}
+                className="bg-slate-50 text-slate-400 py-4 rounded-[22px] font-receipt font-black uppercase text-[11px] hover:bg-slate-100 active:scale-95 transition-all flex items-center justify-center"
+              >
+                FECHAR
+              </button>
             </div>
           </div>
-        )
-      }
-
-      {/* CUPOM DE HISTÓRICO RESUMIDO */}
-      {
-        printingHistoryOrder && businessSettings && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm">
-            <div className="relative w-full max-w-[80mm] bg-white rounded-[2rem] p-8 border border-dashed shadow-2xl font-receipt text-[11px] text-black print-container is-receipt animate-in zoom-in duration-200">
-              <div className="text-center mb-6 border-b border-dashed pb-4">
-                <h2 className="font-black text-sm uppercase tracking-tighter">{businessSettings.name}</h2>
-                <p className="text-[9px] font-bold mt-1 uppercase">Cópia de Comprovante</p>
-              </div>
-
-              <div className="space-y-1 mb-4">
-                <p>DATA: {new Date(printingHistoryOrder.createdAt).toLocaleString('pt-BR')}</p>
-                <p>CLIENTE: {printingHistoryOrder.clientName}</p>
-                {printingHistoryOrder.clientPhone && <p>FONE: {printingHistoryOrder.clientPhone}</p>}
-                {printingHistoryOrder.clientAddress && (
-                  <p className="font-bold border-t border-dashed mt-2 pt-1 uppercase leading-tight">ENTREGA: {printingHistoryOrder.clientAddress}</p>
-                )}
-                <p>PAGTO: {(paymentLabels[(printingHistoryOrder.paymentMethod || '').toUpperCase()] || printingHistoryOrder.paymentMethod || 'PENDENTE').toUpperCase()}</p>
-                <p className="font-bold border-t border-dashed mt-2 pt-1 uppercase">ENTREGADOR: {getDriverName(printingHistoryOrder.driverId)}</p>
-              </div>
-
-              <div className="flex justify-between items-center py-1">
-                <span className="text-[9px] uppercase font-bold">TAXA ENTREGA:</span>
-                <span className="font-bold">R$ {(printingHistoryOrder.deliveryFee || 0).toFixed(2)}</span>
-              </div>
-
-              <div className="flex justify-between items-end border-t border-dashed pt-4 mb-6">
-                <span className="font-black text-[9px] uppercase tracking-widest">TOTAL:</span>
-                <span className="text-2xl font-black">R$ {printingHistoryOrder.total.toFixed(2)}</span>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 no-print mt-6">
-                <button
-                  onClick={() => window.print()}
-                  className="bg-slate-900 text-white py-4 rounded-[22px] font-receipt font-black uppercase text-[11px] shadow-xl hover:bg-black active:scale-95 transition-all flex items-center justify-center"
-                >
-                  IMPRIMIR
-                </button>
-                <button
-                  onClick={() => setPrintingHistoryOrder(null)}
-                  className="bg-slate-50 text-slate-400 py-4 rounded-[22px] font-receipt font-black uppercase text-[11px] hover:bg-slate-100 active:scale-95 transition-all flex items-center justify-center"
-                >
-                  FECHAR
-                </button>
-              </div>
-            </div>
-          </div>
-        )
-      }
+        </div>
+      )}
     </div >
   );
 };
