@@ -1130,7 +1130,15 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
               <div className="flex justify-between items-center mb-4">
                 <div>
                   <h2 className="text-xl font-black text-slate-800 dark:text-white uppercase tracking-tighter">Identificar Cliente</h2>
-                  <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-1">Venda: {getFriendlySaleType(saleType)}</p>
+                  <div className="flex items-center gap-1.5 mt-1">
+                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Venda:</span>
+                    <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${saleType === SaleType.OWN_DELIVERY || saleType === SaleType.THIRD_PARTY
+                      ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-400'
+                      : 'bg-orange-100 text-orange-600 dark:bg-orange-900/40 dark:text-orange-400'
+                      }`}>
+                      {getFriendlySaleType(saleType)}
+                    </span>
+                  </div>
                 </div>
                 <div className="flex items-center gap-2">
                   {isAvulso && (
@@ -1167,15 +1175,15 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                         setIsClientModalOpen(false);
                         setErrors({});
                       }}
-                      className="w-10 h-10 flex items-center justify-center bg-emerald-100 text-emerald-600 rounded-full hover:bg-emerald-600 hover:text-white transition-all shadow-lg shadow-emerald-100/50"
-                      title="Salvar Observações"
+                      className="w-10 h-10 flex items-center justify-center bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 rounded-full hover:bg-emerald-600 dark:hover:bg-emerald-500 hover:text-white transition-all shadow-lg shadow-emerald-100/50 dark:shadow-none"
+                      title="Confirmar Identificação"
                     >
                       <Icons.Check className="w-5 h-5" />
                     </button>
                   )}
                   <button
                     onClick={() => setIsClientModalOpen(false)}
-                    className="w-10 h-10 flex items-center justify-center bg-slate-100 rounded-full text-slate-400 hover:bg-red-50 hover:text-red-500 transition-all font-black text-lg"
+                    className="w-10 h-10 flex items-center justify-center bg-slate-100 dark:bg-slate-800 rounded-full text-slate-400 dark:text-slate-500 hover:bg-red-50 dark:hover:bg-red-900/30 hover:text-red-500 dark:hover:text-red-400 transition-all font-black text-lg"
                   >
                     ×
                   </button>
@@ -1212,13 +1220,13 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                   <div className="relative">
                     <input
                       type="text"
-                      className="w-full p-5 bg-slate-50 border-2 border-slate-100 rounded-2xl text-xs font-black outline-none focus:border-blue-500 transition-all"
+                      className="w-full p-5 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-2xl text-xs font-black outline-none focus:border-blue-500 transition-all dark:text-white"
                       placeholder="Buscar por Nome ou Telefone..."
                       value={clientSearch}
                       onChange={(e) => { setClientSearch(e.target.value); setShowClientList(true); }}
                       autoFocus
                     />
-                    <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300">
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 dark:text-slate-600">
                       <Icons.Search />
                     </div>
                   </div>
@@ -1240,8 +1248,8 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                           className="w-full text-left p-4 bg-slate-50 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-900/40 border border-slate-100 dark:border-slate-700 hover:border-blue-200 dark:hover:border-blue-500 rounded-2xl transition-all group"
                         >
                           <div className="flex justify-between items-center">
-                            <p className="text-sm font-black text-slate-800 uppercase group-hover:text-blue-700">{c.name}</p>
-                            <span className="text-[10px] font-bold text-blue-500 bg-blue-100 px-2 py-0.5 rounded-full">{c.phone}</span>
+                            <p className="text-sm font-black text-slate-800 dark:text-white uppercase group-hover:text-blue-700 dark:group-hover:text-blue-400">{c.name}</p>
+                            <span className="text-[10px] font-bold text-blue-500 bg-blue-100 dark:bg-blue-900/40 px-2 py-0.5 rounded-full">{c.phone}</span>
                           </div>
                           <p className="text-[10px] text-slate-400 font-medium mt-1 uppercase truncate">{c.addresses[0] || 'Sem endereço cadastrado'}</p>
                         </button>
@@ -1377,7 +1385,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                             placeholder="123"
                             value={avulsoData.addressNumber}
                             onChange={e => setAvulsoData({ ...avulsoData, addressNumber: e.target.value })}
-                            className="w-full p-4 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-2xl text-xs font-black outline-none focus:border-blue-500 transition-all dark:text-white"
+                            className="w-full p-4 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-2xl text-xs font-black outline-none focus:border-blue-500 transition-all dark:text-white focus:ring-4 focus:ring-blue-500/10"
                           />
                         </div>
                         <div className="flex-1">
@@ -1433,7 +1441,8 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
             </div>
           </div>
         </div>
-      )}
+      )
+      }
 
       <div className="flex gap-2 lg:gap-4 xl:gap-6 flex-1 min-h-0">
         <div className="w-64 lg:w-72 flex flex-col gap-2 lg:gap-4 shrink-0">
