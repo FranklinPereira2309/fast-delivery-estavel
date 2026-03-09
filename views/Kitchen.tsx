@@ -218,8 +218,8 @@ const Kitchen: React.FC = () => {
                   </div>
                 </div>
 
-                {viewTab === 'HISTORICO' && (
-                  <div className="px-5 pb-3 pt-4">
+                {viewTab === 'HISTORICO' && expandedOrders[order.id] && (
+                  <div className="px-5 pb-3 pt-4 animate-in slide-in-from-top-2 duration-300">
                     <div className="flex items-center gap-3 p-3 bg-emerald-50/50 dark:bg-emerald-900/10 border border-emerald-100/50 dark:border-emerald-800/30 rounded-2xl">
                       <div className="w-9 h-9 bg-emerald-600 rounded-full flex items-center justify-center text-white text-xs font-black uppercase shadow-sm shrink-0">
                         {getWaiterName(order.waiterId).charAt(0)}
@@ -304,28 +304,32 @@ const Kitchen: React.FC = () => {
                     )}
                   </div>
                 ) : (
-                  <div className="p-5 border-t border-slate-50 dark:border-slate-800/50 flex justify-between items-center mt-auto bg-slate-50/30 dark:bg-slate-900/30">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[9px] text-slate-400 dark:text-slate-500 uppercase font-black tracking-widest">Total:</span>
-                      <span className="text-sm font-black text-slate-900 dark:text-white">R$ {(order.total || 0).toFixed(2)}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        title="Imprimir Cupom"
-                        className="p-2 text-slate-400 dark:text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 transition-all hover:bg-white dark:hover:bg-slate-800 rounded-lg"
-                      >
-                        <Icons.Print size={18} />
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setExpandedOrders(prev => ({ ...prev, [order.id]: !prev[order.id] }));
-                        }}
-                        className={`px-3 py-2 rounded-xl transition-all border shadow-sm text-[10px] font-black uppercase flex items-center gap-2 ${expandedOrders[order.id] ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-blue-200'}`}
-                      >
-                        ITENS {expandedOrders[order.id] ? <Icons.ChevronUp size={14} /> : <Icons.ChevronDown size={14} />}
-                      </button>
-                    </div>
+                  <div className="p-4 border-t border-slate-50 dark:border-slate-800/50 flex flex-col gap-4 bg-slate-50/10 dark:bg-slate-900/10">
+                    {expandedOrders[order.id] && (
+                      <div className="flex justify-between items-center animate-in fade-in duration-300">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[9px] text-slate-400 dark:text-slate-500 uppercase font-black tracking-widest">Total:</span>
+                          <span className="text-sm font-black text-slate-900 dark:text-white">R$ {(order.total || 0).toFixed(2)}</span>
+                        </div>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); /* Logic for printing if needed */ }}
+                          title="Imprimir Cupom"
+                          className="p-2.5 bg-white dark:bg-slate-800 text-slate-400 dark:text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 transition-all border border-slate-100 dark:border-slate-700 rounded-xl shadow-sm"
+                        >
+                          <Icons.Print size={18} />
+                        </button>
+                      </div>
+                    )}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setExpandedOrders(prev => ({ ...prev, [order.id]: !prev[order.id] }));
+                      }}
+                      className={`w-full py-3 rounded-2xl transition-all border shadow-sm text-[10px] font-black uppercase flex items-center justify-center gap-2 ${expandedOrders[order.id] ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-blue-200'}`}
+                    >
+                      {expandedOrders[order.id] ? 'Ocultar Detalhes' : 'Ver preparados'}
+                      {expandedOrders[order.id] ? <Icons.ChevronUp size={14} /> : <Icons.ChevronDown size={14} />}
+                    </button>
                   </div>
                 )}
               </div>
