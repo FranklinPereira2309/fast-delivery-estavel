@@ -128,7 +128,7 @@ const WaiterManagement: React.FC = () => {
                                 <button
                                     onClick={() => handleResetWaiter(w)}
                                     title="Resetar Segurança"
-                                    className="p-2.5 sm:p-3 bg-amber-50 dark:bg-amber-900/10 text-amber-600 dark:text-amber-500 rounded-xl hover:bg-amber-600 hover:text-white dark:hover:bg-amber-600 dark:hover:text-white transition-all outline-none"
+                                    className="p-2.5 sm:p-3 bg-slate-50 dark:bg-slate-800 text-amber-600 dark:text-white rounded-xl hover:bg-amber-600 dark:hover:bg-amber-500 hover:text-white transition-all outline-none"
                                 >
                                     <Icons.Clock size={16} />
                                 </button>
@@ -387,7 +387,7 @@ const UserManagementInternal: React.FC = () => {
                                 <button
                                     onClick={() => handleResetUser(u)}
                                     title="Resetar Senha"
-                                    className="p-2.5 sm:p-3 bg-amber-50 dark:bg-amber-900/10 text-amber-600 dark:text-amber-500 rounded-xl hover:bg-amber-600 hover:text-white dark:hover:bg-amber-600 dark:hover:text-white transition-all outline-none"
+                                    className="p-2.5 sm:p-3 bg-slate-50 dark:bg-slate-800 text-amber-600 dark:text-white rounded-xl hover:bg-amber-600 dark:hover:bg-amber-500 hover:text-white transition-all outline-none"
                                 >
                                     <Icons.Clock size={16} />
                                 </button>
