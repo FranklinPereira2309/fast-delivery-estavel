@@ -324,50 +324,80 @@ export const getCashSessions = async (req: Request, res: Response) => {
 };
 
 export const autoCloseCashSessions = async () => {
-    const settings = await prisma.businessSettings.findFirst() as any;
-    const autoCloseTime = settings?.autoCloseTime || '00:00';
+    try {
+        const settings = await prisma.businessSettings.findFirst() as any;
+        const autoCloseTime = settings?.autoCloseTime || '00:00';
+        const [targetHours, targetMinutes] = autoCloseTime.split(':').map(Number);
 
-    const openSessions = await prisma.cashSession.findMany({
-        where: { status: 'OPEN' }
-    });
+        const now = new Date();
+        // Convert current time to Brasilia time for calculation
+        const brasiliaNow = new Date(now.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
 
-    for (const session of openSessions) {
-        const totals = await calculateSessionTotals(session.openedAt);
+        // Calculate the most recent "scheduled" closure time
+        const lastTargetClosure = new Date(brasiliaNow);
+        lastTargetClosure.setHours(targetHours, targetMinutes, 0, 0);
 
-        await prisma.cashSession.update({
-            where: { id: session.id },
-            data: {
-                closedAt: new Date(),
-                closedBy: 'SYSTEM',
-                closedByName: 'SISTEMA (Auto Fechamento)',
-                status: 'CLOSED',
-                reportedCash: totals.systemCash,
-                reportedPix: totals.systemPix,
-                reportedCredit: totals.systemCredit,
-                reportedDebit: totals.systemDebit,
-                reportedOthers: totals.systemOthers,
-                reportedFiado: totals.systemFiado,
-                systemCash: totals.systemCash,
-                systemPix: totals.systemPix,
-                systemCredit: totals.systemCredit,
-                systemDebit: totals.systemDebit,
-                systemOthers: totals.systemOthers,
-                systemFiado: totals.systemFiado,
-                orphanSales: totals.orphanSales,
-                totalSales: totals.totalSales,
-                difference: 0,
-                observations: 'Auto Fechamento do Caixa'
+        // If current time is before today's scheduled time, the "last" closure was yesterday
+        if (brasiliaNow < lastTargetClosure) {
+            lastTargetClosure.setDate(lastTargetClosure.getDate() - 1);
+        }
+
+        console.log(`[AUTO-CLOSE] Cut-off time calculated: ${lastTargetClosure.toLocaleString('pt-BR')}`);
+
+        // Find sessions that were opened BEFORE the last scheduled closure time and are still OPEN
+        const sessionsToClose = await prisma.cashSession.findMany({
+            where: {
+                status: 'OPEN',
+                openedAt: { lt: lastTargetClosure }
             }
         });
 
-        await prisma.auditLog.create({
-            data: {
-                userId: 'SYSTEM',
-                userName: 'SISTEMA',
-                action: 'CLOSE_CASH_AUTO',
-                details: `Sistema realizou o fechamento automático do caixa às ${autoCloseTime}`
-            }
-        });
+        if (sessionsToClose.length === 0) {
+            return;
+        }
+
+        console.log(`[AUTO-CLOSE] Found ${sessionsToClose.length} sessions to auto-close.`);
+
+        for (const session of sessionsToClose) {
+            const totals = await calculateSessionTotals(session.openedAt);
+
+            await prisma.cashSession.update({
+                where: { id: session.id },
+                data: {
+                    closedAt: new Date(),
+                    closedBy: 'SYSTEM',
+                    closedByName: 'SISTEMA (Auto Fechamento)',
+                    status: 'CLOSED',
+                    reportedCash: totals.systemCash,
+                    reportedPix: totals.systemPix,
+                    reportedCredit: totals.systemCredit,
+                    reportedDebit: totals.systemDebit,
+                    reportedOthers: totals.systemOthers,
+                    reportedFiado: totals.systemFiado,
+                    systemCash: totals.systemCash,
+                    systemPix: totals.systemPix,
+                    systemCredit: totals.systemCredit,
+                    systemDebit: totals.systemDebit,
+                    systemOthers: totals.systemOthers,
+                    systemFiado: totals.systemFiado,
+                    orphanSales: totals.orphanSales,
+                    totalSales: totals.totalSales,
+                    difference: 0,
+                    observations: 'Fechamento Automático (Missed Window)'
+                }
+            });
+
+            await prisma.auditLog.create({
+                data: {
+                    userId: 'SYSTEM',
+                    userName: 'SISTEMA',
+                    action: 'CLOSE_CASH_AUTO',
+                    details: `Sistema realizou o fechamento automático retroativo do caixa aberto em ${session.openedAt.toLocaleString('pt-BR')}`
+                }
+            });
+        }
+    } catch (err) {
+        console.error('[AUTO-CLOSE] Error in auto-closure service:', err);
     }
 };
 

@@ -10,6 +10,7 @@ const Dashboard: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [clientCount, setClientCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [isMounted, setIsMounted] = useState(false);
   const { theme } = useTheme();
 
   const isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
@@ -27,6 +28,7 @@ const Dashboard: React.FC = () => {
       setIsLoading(false);
     };
     fetchData();
+    setIsMounted(true);
   }, []);
 
   const stats = useMemo(() => {
@@ -182,25 +184,27 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
           <div className="h-[250px] sm:h-80 w-full min-h-[250px] relative">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.2} />
-                    <stop offset="95%" stopColor="#4f46e5" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={gridColor} />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: labelColor, fontSize: 10, fontWeight: 700 }} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fill: labelColor, fontSize: 10, fontWeight: 700 }} />
-                <Tooltip
-                  contentStyle={{ borderRadius: '20px', border: 'none', backgroundColor: isDark ? '#0f172a' : '#ffffff', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)', padding: '15px' }}
-                  itemStyle={{ fontWeight: 800, fontSize: '12px', textTransform: 'uppercase' }}
-                  labelStyle={{ color: isDark ? '#cbd5e1' : '#64748b', fontWeight: 700, marginBottom: '5px' }}
-                />
-                <Area type="monotone" dataKey="vendas" stroke="#4f46e5" strokeWidth={4} fillOpacity={1} fill="url(#colorSales)" />
-              </AreaChart>
-            </ResponsiveContainer>
+            {isMounted && (
+              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} debounce={100}>
+                <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.2} />
+                      <stop offset="95%" stopColor="#4f46e5" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={gridColor} />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: labelColor, fontSize: 10, fontWeight: 700 }} dy={10} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: labelColor, fontSize: 10, fontWeight: 700 }} />
+                  <Tooltip
+                    contentStyle={{ borderRadius: '20px', border: 'none', backgroundColor: isDark ? '#0f172a' : '#ffffff', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)', padding: '15px' }}
+                    itemStyle={{ fontWeight: 800, fontSize: '12px', textTransform: 'uppercase' }}
+                    labelStyle={{ color: isDark ? '#cbd5e1' : '#64748b', fontWeight: 700, marginBottom: '5px' }}
+                  />
+                  <Area type="monotone" dataKey="vendas" stroke="#4f46e5" strokeWidth={4} fillOpacity={1} fill="url(#colorSales)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </div>
 
@@ -209,22 +213,24 @@ const Dashboard: React.FC = () => {
           <h3 className="text-slate-800 dark:text-white font-black uppercase tracking-tight text-lg mb-1">Volume de Pedidos</h3>
           <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest mb-8">Frequência diária</p>
           <div className="flex-1 min-h-[250px] sm:min-h-[300px] h-[300px] relative">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={gridColor} />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: labelColor, fontSize: 10, fontWeight: 700 }} />
-                <Tooltip
-                  cursor={{ fill: isDark ? '#1e293b' : '#f8fafc' }}
-                  contentStyle={{ borderRadius: '20px', border: 'none', backgroundColor: isDark ? '#0f172a' : '#ffffff', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }}
-                  labelStyle={{ color: isDark ? '#cbd5e1' : '#64748b' }}
-                />
-                <Bar dataKey="pedidos" radius={[10, 10, 0, 0]}>
-                  {chartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={index === chartData.length - 1 ? '#4f46e5' : isDark ? '#334155' : '#e2e8f0'} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+            {isMounted && (
+              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} debounce={100}>
+                <BarChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={gridColor} />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: labelColor, fontSize: 10, fontWeight: 700 }} />
+                  <Tooltip
+                    cursor={{ fill: isDark ? '#1e293b' : '#f8fafc' }}
+                    contentStyle={{ borderRadius: '20px', border: 'none', backgroundColor: isDark ? '#0f172a' : '#ffffff', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }}
+                    labelStyle={{ color: isDark ? '#cbd5e1' : '#64748b' }}
+                  />
+                  <Bar dataKey="pedidos" radius={[10, 10, 0, 0]}>
+                    {chartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={index === chartData.length - 1 ? '#4f46e5' : isDark ? '#334155' : '#e2e8f0'} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </div>
           <div className="mt-6 pt-6 border-t border-slate-50 dark:border-slate-800">
             <div className="flex items-center justify-between">
@@ -245,29 +251,31 @@ const Dashboard: React.FC = () => {
             <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest">Volume financeiro por método</p>
           </div>
           <div className="h-[250px] sm:h-64 w-full relative">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={paymentData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={80}
-                  paddingAngle={5}
-                  dataKey="value"
-                >
-                  {paymentData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS_PAYMENT[index % COLORS_PAYMENT.length]} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  contentStyle={{ borderRadius: '15px', border: 'none', backgroundColor: isDark ? '#0f172a' : '#ffffff', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                  itemStyle={{ color: isDark ? '#cbd5e1' : '#1e293b' }}
-                  formatter={(value: number) => `R$ ${value.toFixed(2)}`}
-                />
-                <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px', fontSize: '10px', fontWeight: 800, textTransform: 'uppercase', color: labelColor }} />
-              </PieChart>
-            </ResponsiveContainer>
+            {isMounted && (
+              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} debounce={100}>
+                <PieChart>
+                  <Pie
+                    data={paymentData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {paymentData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS_PAYMENT[index % COLORS_PAYMENT.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{ borderRadius: '15px', border: 'none', backgroundColor: isDark ? '#0f172a' : '#ffffff', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                    itemStyle={{ color: isDark ? '#cbd5e1' : '#1e293b' }}
+                    formatter={(value: number) => `R$ ${value.toFixed(2)}`}
+                  />
+                  <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px', fontSize: '10px', fontWeight: 800, textTransform: 'uppercase', color: labelColor }} />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </div>
 
@@ -278,27 +286,29 @@ const Dashboard: React.FC = () => {
             <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest">Comparativo Delivery vs Salão/Balcão</p>
           </div>
           <div className="h-[250px] sm:h-64 w-full relative">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={deliveryData}
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                >
-                  {deliveryData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  contentStyle={{ borderRadius: '15px', border: 'none', backgroundColor: isDark ? '#0f172a' : '#ffffff', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                  itemStyle={{ color: isDark ? '#cbd5e1' : '#1e293b' }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
+            {isMounted && (
+              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} debounce={100}>
+                <PieChart>
+                  <Pie
+                    data={deliveryData}
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  >
+                    {deliveryData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{ borderRadius: '15px', border: 'none', backgroundColor: isDark ? '#0f172a' : '#ffffff', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                    itemStyle={{ color: isDark ? '#cbd5e1' : '#1e293b' }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
           </div>
           <div className="mt-4 grid grid-cols-3 gap-2">
             {deliveryData.map((item, i) => (
