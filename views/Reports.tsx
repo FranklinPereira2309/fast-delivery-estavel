@@ -1527,16 +1527,16 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
                         </div>
 
                         <div className="space-y-4 sm:space-y-6 mb-8">
-                            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-                                <div className="space-y-2 col-span-1">
+                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                <div className="space-y-2 md:col-span-1">
                                     <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Início (Pedido)</label>
                                     <input type="date" value={receivableStartDate} onChange={e => setReceivableStartDate(e.target.value)} className="w-full p-4 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl font-bold text-sm text-slate-800 dark:text-slate-200" />
                                 </div>
-                                <div className="space-y-2 col-span-1">
+                                <div className="space-y-2 md:col-span-1">
                                     <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Fim (Pedido)</label>
                                     <input type="date" value={receivableEndDate} onChange={e => setReceivableEndDate(e.target.value)} className="w-full p-4 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl font-bold text-sm text-slate-800 dark:text-slate-200" />
                                 </div>
-                                <div className="space-y-2 col-span-2">
+                                <div className="space-y-2 md:col-span-2">
                                     <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Status de Vencimento</label>
                                     <select
                                         value={receivableFilterStatus}
@@ -1625,7 +1625,7 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
                             <p className="text-[8px] sm:text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest mt-2 ml-10 sm:ml-14">Resumo de desempenho e taxas de serviço por período</p>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Início</label>
                                 <input type="date" value={waiterStartDate} onChange={e => setWaiterStartDate(e.target.value)} className="w-full p-4 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl font-bold text-sm text-slate-800 dark:text-slate-200" />
