@@ -1181,6 +1181,30 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                       <Icons.Check className="w-5 h-5" />
                     </button>
                   )}
+                  {isAvulso && (
+                    <button
+                      onClick={() => {
+                        setAvulsoData({
+                          phone: '',
+                          name: '',
+                          email: '',
+                          document: '',
+                          cep: '',
+                          street: '',
+                          addressNumber: '',
+                          neighborhood: '',
+                          city: '',
+                          state: '',
+                          complement: ''
+                        });
+                        setErrors({});
+                      }}
+                      className="w-10 h-10 flex items-center justify-center bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400 rounded-full hover:bg-red-600 dark:hover:bg-red-500 hover:text-white transition-all shadow-lg shadow-red-100/50 dark:shadow-none"
+                      title="Limpar Tudo"
+                    >
+                      <Icons.Delete className="w-5 h-5" />
+                    </button>
+                  )}
                   <button
                     onClick={() => setIsClientModalOpen(false)}
                     className="w-10 h-10 flex items-center justify-center bg-slate-100 dark:bg-slate-800 rounded-full text-slate-400 dark:text-slate-500 hover:bg-red-50 dark:hover:bg-red-900/30 hover:text-red-500 dark:hover:text-red-400 transition-all font-black text-lg"
@@ -1461,31 +1485,6 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                           onChange={e => setAvulsoData({ ...avulsoData, complement: e.target.value })}
                           className="w-full p-4 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-2xl text-xs font-black outline-none focus:border-blue-500 transition-all dark:text-white"
                         />
-                      </div>
-
-                      <div className="pt-2">
-                        <button
-                          onClick={() => {
-                            setAvulsoData({
-                              phone: '',
-                              name: '',
-                              email: '',
-                              document: '',
-                              cep: '',
-                              street: '',
-                              addressNumber: '',
-                              neighborhood: '',
-                              city: '',
-                              state: '',
-                              complement: ''
-                            });
-                            setErrors({});
-                          }}
-                          className="w-full py-4 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-red-600 dark:hover:bg-red-600 hover:text-white transition-all border border-red-100 dark:border-red-900/30 shadow-sm active:scale-95 flex items-center justify-center gap-2 group"
-                        >
-                          <Icons.Delete className="w-4 h-4" />
-                          Limpar Tudo
-                        </button>
                       </div>
                     </div>
                   )}
