@@ -1137,7 +1137,7 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
 
                         <button
                             onClick={() => generateSalesPDF(false)}
-                            className="mt-6 sm:mt-8 w-full py-4 sm:py-6 bg-slate-900 hover:bg-black text-white rounded-2xl sm:rounded-[2rem] font-black uppercase text-[10px] sm:text-xs tracking-widest shadow-xl transition-all flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 px-4 text-center whitespace-normal"
+                            className="mt-6 sm:mt-8 w-full py-4 sm:py-6 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl sm:rounded-[2rem] font-black uppercase text-[10px] sm:text-xs tracking-widest shadow-xl transition-all flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 px-4 text-center whitespace-normal"
                         >
                             <Icons.Print />
                             Visualizar Relatório de Vendas
@@ -1274,7 +1274,7 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
 
                         <button
                             onClick={() => generateDriversPDF(false)}
-                            className="mt-6 sm:mt-8 w-full py-4 sm:py-6 bg-slate-900 hover:bg-black text-white rounded-2xl sm:rounded-[2rem] font-black uppercase text-[10px] sm:text-xs tracking-widest shadow-xl transition-all flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 px-4 text-center whitespace-normal"
+                            className="mt-6 sm:mt-8 w-full py-4 sm:py-6 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl sm:rounded-[2rem] font-black uppercase text-[10px] sm:text-xs tracking-widest shadow-xl transition-all flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 px-4 text-center whitespace-normal"
                         >
                             <Icons.Print />
                             Visualizar Relatório de Rotas
@@ -1308,7 +1308,7 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
 
                         <button
                             onClick={() => generateInventoryPDF(false)}
-                            className="mt-6 sm:mt-8 w-full py-4 sm:py-6 bg-slate-900 hover:bg-black text-white rounded-2xl sm:rounded-[2rem] font-black uppercase text-[10px] sm:text-xs tracking-widest shadow-xl transition-all flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 px-4 text-center whitespace-normal"
+                            className="mt-6 sm:mt-8 w-full py-4 sm:py-6 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl sm:rounded-[2rem] font-black uppercase text-[10px] sm:text-xs tracking-widest shadow-xl transition-all flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 px-4 text-center whitespace-normal"
                         >
                             <Icons.Print />
                             Visualizar Relatório de Movimentação
@@ -1391,7 +1391,7 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
 
                         <button
                             onClick={() => generateCashPDF(false)}
-                            className="mt-6 sm:mt-8 w-full py-4 sm:py-6 bg-slate-900 hover:bg-black text-white rounded-2xl sm:rounded-[2rem] font-black uppercase text-[10px] sm:text-xs tracking-widest shadow-xl transition-all flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 px-4 text-center whitespace-normal"
+                            className="mt-6 sm:mt-8 w-full py-4 sm:py-6 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl sm:rounded-[2rem] font-black uppercase text-[10px] sm:text-xs tracking-widest shadow-xl transition-all flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 px-4 text-center whitespace-normal"
                         >
                             <Icons.Print />
                             Visualizar Histórico de Caixa
@@ -1606,7 +1606,7 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
 
                         <button
                             onClick={() => generateReceivablesPDF(false)}
-                            className="mt-6 sm:mt-8 w-full py-4 sm:py-6 bg-slate-900 hover:bg-black text-white rounded-2xl sm:rounded-[2rem] font-black uppercase text-[10px] sm:text-xs tracking-widest shadow-xl transition-all flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 px-4 text-center whitespace-normal"
+                            className="mt-6 sm:mt-8 w-full py-4 sm:py-6 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl sm:rounded-[2rem] font-black uppercase text-[10px] sm:text-xs tracking-widest shadow-xl transition-all flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 px-4 text-center whitespace-normal"
                         >
                             <Icons.Print />
                             Visualizar Relatório de Recebimentos
@@ -1671,7 +1671,7 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
                                     generateWaitersAnalyticalPDF(false);
                                 }
                             }}
-                            className="mt-6 sm:mt-8 w-full py-4 sm:py-6 bg-slate-900 hover:bg-black text-white rounded-2xl sm:rounded-[2rem] font-black uppercase text-[10px] sm:text-xs tracking-widest shadow-xl transition-all flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 px-4 text-center whitespace-normal"
+                            className="mt-6 sm:mt-8 w-full py-4 sm:py-6 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl sm:rounded-[2rem] font-black uppercase text-[10px] sm:text-xs tracking-widest shadow-xl transition-all flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 px-4 text-center whitespace-normal"
                         >
                             <Icons.Print />
                             Visualizar Relatório de Comissões
@@ -1704,7 +1704,7 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
                                             else if (previewType === 'WAITERS') generateWaitersPDF(true);
                                             else if (previewType === 'WAITERS_ANALYTICAL') generateWaitersAnalyticalPDF(true);
                                         }}
-                                        className="flex-1 sm:flex-none bg-slate-900 text-white px-4 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all flex items-center justify-center gap-2"
+                                        className="flex-1 sm:flex-none bg-blue-600 text-white px-4 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all flex items-center justify-center gap-2"
                                     >
                                         Download PDF
                                     </button>
