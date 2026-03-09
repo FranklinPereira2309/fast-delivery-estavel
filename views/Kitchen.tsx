@@ -187,7 +187,7 @@ const Kitchen: React.FC = () => {
 
       <div className="flex-1 min-h-0 overflow-hidden">
         {orders.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 h-full overflow-y-auto pr-2 custom-scrollbar content-start items-start pb-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 md:gap-x-6 gap-y-10 md:gap-y-14 h-full overflow-y-auto pr-2 custom-scrollbar content-start items-start pb-4">
             {orders.map(order => (
               <div
                 key={order.id}
