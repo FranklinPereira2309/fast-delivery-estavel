@@ -88,27 +88,27 @@ const WaiterManagement: React.FC = () => {
                 onCancel={() => setAlertConfig(prev => ({ ...prev, isOpen: false }))}
             />
 
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm gap-4 transition-colors">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl sm:rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm gap-4 transition-colors">
                 <div>
                     <h3 className="text-xl font-black text-slate-800 dark:text-white uppercase tracking-tighter">Equipe de Garçons</h3>
-                    <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest">Colaboradores com acesso ao App Garçom</p>
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest leading-relaxed">Colaboradores com acesso ao App Garçom</p>
                 </div>
                 <button
                     onClick={() => { setEditingWaiter(null); setFormData({ name: '', phone: '', email: '' }); setIsModalOpen(true); }}
                     className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-blue-100 dark:shadow-blue-900/20 transition-all flex items-center justify-center gap-2"
                 >
-                    <Icons.User size={16} />
+                    <Icons.User size={16} className="shrink-0" />
                     Novo Garçom
                 </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 {waiters.map(w => (
-                    <div key={w.id} className={`bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 flex flex-col group hover:shadow-xl transition-all relative overflow-hidden ${!w.active ? 'opacity-50 grayscale' : ''}`}>
+                    <div key={w.id} className={`bg-white dark:bg-slate-900 p-5 sm:p-6 rounded-3xl sm:rounded-[2.5rem] border border-slate-100 dark:border-slate-800 flex flex-col group hover:shadow-xl transition-all relative overflow-hidden ${!w.active ? 'opacity-50 grayscale' : ''}`}>
                         <div className="flex items-center gap-4 mb-4">
-                            <div className="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-2xl flex items-center justify-center font-black uppercase text-sm shadow-inner relative">
+                            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-xl sm:rounded-2xl flex items-center justify-center font-black uppercase text-sm shadow-inner shrink-0 relative">
                                 {w.name.substring(0, 2)}
-                                {!w.active && <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></div>}
+                                {!w.active && <div className="absolute -top-1 -right-1 w-3 h-3 sm:w-4 sm:h-4 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></div>}
                             </div>
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2">
@@ -119,16 +119,16 @@ const WaiterManagement: React.FC = () => {
                             </div>
                         </div>
 
-                        <div className="flex items-center justify-between pt-4 border-t border-slate-50">
+                        <div className="flex items-center justify-between pt-4 border-t border-slate-50 dark:border-slate-800">
                             <div className="flex flex-col">
-                                <span className="text-[8px] font-black text-slate-300 uppercase tracking-widest">Whatsapp</span>
-                                <span className="text-[10px] font-bold text-slate-600 tracking-tight">{w.phone}</span>
+                                <span className="text-[8px] font-black text-slate-300 dark:text-slate-600 uppercase tracking-widest">Whatsapp</span>
+                                <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 tracking-tight">{w.phone}</span>
                             </div>
                             <div className="flex gap-2">
                                 <button
                                     onClick={() => handleResetWaiter(w)}
                                     title="Resetar Segurança"
-                                    className="p-3 bg-amber-50 text-amber-600 rounded-xl hover:bg-amber-600 hover:text-white transition-all outline-none"
+                                    className="p-2.5 sm:p-3 bg-amber-50 dark:bg-amber-900/10 text-amber-600 dark:text-amber-500 rounded-xl hover:bg-amber-600 hover:text-white dark:hover:bg-amber-600 dark:hover:text-white transition-all outline-none"
                                 >
                                     <Icons.Clock size={16} />
                                 </button>
@@ -139,14 +139,14 @@ const WaiterManagement: React.FC = () => {
                                         setIsModalOpen(true);
                                     }}
                                     title="Editar Dados"
-                                    className="p-3 bg-slate-50 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition-all outline-none"
+                                    className="p-2.5 sm:p-3 bg-slate-50 dark:bg-slate-800 text-blue-600 dark:text-blue-400 rounded-xl hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600 dark:hover:text-white transition-all outline-none"
                                 >
                                     <Icons.Edit size={16} />
                                 </button>
                                 <button
                                     onClick={() => handleToggleStatus(w)}
                                     title={w.active ? 'Inativar Garçom' : 'Ativar Garçom'}
-                                    className={`p-3 rounded-xl transition-all outline-none ${w.active ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-600 hover:text-white' : 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-600 hover:text-white'}`}
+                                    className={`p-2.5 sm:p-3 rounded-xl transition-all outline-none ${w.active ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-600 hover:text-white' : 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-600 hover:text-white'}`}
                                 >
                                     {w.active ? <Icons.Delete size={16} /> : <Icons.User size={16} />}
                                 </button>
@@ -170,8 +170,8 @@ const WaiterManagement: React.FC = () => {
                             </button>
                         </div>
 
-                        <form onSubmit={handleSave} className="p-6 sm:p-10 space-y-6 sm:y-8">
-                            <div className="grid grid-cols-2 gap-6">
+                        <form onSubmit={handleSave} className="p-6 sm:p-10 space-y-6 sm:space-y-8">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-2">Nome Completo</label>
                                     <input
@@ -179,7 +179,7 @@ const WaiterManagement: React.FC = () => {
                                         required
                                         value={formData.name}
                                         onChange={e => setFormData({ ...formData, name: e.target.value })}
-                                        className="w-full p-5 bg-slate-50 dark:bg-slate-800 border-none rounded-[1.5rem] outline-none font-bold text-sm shadow-inner focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/20 transition-all text-slate-800 dark:text-white"
+                                        className="w-full p-4 sm:p-5 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl sm:rounded-[1.5rem] outline-none font-bold text-sm shadow-inner focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/20 transition-all text-slate-800 dark:text-white"
                                         placeholder="Ex: Miguel Falabela"
                                     />
                                 </div>
@@ -190,7 +190,7 @@ const WaiterManagement: React.FC = () => {
                                         required
                                         value={formData.phone}
                                         onChange={e => setFormData({ ...formData, phone: applyPhoneMask(e.target.value) })}
-                                        className="w-full p-5 bg-slate-50 dark:bg-slate-800 border-none rounded-[1.5rem] outline-none font-bold text-sm shadow-inner focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/20 transition-all text-slate-800 dark:text-white"
+                                        className="w-full p-4 sm:p-5 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl sm:rounded-[1.5rem] outline-none font-bold text-sm shadow-inner focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/20 transition-all text-slate-800 dark:text-white"
                                         placeholder="(00) 0 0000-0000"
                                     />
                                 </div>
@@ -205,24 +205,24 @@ const WaiterManagement: React.FC = () => {
                                     required
                                     value={formData.email}
                                     onChange={e => setFormData({ ...formData, email: e.target.value.toLowerCase() })}
-                                    className="w-full p-5 bg-slate-50 dark:bg-slate-800 border-none rounded-[1.5rem] outline-none font-bold text-sm shadow-inner focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/20 transition-all text-slate-800 dark:text-white"
+                                    className="w-full p-4 sm:p-5 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl sm:rounded-[1.5rem] outline-none font-bold text-sm shadow-inner focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/20 transition-all text-slate-800 dark:text-white"
                                     placeholder="exemplo@gmail.com"
                                 />
-                                <p className="text-[9px] text-slate-400 dark:text-slate-500 font-medium ml-2 mt-2">A senha padrão para novos usuários é: <span className="font-black text-blue-600 dark:text-blue-400">123</span></p>
+                                <p className="text-[9px] text-slate-400 dark:text-slate-500 font-medium ml-2 mt-2 leading-relaxed">A senha padrão para novos usuários é: <span className="font-black text-blue-600 dark:text-blue-400">123</span></p>
                             </div>
 
-                            <div className="pt-6 border-t border-slate-50 flex gap-4">
+                            <div className="pt-6 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row gap-3 sm:gap-4">
                                 <button
                                     type="button"
                                     onClick={() => setIsModalOpen(false)}
-                                    className="flex-1 py-5 font-black uppercase text-[11px] tracking-widest text-slate-400 hover:bg-slate-50 rounded-[1.5rem] transition-all"
+                                    className="order-2 sm:order-1 flex-1 py-4 sm:py-5 font-black uppercase text-[11px] tracking-widest text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-2xl sm:rounded-[1.5rem] transition-all"
                                 >
                                     Cancelar
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={loading}
-                                    className="flex-1 py-5 bg-blue-600 text-white rounded-[1.5rem] font-black uppercase text-[11px] tracking-widest shadow-2xl shadow-blue-500/30 hover:bg-blue-700 active:scale-95 transition-all"
+                                    className="order-1 sm:order-2 flex-1 py-4 sm:py-5 bg-blue-600 text-white rounded-2xl sm:rounded-[1.5rem] font-black uppercase text-[11px] tracking-widest shadow-2xl shadow-blue-500/30 hover:bg-blue-700 active:scale-95 transition-all"
                                 >
                                     {loading ? 'Salvando...' : 'Confirmar Registro'}
                                 </button>
@@ -348,38 +348,68 @@ const UserManagementInternal: React.FC = () => {
                 onConfirm={alertConfig.onConfirm || (() => setAlertConfig(prev => ({ ...prev, isOpen: false })))}
                 onCancel={() => setAlertConfig(prev => ({ ...prev, isOpen: false }))}
             />
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl sm:rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm gap-4 transition-colors">
                 <div>
-                    <h3 className="text-xl font-black text-slate-800 dark:text-white uppercase tracking-tighter">Controle de Acesso (ACL)</h3>
-                    <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest">Defina permissões e usuários do sistema</p>
+                    <h3 className="text-xl font-black text-slate-800 dark:text-white uppercase tracking-tighter">Usuários do Sistema</h3>
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest leading-relaxed">Gerencie níveis de acesso e permissões</p>
                 </div>
-                <button onClick={() => { setEditingUser(null); setFormData({ name: '', email: '', password: '', phone: '', permissions: ['dashboard'] }); setIsModalOpen(true); }} className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-100 dark:shadow-blue-900/20 transition-all">+ Novo Usuário</button>
+                <button
+                    onClick={() => { setEditingUser(null); setFormData({ name: '', email: '', password: '', phone: '', permissions: ['dashboard'] }); setIsModalOpen(true); }}
+                    className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-blue-100 dark:shadow-blue-900/20 transition-all flex items-center justify-center gap-2"
+                >
+                    <Icons.User size={16} className="shrink-0" />
+                    Novo Usuário
+                </button>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 {users.map(u => (
-                    <div key={u.id} className={`bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-slate-100 dark:border-slate-800 flex justify-between items-center group hover:shadow-xl transition-all ${!u.active ? 'opacity-50 grayscale' : ''}`}>
-                        <div>
-                            <div className="flex items-center gap-2">
-                                <p className="font-black text-slate-800 dark:text-white uppercase text-xs">{u.name}</p>
-                                {!u.active && <span className="text-[8px] bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 font-black px-2 py-0.5 rounded-full uppercase tracking-widest">Inativo</span>}
+                    <div key={u.id} className={`bg-white dark:bg-slate-900 p-5 sm:p-6 rounded-3xl sm:rounded-[2.5rem] border border-slate-100 dark:border-slate-800 flex flex-col group hover:shadow-xl transition-all relative overflow-hidden ${!u.active ? 'opacity-50 grayscale' : ''}`}>
+                        <div className="flex items-center gap-4 mb-4">
+                            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-xl sm:rounded-2xl flex items-center justify-center font-black uppercase text-sm shadow-inner shrink-0 relative">
+                                {u.name.substring(0, 2)}
+                                {!u.active && <div className="absolute -top-1 -right-1 w-3 h-3 sm:w-4 h-4 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></div>}
                             </div>
-                            <p className="text-[9px] text-slate-400 dark:text-slate-500 font-black uppercase tracking-widest mt-1">{u.permissions.join(' • ')}</p>
-                            {u.phone && <p className="text-[9px] text-blue-500 dark:text-blue-400 font-bold mt-1">{u.phone}</p>}
+                            <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2">
+                                    <p className="font-black text-slate-800 dark:text-white uppercase text-xs tracking-tight truncate">{u.name}</p>
+                                    {!u.active && <span className="text-[7px] bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 font-black px-1.5 py-0.5 rounded-full uppercase tracking-widest shrink-0">Inativo</span>}
+                                </div>
+                                <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest truncate">{u.email}</p>
+                            </div>
                         </div>
-                        <div className="flex gap-2">
-                            <button onClick={() => handleResetUser(u)} title="Resetar Segurança" className="p-3 bg-amber-50 text-amber-600 rounded-xl hover:bg-amber-600 hover:text-white transition-all">
-                                <Icons.Clock />
-                            </button>
-                            <button onClick={() => {
-                                setEditingUser(u);
-                                setFormData({ name: u.name, email: u.email, password: '', phone: u.phone || '', permissions: u.permissions });
-                                setIsModalOpen(true);
-                            }} title="Editar Dados" className="p-3 bg-slate-50 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition-all">
-                                <Icons.Edit />
-                            </button>
-                            <button onClick={() => handleToggleStatus(u)} title={u.active ? 'Inativar Usuário' : 'Ativar Usuário'} className={`p-3 rounded-xl transition-all ${u.active ? 'bg-red-50 text-red-600 hover:bg-red-600 hover:text-white' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white'}`}>
-                                {u.active ? <Icons.Delete /> : <Icons.User />}
-                            </button>
+
+                        <div className="flex items-center justify-between pt-4 border-t border-slate-50 dark:border-slate-800">
+                            <div className="flex flex-col min-w-0">
+                                <span className="text-[8px] font-black text-slate-300 dark:text-slate-600 uppercase tracking-widest">Nível / Permissões</span>
+                                <span className="text-[9px] font-bold text-blue-500 dark:text-blue-400 truncate tracking-tight">{u.permissions.join(' • ')}</span>
+                            </div>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => handleResetUser(u)}
+                                    title="Resetar Senha"
+                                    className="p-2.5 sm:p-3 bg-amber-50 dark:bg-amber-900/10 text-amber-600 dark:text-amber-500 rounded-xl hover:bg-amber-600 hover:text-white dark:hover:bg-amber-600 dark:hover:text-white transition-all outline-none"
+                                >
+                                    <Icons.Clock size={16} />
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setEditingUser(u);
+                                        setFormData({ name: u.name, email: u.email, password: '', phone: u.phone || '', permissions: u.permissions });
+                                        setIsModalOpen(true);
+                                    }}
+                                    title="Editar Dados"
+                                    className="p-2.5 sm:p-3 bg-slate-50 dark:bg-slate-800 text-blue-600 dark:text-blue-400 rounded-xl hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600 dark:hover:text-white transition-all outline-none"
+                                >
+                                    <Icons.Edit size={16} />
+                                </button>
+                                <button
+                                    onClick={() => handleToggleStatus(u)}
+                                    title={u.active ? 'Inativar Usuário' : 'Ativar Usuário'}
+                                    className={`p-2.5 sm:p-3 rounded-xl transition-all outline-none ${u.active ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-600 hover:text-white' : 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-600 hover:text-white'}`}
+                                >
+                                    {u.active ? <Icons.Delete size={16} /> : <Icons.User size={16} />}
+                                </button>
+                            </div>
                         </div>
                     </div>
                 ))}
@@ -389,16 +419,34 @@ const UserManagementInternal: React.FC = () => {
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
                     <div className="bg-white dark:bg-slate-900 rounded-[3rem] shadow-2xl p-10 w-full max-w-lg border border-white/20 dark:border-slate-800 animate-in zoom-in duration-200">
                         <h4 className="text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tighter mb-8">{editingUser ? 'Editar' : 'Novo'} Usuário</h4>
-                        <form onSubmit={handleSave} className="space-y-6">
-                            <input type="text" placeholder="Nome" value={formData.name} required onChange={e => setFormData({ ...formData, name: e.target.value })} className="w-full p-4 bg-slate-100 dark:bg-slate-800 border-none rounded-2xl outline-none font-bold text-sm text-slate-800 dark:text-white" />
-                            <input type="email" placeholder="E-mail" value={formData.email} required onChange={e => setFormData({ ...formData, email: e.target.value })} className="w-full p-4 bg-slate-100 dark:bg-slate-800 border-none rounded-2xl outline-none font-bold text-sm text-slate-800 dark:text-white" />
-                            <input type="text" placeholder="Telefone: (00) 9 0000-0000" value={formData.phone} required onChange={e => setFormData({ ...formData, phone: applyPhoneMask(e.target.value) })} className="w-full p-4 bg-slate-100 dark:bg-slate-800 border-none rounded-2xl outline-none font-bold text-sm text-slate-800 dark:text-white" />
-                            {!editingUser && (
-                                <input type="password" placeholder="Senha" value={formData.password} required onChange={e => setFormData({ ...formData, password: e.target.value })} className="w-full p-4 bg-slate-100 dark:bg-slate-800 border-none rounded-2xl outline-none font-bold text-sm text-slate-800 dark:text-white" />
-                            )}
+                        <form onSubmit={handleSave} className="p-6 sm:p-10 space-y-6 sm:space-y-8">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-2">Nome Completo</label>
+                                    <input type="text" placeholder="Nome" value={formData.name} required onChange={e => setFormData({ ...formData, name: e.target.value })} className="w-full p-4 sm:p-5 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl sm:rounded-[1.5rem] outline-none font-bold text-sm text-slate-800 dark:text-white shadow-inner focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/20 transition-all" />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-2">E-mail (Login)</label>
+                                    <input type="email" placeholder="E-mail" value={formData.email} required onChange={e => setFormData({ ...formData, email: e.target.value })} className="w-full p-4 sm:p-5 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl sm:rounded-[1.5rem] outline-none font-bold text-sm text-slate-800 dark:text-white shadow-inner focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/20 transition-all" />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-2">Celular / Whats</label>
+                                    <input type="text" placeholder="(00) 0 0000-0000" value={formData.phone} required onChange={e => setFormData({ ...formData, phone: applyPhoneMask(e.target.value) })} className="w-full p-4 sm:p-5 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl sm:rounded-[1.5rem] outline-none font-bold text-sm text-slate-800 dark:text-white shadow-inner focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/20 transition-all" />
+                                </div>
+                                {!editingUser && (
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-2">Senha de Acesso</label>
+                                        <input type="password" placeholder="••••••••" value={formData.password} required onChange={e => setFormData({ ...formData, password: e.target.value })} className="w-full p-4 sm:p-5 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl sm:rounded-[1.5rem] outline-none font-bold text-sm text-slate-800 dark:text-white shadow-inner focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/20 transition-all" />
+                                    </div>
+                                )}
+                            </div>
+
                             <div className="pt-6 border-t border-slate-100 dark:border-slate-800">
                                 <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-4">Módulos Permitidos:</p>
-                                <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
                                     {availableModules.map(m => (
                                         <label key={m.id} className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-xl cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 transition-all border border-transparent has-[:checked]:border-blue-100 dark:has-[:checked]:border-blue-900/40 has-[:checked]:bg-blue-50/50 dark:has-[:checked]:bg-blue-900/20">
                                             <input
@@ -418,9 +466,11 @@ const UserManagementInternal: React.FC = () => {
                                 </div>
                             </div>
 
-                            <div className="flex gap-4 pt-6">
-                                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-4 font-black uppercase text-[10px] tracking-widest text-slate-400 hover:bg-slate-50 rounded-2xl">Cancelar</button>
-                                <button type="submit" className="flex-1 py-4 bg-blue-600 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-blue-100">Salvar Alterações</button>
+                            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-6">
+                                <button type="button" onClick={() => setIsModalOpen(false)} className="order-2 sm:order-1 flex-1 py-4 sm:py-5 font-black uppercase text-[11px] tracking-widest text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-2xl sm:rounded-[1.5rem] transition-all">Cancelar</button>
+                                <button type="submit" className="order-1 sm:order-2 flex-1 py-4 sm:py-5 bg-blue-600 text-white rounded-2xl sm:rounded-[1.5rem] font-black uppercase text-[11px] tracking-widest shadow-2xl shadow-blue-500/30 hover:bg-blue-700 active:scale-95 transition-all">
+                                    {editingUser ? 'Salvar Alterações' : 'Confirmar Registro'}
+                                </button>
                             </div>
                         </form>
                     </div>
@@ -460,11 +510,11 @@ const OperatingHoursSettings: React.FC<{ settings: BusinessSettings, setSettings
     };
 
     return (
-        <form onSubmit={onSave} className="bg-white dark:bg-slate-900 p-10 rounded-[3rem] shadow-sm border border-slate-100 dark:border-slate-800 max-w-4xl space-y-8 animate-in fade-in transition-colors">
-            <div className="flex justify-between items-start mb-10">
+        <form onSubmit={onSave} className="bg-white dark:bg-slate-900 p-6 sm:p-10 rounded-3xl sm:rounded-[3rem] shadow-sm border border-slate-100 dark:border-slate-800 max-w-4xl space-y-8 animate-in fade-in transition-colors">
+            <div className="flex justify-between items-start mb-6 sm:mb-10">
                 <div>
-                    <h3 className="text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tighter">Horário de Funcionamento</h3>
-                    <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest">Defina quando sua loja recebe pedidos</p>
+                    <h3 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tighter">Horário de Funcionamento</h3>
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest leading-relaxed">Defina quando sua loja recebe pedidos</p>
                 </div>
             </div>
 
@@ -489,25 +539,28 @@ const OperatingHoursSettings: React.FC<{ settings: BusinessSettings, setSettings
             <div className="pt-6 border-t border-slate-100 dark:border-slate-800 space-y-4">
                 <h4 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-4">Programação Semanal</h4>
                 {hours.map((config, ix) => (
-                    <div key={ix} className="flex flex-col sm:flex-row sm:items-center gap-4 bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700">
-                        <div className="w-full sm:w-32 flex items-center gap-3">
-                            <input type="checkbox" checked={config.isOpen} onChange={e => updateHour(ix, 'isOpen', e.target.checked)} className="w-5 h-5 rounded-md text-blue-600 dark:text-blue-400 bg-white dark:bg-slate-700 border-none" />
-                            <span className={`font-black uppercase text-sm ${config.isOpen ? 'text-slate-800 dark:text-white' : 'text-slate-400 dark:text-slate-600 line-through'}`}>{daysOfWeek[config.dayOfWeek]}</span>
+                    <div key={ix} className="flex flex-col sm:flex-row sm:items-center gap-4 bg-slate-50 dark:bg-slate-800 p-4 rounded-3xl sm:rounded-2xl border border-slate-100 dark:border-slate-700">
+                        <div className="w-full sm:w-32 flex items-center justify-between sm:justify-start gap-3">
+                            <div className="flex items-center gap-3">
+                                <input type="checkbox" checked={config.isOpen} onChange={e => updateHour(ix, 'isOpen', e.target.checked)} className="w-5 h-5 rounded-md text-blue-600 dark:text-blue-400 bg-white dark:bg-slate-700 border-none" />
+                                <span className={`font-black uppercase text-sm ${config.isOpen ? 'text-slate-800 dark:text-white' : 'text-slate-400 dark:text-slate-600 line-through'}`}>{daysOfWeek[config.dayOfWeek]}</span>
+                            </div>
+                            {!config.isOpen && <span className="sm:hidden text-[9px] font-black bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 px-2 py-1 rounded-full uppercase tracking-widest">Fechado</span>}
                         </div>
-                        <div className="flex flex-col sm:flex-row sm:items-center gap-4 flex-1">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-8 flex-1">
                             {config.isOpen ? (
-                                <>
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Abre:</span>
-                                        <input type="time" value={config.openTime} onChange={e => updateHour(ix, 'openTime', e.target.value)} className="p-3 bg-white dark:bg-slate-900 border-none rounded-xl font-bold text-sm shadow-sm text-slate-800 dark:text-white" />
+                                <div className="grid grid-cols-2 sm:flex sm:items-center gap-4 w-full">
+                                    <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                                        <span className="text-[9px] sm:text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Abre:</span>
+                                        <input type="time" value={config.openTime} onChange={e => updateHour(ix, 'openTime', e.target.value)} className="w-full sm:w-auto p-3 bg-white dark:bg-slate-900 border-none rounded-xl font-bold text-sm shadow-sm text-slate-800 dark:text-white" />
                                     </div>
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Fecha:</span>
-                                        <input type="time" value={config.closeTime} onChange={e => updateHour(ix, 'closeTime', e.target.value)} className="p-3 bg-white dark:bg-slate-900 border-none rounded-xl font-bold text-sm shadow-sm text-slate-800 dark:text-white" />
+                                    <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                                        <span className="text-[9px] sm:text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Fecha:</span>
+                                        <input type="time" value={config.closeTime} onChange={e => updateHour(ix, 'closeTime', e.target.value)} className="w-full sm:w-auto p-3 bg-white dark:bg-slate-900 border-none rounded-xl font-bold text-sm shadow-sm text-slate-800 dark:text-white" />
                                     </div>
-                                </>
+                                </div>
                             ) : (
-                                <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Fechado o dia todo</span>
+                                <span className="hidden sm:inline text-xs font-bold text-slate-400 dark:text-slate-600 uppercase tracking-widest">Fechado o dia todo</span>
                             )}
                         </div>
                     </div>
@@ -570,7 +623,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings, onReset }) =
     ];
 
     return (
-        <div className="flex flex-col h-full gap-8 animate-in fade-in duration-500 overflow-hidden">
+        <div className="flex flex-col h-full gap-4 sm:gap-8 animate-in fade-in duration-500 overflow-hidden">
             <CustomAlert
                 isOpen={isSavedAlertOpen}
                 title="SUCESSO"
@@ -592,13 +645,13 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings, onReset }) =
                 ))}
             </div>
 
-            <div className="flex-1 overflow-y-auto pr-4 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto pr-2 sm:pr-4 custom-scrollbar">
                 {activeSubTab === 'EMPRESA' && (
-                    <div className="bg-white dark:bg-slate-900 p-10 rounded-[3rem] shadow-sm border border-slate-100 dark:border-slate-800 max-w-4xl transition-colors duration-300">
-                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-10 gap-6">
+                    <div className="bg-white dark:bg-slate-900 p-6 sm:p-10 rounded-3xl sm:rounded-[3rem] shadow-sm border border-slate-100 dark:border-slate-800 max-w-4xl transition-colors duration-300">
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sm:mb-10 gap-6">
                             <div>
                                 <h3 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tighter">Identidade do Negócio</h3>
-                                <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest">Aparecerá nos cupons e relatórios do sistema</p>
+                                <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest leading-relaxed">Aparecerá nos cupons e relatórios do sistema</p>
                             </div>
                             {storeStatus && (
                                 <div className={`flex items-center gap-3 px-4 sm:px-6 py-3 rounded-2xl border transition-all ${storeStatus.status === 'online' ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-100 dark:border-emerald-800' : 'bg-red-50 dark:bg-red-900/20 border-red-100 dark:border-red-800'}`}>
@@ -610,7 +663,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings, onReset }) =
                             )}
                         </div>
                         <form onSubmit={handleSaveSettings} className="space-y-8">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8">
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Nome Fantasia</label>
                                     <input type="text" className="w-full p-4 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl focus:ring-4 focus:ring-blue-50 dark:focus:ring-blue-900/20 transition-all font-bold text-sm text-slate-800 dark:text-white" value={settings.name} onChange={e => setSettings({ ...settings, name: e.target.value })} />
@@ -650,12 +703,12 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings, onReset }) =
                                     />
                                     <p className="text-[9px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest ml-1">Esta URL será usada como base para todos os QR Codes gerados nas mesas.</p>
                                 </div>
-                                <div className="space-y-2 col-span-1 md:col-span-2 p-4 sm:p-6 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                                <div className="space-y-2 col-span-1 md:col-span-2 p-4 sm:p-6 bg-slate-50 dark:bg-slate-800 rounded-3xl sm:rounded-2xl border border-slate-100 dark:border-slate-700 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-6 sm:gap-4">
                                     <div className="flex-1">
                                         <h4 className="text-[12px] font-black text-slate-800 dark:text-white uppercase tracking-widest">Cobrar Taxa de Serviço Opcional</h4>
-                                        <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mt-1 uppercase">Aplica % de comissão na venda pelo PDV de Mesas e Menu Digital</p>
+                                        <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mt-1 uppercase leading-relaxed">Aplica % de comissão na venda pelo PDV de Mesas e Menu Digital</p>
                                     </div>
-                                    <div className="flex items-center justify-between sm:justify-end w-full sm:w-auto gap-4">
+                                    <div className="flex items-center justify-between sm:justify-end w-full sm:w-auto gap-4 pt-4 sm:pt-0 border-t sm:border-t-0 border-slate-200 dark:border-slate-700">
                                         <div className="flex items-center gap-2">
                                             <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">%</span>
                                             <input
@@ -668,7 +721,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings, onReset }) =
                                         </div>
                                         <button
                                             type="button"
-                                            className={`w-14 h-8 rounded-full transition-all relative ${settings.serviceFeeStatus !== false ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-slate-700'}`}
+                                            className={`w-14 h-8 rounded-full transition-all relative shrink-0 ${settings.serviceFeeStatus !== false ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-slate-700'}`}
                                             onClick={() => setSettings({ ...settings, serviceFeeStatus: settings.serviceFeeStatus === false ? true : false })}
                                         >
                                             <div className={`absolute top-1 w-6 h-6 rounded-full bg-white transition-all ${settings.serviceFeeStatus !== false ? 'left-7' : 'left-1'}`}></div>
@@ -681,15 +734,15 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings, onReset }) =
                                 </div>
                             </div>
 
-                            <div className="pt-8 border-t border-slate-100">
+                            <div className="pt-8 border-t border-slate-100 dark:border-slate-800">
                                 <div className="flex justify-between items-center mb-6">
                                     <div>
-                                        <h4 className="text-sm font-black text-slate-800 uppercase tracking-tighter">Módulos e Aplicativos Adicionais</h4>
-                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Habilite ou desabilite os aplicativos para sua loja</p>
+                                        <h4 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-tighter">Módulos e Aplicativos Adicionais</h4>
+                                        <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest">Habilite ou desabilite os aplicativos para sua loja</p>
                                     </div>
                                 </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                                    <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col justify-between gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+                                    <div className="p-6 bg-slate-50 dark:bg-slate-800 rounded-3xl sm:rounded-2xl border border-slate-100 dark:border-slate-700 flex flex-col justify-between gap-4 transition-all hover:border-blue-100 dark:hover:border-blue-900/30">
                                         <div>
                                             <h4 className="text-[12px] font-black text-slate-800 uppercase tracking-widest">App Delivery</h4>
                                             <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase">Clientes fazem pedidos via app próprio (pedidos online).</p>
@@ -705,7 +758,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings, onReset }) =
                                         </div>
                                     </div>
 
-                                    <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col justify-between gap-4">
+                                    <div className="p-6 bg-slate-50 dark:bg-slate-800 rounded-3xl sm:rounded-2xl border border-slate-100 dark:border-slate-700 flex flex-col justify-between gap-4 transition-all hover:border-blue-100 dark:hover:border-blue-900/30">
                                         <div>
                                             <h4 className="text-[12px] font-black text-slate-800 uppercase tracking-widest">Menu Digital</h4>
                                             <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase">Cardápio via QR Code para clientes nas mesas.</p>
@@ -721,7 +774,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings, onReset }) =
                                         </div>
                                     </div>
 
-                                    <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col justify-between gap-4">
+                                    <div className="p-6 bg-slate-50 dark:bg-slate-800 rounded-3xl sm:rounded-2xl border border-slate-100 dark:border-slate-700 flex flex-col justify-between gap-4 transition-all hover:border-blue-100 dark:hover:border-blue-900/30">
                                         <div>
                                             <h4 className="text-[12px] font-black text-slate-800 uppercase tracking-widest">App Garçom</h4>
                                             <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase">Acesso ao sistema para garçons lançarem pedidos.</p>
@@ -737,7 +790,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings, onReset }) =
                                         </div>
                                     </div>
 
-                                    <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col justify-between gap-4">
+                                    <div className="p-6 bg-slate-50 dark:bg-slate-800 rounded-3xl sm:rounded-2xl border border-slate-100 dark:border-slate-700 flex flex-col justify-between gap-4 transition-all hover:border-blue-100 dark:hover:border-blue-900/30">
                                         <div>
                                             <h4 className="text-[12px] font-black text-slate-800 uppercase tracking-widest">App Entregador</h4>
                                             <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase">Acesso ao aplicativo para motoboys e entregas.</p>
@@ -745,7 +798,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings, onReset }) =
                                         <div className="flex justify-end">
                                             <button
                                                 type="button"
-                                                className={`w-14 h-8 rounded-full transition-all relative ${settings.enableDriverApp !== false ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-slate-700'}`}
+                                                className={`w-14 h-8 rounded-full transition-all relative shrink-0 ${settings.enableDriverApp !== false ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-slate-700'}`}
                                                 onClick={() => setSettings({ ...settings, enableDriverApp: settings.enableDriverApp === false ? true : false })}
                                             >
                                                 <div className={`absolute top-1 w-6 h-6 rounded-full bg-white transition-all ${settings.enableDriverApp !== false ? 'left-7' : 'left-1'}`}></div>
@@ -755,23 +808,23 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings, onReset }) =
                                 </div>
                             </div>
 
-                            <div className="pt-8 border-t border-slate-100">
+                            <div className="pt-8 border-t border-slate-100 dark:border-slate-800">
                                 <div className="flex justify-between items-center mb-6">
                                     <div>
-                                        <h4 className="text-sm font-black text-slate-800 uppercase tracking-tighter">Regras & Segurança do App Garçom</h4>
-                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Configure o comportamento e privacidade do atendimento</p>
+                                        <h4 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-tighter">Regras & Segurança do App Garçom</h4>
+                                        <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest leading-relaxed">Configure o comportamento e privacidade do atendimento</p>
                                     </div>
                                 </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col justify-between gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                                    <div className="p-6 bg-slate-50 dark:bg-slate-800 rounded-3xl sm:rounded-2xl border border-slate-100 dark:border-slate-700 flex flex-col justify-between gap-4">
                                         <div>
-                                            <h4 className="text-[12px] font-black text-slate-800 uppercase tracking-widest">Travar Mesa por Garçom</h4>
-                                            <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase">Apenas o garçom que iniciou o atendimento pode alterar a mesa.</p>
+                                            <h4 className="text-[12px] font-black text-slate-800 dark:text-white uppercase tracking-widest">Travar Mesa por Garçom</h4>
+                                            <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mt-1 uppercase leading-relaxed">Apenas o garçom que iniciou o atendimento pode alterar a mesa.</p>
                                         </div>
                                         <div className="flex justify-end">
                                             <button
                                                 type="button"
-                                                className={`w-14 h-8 rounded-full transition-all relative ${settings.waiterLockEnabled !== false ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-slate-700'}`}
+                                                className={`w-14 h-8 rounded-full transition-all relative shrink-0 ${settings.waiterLockEnabled !== false ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-slate-700'}`}
                                                 onClick={() => setSettings({ ...settings, waiterLockEnabled: settings.waiterLockEnabled === false ? true : false })}
                                             >
                                                 <div className={`absolute top-1 w-6 h-6 rounded-full bg-white transition-all ${settings.waiterLockEnabled !== false ? 'left-7' : 'left-1'}`}></div>
@@ -779,15 +832,15 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings, onReset }) =
                                         </div>
                                     </div>
 
-                                    <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 space-y-6">
+                                    <div className="p-6 bg-slate-50 dark:bg-slate-800 rounded-3xl sm:rounded-2xl border border-slate-100 dark:border-slate-700 space-y-6">
                                         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                                             <div>
-                                                <h4 className="text-[12px] font-black text-slate-800 uppercase tracking-widest">Ativar Tela de Privacidade</h4>
-                                                <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase">Bloqueia o App Garçom após período de inatividade.</p>
+                                                <h4 className="text-[12px] font-black text-slate-800 dark:text-white uppercase tracking-widest">Ativar Tela de Privacidade</h4>
+                                                <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mt-1 uppercase leading-relaxed">Bloqueia o App Garçom após período de inatividade.</p>
                                             </div>
                                             <button
                                                 type="button"
-                                                className={`w-14 h-8 rounded-full transition-all relative ${settings.waiterPrivacyEnabled ? 'bg-emerald-500' : 'bg-slate-200'}`}
+                                                className={`w-14 h-8 rounded-full transition-all relative shrink-0 ${settings.waiterPrivacyEnabled ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-slate-700'}`}
                                                 onClick={() => setSettings({ ...settings, waiterPrivacyEnabled: !settings.waiterPrivacyEnabled })}
                                             >
                                                 <div className={`absolute top-1 w-6 h-6 rounded-full bg-white transition-all ${settings.waiterPrivacyEnabled ? 'left-7' : 'left-1'}`}></div>
@@ -808,11 +861,11 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings, onReset }) =
                                 </div>
                             </div>
 
-                            <div className="pt-8 border-t border-slate-100">
+                            <div className="pt-8 border-t border-slate-100 dark:border-slate-800">
                                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                                     <div>
-                                        <h4 className="text-sm font-black text-slate-800 uppercase tracking-tighter">Geolocalização & Bloqueio (Geofencing)</h4>
-                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Restrinja pedidos do Cardápio Digital para clientes não presentes no local</p>
+                                        <h4 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-tighter">Geolocalização & Bloqueio (Geofencing)</h4>
+                                        <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest leading-relaxed">Restrinja pedidos do Cardápio Digital para clientes não presentes no local</p>
                                     </div>
                                     <button
                                         type="button"
@@ -834,27 +887,27 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings, onReset }) =
                                                 alert("Geolocalização não suportada pelo seu navegador.");
                                             }
                                         }}
-                                        className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+                                        className="w-full sm:w-auto bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
                                     >
-                                        📍 Usar Localização Atual
+                                        📍 Localização Atual
                                     </button>
                                 </div>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8">
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Latitude</label>
-                                        <input type="number" step="any" className="w-full p-4 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-blue-50 transition-all font-bold text-sm" value={settings.restaurantLat || ''} onChange={e => setSettings({ ...settings, restaurantLat: parseFloat(e.target.value) || undefined })} placeholder="-23.5505" />
+                                        <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Latitude</label>
+                                        <input type="number" step="any" className="w-full p-4 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl focus:ring-4 focus:ring-blue-50 dark:focus:ring-blue-900/20 transition-all font-bold text-sm text-slate-800 dark:text-white" value={settings.restaurantLat || ''} onChange={e => setSettings({ ...settings, restaurantLat: parseFloat(e.target.value) || undefined })} placeholder="-23.5505" />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Longitude</label>
-                                        <input type="number" step="any" className="w-full p-4 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-blue-50 transition-all font-bold text-sm" value={settings.restaurantLng || ''} onChange={e => setSettings({ ...settings, restaurantLng: parseFloat(e.target.value) || undefined })} placeholder="-46.6333" />
+                                        <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Longitude</label>
+                                        <input type="number" step="any" className="w-full p-4 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl focus:ring-4 focus:ring-blue-50 dark:focus:ring-blue-900/20 transition-all font-bold text-sm text-slate-800 dark:text-white" value={settings.restaurantLng || ''} onChange={e => setSettings({ ...settings, restaurantLng: parseFloat(e.target.value) || undefined })} placeholder="-46.6333" />
                                     </div>
-                                    <div className="space-y-2">
+                                    <div className="space-y-2 sm:col-span-2 md:col-span-1">
                                         <div className="flex justify-between items-center ml-1">
-                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Raio Permitido (Metros)</label>
+                                            <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Raio Permitido (Metros)</label>
                                             <span className="text-[8px] font-black text-blue-500 uppercase tracking-widest">(0 = Desativar)</span>
                                         </div>
-                                        <input type="number" className="w-full p-4 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-blue-50 transition-all font-bold text-sm" value={settings.geofenceRadius || 0} onChange={e => setSettings({ ...settings, geofenceRadius: parseInt(e.target.value) || 0 })} placeholder="Recomendado: 150" />
-                                        <p className="text-[8px] text-slate-400 font-bold uppercase tracking-widest ml-1 opacity-60">Sugestão: 150m cobre a maioria das oscilações de GPS interno.</p>
+                                        <input type="number" className="w-full p-4 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl focus:ring-4 focus:ring-blue-50 dark:focus:ring-blue-900/20 transition-all font-bold text-sm text-slate-800 dark:text-white" value={settings.geofenceRadius || 0} onChange={e => setSettings({ ...settings, geofenceRadius: parseInt(e.target.value) || 0 })} placeholder="Recomendado: 150" />
+                                        <p className="text-[8px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest ml-1 opacity-60">Sugestão: 150m cobre a maioria das oscilações de GPS interno.</p>
                                     </div>
                                 </div>
                             </div>
@@ -867,10 +920,10 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings, onReset }) =
                 {activeSubTab === 'HORARIOS' && <OperatingHoursSettings settings={settings} setSettings={setSettings} onSave={handleSaveSettings} />}
 
                 {activeSubTab === 'FISCAL' && (
-                    <div className="bg-white dark:bg-slate-900 p-6 sm:p-10 rounded-[3rem] shadow-sm border border-slate-100 dark:border-slate-800 max-w-4xl animate-in fade-in transition-colors">
-                        <div className="mb-10">
+                    <div className="bg-white dark:bg-slate-900 p-6 sm:p-10 rounded-3xl sm:rounded-[3rem] shadow-sm border border-slate-100 dark:border-slate-800 max-w-4xl animate-in fade-in transition-colors">
+                        <div className="mb-6 sm:mb-10">
                             <h3 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tighter">Configurações Fiscais</h3>
-                            <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest">Credenciais para emissão de NFC-e (Nota Fiscal de Consumidor Eletrônica)</p>
+                            <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest leading-relaxed">Credenciais para emissão de NFC-e (Nota Fiscal de Consumidor Eletrônica)</p>
                         </div>
                         <form onSubmit={handleSaveSettings} className="space-y-8">
                             <div className="p-6 bg-slate-50 dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700 flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
@@ -925,28 +978,28 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings, onReset }) =
                 {activeSubTab === 'AUDITORIA' && <div className="bg-white dark:bg-slate-900 p-8 rounded-[3rem] border border-slate-100 dark:border-slate-800 transition-colors"><AuditLogs /></div>}
 
                 {activeSubTab === 'APARENCIA' && (
-                    <div className="bg-white dark:bg-slate-900 p-10 rounded-[3rem] shadow-sm border border-slate-100 dark:border-slate-800 max-w-4xl transition-colors duration-300">
-                        <div className="mb-10">
-                            <h3 className="text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tighter">Aparência do Sistema</h3>
-                            <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest">Personalize como o sistema é exibido neste dispositivo</p>
+                    <div className="bg-white dark:bg-slate-900 p-6 sm:p-10 rounded-3xl sm:rounded-[3rem] shadow-sm border border-slate-100 dark:border-slate-800 max-w-4xl transition-colors duration-300">
+                        <div className="mb-6 sm:mb-10">
+                            <h3 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tighter">Aparência do Sistema</h3>
+                            <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest leading-relaxed">Personalize como o sistema é exibido neste dispositivo</p>
                         </div>
 
                         <div className="space-y-6">
                             {/* Toggle Modo Escuro */}
-                            <div className="p-6 bg-slate-50 dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700 flex items-center justify-between gap-4">
+                            <div className="p-5 sm:p-6 bg-slate-50 dark:bg-slate-800 rounded-3xl sm:rounded-2xl border border-slate-100 dark:border-slate-700 flex items-center justify-between gap-4">
                                 <div className="flex items-center gap-4">
-                                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${theme === 'dark' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm'}`}>
-                                        <Icons.Moon size={24} />
+                                    <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center shrink-0 ${theme === 'dark' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm'}`}>
+                                        <Icons.Moon size={20} className="sm:w-6 sm:h-6" />
                                     </div>
                                     <div>
                                         <h4 className="text-[12px] font-black text-slate-800 dark:text-white uppercase tracking-widest">Modo Escuro</h4>
-                                        <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mt-1 uppercase">Ativa tons escuros para reduzir o cansaço visual.</p>
+                                        <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mt-1 uppercase leading-relaxed">Ativa tons escuros para reduzir o cansaço visual.</p>
                                     </div>
                                 </div>
                                 <button
                                     type="button"
                                     disabled={theme === 'system'}
-                                    className={`w-14 h-8 rounded-full transition-all relative ${theme === 'dark' ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-slate-700'} ${theme === 'system' ? 'opacity-30 cursor-not-allowed' : ''}`}
+                                    className={`w-14 h-8 rounded-full transition-all relative shrink-0 ${theme === 'dark' ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-slate-700'} ${theme === 'system' ? 'opacity-30 cursor-not-allowed' : ''}`}
                                     onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
                                 >
                                     <div className={`absolute top-1 w-6 h-6 rounded-full bg-white transition-all ${theme === 'dark' ? 'left-7' : 'left-1'}`}></div>
@@ -954,19 +1007,19 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings, onReset }) =
                             </div>
 
                             {/* Toggle Sincronizar com Sistema */}
-                            <div className="p-6 bg-slate-50 dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700 flex items-center justify-between gap-4">
+                            <div className="p-5 sm:p-6 bg-slate-50 dark:bg-slate-800 rounded-3xl sm:rounded-2xl border border-slate-100 dark:border-slate-700 flex items-center justify-between gap-4">
                                 <div className="flex items-center gap-4">
-                                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${theme === 'system' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm'}`}>
-                                        <Icons.Dashboard size={24} />
+                                    <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center shrink-0 ${theme === 'system' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm'}`}>
+                                        <Icons.Dashboard size={20} className="sm:w-6 sm:h-6" />
                                     </div>
                                     <div>
                                         <h4 className="text-[12px] font-black text-slate-800 dark:text-white uppercase tracking-widest">Acompanhar Sistema</h4>
-                                        <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mt-1 uppercase">Segue automaticamente o tema definido no seu dispositivo.</p>
+                                        <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mt-1 uppercase leading-relaxed">Segue automaticamente o tema definido no seu dispositivo.</p>
                                     </div>
                                 </div>
                                 <button
                                     type="button"
-                                    className={`w-14 h-8 rounded-full transition-all relative ${theme === 'system' ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-slate-700'}`}
+                                    className={`w-14 h-8 rounded-full transition-all relative shrink-0 ${theme === 'system' ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-slate-700'}`}
                                     onClick={() => setTheme(theme === 'system' ? 'light' : 'system')}
                                 >
                                     <div className={`absolute top-1 w-6 h-6 rounded-full bg-white transition-all ${theme === 'system' ? 'left-7' : 'left-1'}`}></div>
@@ -978,20 +1031,20 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings, onReset }) =
 
                 {activeSubTab === 'AVANCADO' && (
                     <div className="max-w-4xl space-y-8 animate-in fade-in transition-colors">
-                        <div className="bg-white dark:bg-slate-900 p-10 rounded-[3rem] shadow-sm border border-slate-100 dark:border-slate-800">
-                            <h3 className="text-2xl font-black mb-2 text-blue-600 dark:text-blue-400 uppercase tracking-tighter">Manutenção e Backup</h3>
-                            <p className="text-xs text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest mb-10">Gerencie a segurança dos seus dados</p>
+                        <div className="bg-white dark:bg-slate-900 p-6 sm:p-10 rounded-3xl sm:rounded-[3rem] shadow-sm border border-slate-100 dark:border-slate-800">
+                            <h3 className="text-xl sm:text-2xl font-black mb-2 text-blue-600 dark:text-blue-400 uppercase tracking-tighter">Manutenção e Backup</h3>
+                            <p className="text-[10px] sm:text-xs text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest mb-6 sm:mb-10">Gerencie a segurança dos seus dados</p>
 
                             <div className="p-5 sm:p-8 bg-blue-50 dark:bg-blue-900/20 rounded-3xl border border-blue-100 dark:border-blue-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
                                 <div className="flex-1">
-                                    <p className="text-sm font-black text-blue-900 dark:text-blue-200 uppercase tracking-tight">Cópia de Segurança (Backup):</p>
-                                    <p className="text-[9px] sm:text-[10px] text-blue-700/60 dark:text-blue-400/60 font-bold mt-1 uppercase">Baixe um arquivo contendo todos os dados do sistema (pedidos, clientes, produtos).</p>
+                                    <p className="text-sm font-black text-blue-900 dark:text-blue-200 uppercase tracking-tight">Cópia de Segurança (Backup)</p>
+                                    <p className="text-[9px] sm:text-[10px] text-blue-700/60 dark:text-blue-400/60 font-bold mt-1 uppercase leading-relaxed">Baixe um arquivo contendo todos os dados do sistema.</p>
                                 </div>
                                 <button
                                     onClick={handleBackup}
-                                    className="w-full sm:w-auto bg-blue-600 text-white px-6 sm:px-8 py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-blue-700 transition-all shadow-xl shadow-blue-200 flex items-center justify-center gap-3"
+                                    className="w-full sm:w-auto bg-blue-600 text-white px-8 py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-blue-700 transition-all shadow-xl shadow-blue-200 dark:shadow-none flex items-center justify-center gap-3"
                                 >
-                                    <Icons.Download className="w-4 h-4" />
+                                    <Icons.Download className="w-4 h-4 shrink-0" />
                                     Baixar Backup (.sql)
                                 </button>
                             </div>

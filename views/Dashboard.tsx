@@ -114,55 +114,55 @@ const Dashboard: React.FC = () => {
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-12">
       {/* Cards de Métricas Reais */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white dark:bg-slate-900 p-8 rounded-[3rem] shadow-sm border border-slate-100 dark:border-slate-800 transition-colors">
-          <div className="flex items-center gap-4 mb-6">
-            <div className="w-12 h-12 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-2xl flex items-center justify-center">
-              <Icons.DollarSign size={24} /> {/* Changed from POS to DollarSign for revenue */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        <div className="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-[2.5rem] sm:rounded-[3rem] shadow-sm border border-slate-100 dark:border-slate-800 transition-colors">
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-2xl flex items-center justify-center shrink-0">
+              <Icons.DollarSign size={20} className="sm:w-6 sm:h-6" />
             </div>
             <div>
-              <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest">Receita (Hoje)</p>
-              <h3 className="text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tighter">
+              <p className="text-[9px] sm:text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest">Receita (Hoje)</p>
+              <h3 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tighter">
                 {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(stats.revenueToday)}
               </h3>
             </div>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 p-8 rounded-[3rem] shadow-sm border border-slate-100 dark:border-slate-800 transition-colors">
-          <div className="flex items-center gap-4 mb-6">
-            <div className="w-12 h-12 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-2xl flex items-center justify-center">
-              <Icons.Package size={24} /> {/* Changed from Check to Package for orders */}
+        <div className="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-[2.5rem] sm:rounded-[3rem] shadow-sm border border-slate-100 dark:border-slate-800 transition-colors">
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-2xl flex items-center justify-center shrink-0">
+              <Icons.Package size={20} className="sm:w-6 sm:h-6" />
             </div>
             <div>
-              <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest">Pedidos (Hoje)</p>
-              <h3 className="text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tighter">{stats.ordersToday}</h3>
+              <p className="text-[9px] sm:text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest">Pedidos (Hoje)</p>
+              <h3 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tighter">{stats.ordersToday}</h3>
             </div>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 p-8 rounded-[3rem] shadow-sm border border-slate-100 dark:border-slate-800 transition-colors">
-          <div className="flex items-center gap-4 mb-6">
-            <div className="w-12 h-12 bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-2xl flex items-center justify-center">
-              <Icons.Ticket size={24} /> {/* Changed from Clock to Ticket for avg ticket */}
+        <div className="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-[2.5rem] sm:rounded-[3rem] shadow-sm border border-slate-100 dark:border-slate-800 transition-colors">
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-2xl flex items-center justify-center shrink-0">
+              <Icons.Ticket size={20} className="sm:w-6 sm:h-6" />
             </div>
             <div>
-              <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest">Ticket Médio</p>
-              <h3 className="text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tighter">
+              <p className="text-[9px] sm:text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest">Ticket Médio</p>
+              <h3 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tighter">
                 {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(stats.avgTicket)}
               </h3>
             </div>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 p-8 rounded-[3rem] shadow-sm border border-slate-100 dark:border-slate-800 transition-colors">
-          <div className="flex items-center gap-4 mb-6">
-            <div className="w-12 h-12 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-2xl flex items-center justify-center">
-              <Icons.Users size={24} /> {/* Changed from Clock to Users for clients */}
+        <div className="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-[2.5rem] sm:rounded-[3rem] shadow-sm border border-slate-100 dark:border-slate-800 transition-colors">
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-2xl flex items-center justify-center shrink-0">
+              <Icons.Users size={20} className="sm:w-6 sm:h-6" />
             </div>
             <div>
-              <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest">Base de Clientes</p>
-              <h3 className="text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tighter">{stats.totalClients}</h3>
+              <p className="text-[9px] sm:text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest">Base de Clientes</p>
+              <h3 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tighter">{stats.totalClients}</h3>
             </div>
           </div>
         </div>
@@ -181,9 +181,9 @@ const Dashboard: React.FC = () => {
               <p className="text-2xl font-black text-slate-900 dark:text-white">R$ {chartData.reduce((acc, d) => acc + d.vendas, 0).toFixed(2)}</p>
             </div>
           </div>
-          <div className="h-80 w-full">
-            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-              <AreaChart data={chartData}>
+          <div className="h-[250px] sm:h-80 w-full min-h-[250px] relative">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.2} />
@@ -208,8 +208,8 @@ const Dashboard: React.FC = () => {
         <div className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] shadow-sm border border-slate-100 dark:border-slate-800 transition-colors flex flex-col">
           <h3 className="text-slate-800 dark:text-white font-black uppercase tracking-tight text-lg mb-1">Volume de Pedidos</h3>
           <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest mb-8">Frequência diária</p>
-          <div className="flex-1 min-h-[300px]">
-            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+          <div className="flex-1 min-h-[250px] sm:min-h-[300px] h-[300px] relative">
+            <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={gridColor} />
                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: labelColor, fontSize: 10, fontWeight: 700 }} />
@@ -244,8 +244,8 @@ const Dashboard: React.FC = () => {
             <h3 className="text-slate-800 dark:text-white font-black uppercase tracking-tight text-lg">Mix de Pagamentos</h3>
             <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest">Volume financeiro por método</p>
           </div>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+          <div className="h-[250px] sm:h-64 w-full relative">
+            <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={paymentData}
@@ -277,8 +277,8 @@ const Dashboard: React.FC = () => {
             <h3 className="text-slate-800 dark:text-white font-black uppercase tracking-tight text-lg">Canais de Venda</h3>
             <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest">Comparativo Delivery vs Salão/Balcão</p>
           </div>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+          <div className="h-[250px] sm:h-64 w-full relative">
+            <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={deliveryData}

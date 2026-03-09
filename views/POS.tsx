@@ -853,18 +853,18 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       const alreadyPaid = payments.reduce((acc, p) => acc + p.amount, 0);
       const remaining = Math.max(0, total - alreadyPaid);
 
-      if (remaining > 0) {
-        setCurrentPaymentAmount(remaining.toFixed(2));
-      } else {
-        setCurrentPaymentAmount('0.00');
+      const targetAmount = remaining > 0 ? remaining.toFixed(2) : '0.00';
+      if (currentPaymentAmount !== targetAmount) {
+        setCurrentPaymentAmount(targetAmount);
       }
     } else {
-      setPayments([]);
-      setCurrentPaymentAmount('');
-      setPaymentMethod('DINHEIRO');
-      setPaymentData({ receivedAmount: '' });
+      // Guard clauses to prevent infinite loop since 'payments' is a dependency
+      if (payments.length > 0) setPayments([]);
+      if (currentPaymentAmount !== '') setCurrentPaymentAmount('');
+      if (paymentMethod !== 'DINHEIRO') setPaymentMethod('DINHEIRO');
+      if (paymentData.receivedAmount !== '') setPaymentData({ receivedAmount: '' });
     }
-  }, [isPaymentModalOpen, payments, cartTotal]);
+  }, [isPaymentModalOpen, payments, cartTotal, currentPaymentAmount, paymentMethod, paymentData.receivedAmount]);
 
   const addPaymentToList = () => {
     const amount = parseFloat(currentPaymentAmount.replace(',', '.')) || 0;
