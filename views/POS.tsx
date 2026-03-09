@@ -1206,6 +1206,20 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                     setIsAvulso(true);
                     setSelectedClient(null);
                     setClientSearch('');
+                    setAvulsoData({
+                      phone: '',
+                      name: '',
+                      email: '',
+                      document: '',
+                      cep: '',
+                      street: '',
+                      addressNumber: '',
+                      neighborhood: '',
+                      city: '',
+                      state: '',
+                      complement: ''
+                    });
+                    setErrors({});
                   }}
                   className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${isAvulso ? 'bg-white dark:bg-slate-700 text-blue-600 shadow-md' : 'text-slate-400 dark:text-slate-500'}`}
                 >
@@ -1226,8 +1240,22 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                       onChange={(e) => { setClientSearch(e.target.value); setShowClientList(true); }}
                       autoFocus
                     />
-                    <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 dark:text-slate-600">
-                      <Icons.Search />
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                      {clientSearch && (
+                        <button
+                          onClick={() => {
+                            setClientSearch('');
+                            setSelectedClient(null);
+                            setShowClientList(false);
+                          }}
+                          className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg text-slate-400 transition-colors"
+                        >
+                          <Icons.Delete className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                      <div className="text-slate-300 dark:text-slate-600">
+                        <Icons.Search />
+                      </div>
                     </div>
                   </div>
 
@@ -1433,6 +1461,31 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                           onChange={e => setAvulsoData({ ...avulsoData, complement: e.target.value })}
                           className="w-full p-4 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-2xl text-xs font-black outline-none focus:border-blue-500 transition-all dark:text-white"
                         />
+                      </div>
+
+                      <div className="pt-2">
+                        <button
+                          onClick={() => {
+                            setAvulsoData({
+                              phone: '',
+                              name: '',
+                              email: '',
+                              document: '',
+                              cep: '',
+                              street: '',
+                              addressNumber: '',
+                              neighborhood: '',
+                              city: '',
+                              state: '',
+                              complement: ''
+                            });
+                            setErrors({});
+                          }}
+                          className="w-full py-4 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-red-600 dark:hover:bg-red-600 hover:text-white transition-all border border-red-100 dark:border-red-900/30 shadow-sm active:scale-95 flex items-center justify-center gap-2 group"
+                        >
+                          <Icons.Delete className="w-4 h-4" />
+                          Limpar Tudo
+                        </button>
                       </div>
                     </div>
                   )}
