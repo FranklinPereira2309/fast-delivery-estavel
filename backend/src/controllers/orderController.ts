@@ -188,18 +188,23 @@ export const saveOrder = async (req: Request, res: Response) => {
 
     console.log('Receiving order save request:', { id: order.id, type: order.type, status: order.status, waiterId: resolvedWaiterId });
 
-    // Server-side Cash Session Enforcement for POS Operations
-    // We block saving if there's no active cash session, UNLESS it's from the Digital Menu, Delivery App, or Waiter App
-    if (!order.isOriginDigitalMenu && !order.isOriginDeliveryApp && !resolvedWaiterId && order.status !== 'CANCELLED') {
+    // Server-side Cash Session Enforcement for ALL Operations
+    if (order.status !== 'CANCELLED') {
         const activeCashSession = await prisma.cashSession.findFirst({
             where: { status: 'OPEN' }
         });
 
-        // We allow updates to DELIVERED (if they are syncing from somewhere else), 
-        // but generally block new POS creations or finalizations if closed.
         if (!activeCashSession) {
             console.warn(`Blocked saveOrder for ${order.id}: Cash Session is closed.`);
-            return res.status(403).json({ error: 'Caixa Fechado. Abra o caixa antes de processar pedidos no PDV.' });
+            
+            if (order.isOriginDeliveryApp) {
+                return res.status(403).json({ error: 'Não foi possível concluir o seu pedido, favor verificar com o estabelecimento' });
+            }
+            if (order.isOriginDigitalMenu) {
+                return res.status(403).json({ error: 'No momento não foi possível concluir o seu pedido, favor falar com um garçom' });
+            }
+            // Admin, Garçom App e Cozinha
+            return res.status(403).json({ error: 'Solicitar abertura do Caixa antes de enviar um pedido pra cozinha' });
         }
     }
 

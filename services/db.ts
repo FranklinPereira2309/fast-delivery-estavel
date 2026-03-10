@@ -49,8 +49,8 @@ class APIDBService {
 
         let message = '';
         try {
-          const error = await response.json();
-          message = error.message;
+          const errorData = await response.json();
+          message = errorData.error || errorData.message;
         } catch (e) {
           // Fallback to status translations
         }

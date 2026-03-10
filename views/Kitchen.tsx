@@ -132,7 +132,11 @@ const Kitchen: React.FC = () => {
       status: allReady ? OrderStatus.READY : (anyReady ? OrderStatus.PARTIALLY_READY : OrderStatus.PREPARING)
     };
 
-    await db.saveOrder(updatedOrder, currentUser);
+    try {
+      await db.saveOrder(updatedOrder, currentUser);
+    } catch (error: any) {
+      return alert(error.message || "Erro ao salvar pedido na cozinha.");
+    }
 
     if (order.type === SaleType.TABLE && order.tableNumber) {
       const sess = (await db.getTableSessions()).find(s => s.tableNumber === order.tableNumber);
