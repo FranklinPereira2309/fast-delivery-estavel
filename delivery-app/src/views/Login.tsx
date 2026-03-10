@@ -254,6 +254,7 @@ const Login: React.FC = () => {
                                         message: 'Falha na autenticação com o Google.',
                                         type: 'DANGER',
                                         onConfirm: () => setAlertState(prev => ({ ...prev, isOpen: false })),
+                                        onCancel: undefined
                                     });
                                 }}
                                 useOneTap
