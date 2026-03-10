@@ -1,3 +1,4 @@
+import { Router } from 'express';
 import { loginClient, registerClient, recoverPassword, updateClientProfile, googleLoginClient } from '../controllers/clientAuthController';
 
 const router = Router();
