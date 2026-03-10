@@ -16,7 +16,6 @@ const Home: React.FC = () => {
     const [settings, setSettings] = useState<BusinessSettings | null>(null);
     const [storeStatus, setStoreStatus] = useState<StoreStatus | null>(null);
     const [isLoading, setIsLoading] = useState(true);
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [clientName, setClientName] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
     const [showLogoutAlert, setShowLogoutAlert] = useState(false);
@@ -24,7 +23,6 @@ const Home: React.FC = () => {
 
     useEffect(() => {
         const clientStr = localStorage.getItem('delivery_app_client');
-        setIsLoggedIn(!!clientStr);
         if (clientStr) {
             try {
                 const client = JSON.parse(clientStr);
@@ -125,27 +123,22 @@ const Home: React.FC = () => {
                             </span>
                         </div>
                     </div>
-                    {isLoggedIn ? (
-                        <div className="flex items-center gap-3">
-                            <div className="flex flex-col items-end mr-1">
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Olá,</span>
-                                <span className="text-xs font-bold text-slate-700 max-w-[100px] truncate">{clientName.split(' ')[0]}</span>
-                            </div>
-                            <Link to="/profile" className="w-11 h-11 bg-white rounded-2xl flex items-center justify-center text-slate-500 hover:text-indigo-600 hover:bg-slate-50 transition-all shadow-sm border border-slate-100 active:scale-95">
-                                <Icons.User className="w-5 h-5" />
-                            </Link>
-                            <button
-                                onClick={() => setShowLogoutAlert(true)}
-                                className="w-11 h-11 bg-rose-50 rounded-2xl flex items-center justify-center text-rose-500 hover:bg-rose-100 transition-all shadow-sm border border-rose-100 active:scale-95"
-                            >
-                                <Icons.LogOut className="w-5 h-5" />
-                            </button>
+                    
+                    <div className="flex items-center gap-3">
+                        <div className="flex flex-col items-end mr-1">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Olá,</span>
+                            <span className="text-xs font-bold text-slate-700 max-w-[100px] truncate">{clientName.split(' ')[0]}</span>
                         </div>
-                    ) : (
-                        <Link to="/login" className="px-5 h-11 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center font-black uppercase text-[10px] tracking-widest hover:bg-indigo-100 transition-all shadow-sm active:scale-95">
-                            Entrar
+                        <Link to="/profile" className="w-11 h-11 bg-white rounded-2xl flex items-center justify-center text-slate-500 hover:text-indigo-600 hover:bg-slate-50 transition-all shadow-sm border border-slate-100 active:scale-95">
+                            <Icons.User className="w-5 h-5" />
                         </Link>
-                    )}
+                        <button
+                            onClick={() => setShowLogoutAlert(true)}
+                            className="w-11 h-11 bg-rose-50 rounded-2xl flex items-center justify-center text-rose-500 hover:bg-rose-100 transition-all shadow-sm border border-rose-100 active:scale-95"
+                        >
+                            <Icons.LogOut className="w-5 h-5" />
+                        </button>
+                    </div>
                 </div>
 
                 {/* Search */}

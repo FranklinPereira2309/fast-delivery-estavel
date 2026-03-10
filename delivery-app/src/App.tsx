@@ -10,6 +10,7 @@ import Profile from './views/Profile';
 import Chat from './views/Chat';
 import { CartProvider } from './CartContext';
 import Layout from './components/Layout';
+import AuthGuard from './components/AuthGuard';
 
 function App() {
     return (
@@ -17,15 +18,19 @@ function App() {
             <BrowserRouter>
                 <Layout>
                     <Routes>
-                        <Route path="/" element={<Home />} />
+                        {/* Public Routes */}
                         <Route path="/login" element={<Login />} />
                         <Route path="/recover" element={<RecoverPassword />} />
                         <Route path="/register" element={<Register />} />
-                        <Route path="/checkout" element={<Checkout />} />
-                        <Route path="/history" element={<OrderHistory />} />
-                        <Route path="/order/:id" element={<OrderDetails />} />
-                        <Route path="/profile" element={<Profile />} />
-                        <Route path="/chat" element={<Chat />} />
+
+                        {/* Protected Routes */}
+                        <Route path="/" element={<AuthGuard><Home /></AuthGuard>} />
+                        <Route path="/checkout" element={<AuthGuard><Checkout /></AuthGuard>} />
+                        <Route path="/history" element={<AuthGuard><OrderHistory /></AuthGuard>} />
+                        <Route path="/order/:id" element={<AuthGuard><OrderDetails /></AuthGuard>} />
+                        <Route path="/profile" element={<AuthGuard><Profile /></AuthGuard>} />
+                        <Route path="/chat" element={<AuthGuard><Chat /></AuthGuard>} />
+                        
                         <Route path="*" element={<Navigate to="/" replace />} />
                     </Routes>
                 </Layout>

@@ -26,6 +26,13 @@ const Login: React.FC = () => {
     });
     const navigate = useNavigate();
 
+    React.useEffect(() => {
+        const token = localStorage.getItem('delivery_app_token');
+        if (token) {
+            navigate('/', { replace: true });
+        }
+    }, [navigate]);
+
     // Máscara WhatsApp: (99) 9 9999-9999
     const maskPhone = (value: string) => {
         const numbers = value.replace(/\D/g, '');
@@ -178,14 +185,6 @@ const Login: React.FC = () => {
 
             <div className="w-full max-w-md bg-white p-6 md:p-10 rounded-[2.5rem] md:rounded-[3rem] shadow-xl shadow-slate-200/50 border border-slate-100 relative">
                 {/* Fechar Modal Login */}
-                <button
-                    onClick={() => navigate('/')}
-                    className="absolute top-4 right-4 md:top-6 md:right-6 p-2 bg-slate-50 text-slate-400 rounded-full hover:bg-slate-100 hover:text-slate-600 transition-all active:scale-95"
-                    title="Voltar"
-                >
-                    <Icons.X className="w-5 h-5" />
-                </button>
-
                 <div className="text-center mb-10">
                     <h1 className="text-3xl font-black text-slate-800 uppercase tracking-tighter italic">Delivery App</h1>
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2">
