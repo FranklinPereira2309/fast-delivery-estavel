@@ -78,6 +78,7 @@ model Client {
   phone         String
   email         String?
   password      String?
+  googleId      String?      @unique
   pin           String?
   recoveryCode  String?
   document      String?

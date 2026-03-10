@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { Icons } from '../constants';
 import CustomAlert from '../components/CustomAlert';
+import { GoogleLogin } from '@react-oauth/google';
 
 const Login: React.FC = () => {
     const [phone, setPhone] = useState('');
@@ -69,6 +70,29 @@ const Login: React.FC = () => {
                 isOpen: true,
                 title: 'Erro no Login',
                 message: 'Dados incorretos, verifique o telefone e/ou senha',
+                type: 'DANGER',
+                onConfirm: () => setAlertState(prev => ({ ...prev, isOpen: false })),
+                onCancel: undefined
+            });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleGoogleSuccess = async (credentialResponse: any) => {
+        if (!credentialResponse.credential) return;
+
+        setIsLoading(true);
+        try {
+            const data = await api.googleLogin(credentialResponse.credential);
+            localStorage.setItem('delivery_app_token', data.token);
+            localStorage.setItem('delivery_app_client', JSON.stringify(data.client));
+            navigate('/');
+        } catch (err: any) {
+            setAlertState({
+                isOpen: true,
+                title: 'Erro no Login Google',
+                message: err.message || 'Não foi possível entrar com o Google.',
                 type: 'DANGER',
                 onConfirm: () => setAlertState(prev => ({ ...prev, isOpen: false })),
                 onCancel: undefined
@@ -213,6 +237,31 @@ const Login: React.FC = () => {
                                 {isLoading ? 'Entrando...' : 'Entrar'}
                             </button>
                         </form>
+
+                        <div className="mt-8 flex flex-col items-center gap-6">
+                            <div className="w-full flex items-center gap-4">
+                                <div className="flex-1 h-[1px] bg-slate-100"></div>
+                                <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Ou entrar com</span>
+                                <div className="flex-1 h-[1px] bg-slate-100"></div>
+                            </div>
+
+                            <GoogleLogin
+                                onSuccess={handleGoogleSuccess}
+                                onError={() => {
+                                    setAlertState({
+                                        isOpen: true,
+                                        title: 'Erro',
+                                        message: 'Falha na autenticação com o Google.',
+                                        type: 'DANGER',
+                                        onConfirm: () => setAlertState(prev => ({ ...prev, isOpen: false })),
+                                    });
+                                }}
+                                useOneTap
+                                theme="outline"
+                                shape="pill"
+                                width="100%"
+                            />
+                        </div>
 
                         <div className="mt-10 text-center space-y-4">
                             <p className="text-xs font-bold text-slate-400">

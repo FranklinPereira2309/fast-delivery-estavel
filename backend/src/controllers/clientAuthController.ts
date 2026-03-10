@@ -2,7 +2,10 @@ import { Request as ExpressRequest, Response as ExpressResponse } from 'express'
 import prisma from '../prisma';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { OAuth2Client } from 'google-auth-library';
+
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_delivery_fast';
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 export const registerClient = async (req: ExpressRequest, res: ExpressResponse) => {
     try {
@@ -207,5 +210,73 @@ export const recoverPassword = async (req: ExpressRequest, res: ExpressResponse)
     } catch (error) {
         console.error('Recover Password Error:', error);
         res.status(500).json({ message: 'Erro ao recuperar senha.' });
+    }
+};
+
+export const googleLoginClient = async (req: ExpressRequest, res: ExpressResponse) => {
+    try {
+        const { googleToken } = req.body;
+        if (!googleToken) {
+            return res.status(400).json({ message: 'Token do Google não informado.' });
+        }
+
+        const ticket = await googleClient.verifyIdToken({
+            idToken: googleToken,
+            audience: process.env.GOOGLE_CLIENT_ID,
+        });
+
+        const payload = ticket.getPayload();
+        if (!payload || !payload.email) {
+            return res.status(400).json({ message: 'Falha ao validar token do Google.' });
+        }
+
+        const { email, name, sub: googleId } = payload;
+
+        // Tenta encontrar o cliente pelo googleId ou pelo email
+        let client = await prisma.client.findFirst({
+            where: {
+                OR: [
+                    { googleId },
+                    { email }
+                ]
+            }
+        });
+
+        if (!client) {
+            // Se não existir, cria um novo cliente
+            // O telefone é obrigatório no schema, então usaremos um padrão ou o sub do google
+            client = await prisma.client.create({
+                data: {
+                    name: name || email,
+                    email: email,
+                    googleId: googleId,
+                    phone: '00000000000', // Placeholder para telefone obrigatório
+                    addresses: []
+                }
+            });
+        } else if (!client.googleId) {
+            // Se encontrou por email mas não tinha googleId, vincula
+            client = await prisma.client.update({
+                where: { id: client.id },
+                data: { googleId }
+            });
+        }
+
+        const token = jwt.sign({ id: client.id, role: 'CLIENT' }, JWT_SECRET, { expiresIn: '30d' });
+
+        // Log da ação
+        await prisma.auditLog.create({
+            data: {
+                userId: client.id,
+                userName: client.name,
+                action: 'GOOGLE_LOGIN_CLIENT',
+                details: `Cliente ${client.name} acessou via Google.`
+            }
+        });
+
+        res.json({ token, client });
+    } catch (error) {
+        console.error('Google Login Error:', error);
+        res.status(500).json({ message: 'Erro ao autenticar com Google.' });
     }
 };

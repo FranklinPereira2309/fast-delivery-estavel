@@ -51,6 +51,14 @@ class DeliveryApiService {
         return data;
     }
 
+    async googleLogin(googleToken: string) {
+        const data = await this.request<{ client: any, token: string }>('/client-auth/google', {
+            method: 'POST',
+            body: JSON.stringify({ googleToken }),
+        });
+        return data;
+    }
+
     async register(name: string, email: string, phone: string, pass: string, cep?: string, addressNumber?: string, complement?: string, street?: string, neighborhood?: string, city?: string, state?: string) {
         return this.request('/client-auth/register', {
             method: 'POST',
