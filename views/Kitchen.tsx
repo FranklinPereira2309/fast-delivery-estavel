@@ -249,6 +249,27 @@ const Kitchen: React.FC = () => {
                                       Obs: {item.observations}
                                     </p>
                                   )}
+                                  
+                                  {/* Ficha Técnica (Ingredientes) */}
+                                  {product?.recipe && product.recipe.length > 0 && (
+                                    <div className="mt-2 space-y-1 bg-slate-50/50 dark:bg-slate-800/20 p-2 rounded-lg border border-slate-100/50 dark:border-slate-800/50">
+                                      <p className="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-1">
+                                        <Icons.Alert size={8} /> Ficha Técnica
+                                      </p>
+                                      {product.recipe.map((r, idx) => {
+                                        const invItem = inventory.find(inv => inv.id === r.inventoryItemId);
+                                        const totalQty = r.quantity * item.quantity;
+                                        return (
+                                          <div key={idx} className="flex items-center gap-1.5">
+                                            <div className="w-1 h-1 rounded-full bg-blue-400/50" />
+                                            <p className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tight">
+                                              {invItem?.name}: <span className="text-blue-600 dark:text-blue-400">{totalQty} {invItem?.unit}</span>
+                                            </p>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                             </label>
