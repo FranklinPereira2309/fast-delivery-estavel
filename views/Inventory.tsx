@@ -171,7 +171,13 @@ const Inventory: React.FC = () => {
               <h3 className="font-black text-slate-800 dark:text-white uppercase tracking-tight text-lg">Insumos e Matéria-Prima</h3>
               <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest">Controle de volumes para produção.</p>
             </div>
-            <button onClick={() => openInvModal()} className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase shadow-lg shadow-blue-100 dark:shadow-blue-900/20 transition-all">+ Novo Insumo</button>
+            <button
+              onClick={() => openInvModal()}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20 active:scale-95 shrink-0"
+            >
+              <Icons.Plus size={18} strokeWidth={3} />
+              Novo Insumo
+            </button>
           </div>
           <div className="overflow-y-auto flex-1">
             <table className="w-full text-left">
