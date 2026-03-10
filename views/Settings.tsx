@@ -88,22 +88,17 @@ const WaiterManagement: React.FC = () => {
                 onCancel={() => setAlertConfig(prev => ({ ...prev, isOpen: false }))}
             />
 
-            <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center bg-white dark:bg-slate-900 p-6 sm:p-10 rounded-3xl sm:rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm gap-6 transition-colors">
-                <div className="flex-1">
-                    <h3 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tighter">Equipe de Garçons</h3>
+            <div className="flex justify-between items-center bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm transition-colors">
+                <div>
+                    <h3 className="text-xl font-black text-slate-800 dark:text-white uppercase tracking-tighter">Equipe de Garçons</h3>
                     <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest leading-relaxed">Colaboradores com acesso ao App Garçom</p>
                 </div>
                 <button
                     onClick={() => { setEditingWaiter(null); setFormData({ name: '', phone: '', email: '' }); setIsModalOpen(true); }}
-                    className="group relative flex flex-row sm:flex-col lg:flex-row items-center justify-between sm:justify-center gap-4 bg-blue-600 hover:bg-blue-700 text-white p-6 sm:p-8 lg:px-10 lg:py-6 rounded-[2rem] transition-all duration-300 shadow-2xl shadow-blue-500/20 active:scale-95 w-full lg:w-auto min-w-[240px]"
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20 active:scale-95 shrink-0"
                 >
-                    <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-md group-hover:scale-110 transition-transform duration-500">
-                        <Icons.User size={48} className="text-white drop-shadow-lg" />
-                    </div>
-                    <div className="flex flex-col items-end sm:items-center lg:items-start text-right sm:text-center lg:text-left">
-                        <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-70">Novo</span>
-                        <span className="text-lg sm:text-xl font-black uppercase tracking-tighter leading-none">Garçom</span>
-                    </div>
+                    <Icons.Plus size={18} strokeWidth={3} />
+                    Novo Garçom
                 </button>
             </div>
 
@@ -353,22 +348,17 @@ const UserManagementInternal: React.FC = () => {
                 onConfirm={alertConfig.onConfirm || (() => setAlertConfig(prev => ({ ...prev, isOpen: false })))}
                 onCancel={() => setAlertConfig(prev => ({ ...prev, isOpen: false }))}
             />
-            <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center bg-white dark:bg-slate-900 p-6 sm:p-10 rounded-3xl sm:rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm gap-6 transition-colors">
-                <div className="flex-1">
-                    <h3 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tighter">Usuários do Sistema</h3>
+            <div className="flex justify-between items-center bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm transition-colors">
+                <div>
+                    <h3 className="text-xl font-black text-slate-800 dark:text-white uppercase tracking-tighter">Usuários do Sistema</h3>
                     <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest leading-relaxed">Gerencie níveis de acesso e permissões</p>
                 </div>
                 <button
                     onClick={() => { setEditingUser(null); setFormData({ name: '', email: '', password: '', phone: '', permissions: ['dashboard'] }); setIsModalOpen(true); }}
-                    className="group relative flex flex-row sm:flex-col lg:flex-row items-center justify-between sm:justify-center gap-4 bg-blue-600 hover:bg-blue-700 text-white p-6 sm:p-8 lg:px-10 lg:py-6 rounded-[2rem] transition-all duration-300 shadow-2xl shadow-blue-500/20 active:scale-95 w-full lg:w-auto min-w-[240px]"
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20 active:scale-95 shrink-0"
                 >
-                    <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-md group-hover:scale-110 transition-transform duration-500">
-                        <Icons.User size={48} className="text-white drop-shadow-lg" />
-                    </div>
-                    <div className="flex flex-col items-end sm:items-center lg:items-start text-right sm:text-center lg:text-left">
-                        <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-70">Novo</span>
-                        <span className="text-lg sm:text-xl font-black uppercase tracking-tighter leading-none">Usuário</span>
-                    </div>
+                    <Icons.Plus size={18} strokeWidth={3} />
+                    Novo Usuário
                 </button>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
