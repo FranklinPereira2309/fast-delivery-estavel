@@ -120,11 +120,13 @@ const CartModal: React.FC<CartModalProps> = ({ isOpen, onClose, cart, tableNumbe
                                 window.location.reload();
                             } else {
                                 setErrorModal(null);
+                                clearCart();
+                                onClose();
                             }
                         }}
                         className="w-full bg-slate-900 hover:bg-black text-white font-black py-4 rounded-2xl transition-all shadow-xl active:scale-95 uppercase text-xs tracking-widest"
                     >
-                        {errorModal.isPinError ? "Recarregar Página" : "Tentar Novamente"}
+                        {errorModal.isPinError ? "Recarregar Página" : "OK"}
                     </button>
                 </div>
             </div>
