@@ -14,7 +14,7 @@ interface AlertState {
     message: string;
     type: 'INFO' | 'DANGER' | 'SUCCESS';
     onConfirm: () => void;
-    onCancel?: () => void;
+    onCancel?: (() => void) | null;
     confirmText?: string;
 }
 
@@ -95,7 +95,7 @@ const Checkout: React.FC = () => {
 
     const finalTotal = total + deliveryFee;
 
-    const showAlert = (title: string, message: string, type: 'INFO' | 'SUCCESS' | 'DANGER' = 'INFO', onConfirm?: () => void, onCancel?: () => void, confirmText?: string) => {
+    const showAlert = (title: string, message: string, type: 'INFO' | 'SUCCESS' | 'DANGER' = 'INFO', onConfirm?: () => void, onCancel?: (() => void) | null, confirmText?: string) => {
         setAlertState({
             isOpen: true,
             title,
@@ -105,7 +105,7 @@ const Checkout: React.FC = () => {
                 setAlertState(prev => ({ ...prev, isOpen: false }));
                 if (onConfirm) onConfirm();
             },
-            onCancel: onCancel,
+            onCancel: onCancel === null ? null : (onCancel || (() => setAlertState(prev => ({ ...prev, isOpen: false })))),
             confirmText: confirmText
         });
     };
@@ -213,7 +213,7 @@ const Checkout: React.FC = () => {
                 type={alertState.type}
                 confirmText={alertState.confirmText}
                 onConfirm={alertState.onConfirm}
-                onCancel={alertState.onCancel}
+                onCancel={alertState.onCancel === null ? undefined : (alertState.onCancel || (() => setAlertState(prev => ({ ...prev, isOpen: false }))))}
             />
 
 
