@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { api } from '../services/api';
 import { socket } from '../services/socket';
-import type { Product, BusinessSettings, StoreStatus } from '../types';
+import type { Product, BusinessSettings, StoreStatus, Client } from '../types';
 import { Icons } from '../constants';
 import { useCart } from '../CartContext';
 import CustomAlert from '../components/CustomAlert';
+import CompleteProfileModal from '../components/CompleteProfileModal';
 
 const Home: React.FC = () => {
     const { addToCart, items, total } = useCart();
@@ -16,17 +17,20 @@ const Home: React.FC = () => {
     const [settings, setSettings] = useState<BusinessSettings | null>(null);
     const [storeStatus, setStoreStatus] = useState<StoreStatus | null>(null);
     const [isLoading, setIsLoading] = useState(true);
-    const [clientName, setClientName] = useState('');
+    const [client, setClient] = useState<Client | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [showLogoutAlert, setShowLogoutAlert] = useState(false);
+    const [showCompleteProfile, setShowCompleteProfile] = useState(false);
+
+    const isProfileIncomplete = !!(client && (client.phone === '00000000000' || !client.street || !client.cep));
 
 
     useEffect(() => {
         const clientStr = localStorage.getItem('delivery_app_client');
         if (clientStr) {
             try {
-                const client = JSON.parse(clientStr);
-                setClientName(client.name || '');
+                const data = JSON.parse(clientStr);
+                setClient(data);
             } catch (e) {
                 console.error("Error parsing client data", e);
             }
@@ -108,6 +112,18 @@ const Home: React.FC = () => {
 
     return (
         <div className="min-h-screen bg-slate-50 pb-28">
+            <style>
+                {`
+                @keyframes slow-blink {
+                    0%, 100% { opacity: 1; }
+                    50% { opacity: 0.3; }
+                }
+                .animate-slow-blink {
+                    animation: slow-blink 2s infinite ease-in-out;
+                }
+                `}
+            </style>
+            
             {/* Header / Store Status Premium Soft */}
             <div className="bg-white pt-8 p-6 pb-2 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-5 animate-float"></div>
@@ -116,18 +132,29 @@ const Home: React.FC = () => {
                 <div className="flex justify-between items-start mb-8 relative z-10">
                     <div>
                         <h1 className="text-3xl font-black text-slate-800 tracking-tighter uppercase">Delivery <span className="text-indigo-500">App</span></h1>
-                        <div className="flex items-center gap-2 mt-2 bg-slate-50 px-3 py-1.5 rounded-full inline-flex border border-slate-100 whitespace-nowrap">
-                            <div className={`w-2 h-2 rounded-full ${storeStatus?.status === 'offline' ? 'bg-rose-500' : 'bg-emerald-500 animate-pulse-ring'}`}></div>
-                            <span className={`text-[10px] font-black uppercase tracking-widest ${storeStatus?.status === 'offline' ? 'text-rose-500' : 'text-emerald-500'}`}>
-                                {storeStatus?.status === 'offline' ? 'Delivery OFF' : 'Delivery ON'}
-                            </span>
+                        <div className="flex flex-col gap-2 mt-2">
+                            <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-full inline-flex border border-slate-100 whitespace-nowrap w-fit">
+                                <div className={`w-2 h-2 rounded-full ${storeStatus?.status === 'offline' ? 'bg-rose-500' : 'bg-emerald-500 animate-pulse-ring'}`}></div>
+                                <span className={`text-[10px] font-black uppercase tracking-widest ${storeStatus?.status === 'offline' ? 'text-rose-500' : 'text-emerald-500'}`}>
+                                    {storeStatus?.status === 'offline' ? 'Delivery OFF' : 'Delivery ON'}
+                                </span>
+                            </div>
+                            
+                            {isProfileIncomplete && (
+                                <button 
+                                    onClick={() => setShowCompleteProfile(true)}
+                                    className="text-[9px] font-black text-rose-500 uppercase tracking-widest animate-slow-blink hover:text-rose-600 transition-colors text-left"
+                                >
+                                    ⚠️ Complete seu cadastro
+                                </button>
+                            )}
                         </div>
                     </div>
                     
                     <div className="flex items-center gap-3">
                         <div className="flex flex-col items-end mr-1">
                             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Olá,</span>
-                            <span className="text-xs font-bold text-slate-700 max-w-[100px] truncate">{clientName.split(' ')[0]}</span>
+                            <span className="text-xs font-bold text-slate-700 max-w-[100px] truncate">{client?.name?.split(' ')[0] || ''}</span>
                         </div>
                         <Link to="/profile" className="w-11 h-11 bg-white rounded-2xl flex items-center justify-center text-slate-500 hover:text-indigo-600 hover:bg-slate-50 transition-all shadow-sm border border-slate-100 active:scale-95">
                             <Icons.User className="w-5 h-5" />
@@ -188,9 +215,9 @@ const Home: React.FC = () => {
                             <div className="flex justify-between items-center mt-3">
                                 <span className="text-lg font-black text-slate-800 tracking-tighter">R$ {product.price.toFixed(2)}</span>
                                 <button
-                                    onClick={() => storeStatus?.status !== 'offline' && addToCart(product)}
-                                    disabled={storeStatus?.status === 'offline'}
-                                    className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold active:scale-90 transition-all shadow-sm ${storeStatus?.status === 'offline' ? 'bg-slate-100 text-slate-300 cursor-not-allowed' : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white group-hover:shadow-indigo-200'}`}
+                                    onClick={() => !isProfileIncomplete && storeStatus?.status !== 'offline' && addToCart(product)}
+                                    disabled={storeStatus?.status === 'offline' || isProfileIncomplete}
+                                    className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold active:scale-90 transition-all shadow-sm ${storeStatus?.status === 'offline' || isProfileIncomplete ? 'bg-slate-100 text-slate-300 cursor-not-allowed' : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white group-hover:shadow-indigo-200'}`}
                                 >
                                     +
                                 </button>
@@ -204,11 +231,12 @@ const Home: React.FC = () => {
             {items.length > 0 && storeStatus?.status !== 'offline' && (
                 <div className="fixed bottom-32 left-6 right-6 animate-in slide-in-from-bottom duration-300 z-[60]">
                     <button
-                        onClick={() => navigate('/checkout')}
-                        className="w-full bg-indigo-600 text-white p-5 rounded-3xl font-black uppercase text-[10px] tracking-widest shadow-2xl shadow-indigo-200 flex justify-between items-center active:scale-95 transition-transform"
+                        onClick={() => !isProfileIncomplete && navigate('/checkout')}
+                        disabled={isProfileIncomplete}
+                        className={`w-full p-5 rounded-3xl font-black uppercase text-[10px] tracking-widest flex justify-between items-center active:scale-95 transition-transform shadow-2xl ${isProfileIncomplete ? 'bg-slate-300 text-slate-500 cursor-not-allowed' : 'bg-indigo-600 text-white shadow-indigo-200'}`}
                     >
                         <div className="flex items-center gap-3">
-                            <div className="bg-indigo-500 w-6 h-6 rounded-lg text-[10px] flex items-center justify-center">{items.reduce((a, b) => a + b.quantity, 0)}</div>
+                            <div className={`${isProfileIncomplete ? 'bg-slate-400' : 'bg-indigo-500'} w-6 h-6 rounded-lg text-[10px] flex items-center justify-center`}>{items.reduce((a, b) => a + b.quantity, 0)}</div>
                             <span>Ver Carrinho / Finalizar</span>
                         </div>
                         <span className="font-black">R$ {total.toFixed(2)}</span>
@@ -227,6 +255,17 @@ const Home: React.FC = () => {
                 onCancel={() => setShowLogoutAlert(false)}
                 type="QUESTION"
             />
+
+            {client && (
+                <CompleteProfileModal 
+                    isOpen={showCompleteProfile}
+                    client={client}
+                    onComplete={(updatedClient) => {
+                        setClient(updatedClient);
+                        setShowCompleteProfile(false);
+                    }}
+                />
+            )}
         </div>
     );
 };
