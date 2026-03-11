@@ -183,16 +183,16 @@ const Login: React.FC = () => {
     return (
         <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-4 md:p-6 relative font-sans">
             <div className="w-full max-w-md animate-in fade-in zoom-in duration-500">
-                <div className="flex flex-col items-center mb-4 md:mb-8 text-center">
-                    <div className="w-16 h-16 md:w-24 md:h-24 bg-indigo-600 rounded-[1.5rem] md:rounded-3xl flex items-center justify-center shadow-2xl shadow-indigo-500/20 transform -rotate-12 mb-4 md:mb-6 overflow-hidden">
-                        <img src="/favicon.png" alt="Logo" className="w-10 h-10 md:w-16 md:h-16 object-contain" />
+                <div className="flex flex-col items-center mb-2 md:mb-8 text-center">
+                    <div className="w-14 h-14 md:w-24 md:h-24 bg-indigo-600 rounded-2xl md:rounded-3xl flex items-center justify-center shadow-2xl shadow-indigo-500/20 transform -rotate-12 mb-3 md:mb-6 overflow-hidden">
+                        <img src="/favicon.png" alt="Logo" className="w-8 h-8 md:w-16 md:h-16 object-contain" />
                     </div>
                 </div>
 
-                <div className="w-full bg-white p-6 md:p-10 rounded-[2rem] md:rounded-[3rem] shadow-2xl relative">
+                <div className="w-full bg-white p-5 md:p-10 rounded-3xl md:rounded-[3rem] shadow-2xl relative">
                 {/* Fechar Modal Login */}
                 {/* Header */}
-                <div className="text-center mb-6 md:mb-8">
+                <div className="text-center mb-5 md:mb-8">
                     <h2 className="text-2xl md:text-3xl font-black text-slate-800 uppercase tracking-tighter italic">Delivery App</h2>
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1 md:mt-2">
                         {view === 'LOGIN' ? 'Acesso do Cliente' : 'Troca de Senha Obrigatória'}
@@ -201,7 +201,7 @@ const Login: React.FC = () => {
 
                 {view === 'LOGIN' ? (
                     <>
-                        <form onSubmit={handleLogin} className="space-y-4 md:space-y-6">
+                        <form onSubmit={handleLogin} className="space-y-3 md:space-y-6">
                             <div className="space-y-1 md:space-y-2">
                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">WhatsApp</label>
                                 <div className="relative group">
@@ -210,7 +210,7 @@ const Login: React.FC = () => {
                                     </div>
                                     <input
                                         type="tel"
-                                        className="w-full pl-14 pr-5 py-3.5 md:py-4 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-indigo-100 transition-all font-bold text-sm"
+                                        className="w-full pl-14 pr-5 py-3 md:py-4 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-indigo-100 transition-all font-bold text-sm"
                                         placeholder="(00) 00000-0000"
                                         value={phone}
                                         onChange={e => setPhone(maskPhone(e.target.value))}
@@ -227,7 +227,7 @@ const Login: React.FC = () => {
                                     </div>
                                     <input
                                         type={showPassword ? "text" : "password"}
-                                        className="w-full pl-14 pr-14 py-3.5 md:py-4 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-indigo-100 transition-all font-bold text-sm"
+                                        className="w-full pl-14 pr-14 py-3 md:py-4 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-indigo-100 transition-all font-bold text-sm"
                                         placeholder="••••••••"
                                         value={password}
                                         onChange={e => setPassword(e.target.value)}
@@ -246,13 +246,13 @@ const Login: React.FC = () => {
                             <button
                                 disabled={isLoading}
                                 type="submit"
-                                className="w-full bg-slate-900 hover:bg-black text-white py-3.5 md:py-4 rounded-2xl font-black uppercase text-xs tracking-widest transition-all shadow-xl shadow-slate-900/20 mt-2 md:mt-4 active:scale-[0.98]"
+                                className="w-full bg-slate-900 hover:bg-black text-white py-3 md:py-4 rounded-2xl font-black uppercase text-xs tracking-widest transition-all shadow-xl shadow-slate-900/20 mt-2 md:mt-4 active:scale-[0.98]"
                             >
                                 {isLoading ? 'Entrando...' : 'Entrar no Sistema'}
                             </button>
                         </form>
 
-                        <div className="mt-6 md:mt-8 flex flex-col items-center gap-4 md:gap-6">
+                        <div className="mt-5 md:mt-8 flex flex-col items-center gap-3 md:gap-6">
                             <div className="w-full flex items-center gap-4">
                                 <div className="flex-1 h-[1px] bg-slate-100"></div>
                                 <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Ou entrar com</span>
@@ -278,7 +278,7 @@ const Login: React.FC = () => {
                             />
                         </div>
 
-                        <div className="mt-6 md:mt-8 text-center space-y-3 md:space-y-4">
+                        <div className="mt-5 md:mt-8 text-center space-y-2 md:space-y-4">
                             <p className="text-xs font-bold text-slate-400">
                                 Não tem conta? <button onClick={() => navigate('/register')} className="text-indigo-600 ml-1">Cadastre-se</button>
                             </p>
@@ -291,7 +291,7 @@ const Login: React.FC = () => {
                         </div>
                     </>
                 ) : (
-                    <form onSubmit={handleResetPassword} className="space-y-4 md:space-y-6 animate-in fade-in duration-300">
+                    <form onSubmit={handleResetPassword} className="space-y-3 md:space-y-6 animate-in fade-in duration-300">
                         <div className="p-4 bg-amber-50 border border-amber-100 rounded-2xl mb-4">
                             <p className="text-[9px] font-black text-amber-600 uppercase tracking-tight leading-relaxed">
                                 Você está usando a senha padrão. Por segurança, crie uma senha forte agora.
@@ -306,7 +306,7 @@ const Login: React.FC = () => {
                                 </div>
                                 <input
                                     type={showNewPassword ? "text" : "password"}
-                                    className="w-full pl-14 pr-14 py-3.5 md:py-5 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-indigo-100 transition-all font-bold text-sm"
+                                    className="w-full pl-14 pr-14 py-3 md:py-5 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-indigo-100 transition-all font-bold text-sm"
                                     placeholder="••••••••"
                                     value={newPassword}
                                     onChange={e => setNewPassword(e.target.value)}
@@ -330,7 +330,7 @@ const Login: React.FC = () => {
                                 </div>
                                 <input
                                     type={showConfirmPassword ? "text" : "password"}
-                                    className="w-full pl-14 pr-14 py-3.5 md:py-5 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-indigo-100 transition-all font-bold text-sm"
+                                    className="w-full pl-14 pr-14 py-3 md:py-5 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-indigo-100 transition-all font-bold text-sm"
                                     placeholder="••••••••"
                                     value={confirmPassword}
                                     onChange={e => setConfirmPassword(e.target.value)}
@@ -349,7 +349,7 @@ const Login: React.FC = () => {
                         <button
                             disabled={isLoading}
                             type="submit"
-                            className="w-full bg-emerald-600 text-white py-3.5 md:py-5 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-emerald-700 transition-all shadow-xl shadow-emerald-200 mt-2 md:mt-4"
+                            className="w-full bg-emerald-600 text-white py-3 md:py-5 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-emerald-700 transition-all shadow-xl shadow-emerald-200 mt-2 md:mt-4"
                         >
                             {isLoading ? 'Salvando...' : 'Salvar Nova Senha'}
                         </button>
@@ -372,7 +372,7 @@ const Login: React.FC = () => {
                 )}
             </div>
 
-            <p className="text-center mt-6 md:mt-12 text-slate-600 text-[10px] font-black uppercase tracking-[0.3em]">
+            <p className="text-center mt-4 md:mt-12 text-slate-600 text-[9px] md:text-[10px] font-black uppercase tracking-[0.3em]">
                 Fransoft Developer®
             </p>
 
