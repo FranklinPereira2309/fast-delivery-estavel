@@ -117,19 +117,23 @@ export const updateClientProfile = async (req: ExpressRequest, res: ExpressRespo
             where: { id }
         });
 
-        if (!client || !client.password) {
+        if (!client) {
             return res.status(404).json({ error: 'Cliente não encontrado.' });
         }
 
         // Se for enviado uma nova senha, a senha atual passa a ser obrigatória para autenticação da troca.
         if (password) {
-            if (!currentPassword) {
-                return res.status(401).json({ error: 'Senha atual é obrigatória para realizar a troca de senhas.' });
+            // Se o usuário já possui senha, exige a validação da senha atual.
+            if (client.password) {
+                if (!currentPassword) {
+                    return res.status(401).json({ error: 'Senha atual é obrigatória para realizar a troca de senhas.' });
+                }
+                const valid = await bcrypt.compare(currentPassword, client.password);
+                if (!valid) {
+                    return res.status(401).json({ error: 'Senha atual incorreta.' });
+                }
             }
-            const valid = await bcrypt.compare(currentPassword, client.password);
-            if (!valid) {
-                return res.status(401).json({ error: 'Senha atual incorreta.' });
-            }
+            // Caso contrário (ex: usuário Google definindo senha pela primeira vez), permite a criação sem senha atual.
         }
 
         const data: any = {};
