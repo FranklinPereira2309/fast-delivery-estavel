@@ -221,7 +221,7 @@ const Home: React.FC = () => {
                 title="SAIR DO SISTEMA"
                 message="DESEJA REALMENTE SAIR DA APLICAÇÃO E VOLTAR PARA O LOGIN?"
                 onConfirm={() => {
-                    localStorage.removeItem('delivery_app_client');
+                    api.logout();
                     window.location.reload();
                 }}
                 onCancel={() => setShowLogoutAlert(false)}
