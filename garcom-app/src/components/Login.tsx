@@ -111,12 +111,12 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess, initialUser }) => {
         <div className="min-h-screen w-full flex items-center justify-center bg-slate-50 p-6 font-sans">
             <div className="w-full max-w-md animate-fade-in">
                 <div className="bg-white p-10 rounded-[3rem] shadow-xl shadow-slate-200/50 border border-slate-100">
-                    <div className="flex flex-col items-center mb-10 text-center">
-                        <div className="w-20 h-20 overflow-hidden rounded-[2.5rem] flex items-center justify-center shadow-2xl shadow-blue-500/30 mb-6 transform -rotate-6 transition-transform hover:rotate-0 duration-500">
-                            <img src="/favicon.png" alt="Logo" className="w-full h-full object-cover" />
+                    <div className="flex flex-col items-center mb-8 md:mb-10 text-center">
+                        <div className="w-16 h-16 md:w-20 md:h-20 bg-blue-600 rounded-[1.2rem] md:rounded-[1.5rem] flex items-center justify-center shadow-2xl shadow-blue-500/30 mb-4 md:mb-6 transform -rotate-3 transition-transform hover:rotate-0 duration-500">
+                            <span className="text-white font-black text-2xl md:text-3xl tracking-tighter">GA</span>
                         </div>
-                        <h1 className="text-3xl font-black text-slate-900 tracking-tighter uppercase leading-none">GARÇOM APP</h1>
-                        <p className="text-slate-400 text-[10px] font-black mt-3 tracking-[0.2em] uppercase">
+                        <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tighter uppercase leading-none">GARÇOM APP</h1>
+                        <p className="text-slate-400 text-[10px] font-black mt-2 md:mt-3 tracking-[0.2em] uppercase">
                             {view === 'LOGIN' ? 'Acesso ao Sistema' :
                                 view === 'FORGOT' ? 'Recuperação de Acesso' :
                                     view === 'FORCE_RESET' ? 'Troca de Senha Obrigatória' :

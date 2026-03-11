@@ -183,18 +183,15 @@ const Login: React.FC = () => {
     return (
         <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-4 md:p-6 relative font-sans">
             <div className="w-full max-w-md animate-in fade-in zoom-in duration-500">
-                <div className="flex flex-col items-center mb-2 md:mb-8 text-center">
-                    <div className="w-14 h-14 md:w-24 md:h-24 bg-indigo-600 rounded-2xl md:rounded-3xl flex items-center justify-center shadow-2xl shadow-indigo-500/20 transform -rotate-12 mb-3 md:mb-6 overflow-hidden">
-                        <img src="/favicon.png" alt="Logo" className="w-8 h-8 md:w-16 md:h-16 object-contain" />
-                    </div>
-                </div>
-
                 <div className="w-full bg-white p-5 md:p-10 rounded-3xl md:rounded-[3rem] shadow-2xl relative">
                 {/* Fechar Modal Login */}
                 {/* Header */}
-                <div className="text-center mb-5 md:mb-8">
-                    <h2 className="text-2xl md:text-3xl font-black text-slate-800 uppercase tracking-tighter italic">Delivery App</h2>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1 md:mt-2">
+                <div className="flex flex-col items-center mb-5 md:mb-8 text-center pt-2 md:pt-0">
+                    <div className="w-16 h-16 md:w-20 md:h-20 bg-indigo-600 rounded-[1.2rem] md:rounded-[1.5rem] flex items-center justify-center shadow-2xl shadow-indigo-500/30 mb-4 md:mb-6 transform -rotate-3 transition-transform hover:rotate-0 duration-500">
+                        <span className="text-white font-black text-2xl md:text-3xl tracking-tighter">DA</span>
+                    </div>
+                    <h2 className="text-2xl md:text-3xl font-black text-slate-800 uppercase tracking-tighter italic leading-none">Delivery App</h2>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2 md:mt-3">
                         {view === 'LOGIN' ? 'Acesso do Cliente' : 'Troca de Senha Obrigatória'}
                     </p>
                 </div>
