@@ -86,124 +86,120 @@ const RecoverPassword: React.FC = () => {
     return (
         <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-4 md:p-6 relative font-sans">
             <div className="w-full max-w-md animate-in fade-in zoom-in duration-500">
-                <div className="flex flex-col items-center mb-10 text-center">
-                    <div className="w-24 h-24 bg-indigo-600 rounded-3xl flex items-center justify-center shadow-2xl shadow-indigo-500/20 transform -rotate-12 mb-8 overflow-hidden">
-                        <img src="/favicon.png" alt="Logo" className="w-16 h-16 object-contain" />
-                    </div>
-                </div>
-
-                <div className="w-full bg-white p-6 md:p-10 rounded-[2.5rem] md:rounded-[3rem] shadow-2xl relative">
-                {/* Fechar Modal Recover */}
-                <button
-                    onClick={() => navigate('/login')}
-                    className="absolute top-4 right-4 md:top-6 md:right-6 p-2 bg-slate-50 text-slate-400 rounded-full hover:bg-slate-100 hover:text-slate-600 transition-all active:scale-95"
-                    title="Voltar"
-                >
-                    <Icons.X className="w-5 h-5" />
-                </button>
-
-                <div className="text-center mb-8">
-                    <h1 className="text-2xl font-black text-slate-800 uppercase tracking-tighter italic leading-snug">Recuperar Conta</h1>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2">Valide seu telefone e e-mail</p>
-                </div>
-
-                <form onSubmit={handleRecover} className="space-y-5">
-                    <div className="space-y-2">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">E-mail Cadastrado</label>
-                        <div className="relative group">
-                            <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors">
-                                <Icons.Mail className="w-5 h-5" />
-                            </div>
-                            <input
-                                type="email"
-                                className="w-full pl-14 pr-4 py-4 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-indigo-100 transition-all font-bold text-sm"
-                                placeholder="seu@email.com"
-                                value={email}
-                                onChange={e => setEmail(e.target.value)}
-                                required
-                            />
-                        </div>
-                    </div>
-
-                    <div className="space-y-2">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">WhatsApp (DDD + Número)</label>
-                        <div className="relative group">
-                            <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors">
-                                <Icons.Phone className="w-5 h-5" />
-                            </div>
-                            <input
-                                type="tel"
-                                className="w-full pl-14 pr-4 py-4 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-indigo-100 transition-all font-bold text-sm"
-                                placeholder="(00) 00000-0000"
-                                value={phone}
-                                onChange={e => setPhone(maskPhone(e.target.value))}
-                                onBlur={async () => {
-                                    const cleanPhone = phone.replace(/\D/g, '');
-                                    if (email && cleanPhone.length === 11) {
-                                        try {
-                                            const { isGoogle } = await api.checkGoogleAccount(email, cleanPhone);
-                                            setIsGoogleAccount(isGoogle);
-                                            if (isGoogle) {
-                                                setAlertState({
-                                                    isOpen: true,
-                                                    title: 'Conta Google Detectada',
-                                                    message: 'Esta conta foi criada usando o Google. Por segurança, você deve recuperar sua senha através do site do Google ou simplesmente fazer login usando o botão "Entrar com Google".',
-                                                    type: 'INFO',
-                                                    onConfirm: () => setAlertState(prev => ({ ...prev, isOpen: false })),
-                                                    onCancel: undefined
-                                                });
-                                                setPassword('');
-                                            }
-                                        } catch (e) {
-                                            console.error('Check google account error:', e);
-                                        }
-                                    }
-                                }}
-                                required
-                            />
-                        </div>
-                    </div>
-
-                    <div className="space-y-2 pt-2 border-t border-slate-100">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4 mt-2 block">Crie uma Nova Senha</label>
-                        <div className="relative group">
-                            <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors">
-                                <Icons.Lock className="w-5 h-5" />
-                            </div>
-                            <input
-                                type={showPassword ? "text" : "password"}
-                                className="w-full pl-14 pr-12 py-4 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-indigo-100 transition-all font-bold text-sm disabled:opacity-50"
-                                placeholder={isGoogleAccount ? "Recuperação via Google" : "••••••••"}
-                                value={password}
-                                onChange={e => setPassword(e.target.value)}
-                                disabled={isGoogleAccount}
-                                required={!isGoogleAccount}
-                            />
-                            <button
-                                type="button"
-                                onClick={() => setShowPassword(!showPassword)}
-                                className="absolute right-4 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-indigo-600 transition-all rounded-xl active:scale-90"
-                            >
-                                {showPassword ? <Icons.EyeOff className="w-5 h-5" /> : <Icons.Eye className="w-5 h-5" />}
-                            </button>
-                        </div>
-                    </div>
-
+                <div className="w-full bg-white p-5 md:p-10 rounded-3xl md:rounded-[3rem] shadow-2xl relative">
+                    {/* Fechar Modal Recover */}
                     <button
-                        disabled={isLoading || isGoogleAccount}
-                        type="submit"
-                        className="w-full bg-slate-800 text-white py-5 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-slate-900 transition-all shadow-xl shadow-slate-200 mt-4 disabled:opacity-50"
+                        onClick={() => navigate('/login')}
+                        className="absolute top-4 right-4 md:top-6 md:right-6 p-2 bg-slate-50 text-slate-400 rounded-full hover:bg-slate-100 hover:text-slate-600 transition-all active:scale-95"
+                        title="Voltar"
                     >
-                        {isGoogleAccount ? 'Use o Google Login' : (isLoading ? 'Aguarde...' : 'Mudar Senha')}
+                        <Icons.X className="w-5 h-5" />
                     </button>
-                </form>
+
+                    <div className="flex flex-col items-center mb-5 md:mb-8 text-center pt-2 md:pt-0">
+                        <div className="w-16 h-16 md:w-20 md:h-20 bg-indigo-600 rounded-[1.2rem] md:rounded-[1.5rem] flex items-center justify-center shadow-2xl shadow-indigo-500/30 mb-4 md:mb-6 transform -rotate-3 transition-transform hover:rotate-0 duration-500">
+                            <span className="text-white font-black text-2xl md:text-3xl tracking-tighter">DA</span>
+                        </div>
+                        <h1 className="text-2xl md:text-3xl font-black text-slate-800 uppercase tracking-tighter italic leading-none">Recuperar Conta</h1>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2 md:mt-3">Valide seu telefone e e-mail</p>
+                    </div>
+
+                    <form onSubmit={handleRecover} className="space-y-3 md:space-y-4">
+                        <div className="space-y-1 md:space-y-2">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">E-mail Cadastrado</label>
+                            <div className="relative group">
+                                <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors">
+                                    <Icons.Mail className="w-5 h-5" />
+                                </div>
+                                <input
+                                    type="email"
+                                    className="w-full pl-14 pr-4 py-3 md:py-4 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-indigo-100 transition-all font-bold text-sm"
+                                    placeholder="seu@email.com"
+                                    value={email}
+                                    onChange={e => setEmail(e.target.value)}
+                                    required
+                                />
+                            </div>
+                        </div>
+
+                        <div className="space-y-1 md:space-y-2">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">WhatsApp (DDD + Número)</label>
+                            <div className="relative group">
+                                <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors">
+                                    <Icons.Phone className="w-5 h-5" />
+                                </div>
+                                <input
+                                    type="tel"
+                                    className="w-full pl-14 pr-4 py-3 md:py-4 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-indigo-100 transition-all font-bold text-sm"
+                                    placeholder="(00) 00000-0000"
+                                    value={phone}
+                                    onChange={e => setPhone(maskPhone(e.target.value))}
+                                    onBlur={async () => {
+                                        const cleanPhone = phone.replace(/\D/g, '');
+                                        if (email && cleanPhone.length === 11) {
+                                            try {
+                                                const { isGoogle } = await api.checkGoogleAccount(email, cleanPhone);
+                                                setIsGoogleAccount(isGoogle);
+                                                if (isGoogle) {
+                                                    setAlertState({
+                                                        isOpen: true,
+                                                        title: 'Conta Google Detectada',
+                                                        message: 'Esta conta foi criada usando o Google. Por segurança, você deve recuperar sua senha através do site do Google ou simplesmente fazer login usando o botão "Entrar com Google".',
+                                                        type: 'INFO',
+                                                        onConfirm: () => setAlertState(prev => ({ ...prev, isOpen: false })),
+                                                        onCancel: undefined
+                                                    });
+                                                    setPassword('');
+                                                }
+                                            } catch (e) {
+                                                console.error('Check google account error:', e);
+                                            }
+                                        }
+                                    }}
+                                    required
+                                />
+                            </div>
+                        </div>
+
+                        <div className="space-y-1 md:space-y-2 pt-2 border-t border-slate-100">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4 mt-2 block">Crie uma Nova Senha</label>
+                            <div className="relative group">
+                                <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors">
+                                    <Icons.Lock className="w-5 h-5" />
+                                </div>
+                                <input
+                                    type={showPassword ? "text" : "password"}
+                                    className="w-full pl-14 pr-12 py-3 md:py-4 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-indigo-100 transition-all font-bold text-sm disabled:opacity-50"
+                                    placeholder={isGoogleAccount ? "Recuperação via Google" : "••••••••"}
+                                    value={password}
+                                    onChange={e => setPassword(e.target.value)}
+                                    disabled={isGoogleAccount}
+                                    required={!isGoogleAccount}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-indigo-600 transition-all rounded-xl active:scale-90"
+                                >
+                                    {showPassword ? <Icons.EyeOff className="w-5 h-5" /> : <Icons.Eye className="w-5 h-5" />}
+                                </button>
+                            </div>
+                        </div>
+
+                        <button
+                            disabled={isLoading || isGoogleAccount}
+                            type="submit"
+                            className="w-full bg-slate-800 text-white py-3 md:py-4 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-slate-900 transition-all shadow-xl shadow-slate-200 mt-2 md:mt-4 disabled:opacity-50 active:scale-[0.98]"
+                        >
+                            {isGoogleAccount ? 'Use o Google Login' : (isLoading ? 'Aguarde...' : 'Mudar Senha')}
+                        </button>
+                    </form>
+                </div>
+
+                <p className="text-center mt-4 md:mt-12 text-slate-600 text-[9px] md:text-[10px] font-black uppercase tracking-[0.3em]">
+                    Fransoft Developer®
+                </p>
             </div>
-        </div>
-
-        <p className="text-center mt-12 text-slate-600 text-[10px] font-black uppercase tracking-[0.3em]">
-            Fransoft Developer®
-        </p>
-
             <CustomAlert
                 isOpen={alertState.isOpen}
                 title={alertState.title}
