@@ -83,14 +83,11 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
     return (
         <div className="min-h-screen w-full flex items-center justify-center bg-slate-900 p-6 font-sans">
             <div className="w-full max-w-md animate-in fade-in zoom-in duration-500">
-                <div className="flex flex-col items-center mb-10 text-center">
-                    <div className="w-24 h-24 bg-blue-600 rounded-3xl flex items-center justify-center shadow-2xl shadow-blue-500/20 transform -rotate-12 mb-8 overflow-hidden">
-                        <img src="/favicon.png" alt="Logo" className="w-16 h-16 object-contain" />
-                    </div>
-                </div>
-
                 <div className="bg-white p-10 rounded-[2.5rem] shadow-2xl">
                     <div className="flex flex-col items-center mb-10 text-center">
+                        <div className="w-16 h-16 md:w-20 md:h-20 bg-blue-600 rounded-[1.2rem] md:rounded-[1.5rem] flex items-center justify-center shadow-2xl shadow-blue-500/30 mb-4 md:mb-6 transform -rotate-3 transition-transform hover:rotate-0 duration-500">
+                            <span className="text-white font-black text-2xl md:text-3xl tracking-tighter">EA</span>
+                        </div>
                         <h2 className="text-3xl font-black text-slate-900 tracking-tighter uppercase leading-none">ENTREGADOR APP</h2>
                         <p className="text-slate-400 text-[10px] font-black mt-3 tracking-[0.2em] uppercase">
                             {view === 'LOGIN' ? 'Acesso ao Sistema' :
