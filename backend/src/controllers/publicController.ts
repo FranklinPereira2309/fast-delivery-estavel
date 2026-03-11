@@ -367,6 +367,16 @@ export const createOrder = async (req: Request, res: Response) => {
         }
         // ----------------------------------
 
+        // --- Verificação de Caixa Aberto ---
+        const activeCashSession = await prisma.cashSession.findFirst({
+            where: { status: 'OPEN' }
+        });
+
+        if (!activeCashSession) {
+            return res.status(403).json({ message: 'No momento não foi possível concluir o seu pedido, favor falar com um garçom' });
+        }
+        // -----------------------------------
+
         const updatedSession = await prisma.$transaction(async (tx) => {
             const tableNumNum = parseInt(tableNumber as string);
             const session = await tx.tableSession.findUnique({ where: { tableNumber: tableNumNum } });
