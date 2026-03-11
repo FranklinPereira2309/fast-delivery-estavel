@@ -15,8 +15,13 @@ const SOCKET_URL = BASE_URL.replace('/api', '');
 // Configuração do axios para incluir o token de sessão se existir
 axios.interceptors.request.use((config) => {
     // Busca o token do localStorage baseado na mesa se possível, ou um global
-    // Para simplificar, vamos tentar buscar 'sessionToken_MesaX'
-    const tableNum = new URLSearchParams(window.location.search).get('mesa');
+    let tableNum = new URLSearchParams(window.location.search).get('mesa');
+    
+    // Tenta pegar do payload se for um POST com tableNumber, útil para requisições de Order
+    if (!tableNum && config.data && config.data.tableNumber) {
+        tableNum = String(config.data.tableNumber);
+    }
+
     if (tableNum) {
         const token = localStorage.getItem(`sessionToken_${tableNum}`);
         if (token) {

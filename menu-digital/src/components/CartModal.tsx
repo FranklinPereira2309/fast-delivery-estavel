@@ -20,6 +20,7 @@ const CartModal: React.FC<CartModalProps> = ({ isOpen, onClose, cart, tableNumbe
     const [clientName, setClientName] = useState('');
     const [success, setSuccess] = useState(false);
     const [showClearConfirm, setShowClearConfirm] = useState(false);
+    const [errorModal, setErrorModal] = useState<{ message: string, isPinError: boolean } | null>(null);
 
     if (!isOpen) return null;
 
@@ -30,7 +31,7 @@ const CartModal: React.FC<CartModalProps> = ({ isOpen, onClose, cart, tableNumbe
 
         const executeOrder = async (lat?: number, lng?: number) => {
             if (storeStatus.status === 'offline') {
-                alert("O restaurante está fechado neste momento e não está aceitando pedidos.");
+                setErrorModal({ message: "O restaurante está fechado neste momento e não está aceitando pedidos.", isPinError: false });
                 setIsSubmitting(false);
                 return;
             }
@@ -62,10 +63,9 @@ const CartModal: React.FC<CartModalProps> = ({ isOpen, onClose, cart, tableNumbe
             } catch (e: any) {
                 console.error(e);
                 if (e.pin_required || e.message?.toLowerCase().includes('pin') || e.message?.toLowerCase().includes('sessão inválida')) {
-                    alert("Sessão expirada ou PIN necessário. A página será recarregada.");
-                    window.location.reload();
+                    setErrorModal({ message: "Sessão expirada ou PIN necessário para enviar o pedido.", isPinError: true });
                 } else {
-                    alert(e.message || "Erro ao enviar o pedido.");
+                    setErrorModal({ message: e.message || "Erro ao enviar o pedido.", isPinError: false });
                 }
                 setIsSubmitting(false);
             }
@@ -96,6 +96,36 @@ const CartModal: React.FC<CartModalProps> = ({ isOpen, onClose, cart, tableNumbe
                     </div>
                     <h2 className="text-2xl font-black text-slate-800 uppercase tracking-tighter mb-2">Pedido Enviado!</h2>
                     <p className="text-slate-500 text-sm font-bold">A cozinha já está preparando o seu pedido.</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (errorModal) {
+        return (
+            <div className="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
+                <div className="bg-white rounded-[2.5rem] w-full max-w-[320px] p-8 text-center shadow-2xl animate-in zoom-in-95 duration-200">
+                    <div className="w-20 h-20 bg-red-100 text-red-500 rounded-full mx-auto flex items-center justify-center mb-6 shadow-lg shadow-red-500/20">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </div>
+                    <h2 className="text-xl font-black text-slate-800 uppercase tracking-tighter mb-4">Erro no Pedido</h2>
+                    <p className="text-slate-500 text-sm font-bold mb-8 leading-relaxed px-2">
+                        {errorModal.message}
+                    </p>
+                    <button
+                        onClick={() => {
+                            if (errorModal.isPinError) {
+                                window.location.reload();
+                            } else {
+                                setErrorModal(null);
+                            }
+                        }}
+                        className="w-full bg-slate-900 hover:bg-black text-white font-black py-4 rounded-2xl transition-all shadow-xl active:scale-95 uppercase text-xs tracking-widest"
+                    >
+                        {errorModal.isPinError ? "Recarregar Página" : "Tentar Novamente"}
+                    </button>
                 </div>
             </div>
         );
