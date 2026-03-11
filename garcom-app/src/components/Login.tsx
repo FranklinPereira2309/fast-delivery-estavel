@@ -108,9 +108,9 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess, initialUser }) => {
     };
 
     return (
-        <div className="min-h-screen w-full flex items-center justify-center bg-slate-50 p-6 font-sans">
+        <div className="min-h-screen w-full flex items-center justify-center bg-slate-900 p-6 font-sans">
             <div className="w-full max-w-md animate-fade-in">
-                <div className="bg-white p-10 rounded-[3rem] shadow-xl shadow-slate-200/50 border border-slate-100">
+                <div className="bg-white p-10 rounded-[3rem] shadow-2xl shadow-black/40 border border-slate-800">
                     <div className="flex flex-col items-center mb-8 md:mb-10 text-center">
                         <div className="w-16 h-16 md:w-20 md:h-20 bg-blue-600 rounded-[1.2rem] md:rounded-[1.5rem] flex items-center justify-center shadow-2xl shadow-blue-500/30 mb-4 md:mb-6 transform -rotate-3 transition-transform hover:rotate-0 duration-500">
                             <span className="text-white font-black text-2xl md:text-3xl tracking-tighter">GA</span>
@@ -325,7 +325,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess, initialUser }) => {
                 </div>
 
                 <p className="text-center mt-10 text-slate-400 text-[9px] font-black uppercase tracking-[0.3em]">
-                    Copyright © 2026 • DF Service System
+                    Fransoft Developer ®
                 </p>
             </div>
         </div>
