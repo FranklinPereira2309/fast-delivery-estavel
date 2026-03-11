@@ -121,6 +121,10 @@ class DeliveryApiService {
         } as RequestInit & { overrideToken?: string });
     }
 
+    async checkPhone(phone: string) {
+        return this.request<{ available: boolean }>(`/client-auth/check-phone/${phone}`);
+    }
+
     async getSupportHistory(clientId: string) {
         return this.request<any[]>(`/support?clientId=${clientId}&t=${Date.now()}`);
     }

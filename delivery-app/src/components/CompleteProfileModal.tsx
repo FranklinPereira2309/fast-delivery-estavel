@@ -14,6 +14,8 @@ const CompleteProfileModal: React.FC<CompleteProfileModalProps> = ({ isOpen, cli
     const [isLoading, setIsLoading] = useState(false);
     const [isFetchingCep, setIsFetchingCep] = useState(false);
     const [phone, setPhone] = useState(client.phone === '00000000000' ? '' : client.phone);
+    const [isCheckingPhone, setIsCheckingPhone] = useState(false);
+    const [phoneTaken, setPhoneTaken] = useState(false);
     const [error, setError] = useState('');
 
     const [address, setAddress] = useState({
@@ -34,6 +36,26 @@ const CompleteProfileModal: React.FC<CompleteProfileModalProps> = ({ isOpen, cli
         if (numbers.length <= 3) return `(${numbers.slice(0, 2)}) ${numbers.slice(2)}`;
         if (numbers.length <= 7) return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 3)} ${numbers.slice(3)}`;
         return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 3)} ${numbers.slice(3, 7)}-${numbers.slice(7, 11)}`;
+    };
+
+    const handlePhoneBlur = async () => {
+        const cleanPhone = phone.replace(/\D/g, '');
+        if (cleanPhone.length !== 11) return;
+        if (cleanPhone === client.phone) return;
+
+        setIsCheckingPhone(true);
+        setPhoneTaken(false);
+        try {
+            const { available } = await api.checkPhone(cleanPhone);
+            if (!available) {
+                setPhoneTaken(true);
+                setError('Este número de telefone já está cadastrado em outra conta. Por favor, utilize um número novo.');
+            }
+        } catch (err) {
+            console.error('Check phone error:', err);
+        } finally {
+            setIsCheckingPhone(false);
+        }
     };
 
     const handleCepBlur = async () => {
@@ -65,9 +87,13 @@ const CompleteProfileModal: React.FC<CompleteProfileModalProps> = ({ isOpen, cli
         e.preventDefault();
         setError('');
         const cleanPhone = phone.replace(/\D/g, '');
-
         if (cleanPhone.length !== 11) {
             setError('WhatsApp inválido. Insira 11 dígitos.');
+            return;
+        }
+
+        if (phoneTaken) {
+            setError('Este número de telefone já está cadastrado em outra conta. Por favor, utilize um número novo.');
             return;
         }
 
@@ -129,8 +155,23 @@ const CompleteProfileModal: React.FC<CompleteProfileModalProps> = ({ isOpen, cli
                                 placeholder="(00) 0 0000-0000"
                                 className="w-full pl-14 pr-4 py-4 bg-white border border-slate-100 rounded-2xl font-bold text-sm focus:ring-4 focus:ring-indigo-100 transition-all outline-none"
                                 value={phone}
-                                onChange={e => setPhone(maskPhone(e.target.value))}
+                                onBlur={handlePhoneBlur}
+                                onChange={e => {
+                                    setPhone(maskPhone(e.target.value));
+                                    setPhoneTaken(false);
+                                    if (error.includes('telefone')) setError('');
+                                }}
                             />
+                            {isCheckingPhone && (
+                                <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                                    <div className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+                                </div>
+                            )}
+                            {phoneTaken && !isCheckingPhone && (
+                                <div className="absolute right-4 top-1/2 -translate-y-1/2 text-rose-500">
+                                    <Icons.X className="w-5 h-5" />
+                                </div>
+                            )}
                         </div>
                     </div>
 

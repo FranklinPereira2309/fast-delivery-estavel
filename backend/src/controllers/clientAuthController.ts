@@ -139,7 +139,24 @@ export const updateClientProfile = async (req: ExpressRequest, res: ExpressRespo
         const data: any = {};
         if (name) data.name = name;
         if (email) data.email = email;
-        if (phone) data.phone = phone.replace(/\D/g, '');
+        if (phone) {
+            const cleanPhone = phone.replace(/\D/g, '');
+            // Check if phone is already taken by ANOTHER user
+            const existingPhone = await prisma.client.findFirst({
+                where: {
+                    AND: [
+                        { phone: cleanPhone },
+                        { id: { not: id } },
+                        { phone: { not: '00000000000' } }
+                    ]
+                }
+            });
+
+            if (existingPhone) {
+                return res.status(409).json({ error: 'Este número de telefone já está cadastrado em outra conta. Por favor, utilize um número novo.' });
+            }
+            data.phone = cleanPhone;
+        }
         if (addresses) data.addresses = addresses;
         if (cep) data.cep = cep;
         if (street) data.street = street;
@@ -282,5 +299,23 @@ export const googleLoginClient = async (req: ExpressRequest, res: ExpressRespons
     } catch (error) {
         console.error('Google Login Error:', error);
         res.status(500).json({ message: 'Erro ao autenticar com Google.' });
+    }
+};
+
+export const checkPhoneAvailability = async (req: ExpressRequest, res: ExpressResponse) => {
+    try {
+        const phoneParam = req.params.phone as string;
+        const phone = phoneParam?.replace(/\D/g, '');
+        if (!phone || phone === '00000000000') {
+            return res.json({ available: true });
+        }
+
+        const client = await prisma.client.findFirst({
+            where: { phone }
+        });
+
+        res.json({ available: !client });
+    } catch (error) {
+        res.status(500).json({ error: 'Erro ao verificar telefone.' });
     }
 };
