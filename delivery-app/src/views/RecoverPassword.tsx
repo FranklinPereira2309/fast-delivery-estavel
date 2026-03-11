@@ -103,34 +103,47 @@ const RecoverPassword: React.FC = () => {
                 <form onSubmit={handleRecover} className="space-y-5">
                     <div className="space-y-2">
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">E-mail Cadastrado</label>
-                        <input
-                            type="email"
-                            className="w-full p-4 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-indigo-100 transition-all font-bold text-sm"
-                            placeholder="seu@email.com"
-                            value={email}
-                            onChange={e => setEmail(e.target.value)}
-                            required
-                        />
+                        <div className="relative group">
+                            <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors">
+                                <Icons.Mail className="w-5 h-5" />
+                            </div>
+                            <input
+                                type="email"
+                                className="w-full pl-14 pr-4 py-4 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-indigo-100 transition-all font-bold text-sm"
+                                placeholder="seu@email.com"
+                                value={email}
+                                onChange={e => setEmail(e.target.value)}
+                                required
+                            />
+                        </div>
                     </div>
 
                     <div className="space-y-2">
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">WhatsApp (DDD + Número)</label>
-                        <input
-                            type="tel"
-                            className="w-full p-4 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-indigo-100 transition-all font-bold text-sm"
-                            placeholder="(00) 00000-0000"
-                            value={phone}
-                            onChange={e => setPhone(maskPhone(e.target.value))}
-                            required
-                        />
+                        <div className="relative group">
+                            <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors">
+                                <Icons.Phone className="w-5 h-5" />
+                            </div>
+                            <input
+                                type="tel"
+                                className="w-full pl-14 pr-4 py-4 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-indigo-100 transition-all font-bold text-sm"
+                                placeholder="(00) 00000-0000"
+                                value={phone}
+                                onChange={e => setPhone(maskPhone(e.target.value))}
+                                required
+                            />
+                        </div>
                     </div>
 
                     <div className="space-y-2 pt-2 border-t border-slate-100">
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4 mt-2 block">Crie uma Nova Senha</label>
-                        <div className="relative">
+                        <div className="relative group">
+                            <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors">
+                                <Icons.Lock className="w-5 h-5" />
+                            </div>
                             <input
                                 type={showPassword ? "text" : "password"}
-                                className="w-full p-4 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-indigo-100 transition-all font-bold text-sm pr-12"
+                                className="w-full pl-14 pr-12 py-4 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-indigo-100 transition-all font-bold text-sm"
                                 placeholder="••••••••"
                                 value={password}
                                 onChange={e => setPassword(e.target.value)}

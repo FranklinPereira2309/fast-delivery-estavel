@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
 import { api } from '../services/api';
+import { Icons } from '../constants';
 import type { Client } from '../types';
 
 interface CompleteProfileModalProps {
     isOpen: boolean;
     client: Client;
     onComplete: (updatedClient: Client) => void;
+    onClose: () => void;
 }
 
-const CompleteProfileModal: React.FC<CompleteProfileModalProps> = ({ isOpen, client, onComplete }) => {
+const CompleteProfileModal: React.FC<CompleteProfileModalProps> = ({ isOpen, client, onComplete, onClose }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [isFetchingCep, setIsFetchingCep] = useState(false);
     const [phone, setPhone] = useState(client.phone === '00000000000' ? '' : client.phone);
@@ -100,6 +102,13 @@ const CompleteProfileModal: React.FC<CompleteProfileModalProps> = ({ isOpen, cli
     return (
         <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
             <div className="bg-slate-50 w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl relative animate-in zoom-in-95 duration-300 border border-white">
+                <button 
+                    onClick={onClose}
+                    className="absolute right-6 top-6 w-10 h-10 bg-white rounded-full flex items-center justify-center text-slate-400 hover:text-rose-500 hover:shadow-lg transition-all active:scale-95 z-10 border border-slate-100"
+                >
+                    <Icons.X className="w-5 h-5" />
+                </button>
+
                 <div className="text-center mb-8">
                     <h2 className="text-2xl font-black text-slate-800 uppercase tracking-tighter italic">Completar Cadastro</h2>
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2">
@@ -110,26 +119,34 @@ const CompleteProfileModal: React.FC<CompleteProfileModalProps> = ({ isOpen, cli
                 <form onSubmit={handleSave} className="space-y-5">
                     <div className="space-y-2">
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">WhatsApp</label>
-                        <input
-                            type="tel"
-                            required
-                            placeholder="(00) 0 0000-0000"
-                            className="w-full p-4 bg-white border border-slate-100 rounded-2xl font-bold text-sm focus:ring-4 focus:ring-indigo-100 transition-all outline-none"
-                            value={phone}
-                            onChange={e => setPhone(maskPhone(e.target.value))}
-                        />
+                        <div className="relative group">
+                            <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors">
+                                <Icons.Phone className="w-5 h-5" />
+                            </div>
+                            <input
+                                type="tel"
+                                required
+                                placeholder="(00) 0 0000-0000"
+                                className="w-full pl-14 pr-4 py-4 bg-white border border-slate-100 rounded-2xl font-bold text-sm focus:ring-4 focus:ring-indigo-100 transition-all outline-none"
+                                value={phone}
+                                onChange={e => setPhone(maskPhone(e.target.value))}
+                            />
+                        </div>
                     </div>
 
                     <div className="space-y-4">
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Endereço de Entrega</label>
                         <div className="bg-white rounded-[1.5rem] p-4 shadow-sm border border-slate-100 space-y-3">
-                            <div className="relative">
+                            <div className="relative group">
+                                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors">
+                                    <Icons.MapPin className="w-4 h-4" />
+                                </div>
                                 <input
                                     type="text"
                                     placeholder="CEP"
                                     required
                                     maxLength={10}
-                                    className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm outline-none"
+                                    className="w-full pl-11 pr-3 py-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm outline-none focus:bg-white transition-all"
                                     value={address.cep}
                                     onBlur={handleCepBlur}
                                     onChange={e => {
@@ -142,57 +159,87 @@ const CompleteProfileModal: React.FC<CompleteProfileModalProps> = ({ isOpen, cli
                                 />
                                 {isFetchingCep && <div className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>}
                             </div>
-                            <input
-                                type="text"
-                                placeholder="Rua"
-                                required
-                                className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm outline-none"
-                                value={address.street}
-                                onChange={e => setAddress({ ...address, street: e.target.value })}
-                            />
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="relative group">
+                                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors">
+                                    <Icons.Map className="w-4 h-4" />
+                                </div>
                                 <input
                                     type="text"
-                                    placeholder="Número"
+                                    placeholder="Rua"
                                     required
-                                    className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm outline-none"
-                                    value={address.number}
-                                    onChange={e => setAddress({ ...address, number: e.target.value })}
-                                />
-                                <input
-                                    type="text"
-                                    placeholder="Bairro"
-                                    required
-                                    className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm outline-none"
-                                    value={address.neighborhood}
-                                    onChange={e => setAddress({ ...address, neighborhood: e.target.value })}
+                                    className="w-full pl-11 pr-3 py-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm outline-none focus:bg-white transition-all"
+                                    value={address.street}
+                                    onChange={e => setAddress({ ...address, street: e.target.value })}
                                 />
                             </div>
-                            <input
-                                type="text"
-                                placeholder="Complemento"
-                                className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm outline-none"
-                                value={address.complement}
-                                onChange={e => setAddress({ ...address, complement: e.target.value })}
-                            />
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="relative group">
+                                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors">
+                                        <Icons.Home className="w-4 h-4" />
+                                    </div>
+                                    <input
+                                        type="text"
+                                        placeholder="Número"
+                                        required
+                                        className="w-full pl-11 pr-3 py-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm outline-none focus:bg-white transition-all"
+                                        value={address.number}
+                                        onChange={e => setAddress({ ...address, number: e.target.value })}
+                                    />
+                                </div>
+                                <div className="relative group">
+                                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors">
+                                        <Icons.Layers className="w-4 h-4" />
+                                    </div>
+                                    <input
+                                        type="text"
+                                        placeholder="Bairro"
+                                        required
+                                        className="w-full pl-11 pr-3 py-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm outline-none focus:bg-white transition-all"
+                                        value={address.neighborhood}
+                                        onChange={e => setAddress({ ...address, neighborhood: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+                            <div className="relative group">
+                                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors">
+                                    <Icons.Info className="w-4 h-4" />
+                                </div>
+                                <input
+                                    type="text"
+                                    placeholder="Complemento"
+                                    className="w-full pl-11 pr-3 py-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm outline-none focus:bg-white transition-all"
+                                    value={address.complement}
+                                    onChange={e => setAddress({ ...address, complement: e.target.value })}
+                                />
+                            </div>
                             <div className="grid grid-cols-3 gap-3">
-                                <input
-                                    type="text"
-                                    placeholder="Cidade"
-                                    required
-                                    className="col-span-2 w-full p-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm outline-none"
-                                    value={address.city}
-                                    onChange={e => setAddress({ ...address, city: e.target.value })}
-                                />
-                                <input
-                                    type="text"
-                                    placeholder="UF"
-                                    required
-                                    maxLength={2}
-                                    className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm outline-none uppercase"
-                                    value={address.state}
-                                    onChange={e => setAddress({ ...address, state: e.target.value.toUpperCase() })}
-                                />
+                                <div className="col-span-2 relative group">
+                                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors">
+                                        <Icons.MapPin className="w-4 h-4" />
+                                    </div>
+                                    <input
+                                        type="text"
+                                        placeholder="Cidade"
+                                        required
+                                        className="w-full pl-11 pr-3 py-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm outline-none focus:bg-white transition-all"
+                                        value={address.city}
+                                        onChange={e => setAddress({ ...address, city: e.target.value })}
+                                    />
+                                </div>
+                                <div className="relative group">
+                                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors">
+                                        <Icons.Globe className="w-3 h-3" />
+                                    </div>
+                                    <input
+                                        type="text"
+                                        placeholder="UF"
+                                        required
+                                        maxLength={2}
+                                        className="w-full pl-9 pr-2 py-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-[10px] outline-none uppercase focus:bg-white transition-all"
+                                        value={address.state}
+                                        onChange={e => setAddress({ ...address, state: e.target.value.toUpperCase() })}
+                                    />
+                                </div>
                             </div>
                         </div>
                     </div>

@@ -264,6 +264,7 @@ const Home: React.FC = () => {
                         setClient(updatedClient);
                         setShowCompleteProfile(false);
                     }}
+                    onClose={() => setShowCompleteProfile(false)}
                 />
             )}
         </div>

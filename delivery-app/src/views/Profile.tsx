@@ -181,24 +181,34 @@ const Profile: React.FC = () => {
                         <div className="space-y-4">
                             <div>
                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4 mb-2 block">Nome Completo</label>
-                                <input
-                                    type="text"
-                                    required
-                                    value={formData.name}
-                                    onChange={e => setFormData({ ...formData, name: e.target.value })}
-                                    className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm focus:ring-4 focus:ring-indigo-50 focus:border-indigo-200 transition-all outline-none"
-                                />
+                                <div className="relative group">
+                                    <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors">
+                                        <Icons.User className="w-5 h-5" />
+                                    </div>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={formData.name}
+                                        onChange={e => setFormData({ ...formData, name: e.target.value })}
+                                        className="w-full pl-14 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm focus:ring-4 focus:ring-indigo-50 focus:border-indigo-200 transition-all outline-none"
+                                    />
+                                </div>
                             </div>
 
                             <div>
                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4 mb-2 block">E-mail</label>
-                                <input
-                                    type="email"
-                                    required
-                                    value={formData.email}
-                                    onChange={e => setFormData({ ...formData, email: e.target.value })}
-                                    className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm focus:ring-4 focus:ring-indigo-50 focus:border-indigo-200 transition-all outline-none"
-                                />
+                                <div className="relative group">
+                                    <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors">
+                                        <Icons.Mail className="w-5 h-5" />
+                                    </div>
+                                    <input
+                                        type="email"
+                                        required
+                                        value={formData.email}
+                                        onChange={e => setFormData({ ...formData, email: e.target.value })}
+                                        className="w-full pl-14 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm focus:ring-4 focus:ring-indigo-50 focus:border-indigo-200 transition-all outline-none"
+                                    />
+                                </div>
                             </div>
 
                             <div>
@@ -245,7 +255,10 @@ const Profile: React.FC = () => {
                                             </div>
 
                                             <div className="bg-white rounded-[1.5rem] p-4 shadow-sm border border-slate-100 mb-6 space-y-3 max-h-[60vh] overflow-y-auto">
-                                                <div className="relative">
+                                                <div className="relative group">
+                                                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors">
+                                                        <Icons.Search className="w-4 h-4" />
+                                                    </div>
                                                     <input
                                                         type="text"
                                                         placeholder="CEP"
@@ -259,56 +272,86 @@ const Profile: React.FC = () => {
                                                             if (val.length > 5) masked = `${val.slice(0, 2)}.${val.slice(2, 5)}-${val.slice(5, 8)}`;
                                                             setFormData({ ...formData, cep: masked });
                                                         }}
-                                                        className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm outline-none"
+                                                        className="w-full pl-11 pr-3 py-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm outline-none"
                                                     />
                                                     {isFetchingCep && <div className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>}
                                                 </div>
-                                                <input
-                                                    type="text"
-                                                    placeholder="Rua"
-                                                    value={formData.street}
-                                                    onChange={e => setFormData({ ...formData, street: e.target.value })}
-                                                    className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm outline-none"
-                                                />
-                                                <div className="grid grid-cols-2 gap-3">
+                                                <div className="relative group">
+                                                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors">
+                                                        <Icons.Map className="w-4 h-4" />
+                                                    </div>
                                                     <input
                                                         type="text"
-                                                        placeholder="Número"
-                                                        value={formData.addressNumber}
-                                                        onChange={e => setFormData({ ...formData, addressNumber: e.target.value })}
-                                                        className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm outline-none"
-                                                    />
-                                                    <input
-                                                        type="text"
-                                                        placeholder="Bairro"
-                                                        value={formData.neighborhood}
-                                                        onChange={e => setFormData({ ...formData, neighborhood: e.target.value })}
-                                                        className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm outline-none"
+                                                        placeholder="Rua"
+                                                        value={formData.street}
+                                                        onChange={e => setFormData({ ...formData, street: e.target.value })}
+                                                        className="w-full pl-11 pr-3 py-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm outline-none"
                                                     />
                                                 </div>
-                                                <input
-                                                    type="text"
-                                                    placeholder="Complemento"
-                                                    value={formData.complement}
-                                                    onChange={e => setFormData({ ...formData, complement: e.target.value })}
-                                                    className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm outline-none"
-                                                />
+                                                <div className="grid grid-cols-2 gap-3">
+                                                    <div className="relative group">
+                                                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors">
+                                                            <Icons.Home className="w-4 h-4" />
+                                                        </div>
+                                                        <input
+                                                            type="text"
+                                                            placeholder="Número"
+                                                            value={formData.addressNumber}
+                                                            onChange={e => setFormData({ ...formData, addressNumber: e.target.value })}
+                                                            className="w-full pl-11 pr-3 py-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm outline-none"
+                                                        />
+                                                    </div>
+                                                    <div className="relative group">
+                                                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors">
+                                                            <Icons.Layers className="w-4 h-4" />
+                                                        </div>
+                                                        <input
+                                                            type="text"
+                                                            placeholder="Bairro"
+                                                            value={formData.neighborhood}
+                                                            onChange={e => setFormData({ ...formData, neighborhood: e.target.value })}
+                                                            className="w-full pl-11 pr-3 py-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm outline-none"
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <div className="relative group">
+                                                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors">
+                                                        <Icons.Info className="w-4 h-4" />
+                                                    </div>
+                                                    <input
+                                                        type="text"
+                                                        placeholder="Complemento"
+                                                        value={formData.complement}
+                                                        onChange={e => setFormData({ ...formData, complement: e.target.value })}
+                                                        className="w-full pl-11 pr-3 py-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm outline-none"
+                                                    />
+                                                </div>
                                                 <div className="grid grid-cols-3 gap-3">
-                                                    <input
-                                                        type="text"
-                                                        placeholder="Cidade"
-                                                        value={formData.city}
-                                                        className="col-span-2 w-full p-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm outline-none"
-                                                        onChange={e => setFormData({ ...formData, city: e.target.value })}
-                                                    />
-                                                    <input
-                                                        type="text"
-                                                        placeholder="UF"
-                                                        maxLength={2}
-                                                        value={formData.state}
-                                                        className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm outline-none uppercase"
-                                                        onChange={e => setFormData({ ...formData, state: e.target.value.toUpperCase() })}
-                                                    />
+                                                    <div className="col-span-2 relative group">
+                                                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors">
+                                                            <Icons.MapPin className="w-4 h-4" />
+                                                        </div>
+                                                        <input
+                                                            type="text"
+                                                            placeholder="Cidade"
+                                                            value={formData.city}
+                                                            className="w-full pl-11 pr-3 py-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm outline-none"
+                                                            onChange={e => setFormData({ ...formData, city: e.target.value })}
+                                                        />
+                                                    </div>
+                                                    <div className="relative group">
+                                                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors">
+                                                            <Icons.Globe className="w-3.5 h-3.5" />
+                                                        </div>
+                                                        <input
+                                                            type="text"
+                                                            placeholder="UF"
+                                                            maxLength={2}
+                                                            value={formData.state}
+                                                            className="w-full pl-9 pr-1 py-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm outline-none uppercase"
+                                                            onChange={e => setFormData({ ...formData, state: e.target.value.toUpperCase() })}
+                                                        />
+                                                    </div>
                                                 </div>
                                             </div>
 
@@ -369,37 +412,46 @@ const Profile: React.FC = () => {
                         <div className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 space-y-4">
                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4 mb-2 block">Alterar Senha (Opcional)</label>
                             <div className="space-y-3">
-                                <div className="relative">
+                                <div className="relative group">
+                                    <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors">
+                                        <Icons.Lock className="w-5 h-5" />
+                                    </div>
                                     <input
                                         type={showCurrentPassword ? "text" : "password"}
                                         placeholder="Senha Atual"
                                         value={formData.currentPassword}
                                         onChange={e => setFormData({ ...formData, currentPassword: e.target.value })}
-                                        className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm focus:ring-4 focus:ring-indigo-50 transition-all outline-none"
+                                        className="w-full pl-14 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm focus:ring-4 focus:ring-indigo-50 transition-all outline-none"
                                     />
                                     <button type="button" onClick={() => setShowCurrentPassword(!showCurrentPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-500 transition-colors">
                                         {showCurrentPassword ? <Icons.EyeOff className="w-5 h-5" /> : <Icons.Eye className="w-5 h-5" />}
                                     </button>
                                 </div>
-                                <div className="relative">
+                                <div className="relative group">
+                                    <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors">
+                                        <Icons.Lock className="w-5 h-5" />
+                                    </div>
                                     <input
                                         type={showPassword ? "text" : "password"}
                                         placeholder="Nova Senha"
                                         value={formData.password}
                                         onChange={e => setFormData({ ...formData, password: e.target.value })}
-                                        className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm focus:ring-4 focus:ring-indigo-50 transition-all outline-none"
+                                        className="w-full pl-14 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm focus:ring-4 focus:ring-indigo-50 transition-all outline-none"
                                     />
                                     <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-500 transition-colors">
                                         {showPassword ? <Icons.EyeOff className="w-5 h-5" /> : <Icons.Eye className="w-5 h-5" />}
                                     </button>
                                 </div>
-                                <div className="relative">
+                                <div className="relative group">
+                                    <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors">
+                                        <Icons.Lock className="w-5 h-5" />
+                                    </div>
                                     <input
                                         type={showConfirmPassword ? "text" : "password"}
                                         placeholder="Confirmar Nova Senha"
                                         value={formData.confirmPassword}
                                         onChange={e => setFormData({ ...formData, confirmPassword: e.target.value })}
-                                        className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm focus:ring-4 focus:ring-indigo-50 transition-all outline-none"
+                                        className="w-full pl-14 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm focus:ring-4 focus:ring-indigo-50 transition-all outline-none"
                                     />
                                     <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-500 transition-colors">
                                         {showConfirmPassword ? <Icons.EyeOff className="w-5 h-5" /> : <Icons.Eye className="w-5 h-5" />}

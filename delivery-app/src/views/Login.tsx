@@ -204,22 +204,30 @@ const Login: React.FC = () => {
                         <form onSubmit={handleLogin} className="space-y-6">
                             <div className="space-y-2">
                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">WhatsApp</label>
-                                <input
-                                    type="tel"
-                                    className="w-full p-5 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-indigo-100 transition-all font-bold text-sm"
-                                    placeholder="(00) 00000-0000"
-                                    value={phone}
-                                    onChange={e => setPhone(maskPhone(e.target.value))}
-                                    required
-                                />
+                                <div className="relative group">
+                                    <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors">
+                                        <Icons.Phone className="w-5 h-5" />
+                                    </div>
+                                    <input
+                                        type="tel"
+                                        className="w-full pl-14 pr-5 py-5 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-indigo-100 transition-all font-bold text-sm"
+                                        placeholder="(00) 00000-0000"
+                                        value={phone}
+                                        onChange={e => setPhone(maskPhone(e.target.value))}
+                                        required
+                                    />
+                                </div>
                             </div>
 
                             <div className="space-y-2">
                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Senha</label>
-                                <div className="relative">
+                                <div className="relative group">
+                                    <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors">
+                                        <Icons.Lock className="w-5 h-5" />
+                                    </div>
                                     <input
                                         type={showPassword ? "text" : "password"}
-                                        className="w-full p-5 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-indigo-100 transition-all font-bold text-sm pr-14"
+                                        className="w-full pl-14 pr-14 py-5 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-indigo-100 transition-all font-bold text-sm pr-14"
                                         placeholder="••••••••"
                                         value={password}
                                         onChange={e => setPassword(e.target.value)}
@@ -292,10 +300,13 @@ const Login: React.FC = () => {
 
                         <div className="space-y-2">
                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Nova Senha</label>
-                            <div className="relative">
+                            <div className="relative group">
+                                <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors">
+                                    <Icons.Lock className="w-5 h-5" />
+                                </div>
                                 <input
                                     type={showNewPassword ? "text" : "password"}
-                                    className="w-full p-5 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-indigo-100 transition-all font-bold text-sm pr-14"
+                                    className="w-full pl-14 pr-14 py-5 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-indigo-100 transition-all font-bold text-sm pr-14"
                                     placeholder="••••••••"
                                     value={newPassword}
                                     onChange={e => setNewPassword(e.target.value)}
@@ -313,10 +324,13 @@ const Login: React.FC = () => {
 
                         <div className="space-y-2">
                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Confirme a Senha</label>
-                            <div className="relative">
+                            <div className="relative group">
+                                <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors">
+                                    <Icons.Lock className="w-5 h-5" />
+                                </div>
                                 <input
                                     type={showConfirmPassword ? "text" : "password"}
-                                    className="w-full p-5 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-indigo-100 transition-all font-bold text-sm pr-14"
+                                    className="w-full pl-14 pr-14 py-5 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-indigo-100 transition-all font-bold text-sm pr-14"
                                     placeholder="••••••••"
                                     value={confirmPassword}
                                     onChange={e => setConfirmPassword(e.target.value)}
@@ -358,6 +372,10 @@ const Login: React.FC = () => {
                 )}
             </div>
 
+            <p className="text-center mt-12 text-slate-600 text-[10px] font-black uppercase tracking-[0.3em]">
+                Fransoft Developer®
+            </p>
+
             <CustomAlert
                 isOpen={alertState.isOpen}
                 title={alertState.title}
@@ -366,14 +384,9 @@ const Login: React.FC = () => {
                 onConfirm={alertState.onConfirm}
                 onCancel={alertState.onCancel}
             />
-                </div >
-
-                <p className="text-center mt-12 text-slate-600 text-[10px] font-black uppercase tracking-[0.3em]">
-                    Fransoft Developer®
-                </p>
-            </div>
         </div>
-    );
+    </div>
+);
 };
 
 export default Login;

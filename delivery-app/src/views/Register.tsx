@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
-import { Eye, EyeOff, MapPin, ChevronDown, ChevronUp } from 'lucide-react';
+import { Icons } from '../constants';
 import CustomAlert from '../components/CustomAlert';
 
 const Register: React.FC = () => {
@@ -149,7 +149,7 @@ const Register: React.FC = () => {
         }
     };
 
-    const inputClasses = "w-full p-4 bg-slate-50/50 border border-slate-200/50 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-400 focus:bg-white transition-all font-medium text-sm text-slate-600 placeholder:text-slate-400";
+    const inputClasses = "w-full pl-14 pr-4 py-4 bg-slate-50/50 border border-slate-200/50 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-400 focus:bg-white transition-all font-medium text-sm text-slate-600 placeholder:text-slate-400";
     const labelClasses = "text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-1 block";
 
     return (
@@ -186,35 +186,50 @@ const Register: React.FC = () => {
                     <div className="space-y-5">
                         <div className="space-y-1">
                             <label className={labelClasses}>Nome Completo</label>
-                            <input
-                                type="text" required
-                                className={inputClasses}
-                                placeholder="João Silva"
-                                value={formData.name}
-                                onChange={e => setFormData({ ...formData, name: e.target.value })}
-                            />
+                            <div className="relative group">
+                                <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors">
+                                    <Icons.User className="w-5 h-5" />
+                                </div>
+                                <input
+                                    type="text" required
+                                    className={inputClasses}
+                                    placeholder="João Silva"
+                                    value={formData.name}
+                                    onChange={e => setFormData({ ...formData, name: e.target.value })}
+                                />
+                            </div>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div className="space-y-1">
                                 <label className={labelClasses}>E-mail</label>
-                                <input
-                                    type="email" required
-                                    className={inputClasses}
-                                    placeholder="seu@email.com"
-                                    value={formData.email}
-                                    onChange={e => setFormData({ ...formData, email: e.target.value })}
-                                />
+                                <div className="relative group">
+                                    <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors">
+                                        <Icons.Mail className="w-5 h-5" />
+                                    </div>
+                                    <input
+                                        type="email" required
+                                        className={inputClasses}
+                                        placeholder="seu@email.com"
+                                        value={formData.email}
+                                        onChange={e => setFormData({ ...formData, email: e.target.value })}
+                                    />
+                                </div>
                             </div>
                             <div className="space-y-1">
                                 <label className={labelClasses}>WhatsApp</label>
-                                <input
-                                    type="tel" required
-                                    className={inputClasses}
-                                    placeholder="(11) 90000-0000"
-                                    value={formData.phone}
-                                    onChange={e => setFormData({ ...formData, phone: maskPhone(e.target.value) })}
-                                />
+                                <div className="relative group">
+                                    <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors">
+                                        <Icons.Phone className="w-5 h-5" />
+                                    </div>
+                                    <input
+                                        type="tel" required
+                                        className={inputClasses}
+                                        placeholder="(11) 90000-0000"
+                                        value={formData.phone}
+                                        onChange={e => setFormData({ ...formData, phone: maskPhone(e.target.value) })}
+                                    />
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -227,14 +242,14 @@ const Register: React.FC = () => {
                             className="w-full flex items-center justify-between p-4 bg-slate-50 hover:bg-slate-100 rounded-2xl transition-colors group cursor-pointer"
                         >
                             <div className="flex items-center gap-3">
-                                <MapPin className="w-5 h-5 text-indigo-500" />
+                                <Icons.MapPin className="w-5 h-5 text-indigo-500" />
                                 <span className="text-sm font-bold text-slate-700">Endereço de Entrega</span>
                                 {!showAddress && formData.street && (
                                     <span className="text-[10px] font-black uppercase tracking-widest text-emerald-500 bg-emerald-50 px-2 py-1 rounded-md">Preenchido</span>
                                 )}
                             </div>
                             <div className="text-slate-400 group-hover:text-slate-600 transition-colors">
-                                {showAddress ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                                {showAddress ? <Icons.ChevronUp className="w-5 h-5" /> : <Icons.ChevronDown className="w-5 h-5" />}
                             </div>
                         </button>
                     </div>
@@ -245,7 +260,10 @@ const Register: React.FC = () => {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                 <div className="space-y-1">
                                     <label className={labelClasses}>CEP</label>
-                                    <div className="relative">
+                                    <div className="relative group">
+                                        <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors">
+                                            <Icons.Search className="w-5 h-5" />
+                                        </div>
                                         <input
                                             type="text" required
                                             maxLength={10}
@@ -260,70 +278,100 @@ const Register: React.FC = () => {
                                 </div>
                                 <div className="space-y-1">
                                     <label className={labelClasses}>Rua</label>
-                                    <input
-                                        type="text" required
-                                        className={inputClasses}
-                                        placeholder="Av. Paulista"
-                                        value={formData.street}
-                                        onChange={e => setFormData({ ...formData, street: e.target.value })}
-                                    />
+                                    <div className="relative group">
+                                        <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors">
+                                            <Icons.Map className="w-5 h-5" />
+                                        </div>
+                                        <input
+                                            type="text" required
+                                            className={inputClasses}
+                                            placeholder="Av. Paulista"
+                                            value={formData.street}
+                                            onChange={e => setFormData({ ...formData, street: e.target.value })}
+                                        />
+                                    </div>
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
                                 <div className="space-y-1 col-span-2 md:col-span-1">
                                     <label className={labelClasses}>Número</label>
-                                    <input
-                                        type="text" required
-                                        className={inputClasses}
-                                        placeholder="123"
-                                        value={formData.addressNumber}
-                                        onChange={e => setFormData({ ...formData, addressNumber: e.target.value })}
-                                    />
+                                    <div className="relative group">
+                                        <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors">
+                                            <Icons.Home className="w-5 h-5" />
+                                        </div>
+                                        <input
+                                            type="text" required
+                                            className={inputClasses}
+                                            placeholder="123"
+                                            value={formData.addressNumber}
+                                            onChange={e => setFormData({ ...formData, addressNumber: e.target.value })}
+                                        />
+                                    </div>
                                 </div>
                                 <div className="space-y-1 col-span-2 md:col-span-3">
                                     <label className={labelClasses}>Bairro</label>
-                                    <input
-                                        type="text" required
-                                        className={inputClasses}
-                                        placeholder="Bela Vista"
-                                        value={formData.neighborhood}
-                                        onChange={e => setFormData({ ...formData, neighborhood: e.target.value })}
-                                    />
+                                    <div className="relative group">
+                                        <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors">
+                                            <Icons.Layers className="w-5 h-5" />
+                                        </div>
+                                        <input
+                                            type="text" required
+                                            className={inputClasses}
+                                            placeholder="Bela Vista"
+                                            value={formData.neighborhood}
+                                            onChange={e => setFormData({ ...formData, neighborhood: e.target.value })}
+                                        />
+                                    </div>
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-2 md:grid-cols-12 gap-5">
                                 <div className="space-y-1 col-span-2 md:col-span-6">
                                     <label className={labelClasses}>Complemento (opcional)</label>
-                                    <input
-                                        type="text"
-                                        className={inputClasses}
-                                        placeholder="Apto 101, Bloco B"
-                                        value={formData.complement}
-                                        onChange={e => setFormData({ ...formData, complement: e.target.value })}
-                                    />
+                                    <div className="relative group">
+                                        <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors">
+                                            <Icons.Info className="w-5 h-5" />
+                                        </div>
+                                        <input
+                                            type="text"
+                                            className={inputClasses}
+                                            placeholder="Apto 101, Bloco B"
+                                            value={formData.complement}
+                                            onChange={e => setFormData({ ...formData, complement: e.target.value })}
+                                        />
+                                    </div>
                                 </div>
                                 <div className="space-y-1 col-span-2 md:col-span-4">
                                     <label className={labelClasses}>Cidade</label>
-                                    <input
-                                        type="text" required
-                                        className={inputClasses}
-                                        placeholder="São Paulo"
-                                        value={formData.city}
-                                        onChange={e => setFormData({ ...formData, city: e.target.value })}
-                                    />
+                                    <div className="relative group">
+                                        <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors">
+                                            <Icons.MapPin className="w-5 h-5" />
+                                        </div>
+                                        <input
+                                            type="text" required
+                                            className={inputClasses}
+                                            placeholder="São Paulo"
+                                            value={formData.city}
+                                            onChange={e => setFormData({ ...formData, city: e.target.value })}
+                                        />
+                                    </div>
                                 </div>
                                 <div className="space-y-1 col-span-2 md:col-span-2">
                                     <label className={labelClasses}>UF</label>
-                                    <input
-                                        type="text" required
-                                        maxLength={2}
-                                        className={`${inputClasses} uppercase`}
-                                        placeholder="SP"
-                                        value={formData.state}
-                                        onChange={e => setFormData({ ...formData, state: e.target.value.toUpperCase() })}
-                                    />
+                                    <div className="relative group">
+                                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors">
+                                            <Icons.Globe className="w-4 h-4" />
+                                        </div>
+                                        <input
+                                            type="text" required
+                                            maxLength={2}
+                                            className={`${inputClasses} uppercase !pl-10 !pr-1`}
+                                            placeholder="SP"
+                                            value={formData.state}
+                                            onChange={e => setFormData({ ...formData, state: e.target.value.toUpperCase() })}
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -334,39 +382,45 @@ const Register: React.FC = () => {
                         <div className="space-y-1">
                             <label className={labelClasses}>Senha</label>
                             <div className="relative">
-                                <input
-                                    type={showPassword ? "text" : "password"} required
-                                    className={inputClasses}
-                                    placeholder="••••••"
-                                    value={formData.password}
-                                    onChange={e => setFormData({ ...formData, password: e.target.value })}
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-500 transition-colors"
-                                >
-                                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                                </button>
+                                    <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors">
+                                        <Icons.Lock className="w-5 h-5" />
+                                    </div>
+                                    <input
+                                        type={showPassword ? "text" : "password"} required
+                                        className={inputClasses}
+                                        placeholder="••••••"
+                                        value={formData.password}
+                                        onChange={e => setFormData({ ...formData, password: e.target.value })}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-500 transition-colors"
+                                    >
+                                        {showPassword ? <Icons.EyeOff className="w-4 h-4" /> : <Icons.Eye className="w-4 h-4" />}
+                                    </button>
                             </div>
                         </div>
                         <div className="space-y-1">
                             <label className={labelClasses}>Confirmar Senha</label>
                             <div className="relative">
-                                <input
-                                    type={showConfirmPassword ? "text" : "password"} required
-                                    className={inputClasses}
-                                    placeholder="••••••"
-                                    value={formData.confirmPassword}
-                                    onChange={e => setFormData({ ...formData, confirmPassword: e.target.value })}
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-500 transition-colors"
-                                >
-                                    {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                                </button>
+                                    <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors">
+                                        <Icons.Lock className="w-5 h-5" />
+                                    </div>
+                                    <input
+                                        type={showConfirmPassword ? "text" : "password"} required
+                                        className={inputClasses}
+                                        placeholder="••••••"
+                                        value={formData.confirmPassword}
+                                        onChange={e => setFormData({ ...formData, confirmPassword: e.target.value })}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-500 transition-colors"
+                                    >
+                                        {showConfirmPassword ? <Icons.EyeOff className="w-4 h-4" /> : <Icons.Eye className="w-4 h-4" />}
+                                    </button>
                             </div>
                         </div>
                     </div>
