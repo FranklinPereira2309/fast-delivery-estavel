@@ -8,9 +8,10 @@ interface CustomAlertProps {
   onConfirm: () => void;
   onCancel?: () => void;
   type?: 'INFO' | 'DANGER' | 'SUCCESS' | 'QUESTION';
+  confirmText?: string;
 }
 
-const CustomAlert: React.FC<CustomAlertProps> = ({ isOpen, title, message, onConfirm, onCancel, type = 'INFO' }) => {
+const CustomAlert: React.FC<CustomAlertProps> = ({ isOpen, title, message, onConfirm, onCancel, type = 'INFO', confirmText }) => {
   if (!isOpen) return null;
 
   return (
@@ -66,7 +67,7 @@ const CustomAlert: React.FC<CustomAlertProps> = ({ isOpen, title, message, onCon
                   'bg-blue-600 shadow-blue-100 hover:bg-blue-700'
               }`}
           >
-            {type === 'QUESTION' ? 'Sair Agora' : 'Confirmar'}
+            {confirmText || (type === 'QUESTION' ? 'Sair Agora' : 'Confirmar')}
           </button>
         </div>
       </div>

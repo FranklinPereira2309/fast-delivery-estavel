@@ -15,6 +15,7 @@ interface AlertState {
     type: 'INFO' | 'DANGER' | 'SUCCESS';
     onConfirm: () => void;
     onCancel?: () => void;
+    confirmText?: string;
 }
 
 const Checkout: React.FC = () => {
@@ -94,7 +95,7 @@ const Checkout: React.FC = () => {
 
     const finalTotal = total + deliveryFee;
 
-    const showAlert = (title: string, message: string, type: 'INFO' | 'SUCCESS' | 'DANGER' = 'INFO', onConfirm?: () => void, onCancel?: () => void) => {
+    const showAlert = (title: string, message: string, type: 'INFO' | 'SUCCESS' | 'DANGER' = 'INFO', onConfirm?: () => void, onCancel?: () => void, confirmText?: string) => {
         setAlertState({
             isOpen: true,
             title,
@@ -104,7 +105,8 @@ const Checkout: React.FC = () => {
                 setAlertState(prev => ({ ...prev, isOpen: false }));
                 if (onConfirm) onConfirm();
             },
-            onCancel: onCancel
+            onCancel: onCancel,
+            confirmText: confirmText
         });
     };
 
@@ -191,7 +193,10 @@ const Checkout: React.FC = () => {
                     navigate('/history');
 
                 } catch (err: any) {
-                    showAlert('Ops!', 'Erro ao realizar o pedido: ' + err.message, 'DANGER');
+                    showAlert('Ops!', err.message, 'DANGER', () => {
+                        clearCart();
+                        navigate('/');
+                    }, undefined, 'OK');
                 } finally {
                     setIsLoading(false);
                 }
@@ -206,8 +211,9 @@ const Checkout: React.FC = () => {
                 title={alertState.title}
                 message={alertState.message}
                 type={alertState.type}
+                confirmText={alertState.confirmText}
                 onConfirm={alertState.onConfirm}
-                onCancel={() => setAlertState(prev => ({ ...prev, isOpen: false }))}
+                onCancel={alertState.onCancel}
             />
 
 

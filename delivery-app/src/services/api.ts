@@ -26,7 +26,7 @@ class DeliveryApiService {
                 }
 
                 const error = await response.json().catch(() => ({ message: 'Erro desconhecido' }));
-                throw new Error(error.message || 'Erro na requisição');
+                throw new Error(error.error || error.message || 'Erro na requisição');
             }
 
             return response.json();
