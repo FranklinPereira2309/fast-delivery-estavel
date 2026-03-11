@@ -10,6 +10,7 @@ const RecoverPassword: React.FC = () => {
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [isGoogleAccount, setIsGoogleAccount] = useState(false);
     const [alertState, setAlertState] = useState({
         isOpen: false,
         title: '',
@@ -130,6 +131,28 @@ const RecoverPassword: React.FC = () => {
                                 placeholder="(00) 00000-0000"
                                 value={phone}
                                 onChange={e => setPhone(maskPhone(e.target.value))}
+                                onBlur={async () => {
+                                    const cleanPhone = phone.replace(/\D/g, '');
+                                    if (email && cleanPhone.length === 11) {
+                                        try {
+                                            const { isGoogle } = await api.checkGoogleAccount(email, cleanPhone);
+                                            setIsGoogleAccount(isGoogle);
+                                            if (isGoogle) {
+                                                setAlertState({
+                                                    isOpen: true,
+                                                    title: 'Conta Google Detectada',
+                                                    message: 'Esta conta foi criada usando o Google. Por segurança, você deve recuperar sua senha através do site do Google ou simplesmente fazer login usando o botão "Entrar com Google".',
+                                                    type: 'INFO',
+                                                    onConfirm: () => setAlertState(prev => ({ ...prev, isOpen: false })),
+                                                    onCancel: undefined
+                                                });
+                                                setPassword('');
+                                            }
+                                        } catch (e) {
+                                            console.error('Check google account error:', e);
+                                        }
+                                    }
+                                }}
                                 required
                             />
                         </div>
@@ -143,11 +166,12 @@ const RecoverPassword: React.FC = () => {
                             </div>
                             <input
                                 type={showPassword ? "text" : "password"}
-                                className="w-full pl-14 pr-12 py-4 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-indigo-100 transition-all font-bold text-sm"
-                                placeholder="••••••••"
+                                className="w-full pl-14 pr-12 py-4 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-indigo-100 transition-all font-bold text-sm disabled:opacity-50"
+                                placeholder={isGoogleAccount ? "Recuperação via Google" : "••••••••"}
                                 value={password}
                                 onChange={e => setPassword(e.target.value)}
-                                required
+                                disabled={isGoogleAccount}
+                                required={!isGoogleAccount}
                             />
                             <button
                                 type="button"
@@ -160,11 +184,11 @@ const RecoverPassword: React.FC = () => {
                     </div>
 
                     <button
-                        disabled={isLoading}
+                        disabled={isLoading || isGoogleAccount}
                         type="submit"
                         className="w-full bg-slate-800 text-white py-5 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-slate-900 transition-all shadow-xl shadow-slate-200 mt-4 disabled:opacity-50"
                     >
-                        {isLoading ? 'Aguarde...' : 'Mudar Senha'}
+                        {isGoogleAccount ? 'Use o Google Login' : (isLoading ? 'Aguarde...' : 'Mudar Senha')}
                     </button>
                 </form>
             </div>

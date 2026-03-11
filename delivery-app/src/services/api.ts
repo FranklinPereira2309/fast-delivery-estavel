@@ -125,6 +125,10 @@ class DeliveryApiService {
         return this.request<{ available: boolean }>(`/client-auth/check-phone/${phone}`);
     }
 
+    async checkGoogleAccount(email: string, phone: string) {
+        return this.request<{ isGoogle: boolean }>(`/client-auth/check-google-account?email=${email}&phone=${phone}`);
+    }
+
     async getSupportHistory(clientId: string) {
         return this.request<any[]>(`/support?clientId=${clientId}&t=${Date.now()}`);
     }

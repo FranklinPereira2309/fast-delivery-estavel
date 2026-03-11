@@ -319,3 +319,30 @@ export const checkPhoneAvailability = async (req: ExpressRequest, res: ExpressRe
         res.status(500).json({ error: 'Erro ao verificar telefone.' });
     }
 };
+
+export const checkGoogleAccount = async (req: ExpressRequest, res: ExpressResponse) => {
+    try {
+        const { email, phone } = req.query;
+        if (!email || !phone) {
+            return res.status(400).json({ message: 'Email e telefone são obrigatórios.' });
+        }
+
+        const cleanPhone = (phone as string).replace(/\D/g, '');
+
+        const client = await prisma.client.findFirst({
+            where: {
+                email: email as string,
+                phone: cleanPhone
+            }
+        });
+
+        if (!client) {
+            return res.status(404).json({ message: 'Conta não encontrada.' });
+        }
+
+        res.json({ isGoogle: !!client.googleId });
+    } catch (error) {
+        console.error('Check Google Account Error:', error);
+        res.status(500).json({ message: 'Erro ao verificar conta Google.' });
+    }
+};

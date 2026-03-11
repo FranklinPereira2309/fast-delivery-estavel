@@ -116,6 +116,7 @@ export interface Client {
   phone: string;
   email?: string;
   pin?: string;
+  googleId?: string | null;
   document?: string;
   cep?: string;
   street?: string;
