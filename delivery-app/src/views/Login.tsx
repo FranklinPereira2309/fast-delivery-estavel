@@ -181,12 +181,19 @@ const Login: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 md:p-6 relative">
+        <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-4 md:p-6 relative font-sans">
+            <div className="w-full max-w-md animate-in fade-in zoom-in duration-500">
+                <div className="flex flex-col items-center mb-10 text-center">
+                    <div className="w-24 h-24 bg-indigo-600 rounded-3xl flex items-center justify-center shadow-2xl shadow-indigo-500/20 transform -rotate-12 mb-8 overflow-hidden">
+                        <img src="/favicon.png" alt="Logo" className="w-16 h-16 object-contain" />
+                    </div>
+                </div>
 
-            <div className="w-full max-w-md bg-white p-6 md:p-10 rounded-[2.5rem] md:rounded-[3rem] shadow-xl shadow-slate-200/50 border border-slate-100 relative">
+                <div className="w-full bg-white p-6 md:p-10 rounded-[2.5rem] md:rounded-[3rem] shadow-2xl relative">
                 {/* Fechar Modal Login */}
+                {/* Header */}
                 <div className="text-center mb-10">
-                    <h1 className="text-3xl font-black text-slate-800 uppercase tracking-tighter italic">Delivery App</h1>
+                    <h2 className="text-3xl font-black text-slate-800 uppercase tracking-tighter italic">Delivery App</h2>
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2">
                         {view === 'LOGIN' ? 'Acesso do Cliente' : 'Troca de Senha Obrigatória'}
                     </p>
@@ -231,9 +238,9 @@ const Login: React.FC = () => {
                             <button
                                 disabled={isLoading}
                                 type="submit"
-                                className="w-full bg-slate-800 text-white py-5 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-slate-900 transition-all shadow-xl shadow-slate-200 mt-4"
+                                className="w-full bg-slate-900 hover:bg-black text-white py-5 rounded-2xl font-black uppercase text-xs tracking-widest transition-all shadow-xl shadow-slate-900/20 mt-4 active:scale-[0.98]"
                             >
-                                {isLoading ? 'Entrando...' : 'Entrar'}
+                                {isLoading ? 'Entrando...' : 'Entrar no Sistema'}
                             </button>
                         </form>
 
@@ -359,7 +366,13 @@ const Login: React.FC = () => {
                 onConfirm={alertState.onConfirm}
                 onCancel={alertState.onCancel}
             />
-        </div >
+                </div >
+
+                <p className="text-center mt-12 text-slate-600 text-[10px] font-black uppercase tracking-[0.3em]">
+                    Fransoft Developer®
+                </p>
+            </div>
+        </div>
     );
 };
 

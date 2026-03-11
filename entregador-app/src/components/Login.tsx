@@ -84,8 +84,8 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
         <div className="min-h-screen w-full flex items-center justify-center bg-slate-900 p-6 font-sans">
             <div className="w-full max-w-md animate-in fade-in zoom-in duration-500">
                 <div className="flex flex-col items-center mb-10 text-center">
-                    <div className="w-24 h-24 bg-blue-600 rounded-3xl flex items-center justify-center shadow-2xl shadow-blue-500/20 transform -rotate-12 mb-8">
-                        <span className="text-white text-4xl font-black">DA</span>
+                    <div className="w-24 h-24 bg-blue-600 rounded-3xl flex items-center justify-center shadow-2xl shadow-blue-500/20 transform -rotate-12 mb-8 overflow-hidden">
+                        <img src="/favicon.png" alt="Logo" className="w-16 h-16 object-contain" />
                     </div>
                 </div>
 
