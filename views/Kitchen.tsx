@@ -478,13 +478,18 @@ const Kitchen: React.FC = () => {
             </div>
 
             <div className="border-t border-dashed my-3 py-3 space-y-3">
-              {printingOrder.items.filter(it => viewTab === 'FILA' ? !it.isReady : it.isReady).map((it, idx) => {
+              {printingOrder.items.map((it, idx) => {
                 const product = products.find(p => p.id === it.productId);
+                const isReady = it.isReady;
+                
+                // Em modo HISTORICO, só mostra os prontos. No modo FILA (Produção), mostra todos.
+                if (viewTab === 'HISTORICO' && !isReady) return null;
+
                 return (
                   <div key={idx} className="space-y-1">
-                    <div className="flex justify-between font-black uppercase py-0.5">
+                    <div className={`flex justify-between font-black uppercase py-0.5 ${isReady && viewTab === 'FILA' ? 'line-through opacity-50' : ''}`}>
                       <span>{it.quantity}X {(product?.name || 'Item').substring(0, 22)}</span>
-                      {viewTab === 'HISTORICO' && it.readyAt && (
+                      {isReady && it.readyAt && (
                         <span className="text-[8px] opacity-50">
                           {new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' }).format(new Date(it.readyAt))}
                         </span>
