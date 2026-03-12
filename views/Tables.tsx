@@ -242,8 +242,8 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
 
     const existingSess = getSessForTable(selectedTable);
 
-    // Ownership Rule: Only the owner or an Admin can edit an occupied table.
-    if (existingSess && existingSess.waiterId && existingSess.waiterId !== selectedWaiterId && !currentUser.permissions.includes('admin')) {
+    // Ownership Rule: Only the owner or an Admin can edit an occupied table (if waiter lock is enabled).
+    if (settings?.waiterLockEnabled && existingSess && existingSess.waiterId && existingSess.waiterId !== selectedWaiterId && !currentUser.permissions.includes('admin')) {
       return addToast({ title: "ACESSO NEGADO", message: "Esta mesa já está sendo atendida por outro garçom. O primeiro garçom a atender torna-se o dono da mesa.", type: "DANGER" });
     }
 
