@@ -275,7 +275,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
         clearState();
       }
       await refreshAllData();
-      showAlert("Sucesso", "Débito devolvido para a lista de Recebimentos.", "SUCCESS");
+      addToast({ title: "SUCESSO", message: "Débito devolvido para a lista de Recebimentos.", type: "SUCCESS" });
     } catch (err: any) {
       showAlert("Erro", err.message || "Erro ao devolver débito.", "DANGER");
     }
@@ -666,7 +666,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       const session = await db.openCashSession(balance, currentUser);
       setActiveCashSession(session);
       setIsOpeningModalOpen(false);
-      showAlert("Sucesso", "Caixa aberto com sucesso!", "INFO");
+      addToast({ title: "SUCESSO", message: "Caixa aberto com sucesso!", type: "SUCCESS" });
     } catch (e: any) {
       showAlert("Erro", e.message || "Erro ao abrir o caixa", "DANGER");
     }
@@ -708,7 +708,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
         observations: closingReport.observations // Manter observações se já houver
       });
 
-      showAlert("Relatório Gerado", "Os valores calculados pelo sistema foram importados para conferência.", "SUCCESS");
+      addToast({ title: "RELATÓRIO GERADO", message: "Os valores calculados pelo sistema foram importados para conferência.", type: "SUCCESS" });
     } catch (e: any) {
       showAlert("Erro", e.message || "Erro ao carregar prévia do sistema.", "DANGER");
     }
@@ -749,7 +749,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       setIsReviewModalOpen(true);
       setAdminPassword('');
 
-      showAlert("Caixa Fechado", "O caixa foi encerrado com sucesso.");
+      addToast({ title: "CAIXA FECHADO", message: "O caixa foi encerrado com sucesso.", type: "SUCCESS" });
       refreshAllData();
     } catch (e: any) {
       showAlert("Erro", e.message || "Erro ao fechar o caixa", "DANGER");

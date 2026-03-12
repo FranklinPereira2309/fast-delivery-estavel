@@ -4,6 +4,7 @@ import { Receivable, User, Client, Order, Product, OrderItem, SaleType, Business
 import { db } from '../services/db';
 import { Icons } from '../constants';
 import CustomAlert from '../components/CustomAlert';
+import { useToast } from '../hooks/useToast';
 
 interface ReceivablesProps {
     currentUser: User;
@@ -11,6 +12,7 @@ interface ReceivablesProps {
 }
 
 const Receivables: React.FC<ReceivablesProps> = ({ currentUser, setActiveTab }) => {
+    const { addToast } = useToast();
     const [receivables, setReceivables] = useState<(Receivable & { client: Client })[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -120,7 +122,11 @@ const Receivables: React.FC<ReceivablesProps> = ({ currentUser, setActiveTab }) 
                     await db.deleteReceivable(id, currentUser);
                     closeAlert();
                     refreshData();
-                    showAlert({ title: 'REMOVIDO', message: 'Débito excluído com sucesso.', type: 'SUCCESS' });
+                    addToast({
+                        title: "REMOVIDO",
+                        message: "Débito excluído com sucesso.",
+                        type: "SUCCESS"
+                    });
                 } catch (err: any) {
                     showAlert({ title: 'ERRO', message: err.message || 'Erro ao excluir.', type: 'DANGER' });
                 }
@@ -162,7 +168,11 @@ const Receivables: React.FC<ReceivablesProps> = ({ currentUser, setActiveTab }) 
             setIsEditItemsOpen(false);
             setIsDetailsModalOpen(false);
             refreshData();
-            showAlert({ title: 'SUCESSO', message: 'Itens do pedido e valor do fiado atualizados com sucesso.', type: 'SUCCESS' });
+            addToast({
+                title: "SUCESSO",
+                message: "Itens do pedido e valor do fiado atualizados com sucesso.",
+                type: "SUCCESS"
+            });
         } catch (err: any) {
             showAlert({ title: 'ERRO', message: err.message || 'Erro ao atualizar itens.', type: 'DANGER' });
         }

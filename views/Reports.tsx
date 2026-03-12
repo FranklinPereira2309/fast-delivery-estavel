@@ -6,12 +6,14 @@ import { Icons } from '../constants';
 import CustomAlert from '../components/CustomAlert';
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 import { getLocalIsoDate } from '../services/dateUtils';
+import { useToast } from '../hooks/useToast';
 
 interface ReportsProps {
     currentUser: User | null;
 }
 
 const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
+    const { addToast } = useToast();
     const [orders, setOrders] = useState<Order[]>([]);
     const [clients, setClients] = useState<Client[]>([]);
     const [drivers, setDrivers] = useState<DeliveryDriver[]>([]);
@@ -125,7 +127,11 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
                 observations: editingSession.observations || '',
                 user: currentUser
             });
-            showAlert("Sucesso", "Relatório de caixa atualizado com sucesso!", "SUCCESS");
+            addToast({
+                title: "SUCESSO",
+                message: "Relatório de caixa atualizado com sucesso!",
+                type: "SUCCESS"
+            });
             setIsEditReportModalOpen(false);
             setEditingSession(null);
             setAdminPassword('');
