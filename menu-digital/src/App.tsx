@@ -28,6 +28,7 @@ function AppContent() {
   const [banner, setBanner] = useState<{ message: string; type: 'info' | 'error' | 'success' } | null>(null);
   const [blockingRejection, setBlockingRejection] = useState<{ message: string } | null>(null);
   const [orderReadyNotify, setOrderReadyNotify] = useState<{ message: string } | null>(null);
+  const [orderStatus, setOrderStatus] = useState<string | null>(null);
 
   // Ref para rastrear estados terminais e propriedade em tempo real (evita "stale closures")
   const sessionContextRef = useRef({
@@ -145,6 +146,7 @@ function AppContent() {
       setCurrentPin(data.pin || null);
       setTableNumber(tableParam);
       setClientName(data.clientName);
+      setOrderStatus((data as any).orderStatus || null);
 
     } catch (err: any) {
       // 0. Safety Guard: Even in error, if we are finished, stay finished
@@ -374,6 +376,7 @@ function AppContent() {
       console.log('Socket orderStatusUpdated received:', data);
       if (Number(data.tableNumber) === Number(tableParam)) {
         setOrderReadyNotify({ message: data.message });
+        setOrderStatus(data.status);
       }
     };
 
@@ -756,6 +759,27 @@ function AppContent() {
             </p>
           </div>
         </div>
+        
+        {/* Status do Pedido no Header */}
+        {orderStatus && (
+          <div className="flex flex-col items-end gap-1">
+            <span className={`text-[9px] font-black px-2.5 py-1 rounded-lg shadow-sm border animate-pulse uppercase tracking-[0.05em] ${
+              orderStatus === 'PENDING_APPROVAL' ? 'bg-amber-50 text-amber-600 border-amber-200' :
+              orderStatus === 'PREPARING' ? 'bg-blue-50 text-blue-600 border-blue-200' :
+              orderStatus === 'PARTIALLY_READY' ? 'bg-cyan-50 text-cyan-600 border-cyan-200' :
+              orderStatus === 'READY' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' :
+              'bg-slate-50 text-slate-600 border-slate-200'
+            }`}>
+              {
+                orderStatus === 'PENDING_APPROVAL' ? 'Aguardando Aprovação' :
+                orderStatus === 'PREPARING' ? 'Na Cozinha' :
+                orderStatus === 'PARTIALLY_READY' ? 'Preparado Parcial' :
+                orderStatus === 'READY' ? 'Pedido Pronto!' :
+                orderStatus
+              }
+            </span>
+          </div>
+        )}
       </header>
 
 

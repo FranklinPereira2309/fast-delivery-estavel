@@ -968,13 +968,19 @@ export const markItemsReady = async (req: Request, res: Response) => {
 
         // 5. Sockets
         try {
+            const statusMessages: Record<string, string> = {
+                'READY': "Pedido Pronto na Cozinha, só mais um instante e você será servido!",
+                'PARTIALLY_READY': "Parte do seu pedido já está pronta!",
+                'PREPARING': "Seu pedido está sendo preparado na nossa cozinha!"
+            };
+
             getIO().emit('orderStatusChanged', { action: 'statusUpdate', id, status: result.status });
             
-            if (result.type === 'TABLE' && result.tableNumber && (result.status === 'READY' || result.status === 'PARTIALLY_READY')) {
+            if (result.type === 'TABLE' && result.tableNumber) {
                 getIO().to(`table_${result.tableNumber}`).emit('orderStatusUpdated', {
                     tableNumber: result.tableNumber,
                     status: result.status,
-                    message: "Pedido Pronto na Cozinha, só mais um instante e você será servido!"
+                    message: statusMessages[result.status] || "Status do pedido atualizado"
                 });
             }
         } catch (socketErr) {

@@ -160,12 +160,23 @@ export const verifyTable = async (req: Request, res: Response) => {
             });
         }
 
-        // 7. Resposta padrão para o dono em mesa ocupada
+        // 7. Calcular status do pedido para o cardápio digital
+        let orderStatus = null;
+        if (session.hasPendingDigital) {
+            orderStatus = 'PENDING_APPROVAL';
+        } else if (session.items && session.items.length > 0) {
+            const allReady = session.items.every(it => it.isReady);
+            const anyReady = session.items.some(it => it.isReady);
+            orderStatus = allReady ? 'READY' : (anyReady ? 'PARTIALLY_READY' : 'PREPARING');
+        }
+
+        // 8. Resposta padrão para o dono em mesa ocupada
         res.json({
             tableNumber,
             status: session.status,
+            orderStatus,
             clientName: session.clientName || null,
-            pin: session.sessionToken === token ? session.pin : null, // Segurança: só entrega PIN pro dono
+            pin: session.sessionToken === token ? session.pin : null,
             isOwner: session.sessionToken === token,
             rejectionMessage: null
         });

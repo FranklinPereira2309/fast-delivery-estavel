@@ -322,13 +322,17 @@ export const saveTableSession = async (req: Request, res: Response) => {
                 const anyReady = sessionItems.some((it: any) => it.isReady === true);
                 const calculatedStatus = allReady ? 'READY' : (anyReady ? 'PARTIALLY_READY' : 'PREPARING');
 
-                if (calculatedStatus === 'READY' || calculatedStatus === 'PARTIALLY_READY') {
-                    getIO().to(`table_${result.tableNumber}`).emit('orderStatusUpdated', {
-                        tableNumber: result.tableNumber,
-                        status: calculatedStatus,
-                        message: "Pedido Pronto na Cozinha, só mais um instante e você será servido!"
-                    });
-                }
+                const statusMessages: Record<string, string> = {
+                    'READY': "Pedido Pronto na Cozinha, só mais um instante e você será servido!",
+                    'PARTIALLY_READY': "Parte do seu pedido já está pronta!",
+                    'PREPARING': "Seu pedido já está em preparação na nossa cozinha!"
+                };
+
+                getIO().to(`table_${result.tableNumber}`).emit('orderStatusUpdated', {
+                    tableNumber: result.tableNumber,
+                    status: calculatedStatus,
+                    message: statusMessages[calculatedStatus] || "Status do pedido atualizado"
+                });
             }
         } catch (e) {
             console.error('Socket error emitting orderStatusUpdated from saveTableSession:', e);
