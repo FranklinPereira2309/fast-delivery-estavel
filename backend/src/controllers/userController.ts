@@ -25,15 +25,41 @@ export const saveUser = async (req: Request, res: Response) => {
         const data = req.body;
         console.log('Incoming user data:', JSON.stringify(data));
 
-        // Se o ID começar com 'user-', é um ID temporário do frontend, então tratamos como novo usuário
-        const isNewUser = !data.id || (typeof data.id === 'string' && data.id.startsWith('user-'));
+        // 1. Verificar se o usuário já existe no banco (por ID ou E-mail)
+        let existingUser = null;
+        if (data.id && typeof data.id === 'string' && !data.id.startsWith('user-')) {
+            existingUser = await prisma.user.findUnique({ where: { id: data.id } });
+        }
+        
+        if (!existingUser && data.email) {
+            existingUser = await prisma.user.findUnique({ where: { email: data.email.toLowerCase() } });
+        }
 
         const userData: any = { ...data };
+        
         if (userData.email) {
             userData.email = userData.email.toLowerCase();
         }
 
-        if (isNewUser) {
+        if (existingUser) {
+            // Se o usuário JÁ EXISTE (Update)
+            // 1. Manter o ID correto do banco
+            userData.id = existingUser.id;
+            
+            // 2. Não resetar a senha a menos que venha uma nova (não-hash)
+            if (userData.password && !userData.password.startsWith('$2')) {
+                userData.password = await bcrypt.hash(userData.password, 10);
+            } else {
+                // Se não veio senha nova ou veio hash, removemos para não sobrescrever a atual do banco acidentalmente
+                delete userData.password;
+            }
+
+            // 3. Manter o status de troca de senha atual do banco, a menos que venha um novo valor explícito
+            if (userData.mustChangePassword === undefined) {
+                delete userData.mustChangePassword;
+            }
+        } else {
+            // Só aplicamos padrões de "Novo Usuário" se ele REALMENTE não existir no banco
             userData.recoveryCode = userData.recoveryCode || generateRecoveryCode();
             userData.mustChangePassword = userData.mustChangePassword ?? true;
             userData.active = userData.active ?? true;
@@ -42,17 +68,9 @@ export const saveUser = async (req: Request, res: Response) => {
             const passwordToHash = userData.password || '123';
             userData.password = await bcrypt.hash(passwordToHash, 10);
             
-            // Remove o ID temporário do frontend para o Prisma gerar um UUID
+            // Se o ID for temporário, removemos para o Prisma gerar um UUID
             if (userData.id && typeof userData.id === 'string' && userData.id.startsWith('user-')) {
                 delete userData.id;
-            }
-        } else {
-            // Se for atualização
-            if (userData.password && !userData.password.startsWith('$2')) {
-                userData.password = await bcrypt.hash(userData.password, 10);
-            } else if (!userData.password || userData.password === "") {
-                // Se for string vazia ou nula/indefinida, removemos do objeto para não sobrescrever o hash atual
-                delete userData.password;
             }
         }
 
@@ -74,12 +92,8 @@ export const saveUser = async (req: Request, res: Response) => {
             }
         });
 
-        // A lógica de busca do upsert deve ser inteligente:
-        // 1. Se temos um ID real (UUID), usamos ele.
-        // 2. Se o ID é temporário ou nulo, usamos o e-mail como chave única de busca.
-        const lookup = (userData.id && typeof userData.id === 'string' && !userData.id.startsWith('user-')) 
-            ? { id: userData.id } 
-            : { email: cleanData.email };
+        // A lógica de busca do upsert agora usa o ID garantido (seja o original ou o encontrado pelo e-mail)
+        const lookup = existingUser ? { id: (existingUser as any).id } : { email: cleanData.email };
 
         console.log('Lookup criteria:', JSON.stringify(lookup));
         console.log('Clean data for Prisma:', JSON.stringify(cleanData));
@@ -94,7 +108,6 @@ export const saveUser = async (req: Request, res: Response) => {
         console.error('Error in saveUser:', error);
         let errorMessage = error.message;
         
-        // Tratamento amigável para erro de constraint única se escapar do upsert (raro)
         if (error.code === 'P2002') {
             errorMessage = 'Já existe um usuário cadastrado com este e-mail.';
         }
