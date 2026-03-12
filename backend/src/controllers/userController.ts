@@ -42,9 +42,10 @@ export const saveUser = async (req: Request, res: Response) => {
         }
 
         if (existingUser) {
+            const userId = existingUser.id;
             // Se o usuário JÁ EXISTE (Update)
             // 1. Manter o ID correto do banco
-            userData.id = existingUser.id;
+            userData.id = userId;
             
             // 2. Não resetar a senha a menos que venha uma nova (não-hash)
             if (userData.password && !userData.password.startsWith('$2')) {
@@ -94,9 +95,10 @@ export const saveUser = async (req: Request, res: Response) => {
 
         let user;
         if (existingUser) {
-            console.log('Updating existing user:', existingUser.id);
+            const userId = existingUser.id;
+            console.log('Updating existing user:', userId);
             user = await prisma.user.update({
-                where: { id: existingUser.id },
+                where: { id: userId },
                 data: cleanData
             });
         } else {
