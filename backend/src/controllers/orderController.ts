@@ -247,7 +247,7 @@ export const saveOrder = async (req: Request, res: Response) => {
 
                     await tx.tableSession.deleteMany({
                         where: { tableNumber: tableNumIdx }
-                    }).catch((e: any) => console.log('Sessão de mesa já removida ou inexistente:', e));
+                    });
 
                     // Notificar o cardápio digital que o pagamento foi concluído (mesa liberada)
                     getIO().emit('tableStatusChanged', {
@@ -278,7 +278,7 @@ export const saveOrder = async (req: Request, res: Response) => {
                         // Nós deletamos o registro rascunho da mesa, liberando a chave para o próximo cliente.
                         // O novo ID 'TABLE-X-F-1234' será criado pelo `upsert` no bloco abaixo.
                         await tx.orderItem.deleteMany({ where: { orderId: existingOrder.id } });
-                        await tx.order.delete({ where: { id: existingOrder.id } }).catch(() => { });
+                        await tx.order.delete({ where: { id: existingOrder.id } });
                     }
                 }
             } else if (newStatus !== 'DELIVERED' && oldStatus === 'DELIVERED') {
@@ -417,7 +417,7 @@ export const saveOrder = async (req: Request, res: Response) => {
                 },
                 include: { items: { include: { product: true } } }
             });
-        });
+        }, { timeout: 30000 });
 
         // 4. Receivable Fiado Processing
         if (result.status === 'DELIVERED' && result.paymentMethod === 'FIADO') {
@@ -543,7 +543,7 @@ export const deleteOrder = async (req: Request, res: Response) => {
                     details: `Pedido ${id} removido e estornos (se aplicáveis) processados.`
                 }
             });
-        });
+        }, { timeout: 30000 });
 
         res.json({ message: 'Pedido removido e histórico consolidado.' });
 
@@ -621,7 +621,7 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
 
                     await tx.tableSession.deleteMany({
                         where: { tableNumber: oldOrder.tableNumber }
-                    }).catch((e: any) => console.log('Sessão de mesa já removida ou inexistente:', e));
+                    });
 
                     // Notificar o cardápio digital que o pagamento foi concluído (mesa liberada)
                     getIO().emit('tableStatusChanged', {
@@ -699,7 +699,7 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
                             pin: oldOrder.digitalPin,
                             sessionToken: oldOrder.digitalToken
                         }
-                    }).catch((e: any) => console.error('Erro ao restaurar sessão de mesa:', e));
+                    });
 
                     getIO().emit('tableStatusChanged', {
                         tableNumber: oldOrder.tableNumber,
@@ -759,11 +759,11 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
                         action: 'UPDATE_ORDER_STATUS',
                         details: `Status do pedido ${order.id} alterado de ${oldStatus || 'N/A'} para ${status}.`
                     }
-                }).catch((e: any) => console.error('Error creating audit log in updateOrderStatus:', e));
+                });
             }
 
             return order;
-        });
+        }, { timeout: 30000 });
 
         try {
             getIO().emit('orderStatusChanged', { action: 'statusUpdate', id, status });
@@ -860,7 +860,7 @@ export const updateOrderItems = async (req: Request, res: Response) => {
             }
 
             return updatedOrder;
-        });
+        }, { timeout: 30000 });
 
         getIO().emit('orderStatusChanged', { action: 'refresh', id });
         res.json(mapOrderResponse(result));
@@ -955,7 +955,7 @@ export const updateOrderServiceFee = async (req: Request, res: Response) => {
             }
 
             return updatedOrder;
-        });
+        }, { timeout: 30000 });
 
         // Trigger socket to tell UI to refresh the specific order total globally
         getIO().emit('orderStatusChanged', { action: 'feeUpdate', id, newTotal: result.total, newFee: result.appliedServiceFee });
