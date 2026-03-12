@@ -591,6 +591,7 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
     const { status, driverId, user, paymentMethod } = req.body;
 
     console.log(`[OrderController] updateOrderStatus initiated for order ${id}:`, { status, driverId, paymentMethod });
+    console.log(`[OrderController] FULL BODY:`, JSON.stringify(req.body));
 
     try {
         const result = await prisma.$transaction(async (tx: any) => {

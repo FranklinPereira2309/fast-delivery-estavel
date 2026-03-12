@@ -16,8 +16,14 @@ class DriverDBService {
         });
 
         if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.message || 'Erro na requisição');
+            let errorMessage = 'Erro na requisição';
+            try {
+                const errorData = await response.json();
+                errorMessage = errorData.error || errorData.message || errorMessage;
+            } catch (e) {
+                // If not JSON
+            }
+            throw new Error(errorMessage);
         }
 
         return response.json();
