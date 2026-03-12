@@ -74,20 +74,33 @@ export const saveUser = async (req: Request, res: Response) => {
             }
         });
 
-        const id = isNewUser ? undefined : userData.id;
+        // A lógica de busca do upsert deve ser inteligente:
+        // 1. Se temos um ID real (UUID), usamos ele.
+        // 2. Se o ID é temporário ou nulo, usamos o e-mail como chave única de busca.
+        const lookup = (userData.id && typeof userData.id === 'string' && !userData.id.startsWith('user-')) 
+            ? { id: userData.id } 
+            : { email: cleanData.email };
 
+        console.log('Lookup criteria:', JSON.stringify(lookup));
         console.log('Clean data for Prisma:', JSON.stringify(cleanData));
 
         const user = await prisma.user.upsert({
-            where: { id: id || '' },
+            where: lookup,
             update: cleanData,
-            create: { ...cleanData, id: id } // No create, id pode vir se for UUID existente mas não encontrado
+            create: cleanData
         });
         res.json(user);
     } catch (error: any) {
         console.error('Error in saveUser:', error);
+        let errorMessage = error.message;
+        
+        // Tratamento amigável para erro de constraint única se escapar do upsert (raro)
+        if (error.code === 'P2002') {
+            errorMessage = 'Já existe um usuário cadastrado com este e-mail.';
+        }
+
         res.status(500).json({ 
-            error: `Erro ao salvar usuário: ${error.message}`, 
+            error: `Erro ao salvar usuário: ${errorMessage}`, 
             details: error.message,
             stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
         });
