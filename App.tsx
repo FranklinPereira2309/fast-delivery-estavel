@@ -20,6 +20,8 @@ import { db } from './services/db';
 import { User, Waiter, BusinessSettings } from './types';
 import CustomAlert from './components/CustomAlert';
 import { ThemeProvider } from './components/ThemeProvider';
+import { ToastProvider } from './hooks/useToast';
+import { ToastContainer } from './components/Toast';
 
 const SplashScreen: React.FC = () => (
   <div className="fixed inset-0 z-[9999] bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center animate-in fade-in duration-500 p-4 transition-colors duration-500">
@@ -154,38 +156,41 @@ const App: React.FC = () => {
 
   return (
     <ThemeProvider defaultTheme="system" storageKey="app-theme">
-      {isSplashVisible ? (
-        <SplashScreen />
-      ) : !currentUser ? (
-        <Login onLoginSuccess={handleLogin} />
-      ) : (
-        <Layout activeTab={activeTab} setActiveTab={setActiveTab} currentUser={currentUser} onLogout={handleLogout}>
-          {renderContent()}
-          <CustomAlert
-            isOpen={isResetAlertOpen}
-            title="⚠️ ATENÇÃO CRÍTICA"
-            message="Esta ação irá apagar TODOS os dados do sistema e restaurar os padrões de fábrica. Após confirmar, você precisará logar novamente como Admin Master."
-            type="DANGER"
-            onConfirm={handleResetSystem}
-            onCancel={() => {
-              setIsResetAlertOpen(false);
-              setResetPassword('');
-            }}
-            showInput={true}
-            inputValue={resetPassword}
-            onInputChange={(e) => setResetPassword(e.target.value)}
-            inputPlaceholder="Senha do Admin Master"
-            inputType="password"
-          />
-          <CustomAlert
-            isOpen={isSavedAlertOpen}
-            title="SUCESSO"
-            message="As configurações do estabelecimento foram atualizadas com sucesso no banco de dados local."
-            type="SUCCESS"
-            onConfirm={() => setIsSavedAlertOpen(false)}
-          />
-        </Layout>
-      )}
+      <ToastProvider>
+        {isSplashVisible ? (
+          <SplashScreen />
+        ) : !currentUser ? (
+          <Login onLoginSuccess={handleLogin} />
+        ) : (
+          <Layout activeTab={activeTab} setActiveTab={setActiveTab} currentUser={currentUser} onLogout={handleLogout}>
+            {renderContent()}
+            <CustomAlert
+              isOpen={isResetAlertOpen}
+              title="⚠️ ATENÇÃO CRÍTICA"
+              message="Esta ação irá apagar TODOS os dados do sistema e restaurar os padrões de fábrica. Após confirmar, você precisará logar novamente como Admin Master."
+              type="DANGER"
+              onConfirm={handleResetSystem}
+              onCancel={() => {
+                setIsResetAlertOpen(false);
+                setResetPassword('');
+              }}
+              showInput={true}
+              inputValue={resetPassword}
+              onInputChange={(e) => setResetPassword(e.target.value)}
+              inputPlaceholder="Senha do Admin Master"
+              inputType="password"
+            />
+            <CustomAlert
+              isOpen={isSavedAlertOpen}
+              title="SUCESSO"
+              message="As configurações do estabelecimento foram atualizadas com sucesso no banco de dados local."
+              type="SUCCESS"
+              onConfirm={() => setIsSavedAlertOpen(false)}
+            />
+          </Layout>
+        )}
+        <ToastContainer />
+      </ToastProvider>
     </ThemeProvider>
   );
 };

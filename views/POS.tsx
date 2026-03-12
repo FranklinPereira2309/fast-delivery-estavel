@@ -1,7 +1,8 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Product, OrderItem, SaleType, Order, OrderStatus, OrderStatusLabels, User, Client, DeliveryDriver, TableSession, CashSession, Receivable } from '../types';
-import { db, BusinessSettings } from '../services/db';
+import { Product, OrderItem, SaleType, Order, OrderStatus, OrderStatusLabels, User, Client, DeliveryDriver, TableSession, CashSession, Receivable, BusinessSettings } from '../types';
+import { db } from '../services/db';
+import { useToast } from '../hooks/useToast';
 import { socket, feedbackUnreadManager } from '../services/socket';
 import { Icons, PLACEHOLDER_FOOD_IMAGE, formatImageUrl } from '../constants';
 import CustomAlert from '../components/CustomAlert';
@@ -16,6 +17,7 @@ interface POSProps {
 }
 
 const POS: React.FC<POSProps> = ({ currentUser }) => {
+  const { addToast } = useToast();
   const [products, setProducts] = useState<Product[]>([]);
   const [cart, setCart] = useState<OrderItem[]>([]);
   const [saleType, setSaleType] = useState<SaleType>(SaleType.COUNTER);
@@ -419,7 +421,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
         }
 
         await db.receivePayment(isReceivingFiado, method, currentUser, nfeData);
-        showAlert("Sucesso", "Recebimento concluído.", "SUCCESS");
+        addToast({ title: "SUCESSO", message: "Recebimento concluído.", type: "SUCCESS" });
 
         const shouldEmit = emitNfce;
         setIsReceivingFiado(null);
@@ -606,11 +608,11 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
     }
 
     if (orderData.status === OrderStatus.PREPARING) {
-      showAlert("Sucesso", "Pedido enviado para a cozinha.", "INFO");
+      addToast({ title: "SUCESSO", message: "Pedido enviado para a cozinha.", type: "SUCCESS" });
     } else {
       setIsNfceVisual(emitNfce);
       setPrintingOrder(orderData);
-      showAlert("Sucesso", "Venda finalizada com sucesso.", "SUCCESS");
+      addToast({ title: "SUCESSO", message: "Venda finalizada com sucesso.", type: "SUCCESS" });
     }
 
     clearState(false, !orderData.status || orderData.status !== OrderStatus.PREPARING);

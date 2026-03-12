@@ -9,12 +9,14 @@ import { useDigitalAlert } from '../hooks/useDigitalAlert';
 import { validateEmail, validateCPF, validateCNPJ, maskPhone, maskDocument, toTitleCase } from '../services/validationUtils';
 import { formatAddress } from '../services/formatUtils';
 import WaiterAuthModal from '../components/WaiterAuthModal';
+import { useToast } from '../hooks/useToast';
 
 interface TablesProps {
   currentUser: User;
 }
 
 const Tables: React.FC<TablesProps> = ({ currentUser }) => {
+  const { addToast } = useToast();
   const { isAlerting, dismissAlert } = useDigitalAlert();
   const [settings, setSettings] = useState<BusinessSettings | null>(null);
   const [sessions, setSessions] = useState<TableSession[]>([]);
@@ -421,7 +423,7 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
       const waiter = waiters.find(w => w.id === selectedWaiterId);
       await db.logAction(currentUser, 'TABLE_DIGITAL_APPROVE', `Mesa ${tableNum}: Pedido digital aprovado por ${waiter?.name}.`);
 
-      showAlert("Aprovado!", "Itens do Cardápio Digital foram confirmados e enviados para a Cozinha.", "SUCCESS");
+      addToast({ title: "APROVADO!", message: "Itens confirmados e enviados para a Cozinha.", type: "SUCCESS" });
       await refreshData();
     } catch (err) {
       console.error("Erro ao aprovar digitais", err);
@@ -468,7 +470,7 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
         await db.logAction(currentUser, 'TABLE_DIGITAL_REJECT', `Mesa ${tableNum}: Pedido digital rejeitado/excluído.`);
 
         setAlertConfig(prev => ({ ...prev, isOpen: false }));
-        showAlert("Rejeitado", "O pedido digital foi excluído com sucesso.", "SUCCESS");
+        addToast({ title: "REJEITADO", message: "O pedido digital foi excluído com sucesso.", type: "SUCCESS" });
         await refreshData();
       } catch (err) {
         console.error("Erro ao rejeitar digitais", err);
@@ -638,7 +640,7 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
     setManualClientCep('');
     setClientSearch('');
     await refreshData();
-    showAlert("Sucesso", "Solicitação de fechamento enviada ao PDV!", "SUCCESS");
+    addToast({ title: "SUCESSO", message: "Solicitação de fechamento enviada ao PDV!", type: "SUCCESS" });
   };
 
   if (!settings) return null;
