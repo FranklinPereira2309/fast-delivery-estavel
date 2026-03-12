@@ -82,28 +82,33 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
 
       const activeSessions = await db.getTables();
       setTables(activeSessions);
-
-      // Refresh selected table data if open
-      if (selectedTable) {
-        const updated = activeSessions.find(t => t.tableNumber === selectedTable.tableNumber);
-        if (updated) {
-          setSelectedTable(updated);
-        } else {
-          // If not in active sessions anymore, it's available
-          setSelectedTable({
-            tableNumber: selectedTable.tableNumber,
-            status: 'available',
-            items: [],
-            startTime: new Date().toISOString() // Placeholder
-          } as any);
-        }
-      }
     } catch (e) {
       console.error(e);
     } finally {
       setLoading(false);
     }
   };
+
+  // Synchronize selectedTable details whenever 'tables' state changes (Socket or Manual)
+  useEffect(() => {
+    if (selectedTable) {
+      const updated = tables.find(t => t.tableNumber === selectedTable.tableNumber);
+      if (updated) {
+        setSelectedTable(updated);
+      } else {
+        // If not in active sessions anymore, it's available (or closed)
+        // Check if it's currently open as 'billing' or 'occupied' to avoid flickering on first load
+        if (selectedTable.status !== 'available') {
+          setSelectedTable({
+            tableNumber: selectedTable.tableNumber,
+            status: 'available',
+            items: [],
+            startTime: new Date().toISOString()
+          } as any);
+        }
+      }
+    }
+  }, [tables]);
 
   const fetchFeedbacks = async () => {
     try {
