@@ -19,12 +19,18 @@ const mapSessionResponse = (session: any) => {
 };
 
 export const getTableSessions = async (req: Request, res: Response) => {
-    // Sanity Sweep: Remove any sessions that are 'available' and have no pending digital items
-    // This prevents stale PINs from appearing when a table is officially "free" but the row persists.
+    // Sanity Sweep: Remove any sessions that are 'available' and have no pending digital items.
+    // IMPROVEMENT: We now preserve sessions that have a token (active browsing in Digital Menu)
+    // for at least 2 hours since their last activity (startTime).
+    const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
     await prisma.tableSession.deleteMany({
         where: {
             status: 'available',
-            hasPendingDigital: false
+            hasPendingDigital: false,
+            OR: [
+                { sessionToken: null },
+                { startTime: { lt: twoHoursAgo } }
+            ]
         }
     }).catch(e => console.error('Error during table session sanity sweep:', e));
 

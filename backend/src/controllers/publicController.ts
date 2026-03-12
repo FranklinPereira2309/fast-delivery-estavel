@@ -110,7 +110,7 @@ export const verifyTable = async (req: Request, res: Response) => {
                     status: 'available',
                     pin: pinToSet,
                     sessionToken: tokenToSet,
-                    startTime: startTimeToSet,
+                    startTime: now,
                     hasPendingDigital: false,
                     pendingReviewItems: null,
                     clientName: null,
@@ -125,7 +125,7 @@ export const verifyTable = async (req: Request, res: Response) => {
                 update: {
                     pin: pinToSet,
                     sessionToken: tokenToSet,
-                    startTime: startTimeToSet,
+                    startTime: now,
                     hasPendingDigital: false,
                     pendingReviewItems: null,
                     clientName: null,

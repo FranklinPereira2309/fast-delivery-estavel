@@ -123,7 +123,7 @@ function AppContent() {
       if ((data as any).isNewSession || data.status === 'available') {
         const timeSinceFinished = Date.now() - sessionContextRef.current.lastFinishedAt;
         if (timeSinceFinished > 60000) {
-          console.log('Table available or new session - clearing finished state');
+          // console.log('Table available or new session - clearing finished state');
           updateTerminalState(false);
         }
       }
