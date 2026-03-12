@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { db, BusinessSettings } from '../services/db';
+import { db } from '../services/db';
 import { socket } from '../services/socket';
-import { TableSession, Product, User, OrderItem, Order, OrderStatus, SaleType, Waiter, Client } from '../types';
+import { TableSession, Product, User, OrderItem, Order, OrderStatus, SaleType, Waiter, Client, BusinessSettings } from '../types';
 import { Icons, PLACEHOLDER_FOOD_IMAGE, formatImageUrl } from '../constants';
 import CustomAlert from '../components/CustomAlert';
 import { useDigitalAlert } from '../hooks/useDigitalAlert';
@@ -69,6 +69,7 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
 
   const [transferModal, setTransferModal] = useState<{ isOpen: boolean, sourceTable: number | null }>({ isOpen: false, sourceTable: null });
   const [transferTargetStr, setTransferTargetStr] = useState('');
+  const [authenticatedWaiters, setAuthenticatedWaiters] = useState<Record<number, string>>({});
 
   const requireWaiterAuth = (waiterId: string, actionDesc: string): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -124,7 +125,7 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
   }, []);
 
   const refreshData = async () => {
-    const [s, sess, prods, wa, cl] = await Promise.all([
+    const [s, allSessions, prods, wa, cl] = await Promise.all([
       db.getSettings(),
       db.getTableSessions(),
       db.getProducts(),
@@ -133,7 +134,7 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
     ]);
     setSettings(s);
     // Enriquecer sessões com flag isSoftRejected para filtrar no PDV
-    const enrichedSessions = sess.map(s => {
+    const enrichedSessions = allSessions.map(s => {
       let isSoftRejected = false;
       if (s.pendingReviewItems) {
         try {
@@ -147,6 +148,22 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
       }
       return { ...s, isSoftRejected };
     });
+    // Limpar cache de autenticação para mesas que foram liberadas ou mudaram de garçom
+    setAuthenticatedWaiters(prev => {
+      const next = { ...prev };
+      let changed = false;
+      Object.keys(next).forEach(tableNumStr => {
+        const tableNum = parseInt(tableNumStr);
+        const tSess = allSessions.find(s => s.tableNumber === tableNum);
+        // Se a mesa ficou livre ou o garçom da sessão mudou, remove do cache local
+        if (!tSess || (tSess.waiterId && next[tableNum] !== tSess.waiterId)) {
+          delete next[tableNum];
+          changed = true;
+        }
+      });
+      return changed ? next : prev;
+    });
+
     setSessions(enrichedSessions);
     setProducts(prods);
     setWaiters(wa);
@@ -175,6 +192,37 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
     return s;
   };
 
+  const handleWaiterChange = async (newWaiterId: string) => {
+    if (!selectedTable) return;
+    if (!newWaiterId) {
+      setSelectedWaiterId('');
+      return;
+    }
+
+    const sess = getSessForTable(selectedTable);
+
+    // Regra de Propriedade: Apenas o dono ou Admin pode assumir mesa ocupada se o trava estiver ligado.
+    if (settings?.waiterLockEnabled && sess && sess.waiterId && sess.waiterId !== newWaiterId && !currentUser.permissions.includes('admin')) {
+      return showAlert("Acesso Negado", "Esta mesa já está sendo atendida por outro garçom.", "DANGER");
+    }
+
+    // Se já estiver autenticado localmente para esta mesa com este garçom, apenas troca
+    if (authenticatedWaiters[selectedTable] === newWaiterId) {
+      setSelectedWaiterId(newWaiterId);
+      return;
+    }
+
+    // Autenticação obrigatória ao selecionar o garçom
+    try {
+      await requireWaiterAuth(newWaiterId, `Assumir atendimento da Mesa ${selectedTable}`);
+      setAuthenticatedWaiters(prev => ({ ...prev, [selectedTable]: newWaiterId }));
+      setSelectedWaiterId(newWaiterId);
+    } catch (err) {
+      // Se falhar ou cancelar, mantém o anterior ou limpa
+      console.log("Autenticação de garçom cancelada");
+    }
+  };
+
   const confirmLaunchProduct = async () => {
     const product = selectedProductForLaunch;
     const observationStr = modalObservation;
@@ -201,9 +249,12 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
       return showAlert("Mesa Bloqueada", "Esta mesa está em processo de fechamento (Faturando). Para lançar mais itens, reabra a mesa.", "DANGER");
     }
 
-    // Require Waiter Authentication
+    // Require Waiter Authentication ONLY if not already authenticated locally for this session
     try {
-      await requireWaiterAuth(selectedWaiterId, `Lançar ${product.name} na Mesa ${selectedTable}`);
+      if (authenticatedWaiters[selectedTable] !== selectedWaiterId) {
+        await requireWaiterAuth(selectedWaiterId, `Lançar ${product.name} na Mesa ${selectedTable}`);
+        setAuthenticatedWaiters(prev => ({ ...prev, [selectedTable]: selectedWaiterId }));
+      }
     } catch (authErr) {
       return; // Cancelled or failed auth
     }
@@ -316,7 +367,10 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
     }
 
     try {
-      await requireWaiterAuth(selectedWaiterId, `Aprovar Pedido Digital da Mesa ${tableNum}`);
+      if (authenticatedWaiters[tableNum] !== selectedWaiterId) {
+        await requireWaiterAuth(selectedWaiterId, `Aprovar Pedido Digital da Mesa ${tableNum}`);
+        setAuthenticatedWaiters(prev => ({ ...prev, [tableNum]: selectedWaiterId }));
+      }
     } catch (authErr) {
       return;
     }
@@ -387,7 +441,10 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
     showAlert("Rejeitar Pedido", "Deseja rejeitar estes itens? O cliente será notificado", "DANGER", async () => {
       setAlertConfig(prev => ({ ...prev, isOpen: false })); // FECHA A MENSAGEM DE REJEITAR ANTES DE PEDIR PIN
       try {
-        await requireWaiterAuth(selectedWaiterId, `Rejeitar Pedido da Mesa ${tableNum}`);
+        if (authenticatedWaiters[tableNum] !== selectedWaiterId) {
+          await requireWaiterAuth(selectedWaiterId, `Rejeitar Pedido da Mesa ${tableNum}`);
+          setAuthenticatedWaiters(prev => ({ ...prev, [tableNum]: selectedWaiterId }));
+        }
       } catch (authErr) {
         return;
       }
@@ -770,7 +827,7 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
                     )}
                     <div className="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-100 dark:border-slate-700 shadow-sm mb-6">
                       <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest block mb-2">Selecione o Garçom da Mesa:</label>
-                      <select disabled={getTableStatus(selectedTable) === 'billing'} value={selectedWaiterId} onChange={(e) => setSelectedWaiterId(e.target.value)} className="w-full max-w-sm p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900 transition-all outline-none disabled:opacity-50 dark:text-white">
+                      <select disabled={getTableStatus(selectedTable) === 'billing'} value={selectedWaiterId} onChange={(e) => handleWaiterChange(e.target.value)} className="w-full max-w-sm p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900 transition-all outline-none disabled:opacity-50 dark:text-white">
                         <option value="">Selecione...</option>
                         {waiters.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
                       </select>
