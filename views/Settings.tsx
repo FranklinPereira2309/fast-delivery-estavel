@@ -5,6 +5,7 @@ import { User, Waiter, DeliveryDriver, BusinessSettings } from '../types';
 import { Icons } from '../constants';
 import CustomAlert from '../components/CustomAlert';
 import { useTheme } from '../components/ThemeProvider';
+import { useToast } from '../hooks/useToast';
 import AuditLogs from './AuditLogs';
 
 // Sub-componente para Gestão de Garçons
@@ -14,6 +15,7 @@ const WaiterManagement: React.FC = () => {
     const [editingWaiter, setEditingWaiter] = useState<Waiter | null>(null);
     const [formData, setFormData] = useState({ name: '', phone: '', email: '' });
     const [loading, setLoading] = useState(false);
+    const { addToast } = useToast();
 
     const [alertConfig, setAlertConfig] = useState<{ isOpen: boolean, title: string, message: string, type: 'SUCCESS' | 'ERROR' | 'DANGER', onConfirm?: () => void }>({
         isOpen: false, title: '', message: '', type: 'SUCCESS'
@@ -33,6 +35,11 @@ const WaiterManagement: React.FC = () => {
             setIsModalOpen(false);
             refresh();
             setFormData({ name: '', phone: '', email: '' });
+            addToast({
+                title: "SUCESSO",
+                message: editingWaiter ? "Garçom atualizado com sucesso!" : "Garçom cadastrado com sucesso!",
+                type: "SUCCESS"
+            });
         } catch (error) {
             alert('Erro ao salvar garçom');
         } finally {
@@ -241,6 +248,7 @@ const UserManagementInternal: React.FC = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingUser, setEditingUser] = useState<User | null>(null);
     const [formData, setFormData] = useState({ name: '', email: '', password: '', phone: '', permissions: [] as string[] });
+    const { addToast } = useToast();
     const [alertConfig, setAlertConfig] = useState<{ isOpen: boolean, title: string, message: string, type: 'SUCCESS' | 'ERROR' | 'DANGER' | 'INFO', onConfirm?: () => void }>({
         isOpen: false, title: '', message: '', type: 'SUCCESS'
     });
@@ -284,6 +292,11 @@ const UserManagementInternal: React.FC = () => {
         await db.saveUser(userData);
         setIsModalOpen(false);
         refresh();
+        addToast({
+            title: "SUCESSO",
+            message: editingUser ? "Usuário atualizado com sucesso!" : "Usuário cadastrado com sucesso!",
+            type: "SUCCESS"
+        });
     };
 
     const handleToggleStatus = async (user: User) => {
@@ -581,7 +594,7 @@ interface SettingsProps {
 
 const Settings: React.FC<SettingsProps> = ({ settings, setSettings, onReset }) => {
     const [activeSubTab, setActiveSubTab] = useState<'EMPRESA' | 'HORARIOS' | 'FISCAL' | 'GARCONS' | 'USUARIOS' | 'AUDITORIA' | 'AVANCADO' | 'APARENCIA'>('EMPRESA');
-    const [isSavedAlertOpen, setIsSavedAlertOpen] = useState(false);
+    const { addToast } = useToast();
     const [storeStatus, setStoreStatus] = useState<{ status: string, is_manually_closed: boolean } | null>(null);
     const { theme, setTheme } = useTheme();
 
@@ -602,7 +615,11 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings, onReset }) =
     const handleSaveSettings = async (e: React.FormEvent) => {
         e.preventDefault();
         await db.saveSettings(settings);
-        setIsSavedAlertOpen(true);
+        addToast({
+            title: "SUCESSO",
+            message: "As configurações do estabelecimento foram atualizadas com sucesso.",
+            type: "SUCCESS"
+        });
     };
 
     const handleBackup = () => {
@@ -624,13 +641,6 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings, onReset }) =
 
     return (
         <div className="flex flex-col h-full gap-4 sm:gap-8 animate-in fade-in duration-500 overflow-hidden">
-            <CustomAlert
-                isOpen={isSavedAlertOpen}
-                title="SUCESSO"
-                message="As configurações do estabelecimento foram atualizadas com sucesso."
-                type="SUCCESS"
-                onConfirm={() => setIsSavedAlertOpen(false)}
-            />
 
             <div className="flex gap-4 border-b border-slate-200 dark:border-slate-800 shrink-0 overflow-x-auto pb-0.5 custom-scrollbar">
                 {menuItems.map(item => (
