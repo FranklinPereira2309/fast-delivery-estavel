@@ -102,14 +102,14 @@ export const startOrderTimeoutService = () => {
                         if (oldDriverId) {
                             getIO().to(`chat_${oldDriverId}`).emit('order_auto_rejected', {
                                 orderId: order.id,
-                                message: 'A entrega foi inativada por falta de interação'
+                                message: 'A entrega foi cancelada por inatividade do entregador'
                             });
 
                             // Notificar Broadcast Global
                             getIO().emit('order_auto_rejected_global', {
                                 orderId: order.id,
                                 driverId: oldDriverId,
-                                message: 'A entrega foi inativada por falta de interação'
+                                message: 'A entrega foi cancelada por inatividade do entregador'
                             });
                         }
 

@@ -106,12 +106,20 @@ const App: React.FC = () => {
 
     socket.on('order_auto_rejected_global', (data: any) => {
       if (driver && data.driverId === driver.id) {
-        setCustomAlertMessage(data.message);
+        setCustomAlertMessage(data.message || 'A entrega foi cancelada por inatividade do entregador');
         setIsAlertOpen(true);
         refreshData();
         playNotificationSound();
         setTimeout(playNotificationSound, 600);
       }
+    });
+
+    socket.on('order_auto_rejected', (data: any) => {
+      setCustomAlertMessage(data.message || 'A entrega foi cancelada por inatividade do entregador');
+      setIsAlertOpen(true);
+      refreshData();
+      playNotificationSound();
+      setTimeout(playNotificationSound, 600);
     });
 
     const onReconnect = () => {
