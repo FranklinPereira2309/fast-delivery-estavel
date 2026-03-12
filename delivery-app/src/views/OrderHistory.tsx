@@ -240,7 +240,6 @@ const OrderHistory: React.FC = () => {
                                     <p className="font-black hidden print:block pt-1 text-[10px]">PAGTO: {(paymentLabels[(printingOrder.paymentMethod || '').toUpperCase()] || printingOrder.paymentMethod || 'PENDENTE').toUpperCase()}</p>
                                 </div>
                             )}
-                        </div>
 
                         <div className="border-t border-dashed my-3 py-3 font-receipt">
                             {printingOrder.items.map((it: any, idx: number) => {
