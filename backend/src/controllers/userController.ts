@@ -23,10 +23,12 @@ const generateRecoveryCode = () => {
 export const saveUser = async (req: Request, res: Response) => {
     try {
         const data = req.body;
+        console.log('Incoming user data:', JSON.stringify(data));
+
         // Se o ID começar com 'user-', é um ID temporário do frontend, então tratamos como novo usuário
         const isNewUser = !data.id || (typeof data.id === 'string' && data.id.startsWith('user-'));
 
-        const userData = { ...data };
+        const userData: any = { ...data };
         if (userData.email) {
             userData.email = userData.email.toLowerCase();
         }
@@ -41,7 +43,7 @@ export const saveUser = async (req: Request, res: Response) => {
             userData.password = await bcrypt.hash(passwordToHash, 10);
             
             // Remove o ID temporário do frontend para o Prisma gerar um UUID
-            if (data.id && data.id.startsWith('user-')) {
+            if (userData.id && typeof userData.id === 'string' && userData.id.startsWith('user-')) {
                 delete userData.id;
             }
         } else {
@@ -54,18 +56,38 @@ export const saveUser = async (req: Request, res: Response) => {
             }
         }
 
-        const { id, ...rest } = userData;
+        // Lista de campos permitidos no modelo Prisma User para evitar erros de campo desconhecido
+        const allowedFields = [
+            'name', 'email', 'password', 'phone', 'recoveryCode', 
+            'mustChangePassword', 'active', 'permissions', 'createdAt'
+        ];
+
+        const cleanData: any = {};
+        allowedFields.forEach(field => {
+            if (userData[field] !== undefined) {
+                // Conversão de data se necessário
+                if (field === 'createdAt' && typeof userData[field] === 'string') {
+                    cleanData[field] = new Date(userData[field]);
+                } else {
+                    cleanData[field] = userData[field];
+                }
+            }
+        });
+
+        const id = isNewUser ? undefined : userData.id;
+
+        console.log('Clean data for Prisma:', JSON.stringify(cleanData));
 
         const user = await prisma.user.upsert({
             where: { id: id || '' },
-            update: rest,
-            create: userData
+            update: cleanData,
+            create: { ...cleanData, id: id } // No create, id pode vir se for UUID existente mas não encontrado
         });
         res.json(user);
     } catch (error: any) {
         console.error('Error in saveUser:', error);
         res.status(500).json({ 
-            error: 'Erro ao salvar usuário', 
+            error: `Erro ao salvar usuário: ${error.message}`, 
             details: error.message,
             stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
         });
