@@ -155,7 +155,7 @@ const SalesMonitor: React.FC = () => {
           </div>
         ) : (
           <>
-            <p className="font-black text-[10px]">PAGTO: {(paymentLabels[(printingOrder?.paymentMethod || '').toUpperCase()] || printingOrder?.paymentMethod || 'PENDENTE').toUpperCase()}</p>
+            <p className="font-black text-[10px] dark:text-white">PAGTO: {(paymentLabels[(printingOrder?.paymentMethod || '').toUpperCase()] || printingOrder?.paymentMethod || 'PENDENTE').toUpperCase()}</p>
             <button
               onClick={() => {
                 const rawMethod = printingOrder?.paymentMethod || 'DINHEIRO';
@@ -170,7 +170,7 @@ const SalesMonitor: React.FC = () => {
           </>
         )}
       </div>
-      <p className="font-black hidden print:block pt-1 text-[10px]">PAGTO: {(paymentLabels[(printingOrder?.paymentMethod || '').toUpperCase()] || printingOrder?.paymentMethod || 'PENDENTE').toUpperCase()}</p>
+      <p className="font-black hidden print:block pt-1 text-[10px] dark:text-white">PAGTO: {(paymentLabels[(printingOrder?.paymentMethod || '').toUpperCase()] || printingOrder?.paymentMethod || 'PENDENTE').toUpperCase()}</p>
     </div>
   );
 
@@ -323,9 +323,9 @@ const SalesMonitor: React.FC = () => {
 
           {printingOrder && businessSettings && (
             <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/80 dark:bg-slate-950/90 backdrop-blur-md">
-              <div className="relative w-full max-w-[80mm] bg-white p-8 border border-dashed shadow-2xl font-receipt text-[11px] text-black is-receipt animate-in zoom-in duration-200">
+              <div className="relative w-full max-w-[80mm] bg-white dark:bg-slate-900 p-8 border border-dashed dark:border-slate-800 shadow-2xl font-receipt text-[11px] text-black dark:text-white is-receipt animate-in zoom-in duration-200">
                 {isNfceVisual ? (
-                  <div className="space-y-4 font-mono text-[10px] leading-tight text-black">
+                  <div className="space-y-4 font-mono text-[10px] leading-tight text-black dark:text-white">
                     <div className="text-center space-y-1">
                       <p className="font-bold">CNPJ - {businessSettings?.cnpj} - {businessSettings?.name?.toUpperCase()}</p>
                       <p className="uppercase">{businessSettings?.address}</p>
@@ -333,7 +333,7 @@ const SalesMonitor: React.FC = () => {
                       <p className="font-bold mt-2">DOCUMENTO AUXILIAR DA NOTA FISCAL DE CONSUMIDOR</p>
                     </div>
 
-                    <div className="border-t border-dashed border-black mt-2 pt-2">
+                    <div className="border-t border-dashed border-black dark:border-slate-700 mt-2 pt-2">
                       <table className="w-full text-left">
                         <thead>
                           <tr className="uppercase font-bold">
@@ -367,21 +367,21 @@ const SalesMonitor: React.FC = () => {
                         <span>VALOR A PAGAR R$</span>
                         <span>{printingOrder.total.toFixed(2)}</span>
                       </div>
-                      <div className="flex justify-between font-bold text-[8px] border-b border-dashed border-black pb-1">
+                      <div className="flex justify-between font-bold text-[8px] border-b border-dashed border-black dark:border-slate-700 pb-1">
                         <span>FORMA DE PAGAMENTO</span>
                         <span>Valor Pago</span>
                       </div>
                       {renderPaymentEditor()}
                     </div>
 
-                    <div className="text-center space-y-1 border-t border-dashed border-black pt-2">
+                    <div className="text-center space-y-1 border-t border-dashed border-black dark:border-slate-700 pt-2">
                       <p className="font-bold">NFCe: {printingOrder.nfeNumber?.split('-')[1] || '000001'} Ser: 001 Emi: {new Date(printingOrder.createdAt).toLocaleDateString('pt-BR')} {new Date(printingOrder.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</p>
                       <p>Consulte pela chave de acesso em</p>
                       <p className="text-[8px] underline">www.nfce.sefaz.ba.gov.br/portal/consultaNFCe.jsp</p>
                       <p className="text-[9px] font-bold break-all">35240212345678000190650010000000011000000012</p>
                     </div>
 
-                    <div className="text-center space-y-1 border-t border-dashed border-black pt-2">
+                    <div className="text-center space-y-1 border-t border-dashed border-black dark:border-slate-700 pt-2">
                       <p className="font-bold">{printingOrder.clientName === 'Consumidor' ? 'CONSUMIDOR NAO INFORMADO' : `CLIENTE: ${printingOrder.clientName?.toUpperCase()}`}</p>
                       <p>Protocolo de Autorizacao: {Math.floor(Math.random() * 100000000000000)}</p>
                       <div className="flex justify-between text-[8px]">
@@ -406,7 +406,7 @@ const SalesMonitor: React.FC = () => {
                     <div className="text-center mb-6 border-b border-dashed pb-4">
                       <h2 className="font-black text-sm uppercase tracking-tighter">{businessSettings.name}</h2>
                       <p className="text-[9px] font-bold mt-1">CNPJ: {businessSettings.cnpj}</p>
-                      <p className="text-[10px] font-black mt-3 border border-slate-900 py-1 uppercase tracking-widest">Comprovante de Pagamento</p>
+                      <p className="text-[10px] font-black mt-3 border border-slate-900 dark:border-slate-300 py-1 uppercase tracking-widest">Comprovante de Pagamento</p>
                     </div>
                     <div className="space-y-1 mb-4">
                       <p>DATA: {new Date(printingOrder.createdAt).toLocaleString('pt-BR')}</p>
@@ -442,7 +442,7 @@ const SalesMonitor: React.FC = () => {
                       </div>
                     )}
                     {printingOrder.type === SaleType.TABLE && typeof printingOrder.appliedServiceFee === 'number' && (
-                      <div className="flex justify-between items-center mb-1 bg-slate-50 p-1.5 rounded border border-slate-100 no-print mx-[-6px] px-[6px]">
+                      <div className="flex justify-between items-center mb-1 bg-slate-50 dark:bg-slate-800 p-1.5 rounded border border-slate-100 dark:border-slate-700 no-print mx-[-6px] px-[6px]">
                         <span className="font-black text-[9px] uppercase tracking-widest">TAXA SERVIÇO:</span>
                         {editingServiceFee ? (
                           <div className="flex gap-2 items-center">
