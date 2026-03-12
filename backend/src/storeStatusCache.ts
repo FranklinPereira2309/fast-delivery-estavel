@@ -25,17 +25,28 @@ export const updateCacheAndEmit = (isManuallyClosed: boolean, operatingHours: st
     }
 }
 
-export const loadSettingsToCache = async () => {
-    try {
-        const settings = await prisma.businessSettings.findUnique({ where: { key: 'main' } });
-        if (settings) {
-            cachedSettings.isManuallyClosed = (settings as any).isManuallyClosed ?? true;
-            cachedSettings.operatingHours = (settings as any).operatingHours ?? "[]";
-            // Initially set lastCalculatedStatus without emitting since no clients are connected yet
-            lastCalculatedStatus = calculateCurrentStoreStatus().status;
+export const loadSettingsToCache = async (retries = 3) => {
+    for (let i = 0; i < retries; i++) {
+        try {
+            const settings = await prisma.businessSettings.findUnique({ where: { key: 'main' } });
+            if (settings) {
+                cachedSettings.isManuallyClosed = (settings as any).isManuallyClosed ?? true;
+                cachedSettings.operatingHours = (settings as any).operatingHours ?? "[]";
+                // Initially set lastCalculatedStatus without emitting since no clients are connected yet
+                lastCalculatedStatus = calculateCurrentStoreStatus().status;
+                console.log(`[STATUS-CACHE] Settings loaded successfully (attempt ${i + 1})`);
+                break;
+            } else {
+                console.warn(`[STATUS-CACHE] Main settings not found, using defaults.`);
+                break;
+            }
+        } catch (e) {
+            console.error(`[STATUS-CACHE] Error loading settings to cache (attempt ${i + 1}/${retries}):`, e);
+            if (i < retries - 1) {
+                // Wait 2 seconds before retrying
+                await new Promise(resolve => setTimeout(resolve, 2000));
+            }
         }
-    } catch (e) {
-        console.error("Error loading settings to cache", e);
     }
 };
 
@@ -44,108 +55,117 @@ export const getStoreStatus = (): StoreStatus => {
 }
 
 const calculateCurrentStoreStatus = (): StoreStatus => {
-    if (cachedSettings.isManuallyClosed) {
-        return {
-            status: 'offline',
-            is_manually_closed: true,
-            next_status_change: null
-        };
-    }
+    let hour = 0;
+    let minute = 0;
+    let todayConfig: any = null;
 
-    try {
-        const hours = JSON.parse(cachedSettings.operatingHours);
-        if (!Array.isArray(hours) || hours.length === 0) {
+    const result = ((): StoreStatus => {
+        if (cachedSettings.isManuallyClosed) {
+            return {
+                status: 'offline',
+                is_manually_closed: true,
+                next_status_change: null
+            };
+        }
+
+        try {
+            const hours = JSON.parse(cachedSettings.operatingHours);
+            if (!Array.isArray(hours) || hours.length === 0) {
+                return { status: 'offline', is_manually_closed: false, next_status_change: null };
+            }
+
+            const options: Intl.DateTimeFormatOptions = {
+                timeZone: "America/Sao_Paulo",
+                hour: 'numeric',
+                minute: 'numeric',
+                second: 'numeric',
+                weekday: 'short',
+                year: 'numeric',
+                month: 'numeric',
+                day: 'numeric',
+                hour12: false
+            };
+            const formatter = new Intl.DateTimeFormat('en-US', options);
+            const parts = formatter.formatToParts(new Date());
+            const getPart = (type: string) => parts.find(p => p.type === type)?.value;
+
+            // Current time in Sao Paulo
+            hour = parseInt(getPart('hour') || '0');
+            minute = parseInt(getPart('minute') || '0');
+            const dayOfWeek = new Date().toLocaleDateString('en-US', { timeZone: 'America/Sao_Paulo', weekday: 'short' });
+            const dayMap: Record<string, number> = { 'Sun': 0, 'Mon': 1, 'Tue': 2, 'Wed': 3, 'Thu': 4, 'Fri': 5, 'Sat': 6 };
+            const currentDayNum = dayMap[dayOfWeek] ?? new Date().getDay();
+
+            const currentTimeInt = hour * 60 + minute;
+
+            todayConfig = hours.find((h: any) => h.dayOfWeek === currentDayNum);
+
+            if (!todayConfig || !todayConfig.isOpen) {
+                return { status: 'offline', is_manually_closed: false, next_status_change: getNextOpenTime(hours, new Date()) };
+            }
+
+            const openParts = todayConfig.openTime.split(':').map(Number);
+            const closeParts = todayConfig.closeTime.split(':').map(Number);
+            const openTimeInt = openParts[0] * 60 + openParts[1];
+            let closeTimeInt = closeParts[0] * 60 + closeParts[1];
+
+            // Handle cases where store closes past midnight (e.g., 02:00)
+            let isOpenNow = false;
+            if (closeTimeInt < openTimeInt) {
+                // Closes next day
+                if (currentTimeInt >= openTimeInt || currentTimeInt < closeTimeInt) {
+                    isOpenNow = true;
+                }
+            } else {
+                // Closes same day
+                if (currentTimeInt >= openTimeInt && currentTimeInt < closeTimeInt) {
+                    isOpenNow = true;
+                }
+            }
+
+            if (isOpenNow) {
+                // It's open! Calculate next_status_change (closing time)
+
+                // Get SP date parts to construct a specialized ISO string
+                const spDateParts = new Intl.DateTimeFormat('en-US', {
+                    timeZone: 'America/Sao_Paulo',
+                    year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+                }).formatToParts(new Date());
+
+                const getP = (type: string) => spDateParts.find(p => p.type === type)?.value || '00';
+
+                let y = getP('year');
+                let m = getP('month');
+                let d = getP('day');
+
+                // If closes next day, increment day
+                if (closeTimeInt < openTimeInt && currentTimeInt >= openTimeInt) {
+                    const tempDate = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+                    tempDate.setDate(tempDate.getDate() + 1);
+                    y = tempDate.getFullYear().toString();
+                    m = (tempDate.getMonth() + 1).toString().padStart(2, '0');
+                    d = tempDate.getDate().toString().padStart(2, '0');
+                }
+
+                // Construct ISO with -03:00 offset (Brasilia Time)
+                const closingISO = `${y}-${m}-${d}T${todayConfig.closeTime}:00-03:00`;
+                const nextChangeDate = new Date(closingISO);
+
+                return { status: 'online', is_manually_closed: false, next_status_change: nextChangeDate.toISOString() };
+            } else {
+                // It's closed.
+                const nextOpen = getNextOpenTime(hours, new Date());
+                return { status: 'offline', is_manually_closed: false, next_status_change: nextOpen };
+            }
+
+        } catch (e) {
+            console.error("Store status calculation error:", e);
             return { status: 'offline', is_manually_closed: false, next_status_change: null };
         }
+    })();
 
-        const options: Intl.DateTimeFormatOptions = {
-            timeZone: "America/Sao_Paulo",
-            hour: 'numeric',
-            minute: 'numeric',
-            second: 'numeric',
-            weekday: 'short',
-            year: 'numeric',
-            month: 'numeric',
-            day: 'numeric',
-            hour12: false
-        };
-        const formatter = new Intl.DateTimeFormat('en-US', options);
-        const parts = formatter.formatToParts(new Date());
-        const getPart = (type: string) => parts.find(p => p.type === type)?.value;
-
-        // Current time in Sao Paulo
-        const hour = parseInt(getPart('hour') || '0');
-        const minute = parseInt(getPart('minute') || '0');
-        const dayOfWeek = new Date().toLocaleDateString('en-US', { timeZone: 'America/Sao_Paulo', weekday: 'short' });
-        const dayMap: Record<string, number> = { 'Sun': 0, 'Mon': 1, 'Tue': 2, 'Wed': 3, 'Thu': 4, 'Fri': 5, 'Sat': 6 };
-        const currentDayNum = dayMap[dayOfWeek] ?? new Date().getDay();
-
-        const currentTimeInt = hour * 60 + minute;
-
-        const todayConfig = hours.find((h: any) => h.dayOfWeek === currentDayNum);
-
-        if (!todayConfig || !todayConfig.isOpen) {
-            return { status: 'offline', is_manually_closed: false, next_status_change: getNextOpenTime(hours, new Date()) };
-        }
-
-        const openParts = todayConfig.openTime.split(':').map(Number);
-        const closeParts = todayConfig.closeTime.split(':').map(Number);
-        const openTimeInt = openParts[0] * 60 + openParts[1];
-        let closeTimeInt = closeParts[0] * 60 + closeParts[1];
-
-        // Handle cases where store closes past midnight (e.g., 02:00)
-        let isOpenNow = false;
-        if (closeTimeInt < openTimeInt) {
-            // Closes next day
-            if (currentTimeInt >= openTimeInt || currentTimeInt < closeTimeInt) {
-                isOpenNow = true;
-            }
-        } else {
-            // Closes same day
-            if (currentTimeInt >= openTimeInt && currentTimeInt < closeTimeInt) {
-                isOpenNow = true;
-            }
-        }
-
-        if (isOpenNow) {
-            // It's open! Calculate next_status_change (closing time)
-
-            // Get SP date parts to construct a specialized ISO string
-            const spDateParts = new Intl.DateTimeFormat('en-US', {
-                timeZone: 'America/Sao_Paulo',
-                year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
-            }).formatToParts(new Date());
-
-            const getP = (type: string) => spDateParts.find(p => p.type === type)?.value || '00';
-
-            let y = getP('year');
-            let m = getP('month');
-            let d = getP('day');
-
-            // If closes next day, increment day
-            if (closeTimeInt < openTimeInt && currentTimeInt >= openTimeInt) {
-                const tempDate = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
-                tempDate.setDate(tempDate.getDate() + 1);
-                y = tempDate.getFullYear().toString();
-                m = (tempDate.getMonth() + 1).toString().padStart(2, '0');
-                d = tempDate.getDate().toString().padStart(2, '0');
-            }
-
-            // Construct ISO with -03:00 offset (Brasilia Time)
-            const closingISO = `${y}-${m}-${d}T${todayConfig.closeTime}:00-03:00`;
-            const nextChangeDate = new Date(closingISO);
-
-            return { status: 'online', is_manually_closed: false, next_status_change: nextChangeDate.toISOString() };
-        } else {
-            // It's closed.
-            const nextOpen = getNextOpenTime(hours, new Date());
-            return { status: 'offline', is_manually_closed: false, next_status_change: nextOpen };
-        }
-
-    } catch (e) {
-        console.error("Store status calculation error:", e);
-        return { status: 'offline', is_manually_closed: false, next_status_change: null };
-    }
+    console.log(`[STATUS-CHECK] Status: ${result.status} (Manual: ${result.is_manually_closed}, Now: ${hour}:${minute}, Open: ${todayConfig?.openTime})`);
+    return result;
 };
 
 const getNextOpenTime = (hours: any[], nowObj: Date): string | null => {
