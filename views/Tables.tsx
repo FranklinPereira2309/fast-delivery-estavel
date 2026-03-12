@@ -1280,7 +1280,7 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
                     await db.transferTable(transferModal.sourceTable, target, sess.waiterId, currentUser.permissions);
                     setSelectedTable(null);
                     await refreshData();
-                    showAlert("Sucesso", "Transferência realizada com sucesso!", "SUCCESS");
+                    addToast({ title: "SUCESSO", message: "Transferência realizada com sucesso!", type: "SUCCESS" });
                   } catch (err: any) {
                     if (err.message && err.message !== 'Garçom não encontrado') {
                       showAlert("Erro ao Transferir", err.message, "DANGER");
@@ -1320,7 +1320,7 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
                     await db.transferTable(transferModal.sourceTable, target, sess.waiterId, currentUser.permissions);
                     setSelectedTable(null);
                     await refreshData();
-                    showAlert("Sucesso", "Transferência realizada com sucesso!", "SUCCESS");
+                    addToast({ title: "SUCESSO", message: "Transferência realizada com sucesso!", type: "SUCCESS" });
                   } catch (err: any) {
                     if (err.message && err.message !== 'Garçom não encontrado') {
                       showAlert("Erro ao Transferir", err.message, "DANGER");

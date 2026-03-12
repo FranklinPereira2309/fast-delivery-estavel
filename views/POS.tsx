@@ -345,7 +345,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       setPendingTables(prev => prev.filter(t => t.tableNumber !== num));
       setCurrentOrderStatus(OrderStatus.REOPENED);
 
-      showAlert("Sucesso", `Mesa ${num} reaberta para novos lançamentos nas Mesas.`, "INFO");
+      addToast({ title: "SUCESSO", message: `Mesa ${num} reaberta para novos lançamentos nas Mesas.`, type: "SUCCESS" });
       clearState();
       await refreshAllData();
     }
@@ -378,7 +378,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
     await db.saveTableSession(updatedSess);
     await db.logAction(currentUser, 'TABLE_ADD_ITEM', `Lançamento PDV na Mesa ${num}.`);
 
-    showAlert("Sucesso", `Produtos lançados com sucesso na Mesa ${num}.`);
+    addToast({ title: "SUCESSO", message: `Produtos lançados com sucesso na Mesa ${num}.`, type: "SUCCESS" });
 
     setCart([]);
     setTableNumber('');
