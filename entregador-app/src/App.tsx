@@ -39,6 +39,35 @@ const playNotificationSound = () => {
   }
 };
 
+const CheckoutTimer: React.FC<{ assignedAt: string, timeoutMinutes: number }> = ({ assignedAt, timeoutMinutes }) => {
+  const [timeLeft, setTimeLeft] = useState('');
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const assigned = new Date(assignedAt).getTime();
+      const now = new Date().getTime();
+      const diff = (timeoutMinutes * 60000) - (now - assigned);
+      if (diff <= 0) setTimeLeft('EXPIRADO');
+      else {
+        const mins = Math.floor(diff / 60000);
+        const secs = Math.floor((diff % 60000) / 1000);
+        setTimeLeft(`${mins}:${secs.toString().padStart(2, '0')}`);
+      }
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [assignedAt, timeoutMinutes]);
+
+  const isExpiring = timeLeft !== 'EXPIRADO' && timeLeft.startsWith('0:');
+
+  return (
+    <div className={`flex items-center gap-2 px-4 py-2 rounded-2xl border transition-all ${timeLeft === 'EXPIRADO' ? 'bg-rose-50 border-rose-100 text-rose-600' : isExpiring ? 'bg-amber-50 border-amber-200 text-amber-600 animate-pulse' : 'bg-blue-50 border-blue-100 text-blue-600'}`}>
+      <Icons.Alert className="w-3.5 h-3.5" />
+      <span className="text-[10px] font-black uppercase tracking-widest">
+        {timeLeft === 'EXPIRADO' ? 'TEMPO ESGOTADO' : `ACEITAR EM: ${timeLeft}`}
+      </span>
+    </div>
+  );
+};
+
 const BlinkCSS = () => (
   <style>{`
         @keyframes blink {
@@ -119,6 +148,7 @@ const App: React.FC = () => {
       setIsAlertOpen(true);
       refreshData();
       playNotificationSound();
+      playNotificationSound(); // Dual sound for cancellation
       setTimeout(playNotificationSound, 600);
     });
 
@@ -350,13 +380,17 @@ const App: React.FC = () => {
 
       {/* NOVELTY ALERT */}
       {isAlertOpen && (
-        <div className="fixed top-6 left-6 right-6 z-[100] bg-blue-600 text-white p-6 rounded-[2rem] shadow-2xl flex items-center gap-4 animate-in slide-in-from-top duration-500">
+        <div className={`fixed top-6 left-6 right-6 z-[100] ${customAlertMessage?.toLowerCase().includes('cancelada') ? 'bg-rose-600' : 'bg-blue-600'} text-white p-6 rounded-[2rem] shadow-2xl flex items-center gap-4 animate-in slide-in-from-top duration-500`}>
           <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center shrink-0">
             <Icons.Alert className="w-6 h-6" />
           </div>
           <div className="flex-1">
-            <h4 className="font-black text-sm uppercase tracking-tight">{customAlertMessage ? 'AVISO!' : 'NOVA ENTREGA!'}</h4>
-            <p className="text-[10px] font-bold opacity-80 uppercase leading-tight">{customAlertMessage || 'Você recebeu uma nova rota de entrega.'}</p>
+            <h4 className="font-black text-sm uppercase tracking-tight">
+              {customAlertMessage?.toLowerCase().includes('cancelada') ? 'ENTREGA CANCELADA!' : customAlertMessage ? 'AVISO!' : 'NOVA ENTREGA!'}
+            </h4>
+            <p className="text-[10px] font-bold opacity-80 uppercase leading-tight">
+              {customAlertMessage || 'Você recebeu uma nova rota de entrega.'}
+            </p>
           </div>
           <button onClick={() => { setIsAlertOpen(false); setCustomAlertMessage(null); }} className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
             <Icons.Check className="w-4 h-4" />
@@ -477,19 +511,27 @@ const App: React.FC = () => {
                         <Icons.Print className="w-5 h-5" />
                       </button>
                       {order.status === OrderStatus.READY ? (
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => updateDeliveryStatus(order.id, OrderStatus.READY, '')}
-                            className="px-4 py-3 bg-slate-100 text-slate-500 rounded-2xl font-black uppercase text-[10px] tracking-widest active:scale-95 transition-all"
-                          >
-                            Rejeitar
-                          </button>
-                          <button
-                            onClick={() => updateDeliveryStatus(order.id, OrderStatus.OUT_FOR_DELIVERY, driver.id)}
-                            className="px-6 py-3 bg-blue-600 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-blue-500/30 active:scale-95 transition-all"
-                          >
-                            Aceitar
-                          </button>
+                        <div className="flex flex-col gap-3">
+                          {order.assignedAt && (
+                            <CheckoutTimer 
+                              assignedAt={order.assignedAt} 
+                              timeoutMinutes={settings?.orderTimeoutMinutes || 5} 
+                            />
+                          )}
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => updateDeliveryStatus(order.id, OrderStatus.READY, '')}
+                              className="px-4 py-3 bg-slate-100 text-slate-500 rounded-2xl font-black uppercase text-[10px] tracking-widest active:scale-95 transition-all"
+                            >
+                              Rejeitar
+                            </button>
+                            <button
+                              onClick={() => updateDeliveryStatus(order.id, OrderStatus.OUT_FOR_DELIVERY, driver.id)}
+                              className="px-6 py-3 bg-blue-600 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-blue-500/30 active:scale-95 transition-all flex-1"
+                            >
+                              Aceitar
+                            </button>
+                          </div>
                         </div>
                       ) : (
                         <div className="flex flex-col gap-2 items-end">
