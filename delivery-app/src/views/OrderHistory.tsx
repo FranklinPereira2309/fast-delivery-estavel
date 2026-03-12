@@ -89,6 +89,7 @@ const OrderHistory: React.FC = () => {
             case 'PENDING': return 'bg-amber-100 text-amber-700';
             case 'PREPARING': return 'bg-blue-100 text-blue-700';
             case 'READY': return 'bg-emerald-100 text-emerald-700';
+            case 'PARTIALLY_READY': return 'bg-orange-100 text-orange-700';
             case 'OUT_FOR_DELIVERY': return 'bg-indigo-100 text-indigo-700';
             case 'DELIVERED': return 'bg-slate-100 text-slate-700';
             case 'CANCELLED': return 'bg-rose-100 text-rose-700';
@@ -101,6 +102,7 @@ const OrderHistory: React.FC = () => {
             case 'PENDING': return 'Pendente';
             case 'PREPARING': return 'Em Preparo';
             case 'READY': return 'Pronto';
+            case 'PARTIALLY_READY': return 'Parcialmente Pronto';
             case 'OUT_FOR_DELIVERY': return 'Em Rota';
             case 'DELIVERED': return 'Entregue';
             case 'CANCELLED': return 'Cancelado';

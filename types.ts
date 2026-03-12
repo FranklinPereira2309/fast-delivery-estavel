@@ -14,7 +14,7 @@ export type OrderStatus = (typeof OrderStatus)[keyof typeof OrderStatus];
 export const OrderStatusLabels: Record<OrderStatus, string> = {
   PENDING: 'PENDENTE',
   PREPARING: 'EM PREPARAÇÃO',
-  PARTIALLY_READY: 'PRONTO PARCIALMENTE',
+  PARTIALLY_READY: 'PARCIALMENTE PRONTO',
   READY: 'PRONTO',
   OUT_FOR_DELIVERY: 'EM ROTA',
   DELIVERED: 'FINALIZADA',
