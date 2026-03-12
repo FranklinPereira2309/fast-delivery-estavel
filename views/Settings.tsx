@@ -978,7 +978,13 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings, onReset }) =
                                     <p className="text-[11px] text-blue-700 dark:text-blue-400 font-bold leading-relaxed">Para emitir NFC-e, sua empresa deve estar credenciada na SEFAZ do seu estado e possuir um Certificado Digital (A1) instalado no servidor de mensageria.</p>
                                 </div>
                             </div>
-                            <button type="submit" className="w-full md:w-auto bg-blue-600 text-white px-12 py-5 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-blue-700 transition-all shadow-2xl shadow-blue-100">Salvar Dados Fiscais</button>
+                            <button 
+                                type="submit" 
+                                disabled={!settings.enableNfcEmission}
+                                className={`w-full md:w-auto px-12 py-5 rounded-2xl font-black uppercase text-xs tracking-widest transition-all shadow-2xl ${!settings.enableNfcEmission ? 'bg-slate-300 dark:bg-slate-800 text-slate-500 dark:text-slate-600 cursor-not-allowed shadow-none grayscale opacity-60' : 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-100 dark:shadow-blue-900/20'}`}
+                            >
+                                Salvar Dados Fiscais
+                            </button>
                         </form>
                     </div>
                 )}
