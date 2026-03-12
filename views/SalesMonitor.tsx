@@ -234,7 +234,7 @@ const SalesMonitor: React.FC = () => {
                       <tr key={order.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 group transition-colors">
                         <td className="px-8 py-5">
                           <div className="flex justify-start">
-                            <span className={`text-[8px] sm:text-[9px] font-black px-2 sm:px-4 py-1.5 sm:py-2 rounded-xl text-white uppercase shadow-sm transition-all duration-300 ${blinkClass} ${order.status === OrderStatus.DELIVERED ? 'bg-slate-900 dark:bg-slate-950' :
+                            <span className={`text-[8px] sm:text-[9px] font-black px-2 sm:px-4 py-1.5 sm:py-2 rounded-xl text-white uppercase shadow-md transition-all duration-300 ${blinkClass} ${order.status === OrderStatus.DELIVERED ? 'bg-indigo-600 dark:bg-indigo-500 ring-2 ring-indigo-400/20' :
                               order.status === OrderStatus.READY ? 'bg-emerald-500' :
                                 order.status === OrderStatus.PARTIALLY_READY ? 'bg-orange-500' :
                                   order.status === OrderStatus.PREPARING ? 'bg-blue-500' :
