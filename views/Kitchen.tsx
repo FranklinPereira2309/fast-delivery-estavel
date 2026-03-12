@@ -197,9 +197,21 @@ const Kitchen: React.FC = () => {
                           {order.clientName || 'Cliente Direto'}
                         </p>
                       </div>
-                      <span className="text-[10px] font-black bg-white dark:bg-blue-900/40 px-3 py-1 rounded-full text-blue-600 dark:text-blue-400 shadow-sm shrink-0">
-                        {new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' }).format(new Date(order.createdAt))}
-                      </span>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handlePrint(order);
+                          }}
+                          className="p-2 bg-white dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 rounded-xl shadow-sm hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600 transition-all active:scale-90"
+                          title="Imprimir Cupom de Produção"
+                        >
+                          <Icons.Print size={14} />
+                        </button>
+                        <span className="text-[10px] font-black bg-white dark:bg-blue-900/40 px-3 py-1 rounded-full text-blue-600 dark:text-blue-400 shadow-sm">
+                          {new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' }).format(new Date(order.createdAt))}
+                        </span>
+                      </div>
                     </div>
                   </div>
 
@@ -443,31 +455,79 @@ const Kitchen: React.FC = () => {
           <div className="relative w-full max-w-[80mm] bg-white p-8 border border-dashed shadow-2xl font-receipt text-[11px] text-black print-container is-receipt animate-in zoom-in duration-200">
             <div className="text-center mb-6 border-b border-dashed pb-4">
               <h2 className="font-black text-sm uppercase tracking-tighter">{businessSettings.name}</h2>
-              <p className="text-[9px] font-bold mt-1 uppercase">Comprovante de Preparo</p>
+              <p className="text-[9px] font-bold mt-1 uppercase">
+                {viewTab === 'FILA' ? 'Cupom de Produção' : 'Conferência de Consumo'}
+              </p>
+              
+              {printingOrder.tableNumber && (
+                <div className="mt-4 flex justify-center">
+                  <span className="bg-slate-900 text-white px-4 py-1.5 rounded-lg font-black text-xs uppercase tracking-widest">
+                    Mesa {printingOrder.tableNumber}
+                  </span>
+                </div>
+              )}
             </div>
 
             <div className="space-y-1 mb-4">
               <p>DATA: {new Date(printingOrder.createdAt).toLocaleString('pt-BR')}</p>
-              <p>TIPO: {translateOrderType(printingOrder.type)} {printingOrder.tableNumber ? `- MESA ${printingOrder.tableNumber}` : ''}</p>
+              <p>TIPO: {translateOrderType(printingOrder.type)}</p>
               <p>CLIENTE: {printingOrder.clientName || 'Cliente Direto'}</p>
               {printingOrder.waiterId && (
                 <p>RESPONSÁVEL: {getWaiterName(printingOrder.waiterId)}</p>
               )}
             </div>
 
-            <div className="border-t border-dashed my-3 py-3">
-              {printingOrder.items.filter(it => it.isReady).map((it, idx) => (
-                <div key={idx} className="flex justify-between font-black uppercase py-0.5">
-                  <span>{it.quantity}X {(products.find(p => p.id === it.productId)?.name || 'Item').substring(0, 18)}</span>
-                  {it.readyAt && <span className="text-[8px] opacity-50">{new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' }).format(new Date(it.readyAt))}</span>}
-                </div>
-              ))}
+            <div className="border-t border-dashed my-3 py-3 space-y-3">
+              {printingOrder.items.filter(it => viewTab === 'FILA' ? !it.isReady : it.isReady).map((it, idx) => {
+                const product = products.find(p => p.id === it.productId);
+                return (
+                  <div key={idx} className="space-y-1">
+                    <div className="flex justify-between font-black uppercase py-0.5">
+                      <span>{it.quantity}X {(product?.name || 'Item').substring(0, 22)}</span>
+                      {viewTab === 'HISTORICO' && it.readyAt && (
+                        <span className="text-[8px] opacity-50">
+                          {new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' }).format(new Date(it.readyAt))}
+                        </span>
+                      )}
+                    </div>
+                    
+                    {/* Ficha Técnica no Cupom */}
+                    {product?.recipe && product.recipe.length > 0 && (
+                      <div className="pl-4 space-y-0.5 border-l border-slate-200">
+                        <p className="text-[8px] font-black uppercase text-slate-500">Ficha Técnica:</p>
+                        {product.recipe.map((r, rIdx) => {
+                          const invItem = inventory.find(inv => inv.id === r.inventoryItemId);
+                          return (
+                            <p key={rIdx} className="text-[9px] font-bold text-slate-700 uppercase">
+                              - {invItem?.name}: {r.quantity * it.quantity} {invItem?.unit}
+                            </p>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {it.observations && (
+                      <p className="text-[9px] text-orange-600 font-black pl-4">
+                        * OBS: {it.observations}
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
             </div>
 
-            <div className="flex justify-between items-end border-t border-dashed pt-4 mb-8">
-              <span className="font-black text-[10px] uppercase tracking-widest">TOTAL:</span>
-              <span className="text-2xl font-black">R$ {(printingOrder.total || 0).toFixed(2)}</span>
-            </div>
+            {viewTab === 'HISTORICO' && (
+              <div className="flex justify-between items-end border-t border-dashed pt-4 mb-8">
+                <span className="font-black text-[10px] uppercase tracking-widest">TOTAL:</span>
+                <span className="text-2xl font-black">R$ {(printingOrder.total || 0).toFixed(2)}</span>
+              </div>
+            )}
+
+            {viewTab === 'FILA' && (
+              <div className="text-center border-t border-dashed pt-4 mb-8">
+                <p className="text-[8px] font-black uppercase tracking-widest opacity-50 italic">Fila de Produção - Sem valor fiscal</p>
+              </div>
+            )}
 
             <div className="grid grid-cols-2 gap-4 no-print mt-6">
               <button
