@@ -133,25 +133,9 @@ const Kitchen: React.FC = () => {
     };
 
     try {
-      await db.saveOrder(updatedOrder, currentUser);
+      await db.markItemsReady(order.id, itemsToMark, currentUser);
     } catch (error: any) {
       return alert(error.message || "Erro ao salvar pedido na cozinha.");
-    }
-
-    if (order.type === SaleType.TABLE && order.tableNumber) {
-      const sess = (await db.getTableSessions()).find(s => s.tableNumber === order.tableNumber);
-      if (sess) {
-        // As sessões de mesa agora podem possuir os itens de múltiplos pedidos da cozinha (lançamento manual + app digital individual)
-        // Precisamos localizar no sess.items baseados nos uids que foram marcados como prontos no order atual
-        const newSessItems = sess.items.map(sessIt => {
-          if (itemsToMark.includes(sessIt.uid)) {
-            return { ...sessIt, isReady: true, readyAt: new Date().toISOString() };
-          }
-          return sessIt;
-        });
-
-        await db.saveTableSession({ ...sess, items: newSessItems });
-      }
     }
 
     setSelectedItems(prev => {

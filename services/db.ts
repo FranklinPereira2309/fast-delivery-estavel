@@ -275,6 +275,13 @@ class APIDBService {
     });
   }
 
+  public async markItemsReady(orderId: string, itemIds: string[], user: User) {
+    return this.request<Order>(`/orders/${orderId}/items/ready`, {
+      method: 'PATCH',
+      body: JSON.stringify({ itemIds, user })
+    });
+  }
+
   public async getOrderById(id: string): Promise<Order> {
     return this.request<Order>(`/orders/${id}`);
   }

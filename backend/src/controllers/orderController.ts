@@ -908,6 +908,86 @@ export const updateOrderPaymentMethod = async (req: Request, res: Response) => {
     }
 };
 
+export const markItemsReady = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const { itemIds, user } = req.body;
+
+    if (!itemIds || !Array.isArray(itemIds) || itemIds.length === 0) {
+        return res.status(400).json({ error: 'Nenhum item informado para marcar como pronto.' });
+    }
+
+    try {
+        const result = await prisma.$transaction(async (tx: any) => {
+            // 1. Update items
+            await tx.orderItem.updateMany({
+                where: {
+                    id: { in: itemIds },
+                    orderId: id
+                },
+                data: {
+                    isReady: true,
+                    readyAt: new Date()
+                }
+            });
+
+            // 2. Fetch updated order to check overall status
+            const updatedOrder = await tx.order.findUnique({
+                where: { id },
+                include: { items: true }
+            });
+
+            if (!updatedOrder) throw new Error('Pedido não encontrado após atualização dos itens.');
+
+            const allItems = updatedOrder.items;
+            const allReady = allItems.every((it: any) => it.isReady);
+            const anyReady = allItems.some((it: any) => it.isReady);
+
+            const newStatus = allReady ? 'READY' : (anyReady ? 'PARTIALLY_READY' : 'PREPARING');
+
+            // 3. Update Order status
+            const finalOrder = await tx.order.update({
+                where: { id },
+                data: { status: newStatus },
+                include: { items: { include: { product: true } } }
+            });
+
+            // 4. Audit Log
+            if (user) {
+                await tx.auditLog.create({
+                    data: {
+                        userId: user.id || 'SYSTEM',
+                        userName: user.name || 'Cozinha',
+                        action: 'UPDATE_ORDER_STATUS',
+                        details: `Cozinha marcou ${itemIds.length} itens como prontos no pedido ${id}. Novo status: ${newStatus}`
+                    }
+                });
+            }
+
+            return finalOrder;
+        }, { timeout: 30000 });
+
+        // 5. Sockets
+        try {
+            getIO().emit('orderStatusChanged', { action: 'statusUpdate', id, status: result.status });
+            
+            if (result.type === 'TABLE' && result.tableNumber && (result.status === 'READY' || result.status === 'PARTIALLY_READY')) {
+                getIO().to(`table_${result.tableNumber}`).emit('orderStatusUpdated', {
+                    tableNumber: result.tableNumber,
+                    status: result.status,
+                    message: "Pedido Pronto na Cozinha, só mais um instante e você será servido!"
+                });
+            }
+        } catch (socketErr) {
+            console.error('Socket error in markItemsReady:', socketErr);
+        }
+
+        res.json(mapOrderResponse(result));
+    } catch (error: any) {
+        console.error('Error in markItemsReady:', error);
+        res.status(500).json({ error: error.message });
+    }
+};
+
 export const updateOrderServiceFee = async (req: Request, res: Response) => {
     const id = req.params.id as string;
     const { newFee, user } = req.body;

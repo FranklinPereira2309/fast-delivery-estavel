@@ -7,6 +7,7 @@ router.get('/:id', orderController.getOrderById);
 router.post('/', orderController.saveOrder);
 router.delete('/:id', orderController.deleteOrder);
 router.patch('/:id/status', orderController.updateOrderStatus);
+router.patch('/:id/items/ready', orderController.markItemsReady);
 router.patch('/:id/payment', orderController.updateOrderPaymentMethod);
 router.patch('/:id/service-fee', orderController.updateOrderServiceFee);
 router.put('/:id/items', orderController.updateOrderItems);
