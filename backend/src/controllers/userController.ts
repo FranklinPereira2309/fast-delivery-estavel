@@ -92,17 +92,24 @@ export const saveUser = async (req: Request, res: Response) => {
             }
         });
 
-        // A lógica de busca do upsert agora usa o ID garantido (seja o original ou o encontrado pelo e-mail)
-        const lookup = existingUser ? { id: (existingUser as any).id } : { email: cleanData.email };
-
-        console.log('Lookup criteria:', JSON.stringify(lookup));
-        console.log('Clean data for Prisma:', JSON.stringify(cleanData));
-
-        const user = await prisma.user.upsert({
-            where: lookup,
-            update: cleanData,
-            create: cleanData
-        });
+        let user;
+        if (existingUser) {
+            console.log('Updating existing user:', existingUser.id);
+            user = await prisma.user.update({
+                where: { id: existingUser.id },
+                data: cleanData
+            });
+        } else {
+            console.log('Creating new user with email:', cleanData.email);
+            // Garantir que senha existe para criação
+            if (!cleanData.password) {
+                const passwordToHash = '123';
+                cleanData.password = await bcrypt.hash(passwordToHash, 10);
+            }
+            user = await prisma.user.create({
+                data: cleanData
+            });
+        }
         res.json(user);
     } catch (error: any) {
         console.error('Error in saveUser:', error);
