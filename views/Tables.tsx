@@ -205,7 +205,7 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
 
     // Regra de Propriedade: Apenas o dono ou Admin pode assumir mesa ocupada se o trava estiver ligado.
     if (settings?.waiterLockEnabled && sess && sess.waiterId && sess.waiterId !== newWaiterId && !currentUser.permissions.includes('admin')) {
-      return showAlert("Acesso Negado", "Esta mesa já está sendo atendida por outro garçom.", "DANGER");
+      return addToast({ title: "ACESSO NEGADO", message: "Esta mesa já está sendo atendida por outro garçom.", type: "DANGER" });
     }
 
     // Se já estiver autenticado localmente para esta mesa com este garçom, apenas troca
@@ -237,18 +237,18 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
     if (selectedTable === null) return;
     if (!selectedWaiterId) {
       console.warn('Launch blocked: No waiter selected');
-      return showAlert("Garçom Requerido", "Por favor, selecione o garçom responsável.", "DANGER");
+      return addToast({ title: "GARÇOM REQUERIDO", message: "Por favor, selecione o garçom responsável.", type: "DANGER" });
     }
 
     const existingSess = getSessForTable(selectedTable);
 
     // Ownership Rule: Only the owner or an Admin can edit an occupied table.
     if (existingSess && existingSess.waiterId && existingSess.waiterId !== selectedWaiterId && !currentUser.permissions.includes('admin')) {
-      return showAlert("Acesso Negado", "Esta mesa já está sendo atendida por outro garçom. O primeiro garçom a atender torna-se o dono da mesa.", "DANGER");
+      return addToast({ title: "ACESSO NEGADO", message: "Esta mesa já está sendo atendida por outro garçom. O primeiro garçom a atender torna-se o dono da mesa.", type: "DANGER" });
     }
 
     if (getTableStatus(selectedTable) === 'billing') {
-      return showAlert("Mesa Bloqueada", "Esta mesa está em processo de fechamento (Faturando). Para lançar mais itens, reabra a mesa.", "DANGER");
+      return addToast({ title: "MESA BLOQUEADA", message: "Esta mesa está em processo de fechamento (Faturando). Para lançar mais itens, reabra a mesa.", type: "DANGER" });
     }
 
     // Require Waiter Authentication ONLY if not already authenticated locally for this session
@@ -268,7 +268,7 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
     const validation = await db.validateStockForOrder([{ productId: product.id, quantity: 1 }]);
     if (!validation.valid) {
       console.warn('Launch blocked: Out of stock', validation.message);
-      return showAlert("Sem Estoque", validation.message || "Produto sem estoque.", "DANGER");
+      return addToast({ title: "SEM ESTOQUE", message: validation.message || "Produto sem estoque.", type: "DANGER" });
     }
 
     const currentSess = getSessForTable(selectedTable);
@@ -364,12 +364,12 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
     if (!sess || !sess.hasPendingDigital) return;
 
     if (!selectedWaiterId) {
-      return showAlert("Garçom Requerido", "Para oficializar estes itens, selecione qual garçom assumirá o atendimento dessa mesa.", "DANGER");
+      return addToast({ title: "GARÇOM REQUERIDO", message: "Para oficializar estes itens, selecione qual garçom assumirá o atendimento dessa mesa.", type: "DANGER" });
     }
 
     // Ownership Rule
     if (sess.waiterId && sess.waiterId !== selectedWaiterId && !currentUser.permissions.includes('admin')) {
-      return showAlert("Acesso Negado", "Esta mesa já pertence a outro garçom.", "DANGER");
+      return addToast({ title: "ACESSO NEGADO", message: "Esta mesa já pertence a outro garçom.", type: "DANGER" });
     }
 
     try {
@@ -394,7 +394,7 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
       // Stock Validation
       const validation = await db.validateStockForOrder(pendingItems);
       if (!validation.valid) {
-        return showAlert("Sem Estoque", `Estoque insuficiente para os itens digitais: ${validation.message}`, "DANGER");
+        return addToast({ title: "SEM ESTOQUE", message: `Estoque insuficiente para os itens digitais: ${validation.message}`, type: "DANGER" });
       }
 
       const resolvedItems: OrderItem[] = pendingItems.map((pi: any) => {
@@ -436,12 +436,12 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
     if (!sess || !sess.hasPendingDigital) return;
 
     if (!selectedWaiterId) {
-      return showAlert("Garçom Requerido", "Para rejeitar estes itens, selecione qual garçom está efetuando a ação.", "DANGER");
+      return addToast({ title: "GARÇOM REQUERIDO", message: "Para rejeitar estes itens, selecione qual garçom está efetuando a ação.", type: "DANGER" });
     }
 
     // Ownership Rule
     if (sess.waiterId && sess.waiterId !== selectedWaiterId && !currentUser.permissions.includes('admin')) {
-      return showAlert("Acesso Negado", "Esta mesa já pertence a outro garçom.", "DANGER");
+      return addToast({ title: "ACESSO NEGADO", message: "Esta mesa já pertence a outro garçom.", type: "DANGER" });
     }
 
     showAlert("Rejeitar Pedido", "Deseja rejeitar estes itens? O cliente será notificado", "DANGER", async () => {
@@ -504,7 +504,7 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
 
     if (!hasClient) {
       if (isUnregisteredClient) newErrors.manualClientName = true;
-      showAlert('Cliente Necessário', 'Identifique o cliente para fechar a conta.', 'INFO');
+      addToast({ title: 'CLIENTE NECESSÁRIO', message: 'Identifique o cliente para fechar a conta.', type: 'INFO' });
       return;
     }
 
@@ -530,13 +530,13 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
-      return showAlert("Dados Inválidos", "Verifique os campos destacados em vermelho.", "DANGER");
+      return addToast({ title: "DADOS INVÁLIDOS", message: "Verifique os campos destacados em vermelho.", type: "DANGER" });
     }
 
     setErrors({});
 
     if (!isUnregisteredClient && !selectedClient) {
-      return showAlert("Identificação Requerida", "Por favor, selecione um cliente da base ou use a opção 'Avulso'.", "DANGER");
+      return addToast({ title: "IDENTIFICAÇÃO REQUERIDA", message: "Por favor, selecione um cliente da base ou use a opção 'Avulso'.", type: "DANGER" });
     }
 
     setPrintingPreBill(sess);
