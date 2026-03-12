@@ -155,8 +155,8 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
       Object.keys(next).forEach(tableNumStr => {
         const tableNum = parseInt(tableNumStr);
         const tSess = allSessions.find(s => s.tableNumber === tableNum);
-        // Se a mesa ficou livre ou o garçom da sessão mudou, remove do cache local
-        if (!tSess || (tSess.waiterId && next[tableNum] !== tSess.waiterId)) {
+        // Se a mesa ficou livre (e não estamos com ela aberta no modal) ou o garçom da sessão mudou, remove do cache local
+        if ((!tSess && selectedTable !== tableNum) || (tSess && tSess.waiterId && next[tableNum] !== tSess.waiterId)) {
           delete next[tableNum];
           changed = true;
         }
@@ -250,6 +250,9 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
     }
 
     // Require Waiter Authentication ONLY if not already authenticated locally for this session
+    // NOTE: Removed per user request to only ask when waiter is selected, 
+    // but keeping the cache check for safety if we decide to re-enable or for other actions.
+    /*
     try {
       if (authenticatedWaiters[selectedTable] !== selectedWaiterId) {
         await requireWaiterAuth(selectedWaiterId, `Lançar ${product.name} na Mesa ${selectedTable}`);
@@ -258,6 +261,7 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
     } catch (authErr) {
       return; // Cancelled or failed auth
     }
+    */
 
     const validation = await db.validateStockForOrder([{ productId: product.id, quantity: 1 }]);
     if (!validation.valid) {
