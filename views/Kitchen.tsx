@@ -5,8 +5,10 @@ import { db } from '../services/db';
 import { socket } from '../services/socket';
 import { Icons } from '../constants';
 import { useDigitalAlert } from '../hooks/useDigitalAlert';
+import { useToast } from '../hooks/useToast';
 
 const Kitchen: React.FC = () => {
+  const { addToast } = useToast();
   const { isAlerting, dismissAlert } = useDigitalAlert();
   const [orders, setOrders] = useState<Order[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -115,7 +117,10 @@ const Kitchen: React.FC = () => {
   const markSelectedAsReady = async (order: Order) => {
     if (!currentUser) return;
     const itemsToMark = selectedItems[order.id] || [];
-    if (itemsToMark.length === 0) return alert("Selecione ao menos um item para finalizar.");
+    if (itemsToMark.length === 0) {
+      addToast('Aviso', "Selecione ao menos um item para finalizar.", 'info');
+      return;
+    }
 
     const updatedItems = order.items.map(it => {
       if (itemsToMark.includes(it.uid)) {
@@ -135,7 +140,7 @@ const Kitchen: React.FC = () => {
     try {
       await db.markItemsReady(order.id, itemsToMark, currentUser);
     } catch (error: any) {
-      return alert(error.message || "Erro ao salvar pedido na cozinha.");
+      addToast('Erro', error.message || "Erro ao salvar pedido na cozinha.", 'error');
     }
 
     setSelectedItems(prev => {

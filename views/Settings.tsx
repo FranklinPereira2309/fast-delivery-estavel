@@ -41,7 +41,11 @@ const WaiterManagement: React.FC = () => {
                 type: "SUCCESS"
             });
         } catch (error) {
-            alert('Erro ao salvar garçom');
+            addToast({
+                title: "ERRO",
+                message: "Erro ao salvar garçom",
+                type: "DANGER"
+            });
         } finally {
             setLoading(false);
         }
@@ -890,11 +894,19 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings, onReset }) =
                                                         });
                                                     },
                                                     (error) => {
-                                                        alert("Erro ao obter localização: " + error.message);
+                                                        addToast({
+                                                            title: "ERRO",
+                                                            message: "Erro ao obter localização: " + error.message,
+                                                            type: "DANGER"
+                                                        });
                                                     }
                                                 );
                                             } else {
-                                                alert("Geolocalização não suportada pelo seu navegador.");
+                                                addToast({
+                                                    title: "AVISO",
+                                                    message: "Geolocalização não suportada pelo seu navegador.",
+                                                    type: "INFO"
+                                                });
                                             }
                                         }}
                                         className="w-full sm:w-auto bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"

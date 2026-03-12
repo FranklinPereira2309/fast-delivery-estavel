@@ -5,6 +5,9 @@ import App from './App';
 import './index.css';
 
 
+import { ToastProvider } from './hooks/useToast';
+import { ToastContainer } from './components/Toast';
+
 const rootElement = document.getElementById('root');
 if (!rootElement) {
   throw new Error("Could not find root element to mount to");
@@ -13,6 +16,9 @@ if (!rootElement) {
 const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>
-    <App />
+    <ToastProvider>
+      <App />
+      <ToastContainer />
+    </ToastProvider>
   </React.StrictMode>
 );

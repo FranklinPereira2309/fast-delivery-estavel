@@ -2,8 +2,10 @@
 import React, { useState, useEffect } from 'react';
 import { User } from '../types';
 import { db } from '../services/db';
+import { useToast } from '../hooks/useToast';
 
 const UserManagement: React.FC = () => {
+  const { addToast } = useToast();
   const [users, setUsers] = useState<User[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
@@ -79,7 +81,7 @@ const UserManagement: React.FC = () => {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name || !formData.email || !formData.password) {
-      alert('Nome, Email e Senha são obrigatórios.');
+      addToast('Erro', 'Nome, Email e Senha são obrigatórios.', 'error');
       return;
     }
 
@@ -101,7 +103,7 @@ const UserManagement: React.FC = () => {
   // Fixed: Added async/await for user deletion
   const handleDelete = async (userToDelete: User) => {
     if (userToDelete.permissions.includes('admin')) {
-      alert('Não é possível excluir um usuário administrador.');
+      addToast('Acesso Negado', 'Não é possível excluir um usuário administrador.', 'error');
       return;
     }
     if (confirm(`Deseja excluir o usuário ${userToDelete.name}?`)) {

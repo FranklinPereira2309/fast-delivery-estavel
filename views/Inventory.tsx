@@ -4,8 +4,10 @@ import { InventoryItem, Product, RecipeItem, OrderItem, UnitType } from '../type
 import { db } from '../services/db';
 import { PLACEHOLDER_FOOD_IMAGE, formatImageUrl, Icons } from '../constants';
 import CustomAlert from '../components/CustomAlert';
+import { useToast } from '../hooks/useToast';
 
 const Inventory: React.FC = () => {
+  const { addToast } = useToast();
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [viewMode, setViewMode] = useState<'ESTOQUE' | 'CARDAPIO'>('ESTOQUE');
@@ -124,7 +126,7 @@ const Inventory: React.FC = () => {
       await refreshData();
       setIsProdModalOpen(false);
     } catch (error) {
-      alert("Erro ao salvar produto. Verifique os dados.");
+      addToast('Erro', "Erro ao salvar produto. Verifique os dados.", 'error');
     }
   };
 

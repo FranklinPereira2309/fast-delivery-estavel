@@ -5,8 +5,10 @@ import { QRCodeCanvas } from 'qrcode.react';
 import { db } from '../services/db';
 import { Icons } from '../constants';
 import CustomAlert from '../components/CustomAlert';
+import { useToast } from '../hooks/useToast';
 
 const SalesMonitor: React.FC = () => {
+  const { addToast } = useToast();
   const [orders, setOrders] = useState<Order[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [businessSettings, setBusinessSettings] = useState<BusinessSettings | null>(null);
@@ -474,7 +476,7 @@ const SalesMonitor: React.FC = () => {
                                   setEditingServiceFee(false);
                                 } catch (err) {
                                   console.error('Error updating service fee', err);
-                                  alert('Erro ao atualizar taxa de serviço.');
+                                  addToast('Erro', 'Erro ao atualizar taxa de serviço.', 'error');
                                 } finally {
                                   setIsSavingServiceFee(false);
                                 }

@@ -5,12 +5,14 @@ import { db } from '../services/db';
 import CustomAlert from '../components/CustomAlert';
 import { validateEmail, validateCPF, validateCNPJ, maskPhone, maskDocument, toTitleCase } from '../services/validationUtils';
 import { Eye, EyeOff, RefreshCw, MapPin, Save, X, Check } from 'lucide-react';
+import { useToast } from '../hooks/useToast';
 
 interface CRMProps {
   currentUser: User;
 }
 
 const CRM: React.FC<CRMProps> = ({ currentUser }) => {
+  const { addToast } = useToast();
   const formatClientAddress = (client: Client) => {
     if (client.addresses && client.addresses.length > 0 && client.addresses[0]) {
       return client.addresses[0];
@@ -81,17 +83,17 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
 
   const handleResetPin = async (clientId: string) => {
     if (!currentUser.permissions.includes('admin') && !currentUser.permissions.includes('settings')) {
-      showAlert('Acesso Negado', 'Apenas usuários autorizados podem resetar o PIN.', 'DANGER');
+      addToast('Acesso Negado', 'Apenas usuários autorizados podem resetar o PIN.', 'error');
       return;
     }
 
     try {
       const data = await db.resetClientPin(clientId, currentUser);
-      showAlert('Sucesso', 'O PIN de acesso deste cliente foi regerado com sucesso.', 'SUCCESS');
+      addToast('Sucesso', 'O PIN de acesso deste cliente foi regerado com sucesso.', 'success');
       refreshClients();
     } catch (error: any) {
       console.error(error);
-      showAlert('Erro', error.message || 'Não foi possível resetar o PIN.', 'DANGER');
+      addToast('Erro', error.message || 'Não foi possível resetar o PIN.', 'error');
     }
   };
 
@@ -145,7 +147,7 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
 
   const handleDelete = async (id: string) => {
     if (!currentUser.permissions.includes('admin') && !currentUser.permissions.includes('settings')) {
-      showAlert('Acesso Negado', 'Você não tem permissão para excluir clientes.', 'DANGER');
+      addToast('Acesso Negado', 'Você não tem permissão para excluir clientes.', 'error');
       return;
     }
 
@@ -158,9 +160,9 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
         try {
           await db.deleteClient(id, currentUser);
           refreshClients();
-          showAlert('Sucesso', 'Cliente removido com sucesso!', 'SUCCESS');
+          addToast('Sucesso', 'Cliente removido com sucesso!', 'success');
         } catch (error: any) {
-          showAlert('Erro na Exclusão', error.message || 'Erro ao remover cliente.', 'DANGER');
+          addToast('Erro na Exclusão', error.message || 'Erro ao remover cliente.', 'error');
         }
       },
       () => closeAlert()
@@ -177,7 +179,7 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
       const data = await response.json();
 
       if (data.erro) {
-        showAlert('CEP Inválido', 'CEP não encontrado.', 'INFO');
+        addToast('CEP Inválido', 'CEP não encontrado.', 'info');
       } else {
         setFormData(prev => ({
           ...prev,
@@ -189,7 +191,7 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
       }
     } catch (error) {
       console.error('Erro ao buscar CEP:', error);
-      showAlert('Erro de Conexão', 'Não foi possível conectar ao serviço de busca de CEP. Por favor, preencha manualmente.', 'DANGER');
+      addToast('Erro de Conexão', 'Não foi possível conectar ao serviço de busca de CEP. Por favor, preencha manualmente.', 'error');
     } finally {
       setIsLoadingCep(false);
     }
@@ -225,13 +227,13 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
-      showAlert('Campos Inválidos', 'Verifique os campos destacados em vermelho.', 'DANGER');
+      addToast('Campos Inválidos', 'Verifique os campos destacados em vermelho.', 'error');
       return;
     }
 
     if (formData.email && !validateEmail(formData.email)) {
       setErrors({ email: true });
-      showAlert('Email Inválido', 'Por favor, insira um endereço de email válido.', 'DANGER');
+      addToast('Email Inválido', 'Por favor, insira um endereço de email válido.', 'warning');
       return;
     }
 
@@ -261,10 +263,10 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
       refreshClients();
       setIsModalOpen(false);
       setErrors({});
-      showAlert('Sucesso', editingClient ? 'Cliente atualizado com sucesso!' : 'Cliente cadastrado com sucesso!', 'SUCCESS');
+      addToast('Sucesso', editingClient ? 'Cliente atualizado com sucesso!' : 'Cliente cadastrado com sucesso!', 'success');
     } catch (error: any) {
       console.error(error);
-      showAlert('Erro ao Salvar', error.message || 'Não foi possível salvar os dados do cliente.', 'DANGER');
+      addToast('Erro ao Salvar', error.message || 'Não foi possível salvar os dados do cliente.', 'error');
     } finally {
       setIsSubmitting(false);
     }
