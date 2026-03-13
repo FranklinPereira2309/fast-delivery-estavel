@@ -10,8 +10,8 @@ interface HomeProps {
 
 const Home: React.FC<HomeProps> = ({ cart, addToCart, updateQuantity }) => {
     const [products, setProducts] = useState<Product[]>([]);
-    const [categories, setCategories] = useState<string[]>(MOCK_CATEGORIES);
-    const [activeCategory, setActiveCategory] = useState(MOCK_CATEGORIES[0]);
+    const [categories, setCategories] = useState<string[]>(['Todos', ...MOCK_CATEGORIES]);
+    const [activeCategory, setActiveCategory] = useState('Todos');
     const [searchTerm, setSearchTerm] = useState('');
     const [isLoading, setIsLoading] = useState(true);
 
@@ -23,8 +23,7 @@ const Home: React.FC<HomeProps> = ({ cart, addToCart, updateQuantity }) => {
             // Extrair categorias reais dos produtos se existirem
             const uniqueCategories = Array.from(new Set(data.map(p => p.category))).filter(Boolean);
             if (uniqueCategories.length > 0) {
-                setCategories(uniqueCategories);
-                setActiveCategory(uniqueCategories[0]);
+                setCategories(['Todos', ...uniqueCategories]);
             }
 
             setIsLoading(false);
@@ -34,7 +33,7 @@ const Home: React.FC<HomeProps> = ({ cart, addToCart, updateQuantity }) => {
 
     // Filtra produtos pela categoria ativa E pelo termo de busca
     const filteredProducts = products.filter(p => {
-        const matchesCategory = searchTerm ? true : p.category === activeCategory; // Se buscar, ignora categoria ou apenas filtra geral
+        const matchesCategory = searchTerm || activeCategory === 'Todos' ? true : p.category === activeCategory;
         const matchesSearch = searchTerm ? p.name.toLowerCase().includes(searchTerm.toLowerCase()) : true;
         return matchesCategory && matchesSearch;
     });
