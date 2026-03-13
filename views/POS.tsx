@@ -308,7 +308,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
     if (sess) {
       loadTableSession(sess);
     } else {
-      showAlert("Mesa Vazia", "Mesa não encontrada ou não possui consumo ativo.", "INFO");
+      addToast({ title: "Mesa Vazia", message: "Mesa não encontrada ou não possui consumo ativo.", type: "INFO" });
     }
   };
 
@@ -365,7 +365,8 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
     const existingSess = allSess.find(t => t.tableNumber === num);
 
     if (!existingSess) {
-      return showAlert("Mesa Inativa", "Esta mesa não possui uma sessão ativa iniciada por um garçom.", "DANGER");
+      addToast({ title: "Mesa Inativa", message: "Esta mesa não possui uma sessão ativa iniciada por um garçom.", type: "DANGER" });
+      return;
     }
 
     if (existingSess.status === 'billing') {
@@ -1175,7 +1176,8 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
 
                         if (Object.keys(newErrors).length > 0) {
                           setErrors(newErrors);
-                          return showAlert("Dados Inválidos", "Verifique os campos destacados em vermelho.", "DANGER");
+                          addToast({ title: "Dados Inválidos", message: "Verifique os campos destacados em vermelho.", type: "DANGER" });
+                          return;
                         }
 
                         setIsClientModalOpen(false);
