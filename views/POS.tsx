@@ -312,8 +312,8 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
     }
   };
 
-  const handleReopenTable = async () => {
-    const num = parseInt(tableNumberInput);
+  const handleReopenTable = async (tableNumOverride?: number) => {
+    const num = tableNumOverride || parseInt(tableNumberInput);
     if (isNaN(num)) return;
 
     const allSess = await db.getTableSessions();
@@ -1511,38 +1511,53 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                   setShowFeedbacks(true);
                   feedbackUnreadManager.setUnread(false);
                 }}
-                className={`p-2 rounded-xl transition-all relative ${hasNewFeedback ? 'bg-indigo-600 text-white animate-moderate-blink shadow-lg' : 'bg-slate-200 text-slate-500 hover:bg-slate-300'}`}
+                className={`p-2 rounded-xl transition-all relative ${hasNewFeedback ? 'bg-red-600 text-white animate-piscar-red shadow-lg shadow-red-200' : 'bg-slate-200 text-slate-500 hover:bg-slate-300'}`}
                 title="Mensagens do Dia"
               >
                 <Icons.Message className="w-3.5 h-3.5" />
                 {hasNewFeedback && <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full border border-white dark:border-slate-900 animate-ping"></span>}
               </button>
             </h3>
-            <div className="flex-1 overflow-y-auto pr-1 space-y-3">
+            <div className="flex-1 overflow-y-auto pr-1 pt-1 space-y-3">
               {/* Tables */}
               {pendingTables.length > 0 && pendingTables.map(t => (
-                <button
+                <div
                   key={`table-${t.tableNumber}`}
-                  onClick={() => loadTableSession(t)}
                   className={`w-full p-4 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-transparent dark:border-slate-800 hover:border-orange-500 dark:hover:border-orange-500 hover:shadow-md transition-all text-left group ${tableNumber === t.tableNumber ? 'ring-4 ring-orange-500 border-orange-500' : ''}`}
                 >
-                  <p className="font-black text-slate-800 dark:text-white text-sm uppercase">Mesa {t.tableNumber}</p>
-                  <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase mt-0.5 truncate">{t.clientName || 'S/ Identificação'}</p>
-                  <p className="text-[10px] font-bold text-orange-500 mt-1 uppercase tracking-tighter">Total: R$ {t.items.reduce((acc, it) => acc + (it.price * it.quantity), 0).toFixed(2)}</p>
-                </button>
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1 min-w-0 cursor-pointer" onClick={() => loadTableSession(t)}>
+                      <p className="font-black text-slate-800 dark:text-white text-sm uppercase">Mesa {t.tableNumber}</p>
+                      <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase mt-0.5 truncate">{t.clientName || 'S/ Identificação'}</p>
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleReopenTable(t.tableNumber);
+                      }}
+                      className="w-8 h-8 flex items-center justify-center bg-amber-50 text-amber-500 rounded-xl hover:bg-amber-500 hover:text-white transition-all shadow-sm"
+                      title="Reabrir Mesa"
+                    >
+                      -
+                    </button>
+                  </div>
+                  <div className="cursor-pointer" onClick={() => loadTableSession(t)}>
+                    <p className="text-[10px] font-bold text-orange-500 mt-1 uppercase tracking-tighter">Total: R$ {t.items.reduce((acc, it) => acc + (it.price * it.quantity), 0).toFixed(2)}</p>
+                  </div>
+                </div>
               ))}
 
               {/* Counter Orders */}
               {pendingCounterOrders.length > 0 && pendingCounterOrders.map(o => (
-                <button
+                <div
                   key={`counter-${o.id}`}
+                  className={`w-full p-4 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-transparent dark:border-slate-800 hover:border-blue-500 dark:hover:border-blue-500 hover:shadow-md transition-all text-left group cursor-pointer ${editingOrderId === o.id ? 'ring-4 ring-blue-500 border-blue-500' : ''}`}
                   onClick={() => loadCounterOrder(o)}
-                  className={`w-full p-4 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-transparent dark:border-slate-800 hover:border-blue-500 dark:hover:border-blue-500 hover:shadow-md transition-all text-left group ${editingOrderId === o.id ? 'ring-4 ring-blue-500 border-blue-500' : ''}`}
                 >
                   <p className="font-black text-slate-800 dark:text-white text-sm uppercase">Balcão</p>
                   <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase mt-0.5 truncate">{o.clientName}</p>
                   <p className="text-[10px] font-bold text-blue-500 mt-1 uppercase tracking-tighter">Pronto: R$ {o.total.toFixed(2)}</p>
-                </button>
+                </div>
               ))}
 
               {/* Receivables (Fiado) */}
