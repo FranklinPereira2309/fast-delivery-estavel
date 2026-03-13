@@ -22,6 +22,8 @@ export const saveClient = async (req: Request, res: Response) => {
         const existingById = await prisma.client.findUnique({ where: { id: data.id } });
         if (!existingById) {
             newPassword = await bcrypt.hash('123', 10);
+        } else if (existingById.name === 'Consumidor Avulso' && data.name !== 'Consumidor Avulso') {
+            return res.status(400).json({ message: 'Não é permitido alterar o Nome do cliente padrão do sistema, mas você pode editar os ou outros dados livremente.' });
         }
     }
 
@@ -65,12 +67,17 @@ export const deleteClient = async (req: Request, res: Response) => {
     }
 
     try {
+        const targetClient = await prisma.client.findUnique({ where: { id: id as string }});
+        if (targetClient && targetClient.name === 'Consumidor Avulso') {
+            return res.status(400).json({ message: 'Proteção do Sistema: Não é permitido excluir o Cliente Avulso pois ele recebe todos os pedidos não identificados da loja.' });
+        }
+
         await prisma.client.delete({ where: { id: id as string } });
         res.json({ message: 'Cliente removido' });
     } catch (error: any) {
         if (error.code === 'P2003') {
             return res.status(400).json({
-                message: 'Não é possível excluir este cliente pois ele possui pedidos vinculados. Cancele os pedidos antes de excluir.'
+                message: 'Não é possível excluir este cliente pois ele possui pedidos vinculados. Tente novamente após cancelar ou excluir seus pedidos.'
             });
         }
         res.status(500).json({ message: 'Erro ao remover cliente.' });
