@@ -37,15 +37,13 @@ const Home: React.FC = () => {
 
         const fetchInitialData = async () => {
             try {
-                const [p, s, status] = await Promise.all([
+                const [p, status] = await Promise.all([
                     api.getProducts(),
-                    api.getSettings(),
                     api.getStoreStatus()
                 ]);
                 setProducts(p);
                 const cats = Array.from(new Set(p.map((prod: Product) => prod.category)));
                 setCategories(['Todos', ...cats]);
-                setSettings(s as any);
                 setStoreStatus(status as StoreStatus);
             } catch (e) {
                 console.error(e);
@@ -59,11 +57,9 @@ const Home: React.FC = () => {
         // Polling settings every 15s to update Delivery ON/OFF status
         const interval = setInterval(async () => {
             try {
-                const [s, status] = await Promise.all([
-                    api.getSettings(),
+                const [status] = await Promise.all([
                     api.getStoreStatus()
                 ]);
-                setSettings(s as any);
                 setStoreStatus(status as StoreStatus);
             } catch (e) {
                 console.error("Error polling settings", e);
