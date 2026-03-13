@@ -45,6 +45,8 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
     // Customer Filters
     const [clientSearch, setClientSearch] = useState('');
     const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+    const [clientStartDate, setClientStartDate] = useState(getLocalIsoDate());
+    const [clientEndDate, setClientEndDate] = useState(getLocalIsoDate());
     const [showClientDropdown, setShowClientDropdown] = useState(false);
     const [previewType, setPreviewType] = useState<'SALES' | 'CLIENTS' | 'CLIENT_ORDERS' | 'DRIVERS' | 'INVENTORY' | 'CASH' | 'RECEIVABLES' | 'WAITERS' | 'WAITERS_ANALYTICAL' | null>(null);
 
@@ -142,8 +144,9 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
     };
 
     const fetchData = async () => {
+        // Fetch data based on sales filters only if needed, otherwise default to "all" (which is now filtered by backend if no dates provided)
         const [o, c, s, d, r, rec, w] = await Promise.all([
-            db.getOrders(),
+            db.getOrders(salesStartDate, salesEndDate),
             db.getClients(),
             db.getSettings(),
             db.getDrivers(),
@@ -162,6 +165,33 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
         // Fetch cash sessions for current period
         fetchCashSessions();
     };
+
+    // Effect to re-fetch orders when sales dates change
+    useEffect(() => {
+        const refreshOrders = async () => {
+            const o = await db.getOrders(salesStartDate, salesEndDate);
+            setOrders(o);
+        };
+        if (activeTab === 'SALES') refreshOrders();
+    }, [salesStartDate, salesEndDate, activeTab]);
+
+    // Effect to re-fetch orders when driver dates change
+    useEffect(() => {
+        const refreshOrders = async () => {
+            const o = await db.getOrders(driverStartDate, driverEndDate);
+            setOrders(o);
+        };
+        if (activeTab === 'DRIVERS') refreshOrders();
+    }, [driverStartDate, driverEndDate, activeTab]);
+
+    // Effect to re-fetch orders when waiter dates change
+    useEffect(() => {
+        const refreshOrders = async () => {
+            const o = await db.getOrders(waiterStartDate, waiterEndDate);
+            setOrders(o);
+        };
+        if (activeTab === 'WAITERS' || activeTab === 'WAITERS_ANALYTICAL') refreshOrders();
+    }, [waiterStartDate, waiterEndDate, activeTab]);
 
     const handleReopen = async (sessionId: string) => {
         if (!currentUser || !currentUser.permissions.includes('settings')) {
@@ -464,12 +494,16 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
     const generateClientOrdersPDF = async (downloadOnly = false) => {
         if (!selectedClient || !businessSettings) return;
 
+        addToast({ title: 'Aguarde', message: 'Buscando histórico completo do cliente...', type: 'INFO' });
+
         try {
             const pdfDoc = await PDFDocument.create();
             const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
             const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-            const clientOrders = orders.filter(o => o.clientId === selectedClient.id && o.status === OrderStatus.DELIVERED);
+            // Fetch COMPREHENSIVE historical data for this client within the selected range
+            const clientOrders = await db.getClientOrders(selectedClient.id, clientStartDate, clientEndDate);
+            
             const totalRevenue = clientOrders.reduce((sum, o) => sum + o.total, 0);
             const orderCount = clientOrders.length;
             const avgTicket = orderCount > 0 ? totalRevenue / orderCount : 0;
@@ -479,17 +513,17 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
             let y = height - 50;
 
             // Header
-            page.drawText('RELATÓRIO DE COMPRAS DO CLIENTE', { x: 50, y, size: 18, font: fontBold });
+            page.drawText('RELATÓRIO DE COMPRAS DO CLIENTE (HISTÓRICO)', { x: 50, y, size: 18, font: fontBold });
             y -= 25;
             page.drawText(businessSettings.name, { x: 50, y, size: 12, font: fontBold });
             y -= 15;
             page.drawText(`Cliente: ${selectedClient.name}`, { x: 50, y, size: 10, font: fontBold });
             y -= 15;
-            page.drawText(`Telefone: ${selectedClient.phone}`, { x: 50, y, size: 10, font });
+            page.drawText(`Período: ${new Date(clientStartDate + 'T00:00:00').toLocaleDateString('pt-BR')} a ${new Date(clientEndDate + 'T00:00:00').toLocaleDateString('pt-BR')}`, { x: 50, y, size: 10, font });
 
             y -= 40;
             // KPIs
-            page.drawText('RESUMO DO CLIENTE', { x: 50, y, size: 12, font: fontBold });
+            page.drawText('RESUMO DO PERÍODO', { x: 50, y, size: 12, font: fontBold });
             y -= 20;
             page.drawText(`Faturamento Total: R$ ${totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, { x: 50, y, size: 10, font });
             y -= 15;
@@ -501,26 +535,54 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
             // Table Header
             page.drawRectangle({ x: 50, y: y - 5, width: width - 100, height: 20, color: rgb(0.95, 0.95, 0.95) });
             page.drawText('DATA e HORA', { x: 55, y, size: 8, font: fontBold });
-            page.drawText('MODALIDADE', { x: 180, y, size: 8, font: fontBold });
-            page.drawText('STATUS', { x: 300, y, size: 8, font: fontBold });
-            page.drawText('TOTAL', { x: 450, y, size: 8, font: fontBold });
+            page.drawText('DETALHES DO PEDIDO', { x: 180, y, size: 8, font: fontBold });
+            page.drawText('STATUS', { x: 400, y, size: 8, font: fontBold });
+            page.drawText('VALORES', { x: 500, y, size: 8, font: fontBold });
             y -= 25;
 
             for (const o of clientOrders) {
-                if (y < 70) {
+                if (y < 120) {
                     page = pdfDoc.addPage([595.28, 841.89]);
                     y = page.getHeight() - 50;
                 }
                 const dateObj = new Date(o.createdAt);
                 const dateStr = `${dateObj.toLocaleDateString('pt-BR')} ${dateObj.toLocaleTimeString('pt-BR').substring(0, 5)}`;
+                
                 page.drawText(dateStr, { x: 55, y, size: 8, font });
-                page.drawText(getFriendlySaleType(o.type), { x: 180, y, size: 8, font });
-                page.drawText(o.status === OrderStatus.DELIVERED ? 'Finalizada' : o.status, { x: 300, y, size: 8, font });
-                page.drawText(`R$ ${o.total.toFixed(2)}`, { x: 450, y, size: 8, font: fontBold });
-                y -= 20;
+                
+                // Item breakdown
+                let itemY = y;
+                (o.items || []).forEach((item: any) => {
+                    const itemName = item.product?.name || 'Produto Removido';
+                    page.drawText(`• ${item.quantity}x ${itemName.substring(0, 30)}`, { x: 180, y: itemY, size: 7, font });
+                    itemY -= 10;
+                });
+
+                // Status & Rejection
+                const isDelivered = o.status === OrderStatus.DELIVERED;
+                const statusColor = isDelivered ? rgb(0, 0.5, 0) : rgb(0.8, 0, 0);
+                page.drawText(isDelivered ? 'FINALIZADA' : (o.status === 'CANCELLED' ? 'CANCELADA' : o.status), { x: 400, y, size: 8, font: fontBold, color: statusColor });
+                
+                // Rejection Reason
+                const rej = rejections.find(r => r.orderId === o.id);
+                if (rej) {
+                    page.drawText(`Motivo: ${rej.reason?.substring(0, 25) || 'N/A'}`, { x: 400, y: y - 10, size: 6, font, color: rgb(0.5, 0.5, 0.5) });
+                }
+
+                // Prices
+                page.drawText(`Total: R$ ${o.total.toFixed(2)}`, { x: 500, y, size: 8, font: fontBold });
+                if (o.deliveryFee > 0) {
+                    page.drawText(`Entrega: R$ ${o.deliveryFee.toFixed(2)}`, { x: 500, y: y - 10, size: 6, font });
+                }
+                if (o.appliedServiceFee > 0) {
+                    page.drawText(`Serviço: R$ ${o.appliedServiceFee.toFixed(2)}`, { x: 500, y: y - (o.deliveryFee > 0 ? 18 : 10), size: 6, font });
+                }
+                page.drawText(`PG: ${o.paymentMethod || 'N/A'}`, { x: 500, y: y - (o.deliveryFee > 0 && o.appliedServiceFee > 0 ? 26 : (o.deliveryFee > 0 || o.appliedServiceFee > 0 ? 18 : 10)), size: 6, font, color: rgb(0.3, 0.3, 0.3) });
+
+                y = Math.min(itemY - 15, y - 40);
             }
 
-            await handlePdfOutput(pdfDoc, `relatorio_compras_${selectedClient.name.replace(/\s+/g, '_')}_${new Date().getTime()}.pdf`, downloadOnly, 'CLIENT_ORDERS');
+            await handlePdfOutput(pdfDoc, `histórico_compras_${selectedClient.name.replace(/\s+/g, '_')}_${new Date().getTime()}.pdf`, downloadOnly, 'CLIENT_ORDERS');
         } catch (error) {
             console.error('Erro ao gerar PDF do cliente:', error);
             addToast({ title: 'Erro', message: 'Erro ao gerar relatório do cliente.', type: 'DANGER' });
@@ -1220,6 +1282,19 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
                                     </>
                                 )}
                             </div>
+
+                            {selectedClient && (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-in slide-in-from-top-4 duration-300">
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Início do Relatório</label>
+                                        <input type="date" value={clientStartDate} onChange={e => setClientStartDate(e.target.value)} className="w-full p-4 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl font-bold text-sm text-slate-800 dark:text-slate-200" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Fim do Relatório</label>
+                                        <input type="date" value={clientEndDate} onChange={e => setClientEndDate(e.target.value)} className="w-full p-4 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl font-bold text-sm text-slate-800 dark:text-slate-200" />
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         <div className="mt-6 sm:mt-8 flex flex-col gap-3">

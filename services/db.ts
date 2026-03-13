@@ -236,7 +236,21 @@ class APIDBService {
   }
 
   // Orders
-  public async getOrders(): Promise<Order[]> { return this.request<Order[]>('/orders'); }
+  public async getOrders(startDate?: string, endDate?: string): Promise<Order[]> {
+    const params = new URLSearchParams();
+    if (startDate) params.append('startDate', startDate);
+    if (endDate) params.append('endDate', endDate);
+    const query = params.toString() ? `?${params.toString()}` : '';
+    return this.request<Order[]>(`/orders${query}`);
+  }
+
+  public async getClientOrders(clientId: string, startDate?: string, endDate?: string): Promise<Order[]> {
+    const params = new URLSearchParams();
+    params.append('clientId', clientId);
+    if (startDate) params.append('startDate', startDate);
+    if (endDate) params.append('endDate', endDate);
+    return this.request<Order[]>(`/orders/client/my-orders?${params.toString()}`);
+  }
 
   public async getSupportMessages(): Promise<any[]> {
     return this.request('/support');

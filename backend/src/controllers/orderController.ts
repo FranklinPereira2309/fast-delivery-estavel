@@ -16,19 +16,30 @@ const mapOrderResponse = (order: any) => {
 };
 
 export const getAllOrders = async (req: Request, res: Response) => {
-    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const { startDate, endDate } = req.query;
+
+    let whereClause: any = {};
+
+    if (startDate && endDate) {
+        whereClause.createdAt = {
+            gte: new Date(startDate as string).toISOString(),
+            lte: new Date(new Date(endDate as string).setHours(23, 59, 59, 999)).toISOString()
+        };
+    } else {
+        const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+        whereClause.OR = [
+            { status: { notIn: ['DELIVERED', 'CANCELLED'] } },
+            { createdAt: { gte: sevenDaysAgo.toISOString() } }
+        ];
+    }
 
     const orders = await prisma.order.findMany({
-        where: {
-            OR: [
-                { status: { notIn: ['DELIVERED', 'CANCELLED'] } },
-                { createdAt: { gte: sevenDaysAgo.toISOString() } }
-            ]
-        },
+        where: whereClause,
         include: {
             items: { include: { product: true } },
             waiter: true
-        }
+        },
+        orderBy: { createdAt: 'desc' }
     });
     res.json(orders.map(mapOrderResponse));
 };
@@ -1054,14 +1065,26 @@ export const updateOrderServiceFee = async (req: Request, res: Response) => {
 };
 
 export const getClientOrders = async (req: Request, res: Response) => {
-    const { clientId } = req.query;
+    const { clientId, startDate, endDate } = req.query;
     if (!clientId) return res.status(400).json({ error: 'clientId é obrigatório' });
+
+    let whereClause: any = { clientId: String(clientId) };
+
+    if (startDate && endDate) {
+        whereClause.createdAt = {
+            gte: new Date(startDate as string).toISOString(),
+            lte: new Date(new Date(endDate as string).setHours(23, 59, 59, 999)).toISOString()
+        };
+    }
+
     try {
         const orders = await prisma.order.findMany({
-            where: { clientId: String(clientId) },
-            include: { items: { include: { product: true } } },
-            orderBy: { createdAt: 'desc' },
-            take: 50 // Optimization: don't load thousands of orders for a single client in the app
+            where: whereClause,
+            include: { 
+                items: { include: { product: true } },
+                waiter: true
+            },
+            orderBy: { createdAt: 'desc' }
         });
         res.json(orders.map(mapOrderResponse));
     } catch (error: any) {
