@@ -141,7 +141,7 @@ export const db = {
             return data;
         } catch (error) {
             console.error('Error fetching store status', error);
-            return { status: 'online', is_manually_closed: false, next_status_change: null };
+            return { status: 'online', is_manually_closed: false, next_status_change: null, enableDigitalMenu: true };
         }
     },
 

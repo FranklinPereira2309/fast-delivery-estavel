@@ -1,4 +1,4 @@
-import type { BusinessSettings } from '../types';
+import type { BusinessSettings, StoreStatus } from '../types';
 
 const API_BASE_URL = (import.meta as any).env.VITE_API_URL || 'http://localhost:3000/api';
 
@@ -91,7 +91,7 @@ class DeliveryApiService {
     }
 
     async getStoreStatus() {
-        return this.request<{ status: 'online' | 'offline', is_manually_closed: boolean, next_status_change: string | null }>(`/public/store-status?t=${Date.now()}`);
+        return this.request<StoreStatus>(`/public/store-status?t=${Date.now()}`);
     }
 
     // Orders

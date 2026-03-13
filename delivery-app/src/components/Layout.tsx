@@ -56,7 +56,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                 api.getSettings(),
                 api.getStoreStatus()
             ]);
-            setStoreStatus(status);
+            setStoreStatus(status as StoreStatus);
             settingsRef.current = s;
             updateCountdown();
         } catch (err) {

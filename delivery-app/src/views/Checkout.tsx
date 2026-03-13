@@ -70,7 +70,7 @@ const Checkout: React.FC = () => {
                 ]);
                 const fee = parseFloat(s.deliveryFee.replace('R$', '').replace(',', '.').trim()) || 0;
                 setDeliveryFee(fee);
-                setStoreStatus(status);
+                setStoreStatus(status as StoreStatus);
             } catch (err) {
                 console.error('Error fetching settings or client:', err);
             }

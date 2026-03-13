@@ -47,7 +47,7 @@ const Home: React.FC = () => {
                 const cats = Array.from(new Set(p.map((prod: Product) => prod.category)));
                 setCategories(['Todos', ...cats]);
                 setSettings(s as any);
-                setStoreStatus(status);
+                setStoreStatus(status as StoreStatus);
             } catch (e) {
                 console.error(e);
             } finally {
@@ -65,7 +65,7 @@ const Home: React.FC = () => {
                     api.getStoreStatus()
                 ]);
                 setSettings(s as any);
-                setStoreStatus(status);
+                setStoreStatus(status as StoreStatus);
             } catch (e) {
                 console.error("Error polling settings", e);
             }
