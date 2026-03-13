@@ -3,6 +3,7 @@ import { db } from '../services/db';
 import { socket, clientChatUnreadManager } from '../services/socket';
 import { Order, User, OrderStatusLabels, DeliveryDriver, Product, SaleType, BusinessSettings } from '../types';
 import { Icons } from '../constants';
+import { useToast } from '../hooks/useToast';
 import CustomAlert from '../components/CustomAlert';
 
 interface DeliveryOrdersProps {
@@ -10,10 +11,10 @@ interface DeliveryOrdersProps {
 }
 
 const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
+    const { addToast } = useToast();
     const [orders, setOrders] = useState<Order[]>([]);
     const [clients, setClients] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [editingOrder, setEditingOrder] = useState<Order | null>(null);
     const [allProducts, setAllProducts] = useState<any[]>([]);
     const [drivers, setDrivers] = useState<DeliveryDriver[]>([]);
     const [products, setProducts] = useState<Product[]>([]);
@@ -299,7 +300,16 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
                                             {order.status === 'PENDING' ? (
                                                 <>
                                                     <button onClick={() => approveOrder(order.id)} className="flex-1 py-4 bg-indigo-600 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-indigo-100 dark:shadow-indigo-900/20 transition-all">Aceitar</button>
-                                                    <button onClick={() => setEditingOrder(order)} className="w-12 h-12 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-2xl flex items-center justify-center transition-all"><Icons.Edit className="w-5 h-5" /></button>
+                                                    <button 
+                                                        onClick={() => addToast({
+                                                            title: 'EDITAR PEDIDO',
+                                                            message: 'Controle de itens em desenvolvimento para este módulo.',
+                                                            type: 'INFO'
+                                                        })} 
+                                                        className="w-12 h-12 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-2xl flex items-center justify-center transition-all"
+                                                    >
+                                                        <Icons.Edit className="w-5 h-5" />
+                                                    </button>
                                                     <button onClick={() => rejectOrder(order.id)} className="w-12 h-12 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/40 rounded-2xl flex items-center justify-center transition-all"><Icons.Delete className="w-5 h-5" /></button>
                                                 </>
                                             ) : (
@@ -514,15 +524,6 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
                 </div>
             )}
 
-            {editingOrder && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm">
-                    <div className="bg-white dark:bg-slate-900 w-full max-w-md p-8 rounded-[2.5rem] border border-transparent dark:border-slate-800 animate-in zoom-in duration-200">
-                        <h2 className="font-black text-xl mb-6 uppercase text-slate-800 dark:text-white">Editar Pedido</h2>
-                        <p className="text-slate-500 dark:text-slate-400 mb-8 text-sm">Controle de itens em desenvolvimento para este módulo.</p>
-                        <button onClick={() => setEditingOrder(null)} className="w-full bg-indigo-600 text-white py-4 rounded-2xl font-black uppercase shadow-xl shadow-indigo-100 dark:shadow-indigo-900/20">Fechar</button>
-                    </div>
-                </div>
-            )}
         </div>
     );
 };
