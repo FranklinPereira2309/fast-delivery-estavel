@@ -10,10 +10,9 @@ export const getStoreStatusEndpoint = (req: Request, res: Response) => {
 
 export const getProducts = async (req: Request, res: Response) => {
     try {
-        const products = await prisma.product.findMany();
-        // Em uma aplicação real, aqui filtraríamos apenas produtos com `active: true` 
-        // ou se houvesse uma flag no banco indicando que o produto está ativo no cardápio digital.
-        // Como o schema atual não tem essa flag, vamos retornar todos que tenham estoque ou preço > 0.
+        const products = await prisma.product.findMany({
+            where: { active: true }
+        });
         res.json(products);
     } catch (error) {
         console.error('Error fetching public products:', error);
@@ -392,11 +391,12 @@ export const createOrder = async (req: Request, res: Response) => {
             const tableNumNum = parseInt(tableNumber as string);
             const session = await tx.tableSession.findUnique({ where: { tableNumber: tableNumNum } });
 
-            // Validate products exist and store them for enrichment
+            // Validate products exist, are active and store them for enrichment
             const productMap = new Map<string, any>();
             for (const item of items) {
                 const product = await tx.product.findUnique({ where: { id: item.productId } });
                 if (!product) throw new Error(`Product ${item.productId} not found`);
+                if (!product.active) throw new Error(`O produto "${product.name}" não está mais disponível no cardápio.`);
                 productMap.set(item.productId, product);
             }
 
