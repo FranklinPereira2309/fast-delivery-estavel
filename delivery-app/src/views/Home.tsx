@@ -78,7 +78,10 @@ const Home: React.FC = () => {
 
     const filteredProducts = products.filter(p => {
         const matchesCategory = selectedCategory === 'Todos' || p.category === selectedCategory;
-        const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
+        const query = searchQuery.toLowerCase().trim();
+        const matchesSearch = query
+            ? (p.name.toLowerCase().includes(query) || (p.description && p.description.toLowerCase().includes(query)))
+            : true;
         return matchesCategory && matchesSearch;
     });
 

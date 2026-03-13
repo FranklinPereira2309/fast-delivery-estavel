@@ -33,8 +33,11 @@ const Home: React.FC<HomeProps> = ({ cart, addToCart, updateQuantity }) => {
 
     // Filtra produtos pela categoria ativa E pelo termo de busca
     const filteredProducts = products.filter(p => {
-        const matchesCategory = searchTerm || activeCategory === 'Todos' ? true : p.category === activeCategory;
-        const matchesSearch = searchTerm ? p.name.toLowerCase().includes(searchTerm.toLowerCase()) : true;
+        const matchesCategory = activeCategory === 'Todos' || p.category === activeCategory;
+        const query = searchTerm.toLowerCase().trim();
+        const matchesSearch = query
+            ? (p.name.toLowerCase().includes(query) || (p.description && p.description.toLowerCase().includes(query)))
+            : true;
         return matchesCategory && matchesSearch;
     });
 
