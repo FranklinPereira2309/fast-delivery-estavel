@@ -17,6 +17,6 @@ export const saveSettings = async (req: Request, res: Response) => {
         update: data,
         create: { ...data, key: 'main' }
     });
-    updateCacheAndEmit(settings.isManuallyClosed, settings.operatingHours);
+    updateCacheAndEmit(settings.isManuallyClosed, settings.operatingHours, settings.enableDigitalMenu);
     res.json(settings);
 };

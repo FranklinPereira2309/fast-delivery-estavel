@@ -62,7 +62,7 @@ function AppContent() {
   }, [tableParam]);
 
   // Status da Loja
-  const [storeStatus, setStoreStatus] = useState<StoreStatus>({ status: 'online', is_manually_closed: false, next_status_change: null });
+  const [storeStatus, setStoreStatus] = useState<StoreStatus>({ status: 'online', is_manually_closed: false, next_status_change: null, enableDigitalMenu: true });
   const [countdown, setCountdown] = useState<string | null>(null);
 
   const fetchStatus = useCallback(async () => {
@@ -71,7 +71,7 @@ function AppContent() {
       setStoreStatus(status);
     } catch (e) {
       console.error("Failed to fetch store status, defaulting to offline", e);
-      setStoreStatus({ status: 'offline', is_manually_closed: false, next_status_change: null });
+      setStoreStatus({ status: 'offline', is_manually_closed: false, next_status_change: null, enableDigitalMenu: true });
     }
   }, []);
 
@@ -440,6 +440,22 @@ function AppContent() {
     if (qty <= 0) return removeFromCart(id);
     setCart(prev => prev.map(i => i.id === id ? { ...i, quantity: qty } : i));
   };
+
+  if (storeStatus.enableDigitalMenu === false) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-8 text-center select-none relative overflow-hidden">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-rose-500 rounded-full mix-blend-multiply filter blur-3xl opacity-10"></div>
+        <div className="w-24 h-24 bg-rose-100 rounded-[2rem] flex items-center justify-center shadow-xl shadow-rose-100 transform -rotate-12 mb-8 animate-float relative z-10 border border-rose-200">
+          <span className="text-rose-600 text-4xl font-black">!</span>
+        </div>
+        <h1 className="text-3xl font-black text-slate-800 tracking-tighter uppercase mb-4 relative z-10">App Desativado</h1>
+        <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest leading-relaxed max-w-xs relative z-10">
+          Este aplicativo de cardápio digital não está habilitado para este estabelecimento no momento.
+        </p>
+        <div className="mt-12 h-1 w-12 bg-slate-200 rounded-full"></div>
+      </div>
+    );
+  }
 
   if (isValidating) {
     return (

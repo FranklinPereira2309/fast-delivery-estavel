@@ -5,24 +5,28 @@ export interface StoreStatus {
     status: 'online' | 'offline';
     is_manually_closed: boolean;
     next_status_change: string | null;
+    enableDigitalMenu: boolean;
 }
 
 let cachedSettings = {
     isManuallyClosed: true, // Começar fechado por segurança
-    operatingHours: "[]"
+    operatingHours: "[]",
+    enableDigitalMenu: true
 };
 
 let lastCalculatedStatus: 'online' | 'offline' = 'offline';
 
-export const updateCacheAndEmit = (isManuallyClosed: boolean, operatingHours: string) => {
+export const updateCacheAndEmit = (isManuallyClosed: boolean, operatingHours: string, enableDigitalMenu?: boolean) => {
     cachedSettings.isManuallyClosed = isManuallyClosed;
     cachedSettings.operatingHours = operatingHours;
+    if (enableDigitalMenu !== undefined) {
+        cachedSettings.enableDigitalMenu = enableDigitalMenu;
+    }
 
     const current = calculateCurrentStoreStatus();
-    if (current.status !== lastCalculatedStatus) {
-        lastCalculatedStatus = current.status;
-        getIO().emit('store_status_changed', current);
-    }
+    // Emit always to ensure frontend gets the latest settings (including enableDigitalMenu change)
+    getIO().emit('store_status_changed', current);
+    lastCalculatedStatus = current.status;
 }
 
 export const loadSettingsToCache = async (retries = 3) => {
@@ -32,6 +36,7 @@ export const loadSettingsToCache = async (retries = 3) => {
             if (settings) {
                 cachedSettings.isManuallyClosed = (settings as any).isManuallyClosed ?? true;
                 cachedSettings.operatingHours = (settings as any).operatingHours ?? "[]";
+                cachedSettings.enableDigitalMenu = (settings as any).enableDigitalMenu ?? true;
                 // Initially set lastCalculatedStatus without emitting since no clients are connected yet
                 lastCalculatedStatus = calculateCurrentStoreStatus().status;
                 console.log(`[STATUS-CACHE] Settings loaded successfully (attempt ${i + 1})`);
@@ -64,14 +69,15 @@ const calculateCurrentStoreStatus = (): StoreStatus => {
             return {
                 status: 'offline',
                 is_manually_closed: true,
-                next_status_change: null
+                next_status_change: null,
+                enableDigitalMenu: cachedSettings.enableDigitalMenu
             };
         }
 
         try {
             const hours = JSON.parse(cachedSettings.operatingHours);
             if (!Array.isArray(hours) || hours.length === 0) {
-                return { status: 'offline', is_manually_closed: false, next_status_change: null };
+                return { status: 'offline', is_manually_closed: false, next_status_change: null, enableDigitalMenu: cachedSettings.enableDigitalMenu };
             }
 
             // --- Lógica de Fuso Horário Robusta ---
@@ -98,7 +104,7 @@ const calculateCurrentStoreStatus = (): StoreStatus => {
             todayConfig = hours.find((h: any) => h.dayOfWeek === currentDayNum);
 
             if (!todayConfig || !todayConfig.isOpen) {
-                return { status: 'offline', is_manually_closed: false, next_status_change: getNextOpenTime(hours, now) };
+                return { status: 'offline', is_manually_closed: false, next_status_change: getNextOpenTime(hours, now), enableDigitalMenu: cachedSettings.enableDigitalMenu };
             }
 
             const openParts = todayConfig.openTime.split(':').map(Number);
@@ -143,16 +149,16 @@ const calculateCurrentStoreStatus = (): StoreStatus => {
                 // A melhor forma de gerar o ISO correto sem depender do fuso do servidor:
                 const closingISO = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}T${todayConfig.closeTime}:00-03:00`;
 
-                return { status: 'online', is_manually_closed: false, next_status_change: new Date(closingISO).toISOString() };
+                return { status: 'online', is_manually_closed: false, next_status_change: new Date(closingISO).toISOString(), enableDigitalMenu: cachedSettings.enableDigitalMenu };
             } else {
                 // It's closed.
                 const nextOpen = getNextOpenTime(hours, now);
-                return { status: 'offline', is_manually_closed: false, next_status_change: nextOpen };
+                return { status: 'offline', is_manually_closed: false, next_status_change: nextOpen, enableDigitalMenu: cachedSettings.enableDigitalMenu };
             }
 
         } catch (e) {
             console.error("Store status calculation error:", e);
-            return { status: 'offline', is_manually_closed: false, next_status_change: null };
+            return { status: 'offline', is_manually_closed: false, next_status_change: null, enableDigitalMenu: cachedSettings.enableDigitalMenu };
         }
     })();
 

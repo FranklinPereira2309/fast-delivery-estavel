@@ -59,6 +59,7 @@ export interface StoreStatus {
     status: 'online' | 'offline';
     is_manually_closed: boolean;
     next_status_change: string | null;
+    enableDigitalMenu: boolean;
 }
 
 export const fetchStoreStatus = async (): Promise<StoreStatus> => {
