@@ -1515,7 +1515,6 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
               <button
                 onClick={() => {
                   setShowFeedbacks(true);
-                  feedbackUnreadManager.setUnread(false);
                 }}
                 className={`p-2 rounded-xl transition-all relative ${hasNewFeedback ? 'bg-red-600 text-white animate-piscar-red shadow-lg shadow-red-200' : 'bg-slate-200 text-slate-500 hover:bg-slate-300'}`}
                 title="Mensagens do Dia"
@@ -2788,8 +2787,10 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                   <p className="text-[9px] font-bold text-indigo-400 dark:text-indigo-500 uppercase tracking-widest">Feedbacks e Sugestões do dia</p>
                 </div>
                 <button
-                  onClick={() => setShowFeedbacks(false)}
-                  className="p-3 bg-white dark:bg-slate-800 text-slate-400 dark:text-slate-500 rounded-2xl hover:text-slate-600 dark:hover:text-slate-300 transition-all shadow-sm"
+                  onClick={() => {
+                    setShowFeedbacks(false);
+                    feedbackUnreadManager.setUnread(false);
+                  }}
                 >
                   ✕
                 </button>

@@ -213,7 +213,6 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
     if (activeTab === 'sales-monitor') setShouldBlinkMonitor(false);
     if (activeTab === 'pos') {
       setShouldBlinkPOS(false);
-      feedbackUnreadManager.setUnread(false);
     }
     if (activeTab === 'logistics') {
       setShouldBlinkLogistics(false);

@@ -194,11 +194,12 @@ export const submitFeedback = async (req: Request, res: Response) => {
     }
 
     try {
+        const tableNum = parseInt(tableNumber);
         const feedback = await prisma.feedback.create({
             data: {
-                name: name || 'Anônimo',
-                message,
-                tableNumber: parseInt(tableNumber)
+                name: name || `Mesa ${tableNum}`,
+                message: name ? message : `Mesa ${tableNum}: ${message}`,
+                tableNumber: tableNum
             }
         });
 
