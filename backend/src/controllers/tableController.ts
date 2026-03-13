@@ -192,7 +192,11 @@ export const saveTableSession = async (req: Request, res: Response) => {
                     waiterId: waiterId,
                     digitalPin: sessionData.pin || existingSession?.pin || null,
                     digitalToken: sessionData.sessionToken || existingSession?.sessionToken || null,
-                    createdAt: actualStartTime
+                    createdAt: actualStartTime,
+                    nfeStatus: null,
+                    nfeNumber: null,
+                    nfeUrl: null,
+                    nfeError: null
                 },
                 create: {
                     id: orderId,
@@ -208,7 +212,11 @@ export const saveTableSession = async (req: Request, res: Response) => {
                     isOriginDigitalMenu: sessionData.isOriginDigitalMenu || false, // Fix: Propagate origin into standard Order DB
                     digitalPin: sessionData.pin || existingSession?.pin || null,
                     digitalToken: sessionData.sessionToken || existingSession?.sessionToken || null,
-                    createdAt: actualStartTime
+                    createdAt: actualStartTime,
+                    nfeStatus: null,
+                    nfeNumber: null,
+                    nfeUrl: null,
+                    nfeError: null
                 }
             });
 

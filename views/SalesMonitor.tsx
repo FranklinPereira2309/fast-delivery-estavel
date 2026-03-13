@@ -253,7 +253,7 @@ const SalesMonitor: React.FC = () => {
                             <span className="text-slate-200 dark:text-slate-800">•</span>
                             <span>{getFriendlySaleType(order.type)}</span>
                             <span className="text-blue-600 dark:text-blue-400 font-bold">R$ {order.total.toFixed(2)}</span>
-                            {order.nfeStatus === 'EMITTED' && (
+                            {order.nfeStatus === 'EMITTED' && businessSettings?.enableNfcEmission && (
                               <span className="px-1.5 py-0.5 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 text-[8px] font-black rounded-md flex items-center gap-1">
                                 <Icons.QrCode className="w-2 h-2" />
                                 NFC-E
@@ -293,7 +293,7 @@ const SalesMonitor: React.FC = () => {
                                 <Icons.Print className="w-5 h-5" />
                               </button>
 
-                              {order.nfeStatus === 'EMITTED' && (
+                              {order.nfeStatus === 'EMITTED' && businessSettings?.enableNfcEmission && (
                                 <button onClick={() => {
                                   setPrintingOrder(order);
                                   setIsNfceVisual(true);

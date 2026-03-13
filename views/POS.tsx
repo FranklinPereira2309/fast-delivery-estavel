@@ -595,9 +595,9 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       tableNumber: isTableSale ? finalTableNum! : undefined,
       waiterId: isTableSale ? orders.find(o => o.id === existingTableOrderId)?.waiterId : undefined,
       isOriginDigitalMenu: isTableSale ? (tableSessionToClose?.isOriginDigitalMenu || false) : false,
-      nfeStatus: (emitNfce && businessSettings?.enableNfcEmission) ? 'EMITTED' : undefined,
-      nfeNumber: (emitNfce && businessSettings?.enableNfcEmission) ? `NFC-${Date.now()}` : undefined,
-      nfeUrl: (emitNfce && businessSettings?.enableNfcEmission) ? `https://sefaz.gov.br/nfce/qrcode?p=${Date.now()}` : undefined,
+      nfeStatus: (emitNfce && businessSettings?.enableNfcEmission) ? 'EMITTED' : null,
+      nfeNumber: (emitNfce && businessSettings?.enableNfcEmission) ? `NFC-${Date.now()}` : null,
+      nfeUrl: (emitNfce && businessSettings?.enableNfcEmission) ? `https://sefaz.gov.br/nfce/qrcode?p=${Date.now()}` : null,
       splitAmount1: payments.length > 1 ? payments[0].amount : undefined,
       appliedServiceFee: (saleType === SaleType.TABLE && businessSettings?.serviceFeeStatus && isServiceFeeAccepted) ? (cart.reduce((acc, item) => acc + (item.price * item.quantity), 0) * (businessSettings.serviceFeePercentage || 10) / 100) : 0
     };
