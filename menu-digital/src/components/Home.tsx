@@ -35,9 +35,7 @@ const Home: React.FC<HomeProps> = ({ cart, addToCart, updateQuantity }) => {
     const filteredProducts = products.filter(p => {
         const matchesCategory = activeCategory === 'Todos' || p.category === activeCategory;
         const query = searchTerm.toLowerCase().trim();
-        const matchesSearch = query
-            ? (p.name.toLowerCase().includes(query) || (p.description && p.description.toLowerCase().includes(query)))
-            : true;
+        const matchesSearch = query ? p.name.toLowerCase().includes(query) : true;
         return matchesCategory && matchesSearch;
     });
 
@@ -108,7 +106,6 @@ const Home: React.FC<HomeProps> = ({ cart, addToCart, updateQuantity }) => {
                                     <div className="flex-1 flex flex-col justify-between py-0.5 min-w-0">
                                         <div className="min-w-0">
                                             <h3 className="text-xs sm:text-sm font-black text-slate-800 leading-tight uppercase tracking-tighter line-clamp-2 break-words">{product.name}</h3>
-                                            <p className="text-[9px] sm:text-[10px] font-bold text-slate-400 mt-1 line-clamp-2 leading-snug break-words">{product.description}</p>
                                         </div>
 
                                         <div className="flex items-center justify-between mt-1 sm:mt-2">
