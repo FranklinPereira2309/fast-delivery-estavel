@@ -319,6 +319,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
     const allSess = await db.getTableSessions();
     const sess = allSess.find(s => s.tableNumber === num);
     if (sess) {
+      console.log(`Reopening table session for mesa ${num}`, sess);
       // Retorna mesa para 'occupied'
       await db.saveTableSession({ ...sess, status: 'occupied' });
 
@@ -348,6 +349,9 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       addToast({ title: "SUCESSO", message: `Mesa ${num} reaberta para novos lançamentos nas Mesas.`, type: "SUCCESS" });
       clearState();
       await refreshAllData();
+    } else {
+      console.warn(`Table session not found for mesa ${num} during reopen attempt.`);
+      addToast({ title: "ERRO", message: `Sessão da Mesa ${num} não encontrada. Tente atualizar a página.`, type: "DANGER" });
     }
   };
 
@@ -1518,7 +1522,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                 {hasNewFeedback && <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full border border-white dark:border-slate-900 animate-ping"></span>}
               </button>
             </h3>
-            <div className="flex-1 overflow-y-auto pr-1 pt-1 space-y-3">
+            <div className="flex-1 overflow-y-auto px-1.5 pt-1 pb-4 space-y-3">
               {/* Tables */}
               {pendingTables.length > 0 && pendingTables.map(t => (
                 <div
@@ -1526,31 +1530,33 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                   className={`w-full p-4 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-transparent dark:border-slate-800 hover:border-orange-500 dark:hover:border-orange-500 hover:shadow-md transition-all text-left group ${tableNumber === t.tableNumber ? 'ring-4 ring-orange-500 border-orange-500' : ''}`}
                 >
                   <div className="flex justify-between items-start">
-                    <div className="flex-1 min-w-0 cursor-pointer" onClick={() => loadTableSession(t)}>
-                      <p className="font-black text-slate-800 dark:text-white text-sm uppercase">Mesa {t.tableNumber}</p>
+                    <div className="flex-1 min-w-0 cursor-pointer overflow-hidden" onClick={() => loadTableSession(t)}>
+                      <p className="font-black text-slate-800 dark:text-white text-sm uppercase truncate">Mesa {t.tableNumber}</p>
                       <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase mt-0.5 truncate">{t.clientName || 'S/ Identificação'}</p>
                     </div>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleReopenTable(t.tableNumber);
-                      }}
-                      className="w-8 h-8 flex items-center justify-center bg-amber-50 text-amber-500 rounded-xl hover:bg-amber-500 hover:text-white transition-all shadow-sm"
-                      title="Reabrir Mesa"
-                    >
-                      ⟲
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        clearState();
-                        addToast({ title: "LIMPO", message: "Seleção da mesa removida da Área de Pagamento.", type: "SUCCESS" });
-                      }}
-                      className="w-8 h-8 flex items-center justify-center bg-slate-50 text-slate-400 rounded-xl hover:bg-slate-200 hover:text-slate-600 transition-all shadow-sm"
-                      title="Limpar Seleção"
-                    >
-                      -
-                    </button>
+                    <div className="flex gap-1 shrink-0">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleReopenTable(t.tableNumber);
+                        }}
+                        className="w-8 h-8 flex items-center justify-center bg-amber-50 text-amber-500 rounded-xl hover:bg-amber-500 hover:text-white transition-all shadow-sm"
+                        title="Reabrir Mesa"
+                      >
+                        ⟲
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          clearState();
+                          addToast({ title: "LIMPO", message: "Seleção da mesa removida da Área de Pagamento.", type: "SUCCESS" });
+                        }}
+                        className="w-8 h-8 flex items-center justify-center bg-slate-50 text-slate-400 rounded-xl hover:bg-slate-200 hover:text-slate-600 transition-all shadow-sm"
+                        title="Limpar Seleção"
+                      >
+                        -
+                      </button>
+                    </div>
                   </div>
                   <div className="cursor-pointer" onClick={() => loadTableSession(t)}>
                     <p className="text-[10px] font-bold text-orange-500 mt-1 uppercase tracking-tighter">Total: R$ {t.items.reduce((acc, it) => acc + (it.price * it.quantity), 0).toFixed(2)}</p>
@@ -1566,8 +1572,8 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                   onClick={() => loadCounterOrder(o)}
                 >
                   <div className="flex justify-between items-start">
-                    <div className="flex-1 min-w-0" onClick={() => loadCounterOrder(o)}>
-                      <p className="font-black text-slate-800 dark:text-white text-sm uppercase">Balcão</p>
+                    <div className="flex-1 min-w-0 overflow-hidden" onClick={() => loadCounterOrder(o)}>
+                      <p className="font-black text-slate-800 dark:text-white text-sm uppercase truncate">Balcão</p>
                       <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase mt-0.5 truncate">{o.clientName}</p>
                     </div>
                     <button
