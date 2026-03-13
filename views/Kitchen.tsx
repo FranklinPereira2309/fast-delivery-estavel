@@ -140,7 +140,7 @@ const Kitchen: React.FC = () => {
     try {
       await db.markItemsReady(order.id, itemsToMark, currentUser);
     } catch (error: any) {
-      addToast('Erro', error.message || "Erro ao salvar pedido na cozinha.", 'error');
+      addToast({ title: 'Erro', message: error.message || "Erro ao salvar pedido na cozinha.", type: 'DANGER' });
     }
 
     setSelectedItems(prev => {

@@ -93,7 +93,7 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
       refreshClients();
     } catch (error: any) {
       console.error(error);
-      addToast('Erro', error.message || 'Não foi possível resetar o PIN.', 'error');
+      addToast({ title: 'Erro', message: error.message || 'Não foi possível resetar o PIN.', type: 'DANGER' });
     }
   };
 
@@ -263,10 +263,10 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
       refreshClients();
       setIsModalOpen(false);
       setErrors({});
-      addToast('Sucesso', editingClient ? 'Cliente atualizado com sucesso!' : 'Cliente cadastrado com sucesso!', 'success');
+      addToast({ title: 'Sucesso', message: editingClient ? 'Cliente atualizado com sucesso!' : 'Cliente cadastrado com sucesso!', type: 'SUCCESS' });
     } catch (error: any) {
       console.error(error);
-      addToast('Erro ao Salvar', error.message || 'Não foi possível salvar os dados do cliente.', 'error');
+      addToast({ title: 'Erro ao Salvar', message: error.message || 'Não foi possível salvar os dados do cliente.', type: 'DANGER' });
     } finally {
       setIsSubmitting(false);
     }
