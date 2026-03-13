@@ -83,13 +83,13 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
 
   const handleResetPin = async (clientId: string) => {
     if (!currentUser.permissions.includes('admin') && !currentUser.permissions.includes('settings')) {
-      addToast('Acesso Negado', 'Apenas usuários autorizados podem resetar o PIN.', 'error');
+      addToast({ title: 'Acesso Negado', message: 'Apenas usuários autorizados podem resetar o PIN.', type: 'DANGER' });
       return;
     }
 
     try {
       const data = await db.resetClientPin(clientId, currentUser);
-      addToast('Sucesso', 'O PIN de acesso deste cliente foi regerado com sucesso.', 'success');
+      addToast({ title: 'Sucesso', message: 'O PIN de acesso deste cliente foi regerado com sucesso.', type: 'SUCCESS' });
       refreshClients();
     } catch (error: any) {
       console.error(error);
@@ -147,7 +147,7 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
 
   const handleDelete = async (id: string) => {
     if (!currentUser.permissions.includes('admin') && !currentUser.permissions.includes('settings')) {
-      addToast('Acesso Negado', 'Você não tem permissão para excluir clientes.', 'error');
+      addToast({ title: 'Acesso Negado', message: 'Você não tem permissão para excluir clientes.', type: 'DANGER' });
       return;
     }
 
@@ -160,9 +160,9 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
         try {
           await db.deleteClient(id, currentUser);
           refreshClients();
-          addToast('Sucesso', 'Cliente removido com sucesso!', 'success');
+          addToast({ title: 'Sucesso', message: 'Cliente removido com sucesso!', type: 'SUCCESS' });
         } catch (error: any) {
-          addToast('Erro na Exclusão', error.message || 'Erro ao remover cliente.', 'error');
+          addToast({ title: 'Erro na Exclusão', message: error.message || 'Erro ao remover cliente.', type: 'DANGER' });
         }
       },
       () => closeAlert()
@@ -179,7 +179,7 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
       const data = await response.json();
 
       if (data.erro) {
-        addToast('CEP Inválido', 'CEP não encontrado.', 'info');
+        addToast({ title: 'CEP Inválido', message: 'CEP não encontrado.', type: 'INFO' });
       } else {
         setFormData(prev => ({
           ...prev,
@@ -191,7 +191,7 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
       }
     } catch (error) {
       console.error('Erro ao buscar CEP:', error);
-      addToast('Erro de Conexão', 'Não foi possível conectar ao serviço de busca de CEP. Por favor, preencha manualmente.', 'error');
+      addToast({ title: 'Erro de Conexão', message: 'Não foi possível conectar ao serviço de busca de CEP. Por favor, preencha manualmente.', type: 'DANGER' });
     } finally {
       setIsLoadingCep(false);
     }
@@ -227,13 +227,13 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
-      addToast('Campos Inválidos', 'Verifique os campos destacados em vermelho.', 'error');
+      addToast({ title: 'Campos Inválidos', message: 'Verifique os campos destacados em vermelho.', type: 'DANGER' });
       return;
     }
 
     if (formData.email && !validateEmail(formData.email)) {
       setErrors({ email: true });
-      addToast('Email Inválido', 'Por favor, insira um endereço de email válido.', 'warning');
+      addToast({ title: 'Email Inválido', message: 'Por favor, insira um endereço de email válido.', type: 'WARNING' });
       return;
     }
 

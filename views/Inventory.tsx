@@ -126,7 +126,7 @@ const Inventory: React.FC = () => {
       await refreshData();
       setIsProdModalOpen(false);
     } catch (error) {
-      addToast('Erro', "Erro ao salvar produto. Verifique os dados.", 'error');
+      addToast({ title: 'Erro', message: "Erro ao salvar produto. Verifique os dados.", type: 'DANGER' });
     }
   };
 

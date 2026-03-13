@@ -476,8 +476,8 @@ class APIDBService {
     return session;
   }
 
-  public async getClosurePreview(): Promise<{ systemCash: number, systemPix: number, systemCredit: number, systemDebit: number, systemOthers: number, totalSales: number }> {
-    return this.request<{ systemCash: number, systemPix: number, systemCredit: number, systemDebit: number, systemOthers: number, totalSales: number }>('/cash/preview');
+  public async getClosurePreview(): Promise<{ systemCash: number, systemPix: number, systemCredit: number, systemDebit: number, systemOthers: number, totalSales: number, systemFiado: number, orphanSales: number }> {
+    return this.request<{ systemCash: number, systemPix: number, systemCredit: number, systemDebit: number, systemOthers: number, totalSales: number, systemFiado: number, orphanSales: number }>('/cash/preview');
   }
 
   public async updateCashSession(data: { id: string, cash: number, pix: number, credit: number, debit: number, others?: number, fiado?: number, observations?: string, user: User }): Promise<CashSession> {

@@ -165,17 +165,17 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
 
     const handleReopen = async (sessionId: string) => {
         if (!currentUser || !currentUser.permissions.includes('settings')) {
-            addToast('Acesso Negado', "Apenas administradores podem reabrir caixa.", 'error');
+            addToast({ title: 'Acesso Negado', message: "Apenas administradores podem reabrir caixa.", type: 'DANGER' });
             return;
         }
         if (!window.confirm("Deseja realmente reabrir este caixa? O fechamento atual será perdido.")) return;
 
         try {
             await db.reopenCashSession(sessionId, currentUser);
-            addToast('Sucesso', "Caixa reaberto com sucesso!", 'success');
+            addToast({ title: 'Sucesso', message: "Caixa reaberto com sucesso!", type: 'SUCCESS' });
             fetchData();
         } catch (error) {
-            addToast('Erro', "Erro ao reabrir caixa.", 'error');
+            addToast({ title: 'Erro', message: "Erro ao reabrir caixa.", type: 'DANGER' });
         }
     };
 
@@ -409,7 +409,7 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
             await handlePdfOutput(pdfDoc, `relatorio_vendas_${salesStartDate}_${salesEndDate}.pdf`, downloadOnly, 'SALES');
         } catch (error) {
             console.error('Erro ao gerar PDF:', error);
-            addToast('Erro', 'Erro ao gerar relatório.', 'error');
+            addToast({ title: 'Erro', message: 'Erro ao gerar relatório.', type: 'DANGER' });
         }
     };
 
@@ -523,7 +523,7 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
             await handlePdfOutput(pdfDoc, `relatorio_compras_${selectedClient.name.replace(/\s+/g, '_')}_${new Date().getTime()}.pdf`, downloadOnly, 'CLIENT_ORDERS');
         } catch (error) {
             console.error('Erro ao gerar PDF do cliente:', error);
-            addToast('Erro', 'Erro ao gerar relatório do cliente.', 'error');
+            addToast({ title: 'Erro', message: 'Erro ao gerar relatório do cliente.', type: 'DANGER' });
         }
     };
 
@@ -652,7 +652,7 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
             await handlePdfOutput(pdfDoc, `relatorio_entregadores_${driverStartDate}_${driverEndDate}.pdf`, downloadOnly, 'DRIVERS');
         } catch (error) {
             console.error('Erro ao gerar PDF de entregadores:', error);
-            addToast('Erro', 'Erro ao gerar relatório de entregadores.', 'error');
+            addToast({ title: 'Erro', message: 'Erro ao gerar relatório de entregadores.', type: 'DANGER' });
         }
     };
 
@@ -735,7 +735,7 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
             await handlePdfOutput(pdfDoc, `relatorio_recebiveis_${new Date().getTime()}.pdf`, downloadOnly, 'RECEIVABLES');
         } catch (error) {
             console.error('Erro ao gerar PDF de recebíveis:', error);
-            addToast('Erro', 'Erro ao gerar relatório de recebíveis.', 'error');
+            addToast({ title: 'Erro', message: 'Erro ao gerar relatório de recebíveis.', type: 'DANGER' });
         }
     };
 
@@ -750,7 +750,7 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
             const filtered = await db.getCashSessions(cashStartDate, cashEndDate);
 
             if (filtered.length === 0) {
-                addToast('Aviso', 'Nenhuma movimentação de caixa encontrada para este período.', 'info');
+                addToast({ title: 'Aviso', message: 'Nenhuma movimentação de caixa encontrada para este período.', type: 'INFO' });
                 return;
             }
 
@@ -818,7 +818,7 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
             await handlePdfOutput(pdfDoc, `relatorio_caixa_${cashStartDate}_${cashEndDate}.pdf`, downloadOnly, 'CASH');
         } catch (error) {
             console.error('Erro ao gerar PDF de caixa:', error);
-            addToast('Erro', 'Erro ao gerar relatório.', 'error');
+            addToast({ title: 'Erro', message: 'Erro ao gerar relatório.', type: 'DANGER' });
         }
     };
 
@@ -878,7 +878,7 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
             await handlePdfOutput(pdfDoc, `movimentacao_estoque_${inventoryStartDate}_${inventoryEndDate}.pdf`, downloadOnly, 'INVENTORY');
         } catch (error) {
             console.error('Erro ao gerar PDF de estoque:', error);
-            addToast('Erro', 'Erro ao gerar relatório de estoque.', 'error');
+            addToast({ title: 'Erro', message: 'Erro ao gerar relatório de estoque.', type: 'DANGER' });
         }
     };
 
@@ -966,7 +966,7 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
             await handlePdfOutput(pdfDoc, `comissoes_garcom_${waiterStartDate}_${waiterEndDate}.pdf`, downloadOnly, 'WAITERS');
         } catch (error) {
             console.error('Erro ao gerar PDF de comissões:', error);
-            addToast('Erro', 'Erro ao gerar relatório de comissões.', 'error');
+            addToast({ title: 'Erro', message: 'Erro ao gerar relatório de comissões.', type: 'DANGER' });
         }
     };
 
@@ -987,7 +987,7 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
             }).sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
 
             if (filteredOrders.length === 0) {
-                addToast('Aviso', 'Nenhum pedido encontrado para o período e garçom selecionados.', 'info');
+                addToast({ title: 'Aviso', message: 'Nenhum pedido encontrado para o período e garçom selecionados.', type: 'INFO' });
                 return;
             }
 
@@ -1056,7 +1056,7 @@ const Reports: React.FC<ReportsProps> = ({ currentUser }) => {
             await handlePdfOutput(pdfDoc, `comissoes_analitico_${waiterStartDate}_${waiterEndDate}.pdf`, downloadOnly, 'WAITERS_ANALYTICAL');
         } catch (error) {
             console.error('Erro ao gerar PDF analítico de comissões:', error);
-            addToast('Erro', 'Erro ao gerar relatório analítico.', 'error');
+            addToast({ title: 'Erro', message: 'Erro ao gerar relatório analítico.', type: 'DANGER' });
         }
     };
 

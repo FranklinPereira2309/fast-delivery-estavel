@@ -476,7 +476,7 @@ const SalesMonitor: React.FC = () => {
                                   setEditingServiceFee(false);
                                 } catch (err) {
                                   console.error('Error updating service fee', err);
-                                  addToast('Erro', 'Erro ao atualizar taxa de serviço.', 'error');
+                                  addToast({ title: 'Erro', message: 'Erro ao atualizar taxa de serviço.', type: 'DANGER' });
                                 } finally {
                                   setIsSavingServiceFee(false);
                                 }

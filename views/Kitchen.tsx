@@ -118,7 +118,7 @@ const Kitchen: React.FC = () => {
     if (!currentUser) return;
     const itemsToMark = selectedItems[order.id] || [];
     if (itemsToMark.length === 0) {
-      addToast('Aviso', "Selecione ao menos um item para finalizar.", 'info');
+      addToast({ title: 'Aviso', message: "Selecione ao menos um item para finalizar.", type: 'INFO' });
       return;
     }
 

@@ -81,7 +81,7 @@ const UserManagement: React.FC = () => {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name || !formData.email || !formData.password) {
-      addToast('Erro', 'Nome, Email e Senha são obrigatórios.', 'error');
+      addToast({ title: 'Erro', message: 'Nome, Email e Senha são obrigatórios.', type: 'DANGER' });
       return;
     }
 
@@ -103,7 +103,7 @@ const UserManagement: React.FC = () => {
   // Fixed: Added async/await for user deletion
   const handleDelete = async (userToDelete: User) => {
     if (userToDelete.permissions.includes('admin')) {
-      addToast('Acesso Negado', 'Não é possível excluir um usuário administrador.', 'error');
+      addToast({ title: 'Acesso Negado', message: 'Não é possível excluir um usuário administrador.', type: 'DANGER' });
       return;
     }
     if (confirm(`Deseja excluir o usuário ${userToDelete.name}?`)) {
