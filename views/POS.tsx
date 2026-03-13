@@ -524,7 +524,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
             finalClientName = existingClient.name;
           } else if (isAvulso && avulsoData.name && avulsoData.phone) {
             const newClient: Client = {
-              id: editingClient?.id || `CLIENT-${Date.now()}`,
+              id: `CLIENT-${Date.now()}`,
               name: toTitleCase(avulsoData.name),
               phone: avulsoData.phone.replace(/\D/g, ''),
               email: avulsoData.email || undefined,
@@ -1538,6 +1538,17 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                       className="w-8 h-8 flex items-center justify-center bg-amber-50 text-amber-500 rounded-xl hover:bg-amber-500 hover:text-white transition-all shadow-sm"
                       title="Reabrir Mesa"
                     >
+                      ⟲
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        clearState();
+                        addToast({ title: "LIMPO", message: "Seleção da mesa removida da Área de Pagamento.", type: "SUCCESS" });
+                      }}
+                      className="w-8 h-8 flex items-center justify-center bg-slate-50 text-slate-400 rounded-xl hover:bg-slate-200 hover:text-slate-600 transition-all shadow-sm"
+                      title="Limpar Seleção"
+                    >
                       -
                     </button>
                   </div>
@@ -1554,9 +1565,27 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                   className={`w-full p-4 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-transparent dark:border-slate-800 hover:border-blue-500 dark:hover:border-blue-500 hover:shadow-md transition-all text-left group cursor-pointer ${editingOrderId === o.id ? 'ring-4 ring-blue-500 border-blue-500' : ''}`}
                   onClick={() => loadCounterOrder(o)}
                 >
-                  <p className="font-black text-slate-800 dark:text-white text-sm uppercase">Balcão</p>
-                  <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase mt-0.5 truncate">{o.clientName}</p>
-                  <p className="text-[10px] font-bold text-blue-500 mt-1 uppercase tracking-tighter">Pronto: R$ {o.total.toFixed(2)}</p>
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1 min-w-0" onClick={() => loadCounterOrder(o)}>
+                      <p className="font-black text-slate-800 dark:text-white text-sm uppercase">Balcão</p>
+                      <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase mt-0.5 truncate">{o.clientName}</p>
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        // Se estiver selecionado, limpa. Se não, apenas limpa o estado atual.
+                        clearState();
+                        addToast({ title: "LIMPO", message: "Seleção do balcão removida.", type: "SUCCESS" });
+                      }}
+                      className="w-8 h-8 flex items-center justify-center bg-slate-50 text-slate-400 rounded-xl hover:bg-slate-200 hover:text-slate-600 transition-all shadow-sm"
+                      title="Limpar Seleção"
+                    >
+                      -
+                    </button>
+                  </div>
+                  <div className="cursor-pointer" onClick={() => loadCounterOrder(o)}>
+                    <p className="text-[10px] font-bold text-blue-500 mt-1 uppercase tracking-tighter">Pronto: R$ {o.total.toFixed(2)}</p>
+                  </div>
                 </div>
               ))}
 
@@ -1721,9 +1750,9 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                   <button
                     key={type}
                     onClick={() => {
-                      if (editingOrderId) return showAlert("Bloqueado", "Finalize ou limpe o pedido atual antes de mudar o tipo.", "DANGER");
-                      if (saleType === SaleType.TABLE && tableNumber) return showAlert("Bloqueado", "Limpe a mesa atual antes de mudar a modalidade.", "DANGER");
-                      if (isPaymentModalOpen) return showAlert("Bloqueado", "Cancele o pagamento atual antes de mudar a modalidade.", "DANGER");
+                      if (editingOrderId) return addToast({ title: "BLOQUEADO", message: "Finalize ou limpe o pedido atual antes de mudar o tipo.", type: "DANGER" });
+                      if (saleType === SaleType.TABLE && tableNumber) return addToast({ title: "BLOQUEADO", message: "Limpe a mesa atual antes de mudar a modalidade.", type: "DANGER" });
+                      if (isPaymentModalOpen) return addToast({ title: "BLOQUEADO", message: "Cancele o pagamento atual antes de mudar a modalidade.", type: "DANGER" });
                       setSaleType(type);
                       setErrors({});
                       if (type !== SaleType.TABLE) {
@@ -1877,12 +1906,20 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                   </button>
                 )}
                 <button
-                  onClick={handleReopenTable}
+                  onClick={() => handleReopenTable()}
                   disabled={!!isReceivingFiado}
                   className="flex-1 bg-amber-500 hover:bg-amber-600 text-white font-black py-3 xl:py-4 rounded-xl xl:rounded-2xl shadow-xl uppercase text-[9px] xl:text-[10px] tracking-widest transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed"
                 >
                   Reabrir a Mesa
                 </button>
+                {(editingOrderId || (saleType === SaleType.TABLE && tableNumber)) && (
+                  <button
+                    onClick={() => clearState()}
+                    className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-500 font-black py-3 xl:py-4 rounded-xl xl:rounded-2xl shadow-sm uppercase text-[9px] xl:text-[10px] tracking-widest transition-all active:scale-95"
+                  >
+                    Limpar Seleção
+                  </button>
+                )}
               </div>
             )}
 
