@@ -21,7 +21,7 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
   const [feedbacks, setFeedbacks] = useState<any[]>([]);
   const [showFeedbacks, setShowFeedbacks] = useState(false);
   const [hasNewFeedback, setHasNewFeedback] = useState(false);
-  const [storeStatus, setStoreStatus] = useState<StoreStatus>({ status: 'online', is_manually_closed: false, next_status_change: null });
+  const [storeStatus, setStoreStatus] = useState<StoreStatus>({ status: 'online', is_manually_closed: false, next_status_change: null, enableDigitalMenu: true });
   const [countdown, setCountdown] = useState<string | null>(null);
   const [recentOrders, setRecentOrders] = useState<Order[]>([]);
   const [resolvedWaiterId, setResolvedWaiterId] = useState<string | null>(user.waiterId || null);

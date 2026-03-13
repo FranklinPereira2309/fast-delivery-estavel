@@ -102,7 +102,7 @@ const App: React.FC = () => {
   });
   const [historyEndDate, setHistoryEndDate] = useState(new Date().toISOString().split('T')[0]);
   const [printingHistoryOrder, setPrintingHistoryOrder] = useState<Order | null>(null);
-  const [storeStatus, setStoreStatus] = useState<{ status: 'online' | 'offline', next_status_change?: string | null, is_manually_closed?: boolean }>({ status: 'offline' });
+  const [storeStatus, setStoreStatus] = useState<{ status: 'online' | 'offline', next_status_change?: string | null, is_manually_closed?: boolean, enableDigitalMenu: boolean }>({ status: 'offline', enableDigitalMenu: true });
   const [countdown, setCountdown] = useState<string | null>(null);
   const [customAlertMessage, setCustomAlertMessage] = useState<string | null>(null);
   const [selectedPayments, setSelectedPayments] = useState<Record<string, string>>({});
