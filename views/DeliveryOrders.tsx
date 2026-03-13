@@ -20,6 +20,7 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
     const [businessSettings, setBusinessSettings] = useState<BusinessSettings | null>(null);
     const [activeTab, setActiveTab] = useState<'active' | 'history' | 'chat'>('active');
     const [printingOrder, setPrintingOrder] = useState<Order | null>(null);
+    const [supportMessages, setSupportMessages] = useState<any[]>([]);
 
     const [selectedOrderChat, setSelectedOrderChat] = useState<Order | null>(null);
     const [globalUnreads, setGlobalUnreads] = useState<Set<string>>(new Set());
@@ -62,16 +63,18 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
     const fetchOrders = async () => {
         setIsLoading(true);
         try {
-            const [allOrders, allDrivers, allProducts, settings] = await Promise.all([
+            const [allOrders, allDrivers, allProducts, settings, supportMsgs] = await Promise.all([
                 db.getOrders(),
                 db.getDrivers(),
                 db.getProducts(),
-                db.getSettings()
+                db.getSettings(),
+                db.getSupportMessages()
             ]);
             setOrders(allOrders.filter(o => o.isOriginDeliveryApp || o.type === SaleType.OWN_DELIVERY));
             setDrivers(allDrivers);
             setProducts(allProducts);
             setBusinessSettings(settings as BusinessSettings);
+            setSupportMessages(supportMsgs);
         } catch (error) {
             console.error('Error fetching orders:', error);
         } finally {
@@ -196,8 +199,28 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
     const historyOrders = orders.filter(o => ['DELIVERED', 'CANCELLED'].includes(o.status));
 
     const chatClients = new Map<string, any>();
+    
+    // Add clients from orders
     orders.forEach(o => {
-        chatClients.set(o.id, { id: o.id, clientId: o.clientId, name: o.clientName || 'Cliente', orderId: o.id });
+        chatClients.set(o.clientId || o.id, { 
+            id: o.id, 
+            clientId: o.clientId, 
+            name: o.clientName || 'Cliente', 
+            orderId: o.id 
+        });
+    });
+
+    // Add clients from support messages who don't have orders in the current list
+    supportMessages.forEach(m => {
+        if (m.clientId && !chatClients.has(m.clientId)) {
+            chatClients.set(m.clientId, {
+                id: `support-${m.clientId}`,
+                clientId: m.clientId,
+                name: m.userName || 'Cliente (Suporte)',
+                orderId: null,
+                isSupportOnly: true
+            });
+        }
     });
 
 
@@ -385,7 +408,9 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
                                             <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-white ${selectedOrderChat?.id === client.id ? 'bg-indigo-600' : 'bg-slate-300 dark:bg-slate-700'} text-xs shrink-0`}>{getInitials(client.name)}</div>
                                             <div className="flex-1 text-left min-w-0 pr-4">
                                                 <p className="text-[11px] truncate">{client.name}</p>
-                                                <p className="text-[8px] opacity-40">#{client.id.slice(-4).toUpperCase()}</p>
+                                                <p className="text-[8px] opacity-40">
+                                                    {client.orderId ? `#${client.orderId.slice(-4).toUpperCase()}` : '#SUPORTE'}
+                                                </p>
                                             </div>
                                         </button>
                                     )
