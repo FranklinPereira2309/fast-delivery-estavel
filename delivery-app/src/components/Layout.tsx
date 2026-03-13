@@ -3,7 +3,7 @@ import { useLocation } from 'react-router-dom';
 import FooterNav from './FooterNav';
 import { api } from '../services/api';
 import { socket } from '../services/socket';
-import type { StoreStatus } from '../types';
+import type { BusinessSettings, StoreStatus } from '../types';
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const location = useLocation();
@@ -15,8 +15,9 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     // Business Status & Countdown
     const [isClosingSoon, setIsClosingSoon] = useState(false);
     const [countdown, setCountdown] = useState<string>('');
-    const settingsRef = React.useRef<any>(null);
+    const settingsRef = React.useRef<BusinessSettings | null>(null);
     const [storeStatus, setStoreStatus] = useState<StoreStatus | null>(null);
+    const [settings, setSettings] = useState<BusinessSettings | null>(null);
 
     const updateCountdown = React.useCallback(() => {
         const s = settingsRef.current;
@@ -57,7 +58,8 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                 api.getStoreStatus()
             ]);
             setStoreStatus(status as StoreStatus);
-            settingsRef.current = s;
+            settingsRef.current = s as BusinessSettings;
+            setSettings(s as BusinessSettings);
             updateCountdown();
         } catch (err) {
             console.error("Error fetching settings in Layout:", err);
@@ -120,7 +122,20 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                 </div>
             )}
 
-            {children}
+            {settings && settings.enableDeliveryApp === false ? (
+                <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-8 text-center select-none relative overflow-hidden">
+                    <div className="w-24 h-24 bg-rose-600 rounded-3xl flex items-center justify-center shadow-2xl shadow-rose-500/20 transform -rotate-12 mb-8 animate-bounce">
+                        <span className="text-white text-4xl font-black">!</span>
+                    </div>
+                    <h1 className="text-3xl font-black text-white tracking-tighter uppercase mb-4">Módulo Desativado</h1>
+                    <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest leading-relaxed max-w-xs">
+                        O acesso ao aplicativo de delivery foi desativado nas configurações do estabelecimento.
+                    </p>
+                    <div className="mt-12 h-1 w-12 bg-rose-600 rounded-full"></div>
+                </div>
+            ) : (
+                children
+            )}
 
             {shouldShowFooter && (
                 <FooterNav
