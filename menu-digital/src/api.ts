@@ -64,10 +64,13 @@ export interface StoreStatus {
 
 export const fetchStoreStatus = async (): Promise<StoreStatus> => {
     try {
-        const response = await axios.get(`${API_URL}/store-status`);
+        const url = `${API_URL}/store-status`;
+        console.log(`[API] Fetching store status from: ${url}`);
+        const response = await axios.get(url);
+        console.log(`[API] Store status response:`, response.data);
         return response.data;
     } catch (error) {
-        console.error('Error fetching store status', error);
+        console.error('Error fetching store status from:', `${API_URL}/store-status`, error);
         return { status: 'online', is_manually_closed: false, next_status_change: null, enableDigitalMenu: true };
     }
 };
