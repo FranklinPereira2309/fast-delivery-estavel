@@ -74,34 +74,31 @@ const calculateCurrentStoreStatus = (): StoreStatus => {
                 return { status: 'offline', is_manually_closed: false, next_status_change: null };
             }
 
-            const options: Intl.DateTimeFormatOptions = {
+            // --- Lógica de Fuso Horário Robusta ---
+            const now = new Date();
+            
+            // Usamos formatToParts para extrair os componentes EXATOS de SP, independente do fuso do servidor
+            const formatter = new Intl.DateTimeFormat('en-US', {
                 timeZone: "America/Sao_Paulo",
-                hour: 'numeric',
-                minute: 'numeric',
-                second: 'numeric',
-                weekday: 'short',
-                year: 'numeric',
-                month: 'numeric',
-                day: 'numeric',
+                hour: 'numeric', minute: 'numeric', second: 'numeric',
+                weekday: 'short', year: 'numeric', month: 'numeric', day: 'numeric',
                 hour12: false
-            };
-            const formatter = new Intl.DateTimeFormat('en-US', options);
-            const parts = formatter.formatToParts(new Date());
-            const getPart = (type: string) => parts.find(p => p.type === type)?.value;
-
-            // Current time in Sao Paulo
-            hour = parseInt(getPart('hour') || '0');
-            minute = parseInt(getPart('minute') || '0');
-            const dayOfWeek = new Date().toLocaleDateString('en-US', { timeZone: 'America/Sao_Paulo', weekday: 'short' });
+            });
+            
+            const parts = formatter.formatToParts(now);
+            const getP = (type: string) => parts.find(p => p.type === type)?.value || '0';
+            
+            hour = parseInt(getP('hour'));
+            minute = parseInt(getP('minute'));
+            
             const dayMap: Record<string, number> = { 'Sun': 0, 'Mon': 1, 'Tue': 2, 'Wed': 3, 'Thu': 4, 'Fri': 5, 'Sat': 6 };
-            const currentDayNum = dayMap[dayOfWeek] ?? new Date().getDay();
-
+            const currentDayNum = dayMap[getP('weekday')] ?? now.getDay();
             const currentTimeInt = hour * 60 + minute;
 
             todayConfig = hours.find((h: any) => h.dayOfWeek === currentDayNum);
 
             if (!todayConfig || !todayConfig.isOpen) {
-                return { status: 'offline', is_manually_closed: false, next_status_change: getNextOpenTime(hours, new Date()) };
+                return { status: 'offline', is_manually_closed: false, next_status_change: getNextOpenTime(hours, now) };
             }
 
             const openParts = todayConfig.openTime.split(':').map(Number);
@@ -125,36 +122,31 @@ const calculateCurrentStoreStatus = (): StoreStatus => {
 
             if (isOpenNow) {
                 // It's open! Calculate next_status_change (closing time)
+                let y = parseInt(getP('year'));
+                let m = parseInt(getP('month')) - 1; // 0-indexed month
+                let d = parseInt(getP('day'));
 
-                // Get SP date parts to construct a specialized ISO string
-                const spDateParts = new Intl.DateTimeFormat('en-US', {
-                    timeZone: 'America/Sao_Paulo',
-                    year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
-                }).formatToParts(new Date());
-
-                const getP = (type: string) => spDateParts.find(p => p.type === type)?.value || '00';
-
-                let y = getP('year');
-                let m = getP('month');
-                let d = getP('day');
-
-                // If closes next day, increment day
+                // If closes next day AND we are currently in the pre-midnight part of the shift
                 if (closeTimeInt < openTimeInt && currentTimeInt >= openTimeInt) {
-                    const tempDate = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+                    const tempDate = new Date(now.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
                     tempDate.setDate(tempDate.getDate() + 1);
-                    y = tempDate.getFullYear().toString();
-                    m = (tempDate.getMonth() + 1).toString().padStart(2, '0');
-                    d = tempDate.getDate().toString().padStart(2, '0');
+                    y = tempDate.getFullYear();
+                    m = tempDate.getMonth();
+                    d = tempDate.getDate();
                 }
 
-                // Construct ISO with -03:00 offset (Brasilia Time)
-                const closingISO = `${y}-${m}-${d}T${todayConfig.closeTime}:00-03:00`;
-                const nextChangeDate = new Date(closingISO);
+                // Construct Closing Date in SP context
+                const closingDate = new Date(y, m, d, closeParts[0], closeParts[1], 0);
+                
+                // Convert back to real ISO (the closingDate created above is local to server, 
+                // but we need the ISO to reflect the absolute time of SP)
+                // A melhor forma de gerar o ISO correto sem depender do fuso do servidor:
+                const closingISO = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}T${todayConfig.closeTime}:00-03:00`;
 
-                return { status: 'online', is_manually_closed: false, next_status_change: nextChangeDate.toISOString() };
+                return { status: 'online', is_manually_closed: false, next_status_change: new Date(closingISO).toISOString() };
             } else {
                 // It's closed.
-                const nextOpen = getNextOpenTime(hours, new Date());
+                const nextOpen = getNextOpenTime(hours, now);
                 return { status: 'offline', is_manually_closed: false, next_status_change: nextOpen };
             }
 
@@ -164,14 +156,16 @@ const calculateCurrentStoreStatus = (): StoreStatus => {
         }
     })();
 
-    console.log(`[STATUS-CHECK] Status: ${result.status} (Manual: ${result.is_manually_closed}, Now: ${hour}:${minute}, Open: ${todayConfig?.openTime})`);
+    console.log(`[STATUS-CHECK] Status: ${result.status} (Manual: ${result.is_manually_closed}, Now: ${hour}:${minute}, Day: ${todayConfig?.dayOfWeek}, Open: ${todayConfig?.openTime})`);
     return result;
 };
 
 const getNextOpenTime = (hours: any[], nowObj: Date): string | null => {
     try {
+        const spBase = new Date(nowObj.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+        
         for (let i = 0; i < 7; i++) {
-            const checkDate = new Date(nowObj.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+            const checkDate = new Date(spBase);
             checkDate.setDate(checkDate.getDate() + i);
             const dayOfWeek = checkDate.getDay();
             const config = hours.find(h => h.dayOfWeek === dayOfWeek);
@@ -181,14 +175,18 @@ const getNextOpenTime = (hours: any[], nowObj: Date): string | null => {
                 const openTimeInt = openParts[0] * 60 + openParts[1];
 
                 if (i === 0) {
-                    const currentTimeInt = nowObj.getHours() * 60 + nowObj.getMinutes();
+                    const currentTimeInt = spBase.getHours() * 60 + spBase.getMinutes();
                     if (currentTimeInt >= openTimeInt) {
                         continue;
                     }
                 }
 
-                checkDate.setHours(openParts[0], openParts[1], 0, 0);
-                return checkDate.toISOString();
+                const y = checkDate.getFullYear();
+                const m = String(checkDate.getMonth() + 1).padStart(2, '0');
+                const d = String(checkDate.getDate()).padStart(2, '0');
+                
+                const openISO = `${y}-${m}-${d}T${config.openTime}:00-03:00`;
+                return new Date(openISO).toISOString();
             }
         }
     } catch (e) {
