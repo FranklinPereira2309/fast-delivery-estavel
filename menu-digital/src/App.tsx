@@ -443,16 +443,15 @@ function AppContent() {
 
   if (storeStatus.enableDigitalMenu === false) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-8 text-center select-none relative overflow-hidden">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-rose-500 rounded-full mix-blend-multiply filter blur-3xl opacity-10"></div>
-        <div className="w-24 h-24 bg-rose-100 rounded-[2rem] flex items-center justify-center shadow-xl shadow-rose-100 transform -rotate-12 mb-8 animate-float relative z-10 border border-rose-200">
-          <span className="text-rose-600 text-4xl font-black">!</span>
+      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-8 text-center select-none relative overflow-hidden">
+        <div className="w-24 h-24 bg-rose-600 rounded-3xl flex items-center justify-center shadow-2xl shadow-rose-500/20 transform -rotate-12 mb-8 animate-bounce">
+          <span className="text-white text-4xl font-black">!</span>
         </div>
-        <h1 className="text-3xl font-black text-slate-800 tracking-tighter uppercase mb-4 relative z-10">App Desativado</h1>
-        <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest leading-relaxed max-w-xs relative z-10">
-          Este aplicativo de cardápio digital não está habilitado para este estabelecimento no momento.
+        <h1 className="text-3xl font-black text-white tracking-tighter uppercase mb-4">Módulo Desativado</h1>
+        <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest leading-relaxed max-w-xs">
+          O acesso ao cardápio digital foi desativado nas configurações do estabelecimento.
         </p>
-        <div className="mt-12 h-1 w-12 bg-slate-200 rounded-full"></div>
+        <div className="mt-12 h-1 w-12 bg-rose-600 rounded-full"></div>
       </div>
     );
   }
