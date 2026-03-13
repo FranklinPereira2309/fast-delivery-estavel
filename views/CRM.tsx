@@ -313,7 +313,7 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
               <th className="px-6 py-4 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Telefone</th>
               <th className="px-6 py-4 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">PIN (Acesso App)</th>
               <th className="px-6 py-4 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Endereço Principal</th>
-              <th className="px-6 py-4 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Pedidos</th>
+              <th className="px-6 py-4 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider text-center">Pedidos</th>
               <th className="px-6 py-4 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider text-right">Ações</th>
             </tr>
           </thead>
@@ -348,13 +348,13 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
                     </div>
                   ) : <span className="text-xs text-slate-400 dark:text-slate-500 italic">Não gerado</span>}
                 </td>
-                <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400 max-w-xs truncate">
+                <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400 max-w-md xl:max-w-lg truncate">
                   <div className="flex items-center gap-2">
                     {client.street && !client.addresses?.[0] && <MapPin className="w-3 h-3 text-amber-500" title="Endereço gerado dinamicamente" />}
                     {formatClientAddress(client)}
                   </div>
                 </td>
-                <td className="px-6 py-4">
+                <td className="px-6 py-4 text-center">
                   <span className="bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 px-2 py-1 rounded-lg text-xs font-bold">
                     {client.totalOrders}
                   </span>
