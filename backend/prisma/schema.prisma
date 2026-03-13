@@ -81,6 +81,7 @@ model Client {
   googleId      String?      @unique
   pin           String?
   recoveryCode  String?
+  mustChangePassword Boolean    @default(false)
   document      String?
   cep           String?
   street        String?

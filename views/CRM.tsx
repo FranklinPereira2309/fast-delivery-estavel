@@ -88,13 +88,38 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
     }
 
     try {
-      const data = await db.resetClientPin(clientId, currentUser);
+      await db.resetClientPin(clientId, currentUser);
       addToast({ title: 'Sucesso', message: 'O PIN de acesso deste cliente foi regerado com sucesso.', type: 'SUCCESS' });
       refreshClients();
     } catch (error: any) {
       console.error(error);
       addToast({ title: 'Erro', message: error.message || 'Não foi possível resetar o PIN.', type: 'DANGER' });
     }
+  };
+
+  const handleResetPassword = async (clientId: string) => {
+    if (!currentUser.permissions.includes('admin') && !currentUser.permissions.includes('settings')) {
+      addToast({ title: 'Acesso Negado', message: 'Apenas usuários autorizados podem resetar senhas.', type: 'DANGER' });
+      return;
+    }
+
+    showAlert(
+      'Resetar Senha',
+      'Tem certeza que deseja resetar a senha deste cliente para "123"? Ele será obrigado a trocar no próximo login.',
+      'DANGER',
+      async () => {
+        closeAlert();
+        try {
+          await db.resetClientPassword(clientId, currentUser);
+          addToast({ title: 'Sucesso', message: 'Senha resetada para "123" com sucesso!', type: 'SUCCESS' });
+          refreshClients();
+        } catch (error: any) {
+          console.error(error);
+          addToast({ title: 'Erro', message: error.message || 'Não foi possível resetar a senha.', type: 'DANGER' });
+        }
+      },
+      () => closeAlert()
+    );
   };
 
   useEffect(() => {
@@ -407,27 +432,37 @@ const CRM: React.FC<CRMProps> = ({ currentUser }) => {
               <h3 className="text-lg sm:text-xl font-bold text-slate-800 dark:text-white">
                 {editingClient ? 'Editar Cliente' : 'Cadastrar Novo Cliente'}
               </h3>
-              <div className="flex items-center gap-2">
-                <button
-                  type="submit"
-                  form="client-form"
-                  disabled={isSubmitting}
-                  className={`p-1.5 flex items-center justify-center bg-emerald-500 hover:bg-emerald-600 text-white rounded-full transition-all shadow-lg active:scale-95 ${isSubmitting ? 'opacity-70 cursor-not-allowed' : ''}`}
-                  title="Salvar Cliente"
-                >
-                  {isSubmitting ? (
-                    <RefreshCw className="h-6 w-6 animate-spin" />
-                  ) : (
-                    <Check className="h-6 w-6 stroke-[3]" />
+                <div className="flex items-center gap-2">
+                  {editingClient && (
+                    <button
+                      type="button"
+                      onClick={() => handleResetPassword(editingClient.id)}
+                      className="p-1.5 flex items-center justify-center bg-amber-500 hover:bg-amber-600 text-white rounded-full transition-all shadow-lg active:scale-95"
+                      title="Resetar Senha para 123"
+                    >
+                      <RefreshCw className="h-6 w-6" />
+                    </button>
                   )}
-                </button>
-                <button
-                  onClick={() => setIsModalOpen(false)}
-                  className="p-2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full transition-all"
-                >
-                  <X className="h-6 w-6" />
-                </button>
-              </div>
+                  <button
+                    type="submit"
+                    form="client-form"
+                    disabled={isSubmitting}
+                    className={`p-1.5 flex items-center justify-center bg-emerald-500 hover:bg-emerald-600 text-white rounded-full transition-all shadow-lg active:scale-95 ${isSubmitting ? 'opacity-70 cursor-not-allowed' : ''}`}
+                    title="Salvar Cliente"
+                  >
+                    {isSubmitting ? (
+                      <RefreshCw className="h-6 w-6 animate-spin" />
+                    ) : (
+                      <Check className="h-6 w-6 stroke-[3]" />
+                    )}
+                  </button>
+                  <button
+                    onClick={() => setIsModalOpen(false)}
+                    className="p-2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full transition-all"
+                  >
+                    <X className="h-6 w-6" />
+                  </button>
+                </div>
             </div>
 
             <form id="client-form" onSubmit={handleSave} className="p-4 sm:p-6 space-y-4 max-h-[80vh] overflow-y-auto custom-scrollbar">

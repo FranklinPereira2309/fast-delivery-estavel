@@ -83,10 +83,9 @@ export const loginClient = async (req: ExpressRequest, res: ExpressResponse) => 
             return res.status(401).json({ message: 'Senha incorreta.' });
         }
 
-        const isDefaultPassword = await bcrypt.compare('123', client.password);
         const clientResponse = {
             ...client,
-            mustChangePassword: isDefaultPassword
+            mustChangePassword: client.mustChangePassword || (await bcrypt.compare('123', client.password))
         };
 
         const token = jwt.sign({ id: client.id, role: 'CLIENT' }, JWT_SECRET, { expiresIn: '30d' });
@@ -185,7 +184,10 @@ export const updateClientProfile = async (req: ExpressRequest, res: ExpressRespo
                 data.addresses = [fullAddress];
             }
         }
-        if (password) data.password = await bcrypt.hash(password, 10);
+        if (password) {
+            data.password = await bcrypt.hash(password, 10);
+            data.mustChangePassword = false;
+        }
 
         const updatedClient = await prisma.client.update({
             where: { id },

@@ -105,3 +105,28 @@ export const resetClientPin = async (req: Request, res: Response) => {
         res.status(500).json({ message: 'Erro ao redefinir PIN do cliente.' });
     }
 };
+
+export const resetClientPassword = async (req: Request, res: Response) => {
+    const id = req.params.id as string;
+    const { user } = req.body;
+
+    if (!user?.permissions?.includes('admin') && !user?.permissions?.includes('settings')) {
+        return res.status(403).json({ message: 'Apenas usuários autorizados podem resetar senhas.' });
+    }
+
+    try {
+        const hashedPassword = await bcrypt.hash('123', 10);
+        await prisma.client.update({
+            where: { id },
+            data: { 
+                password: hashedPassword,
+                mustChangePassword: true
+            }
+        });
+
+        res.status(200).json({ message: 'Senha do cliente resetada para "123" com sucesso.' });
+    } catch (error) {
+        console.error('Error resetting client password:', error);
+        res.status(500).json({ message: 'Erro ao resetar senha do cliente.' });
+    }
+};

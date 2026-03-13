@@ -114,6 +114,19 @@ export interface Waiter {
   active: boolean;
 }
 
+export interface Address {
+  id: string;
+  clientId: string;
+  street: string;
+  number: string;
+  neighborhood: string;
+  city: string;
+  state: string;
+  cep: string;
+  complement?: string;
+  isDefault: boolean;
+}
+
 export interface Client {
   id: string;
   name: string;
@@ -127,7 +140,9 @@ export interface Client {
   city?: string;
   state?: string;
   complement?: string;
-  addresses: string[];
+  googleId?: string;
+  mustChangePassword?: boolean;
+  addresses?: Address[];
   totalOrders: number;
   lastOrderDate?: string;
 }

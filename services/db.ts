@@ -384,6 +384,13 @@ class APIDBService {
     });
   }
 
+  public async resetClientPassword(id: string, user: User): Promise<{ message: string }> {
+    return this.request<{ message: string }>(`/clients/${id}/reset-password`, {
+      method: 'PUT',
+      body: JSON.stringify({ user })
+    });
+  }
+
   public async getAuditLogs(startDate?: string, endDate?: string): Promise<AuditLog[]> {
     let path = '/audit';
     const params = new URLSearchParams();
