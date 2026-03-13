@@ -54,8 +54,17 @@ const Kitchen: React.FC = () => {
       const allWaiters = await db.getWaiters();
       const settings = await db.getSettings();
 
+      const now = new Date();
+      const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+
+      // Filtro de 24 horas: mantém apenas pedidos recentes na memória do frontend
+      const recentOrders = allOrders.filter(o => {
+          const orderDate = new Date(o.createdAt);
+          return orderDate >= twentyFourHoursAgo;
+      });
+
       // Filtro inteligente: Pedidos ativos (não finalizados ou cancelados) QUE POSSUEM itens em preparo
-      const activeOrders = allOrders.filter(o =>
+      const activeOrders = recentOrders.filter(o =>
         o.status !== OrderStatus.CANCELLED &&
         o.status !== OrderStatus.DELIVERED &&
         o.items.length > 0 &&
@@ -83,8 +92,8 @@ const Kitchen: React.FC = () => {
       if (viewTab === 'FILA') {
         setOrders(activeOrders.sort((a, b) => a.createdAt.localeCompare(b.createdAt)));
       } else {
-        // Histórico mostra pedidos que tem itens prontos
-        const finished = allOrders.filter(o => o.items.some(it => it.isReady))
+        // Histórico mostra pedidos recentes que tem itens prontos
+        const finished = recentOrders.filter(o => o.items.some(it => it.isReady))
           .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
         setOrders(finished);
       }
