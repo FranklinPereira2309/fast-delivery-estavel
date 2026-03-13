@@ -227,7 +227,11 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, curr
     const hasPermission = currentUser.permissions.includes(item.id);
     if (!hasPermission) return false;
 
-    if (settings) {
+    // Se o usuário tiver permissão de admin ou config, ele ignora os bloqueios globais
+    // Isso permite que o Administrador Master sempre veja os módulos que configurou para si mesmo.
+    const isMaster = currentUser.permissions.includes('admin') || currentUser.permissions.includes('settings');
+
+    if (settings && !isMaster) {
       if (item.id === 'delivery-orders' && settings.enableDeliveryApp === false) return false;
       if (item.id === 'tables' && (settings.enableDigitalMenu === false && settings.enableWaiterApp === false)) return false;
       if (item.id === 'qrcodes' && settings.enableDigitalMenu === false) return false;

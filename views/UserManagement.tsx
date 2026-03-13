@@ -22,12 +22,16 @@ const UserManagement: React.FC = () => {
   const availableModules = [
     { id: 'dashboard', label: 'Dashboard' },
     { id: 'pos', label: 'PDV / Vendas' },
-    { id: 'tables', label: 'Gestão de Mesas' }, // Adicionado módulo de mesas
+    { id: 'sales-monitor', label: 'Monitor de Vendas' },
+    { id: 'tables', label: 'Gestão de Mesas' },
     { id: 'kitchen', label: 'Cozinha' },
     { id: 'crm', label: 'Clientes (CRM)' },
     { id: 'inventory', label: 'Estoque / Cardápio' },
     { id: 'delivery-orders', label: 'App Delivery (Pedidos)' },
     { id: 'logistics', label: 'Logística' },
+    { id: 'receivables', label: 'Recebimentos (Fiado)' },
+    { id: 'qrcodes', label: 'QR Codes das Mesas' },
+    { id: 'reports', label: 'Relatórios' },
     { id: 'waiter', label: 'App Garçom' },
     { id: 'settings', label: 'Configurações' }
   ];
