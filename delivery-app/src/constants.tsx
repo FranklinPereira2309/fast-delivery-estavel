@@ -1,4 +1,3 @@
-import React from 'react';
 import { Ticket, Check } from 'lucide-react';
 
 export const Icons = {
