@@ -15,10 +15,24 @@ export const getAllCoupons = async (req: Request, res: Response) => {
 export const saveCoupon = async (req: Request, res: Response) => {
     const data = req.body;
     const { user, ...couponData } = data;
+    const id = (data.id as string) || '';
+
+    // Sanitize dates: empty strings should be null, otherwise valid Date objects
+    if (couponData.startDate) {
+        couponData.startDate = new Date(couponData.startDate);
+    } else {
+        couponData.startDate = new Date(); // Default to now if missing
+    }
+
+    if (couponData.endDate === '' || !couponData.endDate) {
+        couponData.endDate = null;
+    } else {
+        couponData.endDate = new Date(couponData.endDate);
+    }
 
     try {
         const coupon = await prisma.coupon.upsert({
-            where: { id: (data.id as string) || '' },
+            where: { id },
             update: couponData,
             create: couponData
         });
