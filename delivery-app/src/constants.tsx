@@ -1,3 +1,6 @@
+import React from 'react';
+import { Ticket, Check } from 'lucide-react';
+
 export const Icons = {
     Smartphone: ({ className }: { className?: string }) => (
         <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -123,4 +126,6 @@ export const Icons = {
     ),
     Phone: (props: { className?: string }) => <Icons.Smartphone {...props} />,
     Info: (props: { className?: string }) => <Icons.HelpCircle {...props} />,
+    Ticket: (props: any) => <Ticket {...props} />,
+    Check: (props: any) => <Check {...props} />,
 };
