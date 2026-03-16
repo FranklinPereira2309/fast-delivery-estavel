@@ -114,50 +114,52 @@ const Home: React.FC = () => {
                 <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-5 animate-float"></div>
                 <div className="absolute bottom-0 left-0 w-64 h-64 bg-rose-500 rounded-full mix-blend-multiply filter blur-3xl opacity-5 animate-float" style={{ animationDelay: '2s' }}></div>
 
-                <div className="flex justify-between items-start mb-6 relative z-10">
-                    <div className="flex items-start gap-4">
-                        <div className="flex flex-col gap-1.5 ml-14">
-                            <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-full inline-flex border border-slate-100 whitespace-nowrap w-fit">
-                                <div className={`w-2 h-2 rounded-full ${storeStatus?.status === 'offline' ? 'bg-rose-500' : 'bg-emerald-500 animate-pulse-ring'}`}></div>
-                                <span className={`text-[10px] font-black uppercase tracking-widest ${storeStatus?.status === 'offline' ? 'text-rose-500' : 'text-emerald-500'}`}>
-                                    {storeStatus?.status === 'offline' ? 'Delivery OFF' : 'Delivery ON'}
-                                </span>
-                            </div>
-                            <h1 className="text-xl font-black text-slate-800 tracking-tighter uppercase">Delivery <span className="text-indigo-500">Fast®</span></h1>
-                            
-                            {isProfileIncomplete && (
-                                <button 
-                                    onClick={() => setShowCompleteProfile(true)}
-                                    className="text-[9px] font-black text-rose-500 uppercase tracking-widest animate-slow-blink hover:text-rose-600 transition-colors text-left"
-                                >
-                                    ⚠️ Complete seu cadastro
-                                </button>
-                            )}
+                <div className="flex flex-col items-center mb-6 relative z-10">
+                    <div className="flex flex-col items-center gap-2">
+                        <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-full inline-flex border border-slate-100 whitespace-nowrap w-fit">
+                            <div className={`w-2 h-2 rounded-full ${storeStatus?.status === 'offline' ? 'bg-rose-500' : 'bg-emerald-500 animate-pulse-ring'}`}></div>
+                            <span className={`text-[10px] font-black uppercase tracking-widest ${storeStatus?.status === 'offline' ? 'text-rose-500' : 'text-emerald-500'}`}>
+                                {storeStatus?.status === 'offline' ? 'Delivery OFF' : 'Delivery ON'}
+                            </span>
                         </div>
+                        <h1 className="text-xl font-black text-slate-800 tracking-tighter uppercase whitespace-nowrap">Delivery <span className="text-indigo-500">Fast®</span></h1>
+                        
+                        {isProfileIncomplete && (
+                            <button 
+                                onClick={() => setShowCompleteProfile(true)}
+                                className="text-[9px] font-black text-rose-500 uppercase tracking-widest animate-slow-blink hover:text-rose-600 transition-colors text-center"
+                            >
+                                ⚠️ Complete seu cadastro
+                            </button>
+                        )}
                     </div>
                     
-                    <div className="flex items-center gap-2">
-                        <div className="flex flex-col items-end mr-1">
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Olá,</span>
-                            <span className="text-xs font-bold text-slate-700 max-w-[100px] truncate">{client?.name?.split(' ')[0] || ''}</span>
-                        </div>
-                        <button
-                            onClick={() => setShowNotificationCenter(true)}
-                            className="w-11 h-11 bg-white rounded-2xl flex items-center justify-center text-slate-500 hover:text-indigo-600 hover:bg-slate-50 transition-all shadow-sm border border-slate-100 active:scale-95"
-                        >
-                            <Icons.Bell className="w-5 h-5" />
-                        </button>
+                    <div className="flex items-center gap-2 mt-4 w-full justify-between">
+                        <div className="w-11" /> {/* Spacer to balance the right side buttons */}
+                        
+                        <div className="flex items-center gap-2">
+                            <div className="flex flex-col items-end mr-1">
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Olá,</span>
+                                <span className="text-xs font-bold text-slate-700 max-w-[100px] truncate">{client?.name?.split(' ')[0] || ''}</span>
+                            </div>
+                            <button
+                                onClick={() => setShowNotificationCenter(true)}
+                                className="w-11 h-11 bg-white rounded-2xl flex items-center justify-center text-slate-500 hover:text-indigo-600 hover:bg-slate-50 transition-all shadow-sm border border-slate-100 active:scale-95"
+                            >
+                                <Icons.Bell className="w-5 h-5" />
+                            </button>
 
-                        <button 
-                            onClick={() => setShowProfilePhotoModal(true)}
-                            className="w-11 h-11 bg-white rounded-2xl flex items-center justify-center text-slate-500 hover:text-indigo-600 hover:bg-slate-50 transition-all shadow-sm border border-slate-100 active:scale-95 overflow-hidden"
-                        >
-                            {client?.avatarUrl ? (
-                                <img src={client.avatarUrl} alt="Perfil" className="w-full h-full object-cover" />
-                            ) : (
-                                <span className="font-black text-indigo-600 text-lg">{client?.name?.[0].toUpperCase() || 'U'}</span>
-                            )}
-                        </button>
+                            <button 
+                                onClick={() => setShowProfilePhotoModal(true)}
+                                className="w-11 h-11 bg-white rounded-2xl flex items-center justify-center text-slate-500 hover:text-indigo-600 hover:bg-slate-50 transition-all shadow-sm border border-slate-100 active:scale-95 overflow-hidden"
+                            >
+                                {client?.avatarUrl ? (
+                                    <img src={client.avatarUrl} alt="Perfil" className="w-full h-full object-cover" />
+                                ) : (
+                                    <span className="font-black text-indigo-600 text-lg">{client?.name?.[0].toUpperCase() || 'U'}</span>
+                                )}
+                            </button>
+                        </div>
                     </div>
                 </div>
 

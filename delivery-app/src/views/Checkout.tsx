@@ -263,7 +263,7 @@ const Checkout: React.FC = () => {
 
 
             {/* Header Soft Clean */}
-            <div className="bg-white text-slate-800 p-6 pb-8 rounded-b-[3rem] shadow-sm border-b border-slate-100 flex items-center gap-4 relative overflow-hidden">
+            <div className="bg-white text-slate-800 p-6 pb-8 rounded-b-[3rem] shadow-sm border-b border-slate-100 flex items-center gap-4 sticky top-0 z-[60] overflow-hidden">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-5 animate-float"></div>
 
                 <button onClick={() => navigate(-1)} className="p-3 bg-slate-50 backdrop-blur-md rounded-2xl text-slate-500 hover:text-indigo-600 hover:bg-slate-100 transition-all z-10 border border-slate-100">
