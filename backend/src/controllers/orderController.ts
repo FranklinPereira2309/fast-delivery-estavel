@@ -219,6 +219,49 @@ export const saveOrder = async (req: Request, res: Response) => {
         }
     }
 
+    // 0. Coupon Validation Logic
+    let discountValue = 0;
+    let validatedCouponId: string | null = null;
+
+    if (order.couponCode) {
+        try {
+            const coupon = await prisma.coupon.findFirst({
+                where: {
+                    code: order.couponCode,
+                    active: true,
+                    startDate: { lte: new Date() },
+                    OR: [
+                        { endDate: null },
+                        { endDate: { gte: new Date() } }
+                    ]
+                }
+            });
+
+            if (coupon) {
+                // Check usage limit
+                if (coupon.usageLimit && coupon.usedCount >= coupon.usageLimit) {
+                    console.warn(`Coupon ${coupon.code} usage limit reached.`);
+                } else if (coupon.minOrderValue && order.total < coupon.minOrderValue) {
+                    console.warn(`Order total ${order.total} below minimum order value ${coupon.minOrderValue} for coupon ${coupon.code}.`);
+                } else {
+                    validatedCouponId = coupon.id;
+                    if (coupon.type === 'FIXED') {
+                        discountValue = coupon.value || 0;
+                    } else if (coupon.type === 'PERCENTAGE') {
+                        discountValue = (order.total * (coupon.value || 0)) / 100;
+                        if (coupon.maxDiscount && discountValue > coupon.maxDiscount) {
+                            discountValue = coupon.maxDiscount;
+                        }
+                    } else if (coupon.type === 'FREE_SHIPPING') {
+                        discountValue = order.deliveryFee || 0;
+                    }
+                }
+            }
+        } catch (e) {
+            console.error('Error validating coupon in saveOrder:', e);
+        }
+    }
+
     try {
         let isNewItemsAdded = false;
 
@@ -368,6 +411,8 @@ export const saveOrder = async (req: Request, res: Response) => {
                     mpPreferenceId: order.mpPreferenceId !== undefined ? order.mpPreferenceId : undefined,
                     mpPaymentId: order.mpPaymentId !== undefined ? order.mpPaymentId : undefined,
                     paymentStatus: order.paymentStatus !== undefined ? order.paymentStatus : undefined,
+                    couponId: validatedCouponId,
+                    discountValue: discountValue,
                     items: {
                         deleteMany: {},
                         create: (order.items || []).map((item: any) => ({
@@ -413,6 +458,8 @@ export const saveOrder = async (req: Request, res: Response) => {
                     mpPreferenceId: order.mpPreferenceId || null,
                     mpPaymentId: order.mpPaymentId || null,
                     paymentStatus: order.paymentStatus || 'PENDING',
+                    couponId: validatedCouponId,
+                    discountValue: discountValue,
                     items: {
                         create: (order.items || []).map((item: any) => ({
                             id: item.uid || item.id,
@@ -429,6 +476,14 @@ export const saveOrder = async (req: Request, res: Response) => {
                 include: { items: { include: { product: true } } }
             });
         }, { timeout: 30000 });
+        
+        // Increment Coupon Usage Count if success
+        if (validatedCouponId) {
+            await prisma.coupon.update({
+                where: { id: validatedCouponId },
+                data: { usedCount: { increment: 1 } }
+            }).catch(e => console.error('Error incrementing coupon usedCount:', e));
+        }
 
         // 4. Receivable Fiado Processing
         if (result.status === 'DELIVERED' && result.paymentMethod === 'FIADO') {

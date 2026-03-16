@@ -577,6 +577,50 @@ class APIDBService {
       body: JSON.stringify(data)
     });
   }
+
+  // Promotions & Campaigns
+  public async getCoupons(): Promise<Coupon[]> { return this.request<Coupon[]>('/promotions'); }
+  public async saveCoupon(coupon: Coupon) {
+    const user = this.getCurrentSession()?.user;
+    return this.request<Coupon>('/promotions', {
+      method: 'POST',
+      body: JSON.stringify({ ...coupon, user })
+    });
+  }
+  public async deleteCoupon(id: string) {
+    const user = this.getCurrentSession()?.user;
+    return this.request<{ message: string }>(`/promotions/${id}`, {
+      method: 'DELETE',
+      body: JSON.stringify({ user })
+    });
+  }
+  public async validateCoupon(code: string, orderTotal: number): Promise<Coupon> {
+    return this.request<Coupon>('/promotions/validate', {
+      method: 'POST',
+      body: JSON.stringify({ code, orderTotal })
+    });
+  }
+
+  public async getCampaigns(): Promise<Campaign[]> { return this.request<Campaign[]>('/campaigns'); }
+  public async saveCampaign(campaign: Campaign) {
+    const user = this.getCurrentSession()?.user;
+    return this.request<Campaign>('/campaigns', {
+      method: 'POST',
+      body: JSON.stringify({ ...campaign, user })
+    });
+  }
+  public async deleteCampaign(id: string) {
+    const user = this.getCurrentSession()?.user;
+    return this.request<{ message: string }>(`/campaigns/${id}`, {
+      method: 'DELETE',
+      body: JSON.stringify({ user })
+    });
+  }
+  public async sendCampaign(id: string) {
+    return this.request<{ message: string }>(`/campaigns/${id}/send`, {
+      method: 'POST'
+    });
+  }
 }
 
 export const db = new APIDBService();

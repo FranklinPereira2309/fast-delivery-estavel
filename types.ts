@@ -128,6 +128,44 @@ export interface Client {
   addresses: string[];
   totalOrders: number;
   lastOrderDate?: string;
+  notifications?: Notification[];
+}
+
+export interface Coupon {
+  id: string;
+  code: string;
+  description?: string;
+  type: 'FIXED' | 'PERCENTAGE' | 'FREE_SHIPPING';
+  value?: number;
+  minOrderValue?: number;
+  maxDiscount?: number;
+  startDate: string;
+  endDate?: string;
+  usageLimit?: number;
+  usedCount: number;
+  active: boolean;
+  createdAt: string;
+}
+
+export interface Campaign {
+  id: string;
+  title: string;
+  message: string;
+  type: 'PUSH' | 'IN_APP' | 'BOTH';
+  segment?: string;
+  scheduledAt?: string;
+  sentAt?: string;
+  status: 'DRAFT' | 'SCHEDULED' | 'SENT' | 'CANCELLED';
+  createdAt: string;
+}
+
+export interface Notification {
+  id: string;
+  clientId: string;
+  title: string;
+  message: string;
+  isRead: boolean;
+  createdAt: string;
 }
 
 export interface Product {
@@ -183,6 +221,9 @@ export interface Order {
   clientPhone?: string;
   clientEmail?: string;
   clientDocument?: string;
+  couponId?: string | null;
+  couponCode?: string | null;
+  discountValue?: number;
   items: OrderItem[];
   total: number;
   status: OrderStatus;

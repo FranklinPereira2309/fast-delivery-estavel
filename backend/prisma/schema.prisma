@@ -95,6 +95,7 @@ model Client {
   lastOrderDate String?
   orders        Order[]
   receivables   Receivable[]
+  notifications Notification[]
 }
 
 model Waiter {
@@ -211,9 +212,56 @@ model Order {
   mpPreferenceId      String?
   mpPaymentId         String?
   paymentStatus       String?          @default("PENDING") // PENDING, APPROVED, REJECTED
+  
+  // Promotion Fields
+  couponId            String?
+  coupon              Coupon?          @relation(fields: [couponId], references: [id])
+  discountValue       Float?           @default(0)
+}
+
+model Coupon {
+  id              String      @id @default(uuid())
+  code            String      @unique
+  description     String?
+  type            String      // FIXED, PERCENTAGE, FREE_SHIPPING
+  value           Float?      @default(0)
+  minOrderValue   Float?      @default(0)
+  maxDiscount     Float?
+  startDate       DateTime    @default(now())
+  endDate         DateTime?
+  usageLimit      Int?
+  usedCount       Int         @default(0)
+  active          Boolean     @default(true)
+  createdAt       DateTime    @default(now())
+  orders          Order[]
+}
+
+model Campaign {
+  id              String      @id @default(uuid())
+  title           String
+  message         String
+  type            String      // PUSH, IN_APP, BOTH
+  segment         String?     // ALL, ACTIVE, INACTIVE, etc.
+  scheduledAt     DateTime?
+  sentAt          DateTime?
+  status          String      @default("DRAFT") // DRAFT, SCHEDULED, SENT, CANCELLED
+  createdAt       DateTime    @default(now())
+}
+
+model Notification {
+  id              String      @id @default(uuid())
+  clientId        String
+  client          Client      @relation(fields: [clientId], references: [id])
+  title           String
+  message         String
+  isRead          Boolean     @default(false)
+  link            String?     // Optional link to open (e.g., product page or coupon)
+  createdAt       DateTime    @default(now())
 }
 
 model Receivable {
+// ... existing Receivable model ...
+
   id            String    @id @default(uuid())
   clientId      String
   client        Client    @relation(fields: [clientId], references: [id])
