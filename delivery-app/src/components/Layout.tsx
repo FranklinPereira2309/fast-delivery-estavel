@@ -193,7 +193,12 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                             <div className="absolute -top-12 -right-12 w-32 h-32 bg-black/10 rounded-full blur-2xl"></div>
 
                             {settings?.campaignLogoUrl ? (
-                                <img src={settings.campaignLogoUrl} alt="Logo" className="w-28 h-28 object-contain mb-1 animate-in zoom-in duration-500 relative z-10" />
+                                <img 
+                                    src={settings.campaignLogoUrl} 
+                                    alt="Logo" 
+                                    style={{ width: '5cm', height: '3cm' }}
+                                    className="object-contain mb-1 animate-in zoom-in duration-500 relative z-10" 
+                                />
                             ) : (
                                 <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mb-1 relative z-10">
                                     <Globe className="w-10 h-10 text-white" />
