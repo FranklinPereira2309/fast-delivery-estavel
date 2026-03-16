@@ -186,13 +186,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                         className={`fixed top-0 left-0 h-full w-[85%] max-w-sm bg-white z-[90] shadow-2xl transition-transform duration-500 ease-out flex flex-col ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
                     >
                         {/* Header with Campaign Logo */}
-                        <div className="relative bg-[#4f39f6] p-8 pb-20 flex flex-col items-center justify-center text-center overflow-hidden">
-                            <div className="absolute top-0 right-0 p-4">
-                                <button onClick={() => setIsSidebarOpen(false)} className="bg-white/20 backdrop-blur-md p-2 rounded-2xl text-white shadow-xl border border-white/20 active:scale-95 transition-all">
-                                    <X className="w-5 h-5" />
-                                </button>
-                            </div>
-                            
+                        <div className="relative bg-[#4f39f6] p-8 pb-14 flex flex-col items-center justify-center text-center overflow-hidden">
                             <div className="absolute -bottom-12 -left-12 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
                             <div className="absolute -top-12 -right-12 w-32 h-32 bg-black/10 rounded-full blur-2xl"></div>
 
