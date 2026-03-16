@@ -301,7 +301,7 @@ const EngagementManager: React.FC<EngagementManagerProps> = ({ currentUser }) =>
 
               <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1">Logotipo da Campanha</label>
-                <div className="flex gap-4 items-center">
+                <div className="flex gap-3 items-center">
                   <input
                     type="text"
                     className="flex-1 p-4 bg-white dark:bg-slate-900 rounded-2xl border-none shadow-sm font-bold text-slate-800 dark:text-slate-200 text-sm"
@@ -309,20 +309,34 @@ const EngagementManager: React.FC<EngagementManagerProps> = ({ currentUser }) =>
                     value={settings.campaignLogoUrl || ''}
                     onChange={e => setSettings({ ...settings, campaignLogoUrl: e.target.value })}
                   />
-                  <button
-                    type="button"
-                    onClick={() => logoFileInputRef.current?.click()}
-                    className="p-4 bg-blue-600 text-white rounded-2xl shadow-lg shadow-blue-200 dark:shadow-blue-900/40 transition-all active:scale-95"
-                  >
-                    <Upload className="w-5 h-5" />
-                  </button>
-                  <input
-                    type="file"
-                    ref={logoFileInputRef}
-                    className="hidden"
-                    accept="image/*"
-                    onChange={handleLogoUpload}
-                  />
+                  
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => logoFileInputRef.current?.click()}
+                      className="p-4 bg-blue-600 text-white rounded-2xl shadow-lg shadow-blue-200 dark:shadow-blue-900/40 transition-all active:scale-95 flex items-center justify-center"
+                      title="Upload de Imagem"
+                    >
+                      <Upload className="w-5 h-5" />
+                    </button>
+
+                    {settings.campaignLogoUrl && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          showAlert('Confirmar Exclusão', 'Deseja remover a imagem do logotipo?', 'DANGER', () => {
+                            setSettings({ ...settings, campaignLogoUrl: '' });
+                            setAlertConfig(prev => ({ ...prev, isOpen: false }));
+                          }, () => setAlertConfig(prev => ({ ...prev, isOpen: false })));
+                        }}
+                        className="p-4 bg-rose-50 dark:bg-rose-900/20 text-rose-500 rounded-2xl border border-rose-100 dark:border-rose-800 transition-all active:scale-95 flex items-center justify-center"
+                        title="Remover Imagem"
+                      >
+                        <Trash2 className="w-5 h-5" />
+                      </button>
+                    )}
+                  </div>
+                  
                   {settings.campaignLogoUrl && (
                     <div className="w-14 h-14 rounded-2xl bg-white dark:bg-slate-900 p-1 shadow-sm overflow-hidden border border-slate-100 dark:border-slate-800 shrink-0">
                       <img src={settings.campaignLogoUrl} alt="Preview" className="w-full h-full object-contain" />

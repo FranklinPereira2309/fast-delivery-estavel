@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import FooterNav from './FooterNav';
-import { X, Phone, Facebook, Instagram, Globe, Ticket, LogOut } from 'lucide-react';
+import { Phone, Facebook, Instagram, Globe, Ticket, LogOut } from 'lucide-react';
 import { api } from '../services/api';
 import { socket } from '../services/socket';
 import type { BusinessSettings, StoreStatus } from '../types';
