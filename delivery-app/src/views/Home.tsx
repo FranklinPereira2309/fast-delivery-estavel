@@ -220,30 +220,24 @@ const Home: React.FC = () => {
 
             {/* TAB CONTENT */}
             {activeTab === 'CARDAPIO' ? (
-                <div className="flex-1 flex flex-col gap-6 pt-6 animate-in fade-in duration-500">
-                    {/* Advertisement Banner - Always visible in Cardápio */}
-                    <div className="px-6">
-                        <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-[2.5rem] overflow-hidden shadow-sm relative group flex items-center justify-center">
-                            {settings?.appBannerUrl ? (
-                                <img src={settings.appBannerUrl} alt="Propaganda" className="w-full h-full object-contain" />
-                            ) : (
-                                <div className="w-full py-12 flex flex-col items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600 px-8 text-center rounded-[2.5rem]">
-                                    <Icons.ShoppingCart className="w-12 h-12 text-white/20 mb-4" />
-                                    <h2 className="text-white font-black uppercase tracking-tighter text-2xl mb-2">Seja Bem-vindo!</h2>
-                                    <p className="text-white/60 font-bold text-xs uppercase tracking-widest">Confira nossas delícias de hoje.</p>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
+                <div className="flex-1 flex flex-col space-y-6 pt-6 animate-in fade-in duration-500">
                     {!showMenu ? (
-                        <div className="flex-1 flex items-center justify-center px-6 py-10 opacity-40">
-                             <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest leading-relaxed text-center">
-                                Clique no botão acima para<br/>abrir o Cardápio do dia
-                            </p>
+                        /* Advertisement Banner Space */
+                        <div className="flex-1 flex flex-col px-6 pb-6">
+                            <div className="flex-1 w-full bg-slate-100 dark:bg-slate-800 rounded-[2.5rem] overflow-hidden shadow-sm relative group flex items-center justify-center">
+                                {settings?.appBannerUrl ? (
+                                    <img src={settings.appBannerUrl} alt="Propaganda" className="w-full h-full object-contain" />
+                                ) : (
+                                    <div className="w-full max-w-sm aspect-square md:aspect-video flex flex-col items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600 p-8 text-center rounded-[2.5rem] shadow-2xl">
+                                        <Icons.ShoppingCart className="w-16 h-16 text-white/20 mb-4" />
+                                        <h2 className="text-white font-black uppercase tracking-tighter text-2xl mb-2">Seja Bem-vindo!</h2>
+                                        <p className="text-white/60 font-bold text-xs uppercase tracking-widest">Clique em cardápio para ver as delícias de hoje.</p>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     ) : (
-                        <div className="flex flex-col gap-6">
+                        <>
                             {/* Search Field inside Cardápio */}
                             <div className="px-6 relative scale-in-center">
                                 <input
@@ -287,7 +281,7 @@ const Home: React.FC = () => {
                                     </div>
                                 ))}
                             </div>
-                        </div>
+                        </>
                     )}
                 </div>
             ) : (
