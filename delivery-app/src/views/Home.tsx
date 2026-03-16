@@ -123,7 +123,7 @@ const Home: React.FC = () => {
                                     {storeStatus?.status === 'offline' ? 'Delivery OFF' : 'Delivery ON'}
                                 </span>
                             </div>
-                            <h1 className="text-xl font-black text-slate-800 tracking-tighter uppercase">Code <span className="text-indigo-500">Fast®</span></h1>
+                            <h1 className="text-xl font-black text-slate-800 tracking-tighter uppercase">Delivery <span className="text-indigo-500">Fast®</span></h1>
                             
                             {isProfileIncomplete && (
                                 <button 
@@ -137,6 +137,10 @@ const Home: React.FC = () => {
                     </div>
                     
                     <div className="flex items-center gap-2">
+                        <div className="flex flex-col items-end mr-1">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Olá,</span>
+                            <span className="text-xs font-bold text-slate-700 max-w-[100px] truncate">{client?.name?.split(' ')[0] || ''}</span>
+                        </div>
                         <button
                             onClick={() => setShowNotificationCenter(true)}
                             className="w-11 h-11 bg-white rounded-2xl flex items-center justify-center text-slate-500 hover:text-indigo-600 hover:bg-slate-50 transition-all shadow-sm border border-slate-100 active:scale-95"

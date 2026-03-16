@@ -188,7 +188,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                         {/* Header with Campaign Logo */}
                         <div className="relative bg-[#4f39f6] p-8 pb-20 flex flex-col items-center justify-center text-center overflow-hidden">
                             <div className="absolute top-0 right-0 p-4">
-                                <button onClick={() => setIsSidebarOpen(false)} className="bg-white/20 p-2 rounded-xl text-white">
+                                <button onClick={() => setIsSidebarOpen(false)} className="bg-white/20 backdrop-blur-md p-2 rounded-2xl text-white shadow-xl border border-white/20 active:scale-95 transition-all">
                                     <X className="w-5 h-5" />
                                 </button>
                             </div>
