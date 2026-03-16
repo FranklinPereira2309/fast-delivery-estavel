@@ -104,6 +104,7 @@ export interface BusinessSettings {
   instagram?: string;
   website?: string;
   campaignLogoUrl?: string;
+  appBannerUrl?: string;
 }
 
 export interface Waiter {

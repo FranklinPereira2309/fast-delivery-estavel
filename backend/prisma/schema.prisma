@@ -376,6 +376,7 @@ model BusinessSettings {
   instagram            String?
   website              String?
   campaignLogoUrl      String?
+  appBannerUrl         String?
 }
 
 model ChatMessage {

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { socket } from '../services/socket';
-import type { Product, StoreStatus, Client } from '../types';
+import type { Product, StoreStatus, Client, BusinessSettings } from '../types';
 import { Icons } from '../constants';
 import { useCart } from '../CartContext';
 import CustomAlert from '../components/CustomAlert';
@@ -16,10 +16,12 @@ const Home: React.FC = () => {
     const { addToCart, items, total } = useCart();
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState<'CARDAPIO' | 'CARRINHO'>('CARDAPIO');
+    const [showMenu, setShowMenu] = useState(false);
     const [products, setProducts] = useState<Product[]>([]);
     const [categories, setCategories] = useState<string[]>([]);
     const [selectedCategory, setSelectedCategory] = useState('Todos');
     const [storeStatus, setStoreStatus] = useState<StoreStatus | null>(null);
+    const [settings, setSettings] = useState<BusinessSettings | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [client, setClient] = useState<Client | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
@@ -44,14 +46,16 @@ const Home: React.FC = () => {
 
         const fetchInitialData = async () => {
             try {
-                const [p, status] = await Promise.all([
+                const [p, status, s] = await Promise.all([
                     api.getProducts(),
-                    api.getStoreStatus()
+                    api.getStoreStatus(),
+                    api.getSettings()
                 ]);
                 setProducts(p);
                 const cats = Array.from(new Set(p.map((prod: Product) => prod.category)));
                 setCategories(['Todos', ...cats]);
                 setStoreStatus(status as StoreStatus);
+                setSettings(s as BusinessSettings);
             } catch (e) {
                 console.error(e);
             } finally {
@@ -176,8 +180,15 @@ const Home: React.FC = () => {
                     {/* Tab Navigation */}
                     <div className="flex gap-4 mt-6 relative z-10">
                         <button
-                            onClick={() => setActiveTab('CARDAPIO')}
-                            className={`flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl font-black uppercase text-[10px] tracking-[0.2em] transition-all shadow-sm active:scale-95 ${activeTab === 'CARDAPIO' ? 'bg-indigo-600 text-white shadow-indigo-200' : 'bg-slate-50 text-slate-400 border border-slate-100'}`}
+                            onClick={() => {
+                                if (activeTab === 'CARRINHO') {
+                                    setActiveTab('CARDAPIO');
+                                    setShowMenu(true);
+                                } else {
+                                    setShowMenu(!showMenu);
+                                }
+                            }}
+                            className={`flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl font-black uppercase text-[10px] tracking-[0.2em] transition-all shadow-sm active:scale-95 ${activeTab === 'CARDAPIO' && showMenu ? 'bg-indigo-600 text-white shadow-indigo-200' : 'bg-slate-50 text-slate-400 border border-slate-100'}`}
                         >
                             Cardápio
                         </button>
@@ -191,8 +202,8 @@ const Home: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Categories Sticky Row (Only for Cardápio) */}
-                {activeTab === 'CARDAPIO' && (
+                {/* Categories Sticky Row (Only for Cardápio + showMenu) */}
+                {activeTab === 'CARDAPIO' && showMenu && (
                     <div className="flex gap-2 overflow-x-auto px-6 py-3 no-scrollbar border-t border-slate-50/50 bg-white">
                         {categories.map(cat => (
                             <button
@@ -209,50 +220,69 @@ const Home: React.FC = () => {
 
             {/* TAB CONTENT */}
             {activeTab === 'CARDAPIO' ? (
-                <div className="space-y-6 pt-6">
-                    {/* Search Field inside Cardápio */}
-                    <div className="px-6 relative">
-                        <input
-                            type="text"
-                            placeholder="O que você quer comer hoje?"
-                            value={searchQuery}
-                            onChange={e => setSearchQuery(e.target.value)}
-                            className="w-full p-4 bg-white border border-slate-100 text-slate-800 placeholder:text-slate-400 rounded-2xl font-bold text-sm focus:ring-4 focus:ring-indigo-50 transition-all pl-12 shadow-sm"
-                        />
-                        <div className="absolute left-10 top-1/2 -translate-y-1/2 text-slate-400">
-                            <Icons.Search className="w-4 h-4" />
-                        </div>
-                    </div>
-
-                    {/* Products Grid */}
-                    <div className="px-6 grid grid-cols-1 gap-5">
-                        {filteredProducts.map(product => (
-                            <div key={product.id} className="bg-white p-4 rounded-[2rem] flex gap-4 shadow-sm border border-slate-100 items-center group active:scale-[0.98] transition-all hover:shadow-md hover:border-indigo-100 relative overflow-hidden">
-                                <div className="w-28 h-28 bg-slate-50 rounded-2xl overflow-hidden shrink-0 relative flex items-center justify-center text-slate-300">
-                                    {product.imageUrl ? (
-                                        <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                                    ) : (
-                                        <Icons.ShoppingCart className="w-8 h-8 opacity-50" />
-                                    )}
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                                </div>
-                                <div className="flex-1 py-1">
-                                    <p className="text-[9px] font-black text-indigo-500 uppercase tracking-widest mb-1">{product.category}</p>
-                                    <h3 className="font-bold text-slate-800 text-sm leading-tight line-clamp-2">{product.name}</h3>
-                                    <div className="flex justify-between items-center mt-3">
-                                        <span className="text-lg font-black text-slate-800 tracking-tighter">R$ {product.price.toFixed(2)}</span>
-                                        <button
-                                            onClick={() => !isProfileIncomplete && storeStatus?.status !== 'offline' && addToCart(product)}
-                                            disabled={storeStatus?.status === 'offline' || isProfileIncomplete}
-                                            className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold active:scale-90 transition-all shadow-sm ${storeStatus?.status === 'offline' || isProfileIncomplete ? 'bg-slate-100 text-slate-300 cursor-not-allowed' : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white group-hover:shadow-indigo-200'}`}
-                                        >
-                                            +
-                                        </button>
+                <div className="space-y-6 pt-6 animate-in fade-in duration-500">
+                    {!showMenu ? (
+                        /* Advertisement Banner Space */
+                        <div className="px-6">
+                            <div className="w-full aspect-[16/9] bg-slate-200 rounded-[2.5rem] overflow-hidden shadow-sm relative group">
+                                {settings?.appBannerUrl ? (
+                                    <img src={settings.appBannerUrl} alt="Propaganda" className="w-full h-full object-cover" />
+                                ) : (
+                                    <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600 p-8 text-center">
+                                        <Icons.ShoppingCart className="w-16 h-16 text-white/20 mb-4" />
+                                        <h2 className="text-white font-black uppercase tracking-tighter text-2xl mb-2">Seja Bem-vindo!</h2>
+                                        <p className="text-white/60 font-bold text-xs uppercase tracking-widest">Clique em cardápio para ver as delícias de hoje.</p>
                                     </div>
+                                )}
+                            </div>
+                        </div>
+                    ) : (
+                        <>
+                            {/* Search Field inside Cardápio */}
+                            <div className="px-6 relative scale-in-center">
+                                <input
+                                    type="text"
+                                    placeholder="O que você quer comer hoje?"
+                                    value={searchQuery}
+                                    onChange={e => setSearchQuery(e.target.value)}
+                                    className="w-full p-4 bg-white border border-slate-100 text-slate-800 placeholder:text-slate-400 rounded-2xl font-bold text-sm focus:ring-4 focus:ring-indigo-50 transition-all pl-12 shadow-sm"
+                                />
+                                <div className="absolute left-10 top-1/2 -translate-y-1/2 text-slate-400">
+                                    <Icons.Search className="w-4 h-4" />
                                 </div>
                             </div>
-                        ))}
-                    </div>
+
+                            {/* Products Grid */}
+                            <div className="px-6 grid grid-cols-1 gap-5 animate-in slide-in-from-bottom-4 duration-500">
+                                {filteredProducts.map(product => (
+                                    <div key={product.id} className="bg-white p-4 rounded-[2rem] flex gap-4 shadow-sm border border-slate-100 items-center group active:scale-[0.98] transition-all hover:shadow-md hover:border-indigo-100 relative overflow-hidden">
+                                        <div className="w-28 h-28 bg-slate-50 rounded-2xl overflow-hidden shrink-0 relative flex items-center justify-center text-slate-300">
+                                            {product.imageUrl ? (
+                                                <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                                            ) : (
+                                                <Icons.ShoppingCart className="w-8 h-8 opacity-50" />
+                                            )}
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                        </div>
+                                        <div className="flex-1 py-1">
+                                            <p className="text-[9px] font-black text-indigo-500 uppercase tracking-widest mb-1">{product.category}</p>
+                                            <h3 className="font-bold text-slate-800 text-sm leading-tight line-clamp-2">{product.name}</h3>
+                                            <div className="flex justify-between items-center mt-3">
+                                                <span className="text-lg font-black text-slate-800 tracking-tighter">R$ {product.price.toFixed(2)}</span>
+                                                <button
+                                                    onClick={() => !isProfileIncomplete && storeStatus?.status !== 'offline' && addToCart(product)}
+                                                    disabled={storeStatus?.status === 'offline' || isProfileIncomplete}
+                                                    className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold active:scale-90 transition-all shadow-sm ${storeStatus?.status === 'offline' || isProfileIncomplete ? 'bg-slate-100 text-slate-300 cursor-not-allowed' : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white group-hover:shadow-indigo-200'}`}
+                                                >
+                                                    +
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </>
+                    )}
                 </div>
             ) : (
                 <CheckoutTab onOrderPlaced={() => navigate('/history')} />
@@ -262,55 +292,14 @@ const Home: React.FC = () => {
             {activeTab === 'CARDAPIO' && items.length > 0 && storeStatus?.status !== 'offline' && (
                 <div className="fixed bottom-32 left-6 right-6 animate-in slide-in-from-bottom duration-300 z-[60]">
                     <button
-                        onClick={() => setActiveTab('CARRINHO')}
+                        onClick={() => {
+                            setActiveTab('CARRINHO');
+                            setShowMenu(false);
+                        }}
                         className="w-full p-5 rounded-3xl font-black uppercase text-[10px] tracking-widest flex justify-between items-center bg-indigo-600 text-white shadow-2xl shadow-indigo-200 active:scale-95 transition-transform"
                     >
                         <div className="flex items-center gap-3">
                             <div className="bg-indigo-500 w-6 h-6 rounded-lg text-[10px] flex items-center justify-center">{items.reduce((a, b) => a + b.quantity, 0)}</div>
-                            <span>Ver Carrinho / Finalizar</span>
-                        </div>
-                        <span className="font-black">R$ {total.toFixed(2)}</span>
-                    </button>
-                </div>
-            )}
-                {filteredProducts.map(product => (
-                    <div key={product.id} className="bg-white p-4 rounded-[2rem] flex gap-4 shadow-sm border border-slate-100 items-center group active:scale-[0.98] transition-all hover:shadow-md hover:border-indigo-100 relative overflow-hidden">
-                        <div className="w-28 h-28 bg-slate-50 rounded-2xl overflow-hidden shrink-0 relative flex items-center justify-center text-slate-300">
-                            {product.imageUrl ? (
-                                <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                            ) : (
-                                <Icons.ShoppingCart className="w-8 h-8 opacity-50" />
-                            )}
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                        </div>
-                        <div className="flex-1 py-1">
-                            <p className="text-[9px] font-black text-indigo-500 uppercase tracking-widest mb-1">{product.category}</p>
-                            <h3 className="font-bold text-slate-800 text-sm leading-tight line-clamp-2">{product.name}</h3>
-                            <div className="flex justify-between items-center mt-3">
-                                <span className="text-lg font-black text-slate-800 tracking-tighter">R$ {product.price.toFixed(2)}</span>
-                                <button
-                                    onClick={() => !isProfileIncomplete && storeStatus?.status !== 'offline' && addToCart(product)}
-                                    disabled={storeStatus?.status === 'offline' || isProfileIncomplete}
-                                    className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold active:scale-90 transition-all shadow-sm ${storeStatus?.status === 'offline' || isProfileIncomplete ? 'bg-slate-100 text-slate-300 cursor-not-allowed' : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white group-hover:shadow-indigo-200'}`}
-                                >
-                                    +
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                ))}
-            </div>
-
-            {/* Floating Cart Button */}
-            {items.length > 0 && storeStatus?.status !== 'offline' && (
-                <div className="fixed bottom-32 left-6 right-6 animate-in slide-in-from-bottom duration-300 z-[60]">
-                    <button
-                        onClick={() => !isProfileIncomplete && navigate('/checkout')}
-                        disabled={isProfileIncomplete}
-                        className={`w-full p-5 rounded-3xl font-black uppercase text-[10px] tracking-widest flex justify-between items-center active:scale-95 transition-transform shadow-2xl ${isProfileIncomplete ? 'bg-slate-300 text-slate-500 cursor-not-allowed' : 'bg-indigo-600 text-white shadow-indigo-200'}`}
-                    >
-                        <div className="flex items-center gap-3">
-                            <div className={`${isProfileIncomplete ? 'bg-slate-400' : 'bg-indigo-500'} w-6 h-6 rounded-lg text-[10px] flex items-center justify-center`}>{items.reduce((a, b) => a + b.quantity, 0)}</div>
                             <span>Ver Carrinho / Finalizar</span>
                         </div>
                         <span className="font-black">R$ {total.toFixed(2)}</span>
