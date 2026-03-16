@@ -119,10 +119,10 @@ const Home: React.FC = () => {
                         {/* Left: Store Status (Next to Menu button space) */}
                         <div className="flex items-center gap-2">
                             <div className="w-12 h-12 shrink-0" /> {/* Spacer for the fixed menu button in Layout.tsx */}
-                            <div className="flex items-center gap-2 bg-slate-50/50 px-3 py-1.5 rounded-full border border-slate-100/50 whitespace-nowrap">
-                                <div className={`w-2 h-2 rounded-full ${storeStatus?.status === 'offline' ? 'bg-rose-500' : 'bg-emerald-500 animate-pulse-ring'}`}></div>
-                                <span className={`text-[10px] font-black uppercase tracking-widest ${storeStatus?.status === 'offline' ? 'text-rose-500' : 'text-emerald-500'}`}>
-                                    {storeStatus?.status === 'offline' ? 'Off' : 'On'}
+                            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-slate-100/50 whitespace-nowrap ${storeStatus?.status === 'offline' ? 'bg-rose-50 text-rose-600' : 'bg-emerald-50 text-emerald-600'}`}>
+                                <Icons.Globe className={`w-3.5 h-3.5 ${storeStatus?.status !== 'offline' ? 'animate-pulse' : ''}`} />
+                                <span className="text-[10px] font-black uppercase tracking-widest">
+                                    {storeStatus?.status === 'offline' ? 'OFF' : 'ON'}
                                 </span>
                             </div>
                         </div>
