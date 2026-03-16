@@ -10,9 +10,12 @@ import CompleteProfileModal from '../components/CompleteProfileModal';
 import ProfilePhotoModal from '../components/ProfilePhotoModal';
 import NotificationCenterModal from '../components/NotificationCenterModal';
 
+import CheckoutTab from '../components/CheckoutTab';
+
 const Home: React.FC = () => {
     const { addToCart, items, total } = useCart();
     const navigate = useNavigate();
+    const [activeTab, setActiveTab] = useState<'CARDAPIO' | 'CARRINHO'>('CARDAPIO');
     const [products, setProducts] = useState<Product[]>([]);
     const [categories, setCategories] = useState<string[]>([]);
     const [selectedCategory, setSelectedCategory] = useState('Todos');
@@ -110,15 +113,15 @@ const Home: React.FC = () => {
             </style>
             
             {/* Sticky Header Container */}
-            <div className="sticky top-0 z-[60] bg-white/95 backdrop-blur-md border-b border-slate-100/50 shadow-sm shadow-slate-200/20">
+            <div className="sticky top-0 z-[60] bg-white border-b border-slate-100 shadow-sm shadow-slate-200/20">
                 {/* Top Elements Row (Status, Greeting, Icons) */}
-                <div className="pt-4 px-6 pb-2 relative overflow-hidden">
+                <div className="pt-4 px-6 pb-2 relative overflow-hidden backdrop-blur-md">
                     <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-5"></div>
                     
                     <div className="flex items-center justify-between relative z-10">
-                        {/* Left: Store Status (Next to Menu button space) */}
+                        {/* Left: Store Status */}
                         <div className="flex items-center gap-2">
-                            <div className="w-12 h-12 shrink-0" /> {/* Spacer for the fixed menu button in Layout.tsx */}
+                            <div className="w-12 h-12 shrink-0" />
                             <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-slate-100/50 whitespace-nowrap ${storeStatus?.status === 'offline' ? 'bg-rose-50 text-rose-600' : 'bg-emerald-50 text-emerald-600'}`}>
                                 <Icons.Globe className={`w-3.5 h-3.5 ${storeStatus?.status !== 'offline' ? 'animate-pulse' : ''}`} />
                                 <span className="text-[10px] font-black uppercase tracking-widest">
@@ -170,37 +173,106 @@ const Home: React.FC = () => {
                         )}
                     </div>
 
-                    {/* Search Field */}
-                    <div className="relative z-10 mt-4">
+                    {/* Tab Navigation */}
+                    <div className="flex gap-4 mt-6 relative z-10">
+                        <button
+                            onClick={() => setActiveTab('CARDAPIO')}
+                            className={`flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl font-black uppercase text-[10px] tracking-[0.2em] transition-all shadow-sm active:scale-95 ${activeTab === 'CARDAPIO' ? 'bg-indigo-600 text-white shadow-indigo-200' : 'bg-slate-50 text-slate-400 border border-slate-100'}`}
+                        >
+                            Cardápio
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('CARRINHO')}
+                            className={`flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl font-black uppercase text-[10px] tracking-[0.2em] transition-all shadow-sm active:scale-95 ${activeTab === 'CARRINHO' ? 'bg-indigo-600 text-white shadow-indigo-200' : 'bg-slate-50 text-slate-400 border border-slate-100'}`}
+                        >
+                            Carrinho
+                            {items.length > 0 && <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] ${activeTab === 'CARRINHO' ? 'bg-white text-indigo-600' : 'bg-indigo-500 text-white'}`}>{items.reduce((a, b) => a + b.quantity, 0)}</span>}
+                        </button>
+                    </div>
+                </div>
+
+                {/* Categories Sticky Row (Only for Cardápio) */}
+                {activeTab === 'CARDAPIO' && (
+                    <div className="flex gap-2 overflow-x-auto px-6 py-3 no-scrollbar border-t border-slate-50/50 bg-white">
+                        {categories.map(cat => (
+                            <button
+                                key={cat}
+                                onClick={() => setSelectedCategory(cat)}
+                                className={`px-4 py-2 rounded-xl font-black text-[9px] uppercase tracking-widest transition-all whitespace-nowrap shadow-sm border ${selectedCategory === cat ? 'bg-indigo-600 text-white border-indigo-500 translate-y-[-1px]' : 'bg-white text-slate-500 border-slate-100 hover:border-indigo-200'}`}
+                            >
+                                {cat}
+                            </button>
+                        ))}
+                    </div>
+                )}
+            </div>
+
+            {/* TAB CONTENT */}
+            {activeTab === 'CARDAPIO' ? (
+                <div className="space-y-6 pt-6">
+                    {/* Search Field inside Cardápio */}
+                    <div className="px-6 relative">
                         <input
                             type="text"
                             placeholder="O que você quer comer hoje?"
                             value={searchQuery}
                             onChange={e => setSearchQuery(e.target.value)}
-                            className="w-full p-4 bg-slate-50/50 border border-slate-100 text-slate-800 placeholder:text-slate-400 rounded-2xl font-bold text-sm focus:ring-4 focus:ring-indigo-50 focus:border-indigo-100 focus:bg-white transition-all pl-12 shadow-sm"
+                            className="w-full p-4 bg-white border border-slate-100 text-slate-800 placeholder:text-slate-400 rounded-2xl font-bold text-sm focus:ring-4 focus:ring-indigo-50 transition-all pl-12 shadow-sm"
                         />
-                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+                        <div className="absolute left-10 top-1/2 -translate-y-1/2 text-slate-400">
                             <Icons.Search className="w-4 h-4" />
                         </div>
                     </div>
-                </div>
 
-                {/* Categories Sticky Row */}
-                <div className="flex gap-2 overflow-x-auto px-6 py-3 no-scrollbar border-t border-slate-50/50">
-                    {categories.map(cat => (
-                        <button
-                            key={cat}
-                            onClick={() => setSelectedCategory(cat)}
-                            className={`px-4 py-2 rounded-xl font-black text-[9px] uppercase tracking-widest transition-all whitespace-nowrap shadow-sm border ${selectedCategory === cat ? 'bg-indigo-600 text-white border-indigo-500 translate-y-[-1px]' : 'bg-white text-slate-500 border-slate-100 hover:border-indigo-200'}`}
-                        >
-                            {cat}
-                        </button>
-                    ))}
+                    {/* Products Grid */}
+                    <div className="px-6 grid grid-cols-1 gap-5">
+                        {filteredProducts.map(product => (
+                            <div key={product.id} className="bg-white p-4 rounded-[2rem] flex gap-4 shadow-sm border border-slate-100 items-center group active:scale-[0.98] transition-all hover:shadow-md hover:border-indigo-100 relative overflow-hidden">
+                                <div className="w-28 h-28 bg-slate-50 rounded-2xl overflow-hidden shrink-0 relative flex items-center justify-center text-slate-300">
+                                    {product.imageUrl ? (
+                                        <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                                    ) : (
+                                        <Icons.ShoppingCart className="w-8 h-8 opacity-50" />
+                                    )}
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                </div>
+                                <div className="flex-1 py-1">
+                                    <p className="text-[9px] font-black text-indigo-500 uppercase tracking-widest mb-1">{product.category}</p>
+                                    <h3 className="font-bold text-slate-800 text-sm leading-tight line-clamp-2">{product.name}</h3>
+                                    <div className="flex justify-between items-center mt-3">
+                                        <span className="text-lg font-black text-slate-800 tracking-tighter">R$ {product.price.toFixed(2)}</span>
+                                        <button
+                                            onClick={() => !isProfileIncomplete && storeStatus?.status !== 'offline' && addToCart(product)}
+                                            disabled={storeStatus?.status === 'offline' || isProfileIncomplete}
+                                            className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold active:scale-90 transition-all shadow-sm ${storeStatus?.status === 'offline' || isProfileIncomplete ? 'bg-slate-100 text-slate-300 cursor-not-allowed' : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white group-hover:shadow-indigo-200'}`}
+                                        >
+                                            +
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
-            </div>
+            ) : (
+                <CheckoutTab onOrderPlaced={() => navigate('/history')} />
+            )}
 
-            {/* Products Grid */}
-            <div className="px-6 grid grid-cols-1 gap-5">
+            {/* Sticky Cart Footer (Only if in Cardápio and has items) */}
+            {activeTab === 'CARDAPIO' && items.length > 0 && storeStatus?.status !== 'offline' && (
+                <div className="fixed bottom-32 left-6 right-6 animate-in slide-in-from-bottom duration-300 z-[60]">
+                    <button
+                        onClick={() => setActiveTab('CARRINHO')}
+                        className="w-full p-5 rounded-3xl font-black uppercase text-[10px] tracking-widest flex justify-between items-center bg-indigo-600 text-white shadow-2xl shadow-indigo-200 active:scale-95 transition-transform"
+                    >
+                        <div className="flex items-center gap-3">
+                            <div className="bg-indigo-500 w-6 h-6 rounded-lg text-[10px] flex items-center justify-center">{items.reduce((a, b) => a + b.quantity, 0)}</div>
+                            <span>Ver Carrinho / Finalizar</span>
+                        </div>
+                        <span className="font-black">R$ {total.toFixed(2)}</span>
+                    </button>
+                </div>
+            )}
                 {filteredProducts.map(product => (
                     <div key={product.id} className="bg-white p-4 rounded-[2rem] flex gap-4 shadow-sm border border-slate-100 items-center group active:scale-[0.98] transition-all hover:shadow-md hover:border-indigo-100 relative overflow-hidden">
                         <div className="w-28 h-28 bg-slate-50 rounded-2xl overflow-hidden shrink-0 relative flex items-center justify-center text-slate-300">
