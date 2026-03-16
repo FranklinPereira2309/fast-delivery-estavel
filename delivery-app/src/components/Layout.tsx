@@ -268,19 +268,10 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
                         {/* Footer Section */}
                         <div className="p-6 border-t border-slate-100 bg-slate-50 flex flex-col gap-4">
-                            <button
-                                onClick={() => setIsSidebarOpen(false)}
-                                className="w-full bg-[#4f39f6] text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-3 active:scale-95 transition-all shadow-lg shadow-[#4f39f6]/20"
-                            >
-                                <ChevronRight className="w-4 h-4 rotate-180" />
-                                Fechar Menu
-                            </button>
                             <div className="flex flex-col items-center justify-center pt-2 opacity-50 grayscale hover:grayscale-0 transition-all">
                                 <p className="text-[8px] font-black uppercase tracking-widest text-slate-400 mb-1">Tecnologia por</p>
                                 <div className="flex items-center gap-1.5">
-                                    <div className="w-5 h-5 bg-indigo-600 rounded-lg flex items-center justify-center shadow-lg shadow-indigo-600/20">
-                                        <span className="text-white text-[10px] font-black mt-0.5">F</span>
-                                    </div>
+                                    <img src="/logo_fransoft.png" alt="Fransoft Logo" className="w-6 h-6 object-contain" />
                                     <span className="text-slate-900 font-extrabold text-xs tracking-tighter uppercase">Fransoft <span className="text-indigo-600 font-medium">Developer®</span></span>
                                 </div>
                             </div>
