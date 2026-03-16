@@ -18,7 +18,7 @@ export const saveCoupon = async (req: Request, res: Response) => {
 
     try {
         const coupon = await prisma.coupon.upsert({
-            where: { id: data.id || '' },
+            where: { id: (data.id as string) || '' },
             update: couponData,
             create: couponData
         });
@@ -50,16 +50,16 @@ export const deleteCoupon = async (req: Request, res: Response) => {
 
     try {
         // Check if coupon was ever used
-        const coupon = await prisma.coupon.findUnique({ where: { id } });
+        const coupon = await prisma.coupon.findUnique({ where: { id: id as string } });
         if (coupon && coupon.usedCount > 0) {
             await prisma.coupon.update({
-                where: { id },
+                where: { id: id as string },
                 data: { active: false }
             });
             return res.json({ message: 'Cupom desativado (já possui histórico de uso).' });
         }
 
-        await prisma.coupon.delete({ where: { id } });
+        await prisma.coupon.delete({ where: { id: id as string } });
 
         if (user) {
             await prisma.auditLog.create({
@@ -82,8 +82,8 @@ export const validateCoupon = async (req: Request, res: Response) => {
     const { code, orderTotal } = req.body;
 
     try {
-        const coupon = await prisma.coupon.findUnique({
-            where: { code, active: true }
+        const coupon = await prisma.coupon.findFirst({
+            where: { code: code as string, active: true }
         });
 
         if (!coupon) {

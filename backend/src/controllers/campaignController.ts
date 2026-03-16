@@ -18,7 +18,7 @@ export const saveCampaign = async (req: Request, res: Response) => {
 
     try {
         const campaign = await prisma.campaign.upsert({
-            where: { id: data.id || '' },
+            where: { id: (data.id as string) || '' },
             update: campaignData,
             create: campaignData
         });
@@ -46,12 +46,12 @@ export const deleteCampaign = async (req: Request, res: Response) => {
     const { user } = req.body;
 
     try {
-        const campaign = await prisma.campaign.findUnique({ where: { id } });
+        const campaign = await prisma.campaign.findUnique({ where: { id: id as string } });
         if (campaign && campaign.status === 'SENT') {
             return res.status(400).json({ message: 'Não é possível excluir uma campanha que já foi enviada.' });
         }
 
-        await prisma.campaign.delete({ where: { id } });
+        await prisma.campaign.delete({ where: { id: id as string } });
 
         if (user) {
             await prisma.auditLog.create({
@@ -74,7 +74,7 @@ export const sendCampaign = async (req: Request, res: Response) => {
     const { id } = req.params;
 
     try {
-        const campaign = await prisma.campaign.findUnique({ where: { id } });
+        const campaign = await prisma.campaign.findUnique({ where: { id: id as string } });
         if (!campaign) {
             return res.status(404).json({ message: 'Campanha não encontrada.' });
         }
@@ -105,7 +105,7 @@ export const sendCampaign = async (req: Request, res: Response) => {
 
         // Update campaign status
         await prisma.campaign.update({
-            where: { id },
+            where: { id: id as string },
             data: {
                 status: 'SENT',
                 sentAt: new Date()

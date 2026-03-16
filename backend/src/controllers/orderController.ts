@@ -482,7 +482,7 @@ export const saveOrder = async (req: Request, res: Response) => {
             await prisma.coupon.update({
                 where: { id: validatedCouponId },
                 data: { usedCount: { increment: 1 } }
-            }).catch(e => console.error('Error incrementing coupon usedCount:', e));
+            }).catch((e: any) => console.error('Error incrementing coupon usedCount:', e));
         }
 
         // 4. Receivable Fiado Processing
