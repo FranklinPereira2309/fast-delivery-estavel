@@ -3,7 +3,7 @@ import { Coupon, Campaign, User, BusinessSettings } from '../types';
 import { db } from '../services/db';
 import { useToast } from '../hooks/useToast';
 import CustomAlert from '../components/CustomAlert';
-import { Plus, Ticket, Megaphone, Trash2, Send, Check, X, Calendar, Info, Percent, DollarSign, Truck } from 'lucide-react';
+import { Plus, Ticket, Megaphone, Trash2, Send, Check, X, Calendar, Info, Percent, DollarSign, Truck, Upload } from 'lucide-react';
 
 interface EngagementManagerProps {
   currentUser: User;
@@ -19,6 +19,7 @@ const EngagementManager: React.FC<EngagementManagerProps> = ({ currentUser }) =>
   const [editingCampaign, setEditingCampaign] = useState<Partial<Campaign> | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { addToast } = useToast();
+  const logoFileInputRef = React.useRef<HTMLInputElement>(null);
 
   const [alertConfig, setAlertConfig] = useState<{
     isOpen: boolean;
@@ -70,7 +71,7 @@ const EngagementManager: React.FC<EngagementManagerProps> = ({ currentUser }) =>
       } catch (error: any) {
         addToast({ title: 'Erro', message: error.message, type: 'DANGER' });
       }
-    });
+    }, () => setAlertConfig(prev => ({ ...prev, isOpen: false })));
   };
 
   const handleDeleteCampaign = async (id: string) => {
@@ -83,7 +84,7 @@ const EngagementManager: React.FC<EngagementManagerProps> = ({ currentUser }) =>
       } catch (error: any) {
         addToast({ title: 'Erro', message: error.message, type: 'DANGER' });
       }
-    });
+    }, () => setAlertConfig(prev => ({ ...prev, isOpen: false })));
   };
 
   const handleSendCampaign = async (id: string) => {
@@ -143,6 +144,15 @@ const EngagementManager: React.FC<EngagementManagerProps> = ({ currentUser }) =>
     }
   };
 
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => setSettings(prev => ({ ...prev, campaignLogoUrl: reader.result as string }));
+      reader.readAsDataURL(file);
+    }
+  };
+
   return (
     <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 flex flex-col h-full overflow-hidden">
       {/* Tabs */}
@@ -173,24 +183,26 @@ const EngagementManager: React.FC<EngagementManagerProps> = ({ currentUser }) =>
       {/* Header Actions */}
       <div className="p-4 flex justify-between items-center gap-4">
         <div className="text-slate-500 dark:text-slate-400 text-xs font-medium">
-          {activeTab === 'coupons' ? `${coupons.length} cupons encontrados` : `${campaigns.length} campanhas encontradas`}
+          {activeTab === 'coupons' ? `${coupons.length} cupons encontrados` : activeTab === 'campaigns' ? `${campaigns.length} campanhas encontradas` : ''}
         </div>
-        <button
-          onClick={() => {
-            if (activeTab === 'coupons') {
-              setEditingCoupon({ code: '', type: 'FIXED', value: 0, active: true, startDate: new Date().toISOString() });
-              setEditingCampaign(null);
-            } else {
-              setEditingCampaign({ title: '', message: '', type: 'PUSH', status: 'DRAFT' });
-              setEditingCoupon(null);
-            }
-            setIsModalOpen(true);
-          }}
-          className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-all active:scale-95"
-        >
-          <Plus className="w-4 h-4" />
-          {activeTab === 'coupons' ? 'Novo Cupom' : 'Nova Campanha'}
-        </button>
+        {activeTab !== 'profile' && (
+          <button
+            onClick={() => {
+              if (activeTab === 'coupons') {
+                setEditingCoupon({ code: '', type: 'FIXED', value: 0, active: true, startDate: new Date().toISOString() });
+                setEditingCampaign(null);
+              } else {
+                setEditingCampaign({ title: '', message: '', type: 'PUSH', status: 'DRAFT' });
+                setEditingCoupon(null);
+              }
+              setIsModalOpen(true);
+            }}
+            className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-all active:scale-95"
+          >
+            <Plus className="w-4 h-4" />
+            {activeTab === 'coupons' ? 'Novo Cupom' : 'Nova Campanha'}
+          </button>
+        )}
       </div>
 
       {/* Content Area */}
@@ -288,17 +300,31 @@ const EngagementManager: React.FC<EngagementManagerProps> = ({ currentUser }) =>
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1">Logotipo da Campanha (URL da Imagem)</label>
+                <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1">Logotipo da Campanha</label>
                 <div className="flex gap-4 items-center">
                   <input
                     type="text"
-                    className="flex-1 p-4 bg-white dark:bg-slate-900 rounded-2xl border-none shadow-sm font-bold text-slate-700 dark:text-slate-200 text-sm"
+                    className="flex-1 p-4 bg-white dark:bg-slate-900 rounded-2xl border-none shadow-sm font-bold text-slate-800 dark:text-slate-200 text-sm"
                     placeholder="https://link-da-imagem.com/logo.png"
                     value={settings.campaignLogoUrl || ''}
                     onChange={e => setSettings({ ...settings, campaignLogoUrl: e.target.value })}
                   />
+                  <button
+                    type="button"
+                    onClick={() => logoFileInputRef.current?.click()}
+                    className="p-4 bg-blue-600 text-white rounded-2xl shadow-lg shadow-blue-200 dark:shadow-blue-900/40 transition-all active:scale-95"
+                  >
+                    <Upload className="w-5 h-5" />
+                  </button>
+                  <input
+                    type="file"
+                    ref={logoFileInputRef}
+                    className="hidden"
+                    accept="image/*"
+                    onChange={handleLogoUpload}
+                  />
                   {settings.campaignLogoUrl && (
-                    <div className="w-14 h-14 rounded-2xl bg-white dark:bg-slate-900 p-1 shadow-sm overflow-hidden border border-slate-100 dark:border-slate-800">
+                    <div className="w-14 h-14 rounded-2xl bg-white dark:bg-slate-900 p-1 shadow-sm overflow-hidden border border-slate-100 dark:border-slate-800 shrink-0">
                       <img src={settings.campaignLogoUrl} alt="Preview" className="w-full h-full object-contain" />
                     </div>
                   )}
@@ -378,7 +404,7 @@ const EngagementManager: React.FC<EngagementManagerProps> = ({ currentUser }) =>
                         type="text"
                         required
                         placeholder="EX: PIZZA10"
-                        className="w-full p-3 bg-slate-100 dark:bg-slate-800 rounded-xl border-none font-bold uppercase"
+                        className="w-full p-3 bg-slate-100 dark:bg-slate-800 rounded-xl border-none font-bold uppercase text-slate-800 dark:text-white"
                         value={editingCoupon?.code}
                         onChange={e => setEditingCoupon({ ...editingCoupon, code: e.target.value.toUpperCase() })}
                       />
@@ -386,7 +412,7 @@ const EngagementManager: React.FC<EngagementManagerProps> = ({ currentUser }) =>
                     <div className="space-y-1">
                       <label className="text-[10px] font-black uppercase text-slate-400">Tipo</label>
                       <select
-                        className="w-full p-3 bg-slate-100 dark:bg-slate-800 rounded-xl border-none font-bold"
+                        className="w-full p-3 bg-slate-100 dark:bg-slate-800 rounded-xl border-none font-bold text-slate-800 dark:text-white"
                         value={editingCoupon?.type}
                         onChange={e => setEditingCoupon({ ...editingCoupon, type: e.target.value as any })}
                       >
@@ -402,7 +428,7 @@ const EngagementManager: React.FC<EngagementManagerProps> = ({ currentUser }) =>
                       <div className="relative">
                         <input
                           type="number"
-                          className="w-full p-3 bg-slate-100 dark:bg-slate-800 rounded-xl border-none font-bold pl-8"
+                          className="w-full p-3 bg-slate-100 dark:bg-slate-800 rounded-xl border-none font-bold pl-8 text-slate-800 dark:text-white"
                           value={editingCoupon?.value}
                           onChange={e => setEditingCoupon({ ...editingCoupon, value: Number(e.target.value) })}
                         />
@@ -415,20 +441,31 @@ const EngagementManager: React.FC<EngagementManagerProps> = ({ currentUser }) =>
                       <label className="text-[10px] font-black uppercase text-slate-400">Pedido Mínimo</label>
                       <input
                         type="number"
-                        className="w-full p-3 bg-slate-100 dark:bg-slate-800 rounded-xl border-none font-bold"
+                        className="w-full p-3 bg-slate-100 dark:bg-slate-800 rounded-xl border-none font-bold text-slate-800 dark:text-white"
                         value={editingCoupon?.minOrderValue}
                         onChange={e => setEditingCoupon({ ...editingCoupon, minOrderValue: Number(e.target.value) })}
                       />
                     </div>
                   </div>
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-black uppercase text-slate-400">Descrição</label>
-                    <textarea
-                      className="w-full p-3 bg-slate-100 dark:bg-slate-800 rounded-xl border-none text-sm"
-                      placeholder="Ex: Desconto de Boas Vindas"
-                      value={editingCoupon?.description}
-                      onChange={e => setEditingCoupon({ ...editingCoupon, description: e.target.value })}
-                    />
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-black uppercase text-slate-400">Descrição</label>
+                      <input
+                        className="w-full p-3 bg-slate-100 dark:bg-slate-800 rounded-xl border-none text-sm font-bold text-slate-800 dark:text-white"
+                        placeholder="Ex: Desconto de Boas Vindas"
+                        value={editingCoupon?.description || ''}
+                        onChange={e => setEditingCoupon({ ...editingCoupon, description: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-black uppercase text-slate-400">Validade</label>
+                      <input
+                        type="date"
+                        className="w-full p-3 bg-slate-100 dark:bg-slate-800 rounded-xl border-none text-sm font-bold text-slate-800 dark:text-white"
+                        value={editingCoupon?.endDate ? new Date(editingCoupon.endDate).toISOString().split('T')[0] : ''}
+                        onChange={e => setEditingCoupon({ ...editingCoupon, endDate: e.target.value })}
+                      />
+                    </div>
                   </div>
                 </>
               ) : (
@@ -439,7 +476,7 @@ const EngagementManager: React.FC<EngagementManagerProps> = ({ currentUser }) =>
                       type="text"
                       required
                       placeholder="Ex: Novidade no Cardápio!"
-                      className="w-full p-3 bg-slate-100 dark:bg-slate-800 rounded-xl border-none font-bold"
+                      className="w-full p-3 bg-slate-100 dark:bg-slate-800 rounded-xl border-none font-bold text-slate-800 dark:text-white"
                       value={editingCampaign?.title}
                       onChange={e => setEditingCampaign({ ...editingCampaign, title: e.target.value })}
                     />
@@ -450,7 +487,7 @@ const EngagementManager: React.FC<EngagementManagerProps> = ({ currentUser }) =>
                       required
                       rows={4}
                       placeholder="Escreva a mensagem que os clientes receberão..."
-                      className="w-full p-3 bg-slate-100 dark:bg-slate-800 rounded-xl border-none text-sm"
+                      className="w-full p-3 bg-slate-100 dark:bg-slate-800 rounded-xl border-none text-sm font-bold text-slate-800 dark:text-white"
                       value={editingCampaign?.message}
                       onChange={e => setEditingCampaign({ ...editingCampaign, message: e.target.value })}
                     />
@@ -459,7 +496,7 @@ const EngagementManager: React.FC<EngagementManagerProps> = ({ currentUser }) =>
                     <div className="space-y-1">
                       <label className="text-[10px] font-black uppercase text-slate-400">Canal</label>
                       <select
-                        className="w-full p-3 bg-slate-100 dark:bg-slate-800 rounded-xl border-none font-bold"
+                        className="w-full p-3 bg-slate-100 dark:bg-slate-800 rounded-xl border-none font-bold text-slate-800 dark:text-white"
                         value={editingCampaign?.type}
                         onChange={e => setEditingCampaign({ ...editingCampaign, type: e.target.value as any })}
                       >
@@ -471,7 +508,7 @@ const EngagementManager: React.FC<EngagementManagerProps> = ({ currentUser }) =>
                     <div className="space-y-1">
                       <label className="text-[10px] font-black uppercase text-slate-400">Segmento</label>
                       <select
-                        className="w-full p-3 bg-slate-100 dark:bg-slate-800 rounded-xl border-none font-bold"
+                        className="w-full p-3 bg-slate-100 dark:bg-slate-800 rounded-xl border-none font-bold text-slate-800 dark:text-white"
                         value={editingCampaign?.segment}
                         onChange={e => setEditingCampaign({ ...editingCampaign, segment: e.target.value })}
                       >
