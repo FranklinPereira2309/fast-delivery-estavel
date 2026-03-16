@@ -279,6 +279,7 @@ const UserManagementInternal: React.FC = () => {
         { id: 'driver', label: 'Entregador' },
         { id: 'receivables', label: 'Recebimentos (Fiado)' },
         { id: 'qrcodes', label: 'QR Codes das Mesas' },
+        { id: 'engagement', label: 'Engajamento & Promoções' },
         { id: 'reports', label: 'Relatórios' },
         { id: 'settings', label: 'Configurações' }
     ];
@@ -803,6 +804,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings, onReset }) =
                                             </button>
                                         </div>
                                     </div>
+
 
                                     <div className="p-6 bg-slate-50 dark:bg-slate-800 rounded-3xl sm:rounded-2xl border border-slate-100 dark:border-slate-700 flex flex-col justify-between gap-4 transition-all hover:border-blue-100 dark:hover:border-blue-900/30">
                                         <div>

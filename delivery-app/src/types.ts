@@ -95,8 +95,25 @@ export interface BusinessSettings {
   cscToken?: string;
   isNfeProduction?: boolean;
   enableNfcEmission?: boolean;
-  waiterPrivacyEnabled?: boolean;
   waiterPrivacyTimer?: number;
+  facebook?: string;
+  instagram?: string;
+  website?: string;
+  campaignLogoUrl?: string;
+}
+
+export interface Coupon {
+  id: string;
+  code: string;
+  description?: string;
+  type: 'FIXED' | 'PERCENTAGE' | 'FREE_SHIPPING';
+  value: number;
+  minOrderValue?: number;
+  startDate: string;
+  endDate?: string;
+  usageLimit?: number;
+  usedCount: number;
+  active: boolean;
 }
 
 export interface StoreStatus {

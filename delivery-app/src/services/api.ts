@@ -140,6 +140,10 @@ class DeliveryApiService {
         });
     }
 
+    async getCoupons() {
+        return this.request<any[]>('/public/promotions');
+    }
+
     logout() {
         localStorage.removeItem('delivery_app_token');
         localStorage.removeItem('delivery_app_client');

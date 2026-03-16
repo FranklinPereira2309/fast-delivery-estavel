@@ -112,7 +112,7 @@ const Home: React.FC = () => {
 
                 <div className="flex justify-between items-start mb-8 relative z-10">
                     <div>
-                        <h1 className="text-3xl font-black text-slate-800 tracking-tighter uppercase">Delivery <span className="text-indigo-500">App</span></h1>
+                        <h1 className="text-3xl font-black text-slate-800 tracking-tighter uppercase ml-14">Delivery <span className="text-indigo-500">App</span></h1>
                         <div className="flex flex-col gap-2 mt-2">
                             <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-full inline-flex border border-slate-100 whitespace-nowrap w-fit">
                                 <div className={`w-2 h-2 rounded-full ${storeStatus?.status === 'offline' ? 'bg-rose-500' : 'bg-emerald-500 animate-pulse-ring'}`}></div>

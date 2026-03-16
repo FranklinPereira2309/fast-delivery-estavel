@@ -100,6 +100,10 @@ export interface BusinessSettings {
   autoCloseTime?: string;
   waiterLockEnabled?: boolean;
   qrCodeBaseUrl?: string;
+  facebook?: string;
+  instagram?: string;
+  website?: string;
+  campaignLogoUrl?: string;
 }
 
 export interface Waiter {

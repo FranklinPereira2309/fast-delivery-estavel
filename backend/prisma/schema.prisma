@@ -371,6 +371,10 @@ model BusinessSettings {
   autoCloseTime        String  @default("00:00")
   waiterLockEnabled    Boolean @default(true)
   qrCodeBaseUrl        String?
+  facebook             String?
+  instagram            String?
+  website              String?
+  campaignLogoUrl      String?
 }
 
 model ChatMessage {

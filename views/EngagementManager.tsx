@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Coupon, Campaign, User } from '../types';
+import { Coupon, Campaign, User, BusinessSettings } from '../types';
 import { db } from '../services/db';
 import { useToast } from '../hooks/useToast';
 import CustomAlert from '../components/CustomAlert';
@@ -10,9 +10,10 @@ interface EngagementManagerProps {
 }
 
 const EngagementManager: React.FC<EngagementManagerProps> = ({ currentUser }) => {
-  const [activeTab, setActiveTab] = useState<'coupons' | 'campaigns'>('coupons');
+  const [activeTab, setActiveTab] = useState<'coupons' | 'campaigns' | 'profile'>('coupons');
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [settings, setSettings] = useState<Partial<BusinessSettings>>({});
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCoupon, setEditingCoupon] = useState<Partial<Coupon> | null>(null);
   const [editingCampaign, setEditingCampaign] = useState<Partial<Campaign> | null>(null);
@@ -43,6 +44,9 @@ const EngagementManager: React.FC<EngagementManagerProps> = ({ currentUser }) =>
       if (activeTab === 'coupons') {
         const data = await db.getCoupons();
         setCoupons(data);
+      } else if (activeTab === 'profile') {
+        const data = await db.getSettings();
+        setSettings(data);
       } else {
         const data = await db.getCampaigns();
         setCampaigns(data);
@@ -125,6 +129,20 @@ const EngagementManager: React.FC<EngagementManagerProps> = ({ currentUser }) =>
     }
   };
 
+  const handleSaveSettings = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      await db.saveSettings(settings as any);
+      addToast({ title: 'Sucesso', message: 'Configurações do perfil salvas.', type: 'SUCCESS' });
+      loadData();
+    } catch (error: any) {
+      addToast({ title: 'Erro', message: error.message, type: 'DANGER' });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 flex flex-col h-full overflow-hidden">
       {/* Tabs */}
@@ -141,7 +159,14 @@ const EngagementManager: React.FC<EngagementManagerProps> = ({ currentUser }) =>
           className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === 'campaigns' ? 'bg-blue-600 text-white shadow-lg shadow-blue-200 dark:shadow-blue-900/20' : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
         >
           <Megaphone className="w-4 h-4" />
-          Campanhas & Engajamento
+          Campanhas
+        </button>
+        <button
+          onClick={() => setActiveTab('profile')}
+          className={`flex-2 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-bold transition-all ${activeTab === 'profile' ? 'bg-blue-600 text-white shadow-lg shadow-blue-200 dark:shadow-blue-900/20' : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
+        >
+          <Info className="w-4 h-4" />
+          Perfil da Loja (App)
         </button>
       </div>
 
@@ -211,6 +236,85 @@ const EngagementManager: React.FC<EngagementManagerProps> = ({ currentUser }) =>
                 </div>
               </div>
             ))}
+          </div>
+        ) : activeTab === 'profile' ? (
+          <div className="max-w-2xl mx-auto w-full bg-slate-50 dark:bg-slate-800/50 p-8 rounded-3xl border border-slate-100 dark:border-slate-800">
+            <h3 className="text-lg font-black text-slate-800 dark:text-white mb-6 uppercase tracking-tight">Informações de Contato & Layout</h3>
+            <form onSubmit={handleSaveSettings} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1">Telefone Principal</label>
+                  <input
+                    type="text"
+                    className="w-full p-4 bg-white dark:bg-slate-900 rounded-2xl border-none shadow-sm font-bold text-slate-700 dark:text-slate-200"
+                    placeholder="(00) 00000-0000"
+                    value={settings.phone || ''}
+                    onChange={e => setSettings({ ...settings, phone: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1">Website</label>
+                  <input
+                    type="text"
+                    className="w-full p-4 bg-white dark:bg-slate-900 rounded-2xl border-none shadow-sm font-bold text-slate-700 dark:text-slate-200"
+                    placeholder="www.sualoja.com.br"
+                    value={settings.website || ''}
+                    onChange={e => setSettings({ ...settings, website: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1">Facebook (Username)</label>
+                  <input
+                    type="text"
+                    className="w-full p-4 bg-white dark:bg-slate-900 rounded-2xl border-none shadow-sm font-bold text-slate-700 dark:text-slate-200"
+                    placeholder="sualoja"
+                    value={settings.facebook || ''}
+                    onChange={e => setSettings({ ...settings, facebook: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1">Instagram (Username)</label>
+                  <input
+                    type="text"
+                    className="w-full p-4 bg-white dark:bg-slate-900 rounded-2xl border-none shadow-sm font-bold text-slate-700 dark:text-slate-200"
+                    placeholder="sualoja"
+                    value={settings.instagram || ''}
+                    onChange={e => setSettings({ ...settings, instagram: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1">Logotipo da Campanha (URL da Imagem)</label>
+                <div className="flex gap-4 items-center">
+                  <input
+                    type="text"
+                    className="flex-1 p-4 bg-white dark:bg-slate-900 rounded-2xl border-none shadow-sm font-bold text-slate-700 dark:text-slate-200 text-sm"
+                    placeholder="https://link-da-imagem.com/logo.png"
+                    value={settings.campaignLogoUrl || ''}
+                    onChange={e => setSettings({ ...settings, campaignLogoUrl: e.target.value })}
+                  />
+                  {settings.campaignLogoUrl && (
+                    <div className="w-14 h-14 rounded-2xl bg-white dark:bg-slate-900 p-1 shadow-sm overflow-hidden border border-slate-100 dark:border-slate-800">
+                      <img src={settings.campaignLogoUrl} alt="Preview" className="w-full h-full object-contain" />
+                    </div>
+                  )}
+                </div>
+                <p className="text-[9px] text-slate-400 font-bold uppercase mt-1 px-1 tracking-tighter">Essa imagem aparecerá no topo do menu lateral do app de delivery.</p>
+              </div>
+
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-emerald-200 dark:shadow-emerald-900/20 transition-all active:scale-95 flex items-center justify-center gap-3 mt-4"
+              >
+                {isSubmitting ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Check className="w-4 h-4" />}
+                Salvar Perfil da Loja
+              </button>
+            </form>
           </div>
         ) : (
           <div className="space-y-3">
