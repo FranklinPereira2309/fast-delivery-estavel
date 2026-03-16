@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Home from './views/Home';
 import Login from './views/Login';
@@ -11,8 +12,22 @@ import Chat from './views/Chat';
 import { CartProvider } from './CartContext';
 import Layout from './components/Layout';
 import AuthGuard from './components/AuthGuard';
+import SplashScreen from './components/SplashScreen';
 
 function App() {
+    const [isSplashVisible, setIsSplashVisible] = useState(true);
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setIsSplashVisible(false);
+        }, 3000);
+        return () => clearTimeout(timer);
+    }, []);
+
+    if (isSplashVisible) {
+        return <SplashScreen />;
+    }
+
     return (
         <CartProvider>
             <BrowserRouter>
