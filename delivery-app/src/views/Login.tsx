@@ -181,7 +181,7 @@ const Login: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-slate-900 transition-colors duration-500 flex flex-col items-center justify-center p-4 md:p-6 relative font-sans">
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-500 flex flex-col items-center justify-center p-4 md:p-6 relative font-sans">
             <div className="w-full max-w-md animate-in fade-in zoom-in duration-500">
                 <div className="w-full bg-white dark:bg-slate-800 p-5 md:p-10 rounded-3xl md:rounded-[3rem] shadow-2xl relative border border-slate-100 dark:border-slate-700">
                 {/* Fechar Modal Login */}
