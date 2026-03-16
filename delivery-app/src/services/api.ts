@@ -121,6 +121,14 @@ class DeliveryApiService {
         } as RequestInit & { overrideToken?: string });
     }
 
+    async getNotifications(clientId: string) {
+        return this.request<{
+            notifications: any[],
+            coupons: any[],
+            campaigns: any[]
+        }>(`/client-auth/${clientId}/notifications`);
+    }
+
     async checkPhone(phone: string) {
         return this.request<{ available: boolean }>(`/client-auth/check-phone/${phone}`);
     }

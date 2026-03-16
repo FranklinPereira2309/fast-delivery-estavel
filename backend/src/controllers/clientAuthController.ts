@@ -110,7 +110,7 @@ export const loginClient = async (req: ExpressRequest, res: ExpressResponse) => 
 export const updateClientProfile = async (req: ExpressRequest, res: ExpressResponse) => {
     try {
         const id = req.params.id as string;
-        const { name, email, phone, addresses, cep, street, addressNumber, neighborhood, city, state, complement, currentPassword, password } = req.body;
+        const { name, email, phone, addresses, cep, street, addressNumber, neighborhood, city, state, complement, currentPassword, password, avatarUrl } = req.body;
 
         const client = await prisma.client.findUnique({
             where: { id }
@@ -164,6 +164,7 @@ export const updateClientProfile = async (req: ExpressRequest, res: ExpressRespo
         if (city) data.city = city;
         if (state) data.state = state;
         if (complement) data.complement = complement;
+        if (avatarUrl !== undefined) data.avatarUrl = avatarUrl;
 
         // Auto-generate addresses array if structured fields are provided and addresses is not explicitly sent
         if (!addresses && (street || addressNumber || neighborhood || city || state)) {
@@ -346,5 +347,48 @@ export const checkGoogleAccount = async (req: ExpressRequest, res: ExpressRespon
     } catch (error) {
         console.error('Check Google Account Error:', error);
         res.status(500).json({ message: 'Erro ao verificar conta Google.' });
+    }
+};
+
+export const getClientNotifications = async (req: ExpressRequest, res: ExpressResponse) => {
+    try {
+        const id = req.params.id as string;
+
+        // Fetch Notifications
+        const notifications = await prisma.notification.findMany({
+            where: { clientId: id },
+            orderBy: { createdAt: 'desc' },
+            take: 20
+        });
+
+        // Fetch Active Coupons
+        const now = new Date();
+        const coupons = await prisma.coupon.findMany({
+            where: {
+                active: true,
+                OR: [
+                    { endDate: null },
+                    { endDate: { gte: now } }
+                ]
+            },
+            orderBy: { createdAt: 'desc' },
+            take: 10
+        });
+
+        // Fetch Sent Campaigns
+        const campaigns = await prisma.campaign.findMany({
+            where: { status: 'SENT' },
+            orderBy: { sentAt: 'desc' },
+            take: 10
+        });
+
+        res.json({
+            notifications,
+            coupons,
+            campaigns
+        });
+    } catch (error) {
+        console.error('Get Client Notifications Error:', error);
+        res.status(500).json({ message: 'Erro ao buscar notificações' });
     }
 };

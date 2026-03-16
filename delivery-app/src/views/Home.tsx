@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { socket } from '../services/socket';
 import type { Product, StoreStatus, Client } from '../types';
@@ -7,6 +7,8 @@ import { Icons } from '../constants';
 import { useCart } from '../CartContext';
 import CustomAlert from '../components/CustomAlert';
 import CompleteProfileModal from '../components/CompleteProfileModal';
+import ProfilePhotoModal from '../components/ProfilePhotoModal';
+import NotificationCenterModal from '../components/NotificationCenterModal';
 
 const Home: React.FC = () => {
     const { addToCart, items, total } = useCart();
@@ -20,6 +22,8 @@ const Home: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [showLogoutAlert, setShowLogoutAlert] = useState(false);
     const [showCompleteProfile, setShowCompleteProfile] = useState(false);
+    const [showProfilePhotoModal, setShowProfilePhotoModal] = useState(false);
+    const [showNotificationCenter, setShowNotificationCenter] = useState(false);
 
     const isProfileIncomplete = !!(client && (client.phone === '00000000000' || !client.street || !client.cep));
 
@@ -110,16 +114,16 @@ const Home: React.FC = () => {
                 <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-5 animate-float"></div>
                 <div className="absolute bottom-0 left-0 w-64 h-64 bg-rose-500 rounded-full mix-blend-multiply filter blur-3xl opacity-5 animate-float" style={{ animationDelay: '2s' }}></div>
 
-                <div className="flex justify-between items-start mb-8 relative z-10">
-                    <div>
-                        <h1 className="text-3xl font-black text-slate-800 tracking-tighter uppercase ml-14">Delivery <span className="text-indigo-500">App</span></h1>
-                        <div className="flex flex-col gap-2 mt-2">
+                <div className="flex justify-between items-start mb-6 relative z-10">
+                    <div className="flex items-start gap-4">
+                        <div className="flex flex-col gap-1.5 ml-14">
                             <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-full inline-flex border border-slate-100 whitespace-nowrap w-fit">
                                 <div className={`w-2 h-2 rounded-full ${storeStatus?.status === 'offline' ? 'bg-rose-500' : 'bg-emerald-500 animate-pulse-ring'}`}></div>
                                 <span className={`text-[10px] font-black uppercase tracking-widest ${storeStatus?.status === 'offline' ? 'text-rose-500' : 'text-emerald-500'}`}>
                                     {storeStatus?.status === 'offline' ? 'Delivery OFF' : 'Delivery ON'}
                                 </span>
                             </div>
+                            <h1 className="text-xl font-black text-slate-800 tracking-tighter uppercase">Code <span className="text-indigo-500">Fast®</span></h1>
                             
                             {isProfileIncomplete && (
                                 <button 
@@ -132,19 +136,23 @@ const Home: React.FC = () => {
                         </div>
                     </div>
                     
-                    <div className="flex items-center gap-3">
-                        <div className="flex flex-col items-end mr-1">
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Olá,</span>
-                            <span className="text-xs font-bold text-slate-700 max-w-[100px] truncate">{client?.name?.split(' ')[0] || ''}</span>
-                        </div>
-                        <Link to="/profile" className="w-11 h-11 bg-white rounded-2xl flex items-center justify-center text-slate-500 hover:text-indigo-600 hover:bg-slate-50 transition-all shadow-sm border border-slate-100 active:scale-95">
-                            <Icons.User className="w-5 h-5" />
-                        </Link>
+                    <div className="flex items-center gap-2">
                         <button
-                            onClick={() => setShowLogoutAlert(true)}
-                            className="w-11 h-11 bg-rose-50 rounded-2xl flex items-center justify-center text-rose-500 hover:bg-rose-100 transition-all shadow-sm border border-rose-100 active:scale-95"
+                            onClick={() => setShowNotificationCenter(true)}
+                            className="w-11 h-11 bg-white rounded-2xl flex items-center justify-center text-slate-500 hover:text-indigo-600 hover:bg-slate-50 transition-all shadow-sm border border-slate-100 active:scale-95"
                         >
-                            <Icons.LogOut className="w-5 h-5" />
+                            <Icons.Bell className="w-5 h-5" />
+                        </button>
+
+                        <button 
+                            onClick={() => setShowProfilePhotoModal(true)}
+                            className="w-11 h-11 bg-white rounded-2xl flex items-center justify-center text-slate-500 hover:text-indigo-600 hover:bg-slate-50 transition-all shadow-sm border border-slate-100 active:scale-95 overflow-hidden"
+                        >
+                            {client?.avatarUrl ? (
+                                <img src={client.avatarUrl} alt="Perfil" className="w-full h-full object-cover" />
+                            ) : (
+                                <span className="font-black text-indigo-600 text-lg">{client?.name?.[0].toUpperCase() || 'U'}</span>
+                            )}
                         </button>
                     </div>
                 </div>
@@ -246,6 +254,30 @@ const Home: React.FC = () => {
                         setShowCompleteProfile(false);
                     }}
                     onClose={() => setShowCompleteProfile(false)}
+                />
+            )}
+
+            <ProfilePhotoModal 
+                isOpen={showProfilePhotoModal}
+                onClose={() => setShowProfilePhotoModal(false)}
+                onPhotoSelected={async (base64: string | null) => {
+                    if (client) {
+                        try {
+                            const updated = await api.updateClient(client.id, { avatarUrl: base64 });
+                            setClient(updated);
+                            localStorage.setItem('delivery_app_client', JSON.stringify(updated));
+                        } catch (e) {
+                            console.error("Error updating avatar", e);
+                        }
+                    }
+                }}
+            />
+
+            {client && (
+                <NotificationCenterModal 
+                    isOpen={showNotificationCenter}
+                    onClose={() => setShowNotificationCenter(false)}
+                    clientId={client.id}
                 />
             )}
         </div>

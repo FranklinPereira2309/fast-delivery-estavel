@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import FooterNav from './FooterNav';
-import { X, Phone, Facebook, Instagram, Globe, Ticket } from 'lucide-react';
+import { X, Phone, Facebook, Instagram, Globe, Ticket, LogOut } from 'lucide-react';
 import { api } from '../services/api';
 import { socket } from '../services/socket';
 import type { BusinessSettings, StoreStatus } from '../types';
@@ -116,6 +116,22 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         }
     }, [location.pathname]);
 
+    // Swipe to close sidebar logic
+    const [touchStartX, setTouchStartX] = React.useState<number | null>(null);
+    const handleTouchStart = (e: React.TouchEvent) => setTouchStartX(e.touches[0].clientX);
+    const handleTouchEnd = (e: React.TouchEvent) => {
+        if (touchStartX !== null) {
+            const touchEndX = e.changedTouches[0].clientX;
+            const diff = touchStartX - touchEndX;
+            if (diff > 50) { // Swipe left
+                setIsSidebarOpen(false);
+            }
+        }
+        setTouchStartX(null);
+    };
+
+    const isHome = location.pathname === '/';
+
     return (
         <div className={`min-h-screen bg-slate-50 ${shouldShowFooter ? 'pb-28' : ''}`}>
             {/* Banner de Status da Loja (Global) */}
@@ -144,16 +160,18 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             ) : (
                 <>
                     {/* Hamburger Menu Button */}
-                    <div className="fixed top-4 left-4 z-[70]">
-                        <button
-                            onClick={() => setIsSidebarOpen(true)}
-                            className="w-12 h-12 bg-[#4f39f6] rounded-xl flex flex-col items-center justify-center gap-1.5 shadow-xl shadow-[#4f39f6]/20 active:scale-90 transition-all border-b-4 border-[#3a29c4]"
-                        >
-                            <div className="w-6 h-1 bg-white rounded-full"></div>
-                            <div className="w-6 h-1 bg-white rounded-full"></div>
-                            <div className="w-6 h-1 bg-white rounded-full"></div>
-                        </button>
-                    </div>
+                    {isHome && (
+                        <div className="fixed top-4 left-4 z-[70]">
+                            <button
+                                onClick={() => setIsSidebarOpen(true)}
+                                className="w-12 h-12 bg-[#4f39f6] rounded-xl flex flex-col items-center justify-center gap-1.5 shadow-xl shadow-[#4f39f6]/20 active:scale-90 transition-all border-b-4 border-[#3a29c4]"
+                            >
+                                <div className="w-6 h-1 bg-white rounded-full"></div>
+                                <div className="w-6 h-1 bg-white rounded-full"></div>
+                                <div className="w-6 h-1 bg-white rounded-full"></div>
+                            </button>
+                        </div>
+                    )}
 
                     {/* Sidebar Overlay */}
                     <div
@@ -163,10 +181,12 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
                     {/* Sidebar Content */}
                     <aside
+                        onTouchStart={handleTouchStart}
+                        onTouchEnd={handleTouchEnd}
                         className={`fixed top-0 left-0 h-full w-[85%] max-w-sm bg-white z-[90] shadow-2xl transition-transform duration-500 ease-out flex flex-col ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
                     >
                         {/* Header with Campaign Logo */}
-                        <div className="relative bg-[#4f39f6] p-8 pb-12 flex flex-col items-center justify-center text-center overflow-hidden">
+                        <div className="relative bg-[#4f39f6] p-8 pb-20 flex flex-col items-center justify-center text-center overflow-hidden">
                             <div className="absolute top-0 right-0 p-4">
                                 <button onClick={() => setIsSidebarOpen(false)} className="bg-white/20 p-2 rounded-xl text-white">
                                     <X className="w-5 h-5" />
@@ -177,14 +197,12 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                             <div className="absolute -top-12 -right-12 w-32 h-32 bg-black/10 rounded-full blur-2xl"></div>
 
                             {settings?.campaignLogoUrl ? (
-                                <img src={settings.campaignLogoUrl} alt="Logo" className="w-24 h-24 object-contain mb-4 animate-in zoom-in duration-500 relative z-10" />
+                                <img src={settings.campaignLogoUrl} alt="Logo" className="w-40 h-40 object-contain mb-2 animate-in zoom-in duration-500 relative z-10" />
                             ) : (
-                                <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mb-4 relative z-10">
-                                    <Globe className="w-10 h-10 text-white" />
+                                <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center mb-2 relative z-10">
+                                    <Globe className="w-12 h-12 text-white" />
                                 </div>
                             )}
-                            
-                            <h2 className="text-white font-black uppercase tracking-tight text-xl relative z-10">Informações</h2>
                         </div>
 
                         {/* Content Scrollable */}
@@ -268,6 +286,17 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
                         {/* Footer Section */}
                         <div className="p-6 border-t border-slate-100 bg-slate-50 flex flex-col gap-4">
+                            <button 
+                                onClick={() => {
+                                    api.logout();
+                                    window.location.reload();
+                                }}
+                                className="w-full p-4 bg-rose-50 text-rose-500 rounded-2xl flex items-center justify-center gap-3 font-black uppercase text-[10px] tracking-widest border border-rose-100 shadow-sm active:scale-95 transition-all"
+                            >
+                                <LogOut className="w-5 h-5" />
+                                Sair do App
+                            </button>
+
                             <div className="flex flex-col items-center justify-center pt-2 opacity-50 grayscale hover:grayscale-0 transition-all">
                                 <p className="text-[8px] font-black uppercase tracking-widest text-slate-400 mb-1">Tecnologia por</p>
                                 <div className="flex items-center gap-1.5">

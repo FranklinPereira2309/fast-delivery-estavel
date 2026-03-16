@@ -163,6 +163,7 @@ export interface Client {
   addresses?: Address[];
   totalOrders: number;
   lastOrderDate?: string;
+  avatarUrl?: string;
 }
 
 export interface Product {

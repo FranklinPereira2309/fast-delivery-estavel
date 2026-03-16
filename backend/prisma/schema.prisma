@@ -96,6 +96,7 @@ model Client {
   orders        Order[]
   receivables   Receivable[]
   notifications Notification[]
+  avatarUrl     String?
 }
 
 model Waiter {
