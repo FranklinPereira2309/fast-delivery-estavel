@@ -186,15 +186,15 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                         className={`fixed top-0 left-0 h-full w-[85%] max-w-sm bg-white z-[90] shadow-2xl transition-transform duration-500 ease-out flex flex-col ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
                     >
                         {/* Header with Campaign Logo */}
-                        <div className="relative bg-[#4f39f6] p-8 pb-14 flex flex-col items-center justify-center text-center overflow-hidden">
+                        <div className="relative bg-[#4f39f6] p-6 pb-10 flex flex-col items-center justify-center text-center overflow-hidden">
                             <div className="absolute -bottom-12 -left-12 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
                             <div className="absolute -top-12 -right-12 w-32 h-32 bg-black/10 rounded-full blur-2xl"></div>
 
                             {settings?.campaignLogoUrl ? (
-                                <img src={settings.campaignLogoUrl} alt="Logo" className="w-40 h-40 object-contain mb-2 animate-in zoom-in duration-500 relative z-10" />
+                                <img src={settings.campaignLogoUrl} alt="Logo" className="w-28 h-28 object-contain mb-1 animate-in zoom-in duration-500 relative z-10" />
                             ) : (
-                                <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center mb-2 relative z-10">
-                                    <Globe className="w-12 h-12 text-white" />
+                                <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mb-1 relative z-10">
+                                    <Globe className="w-10 h-10 text-white" />
                                 </div>
                             )}
                         </div>
