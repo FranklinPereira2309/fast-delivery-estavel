@@ -109,87 +109,94 @@ const Home: React.FC = () => {
                 `}
             </style>
             
-            {/* Header / Store Status Premium Soft */}
-            <div className="bg-white pt-8 p-6 pb-2 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-5 animate-float"></div>
-                <div className="absolute bottom-0 left-0 w-64 h-64 bg-rose-500 rounded-full mix-blend-multiply filter blur-3xl opacity-5 animate-float" style={{ animationDelay: '2s' }}></div>
-
-                <div className="flex flex-col items-center mb-6 relative z-10">
-                    <div className="flex flex-col items-center gap-2">
-                        <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-full inline-flex border border-slate-100 whitespace-nowrap w-fit">
-                            <div className={`w-2 h-2 rounded-full ${storeStatus?.status === 'offline' ? 'bg-rose-500' : 'bg-emerald-500 animate-pulse-ring'}`}></div>
-                            <span className={`text-[10px] font-black uppercase tracking-widest ${storeStatus?.status === 'offline' ? 'text-rose-500' : 'text-emerald-500'}`}>
-                                {storeStatus?.status === 'offline' ? 'Delivery OFF' : 'Delivery ON'}
-                            </span>
+            {/* Sticky Header Container */}
+            <div className="sticky top-0 z-[60] bg-white/95 backdrop-blur-md border-b border-slate-100/50 shadow-sm shadow-slate-200/20">
+                {/* Top Elements Row (Status, Greeting, Icons) */}
+                <div className="pt-4 px-6 pb-2 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-5"></div>
+                    
+                    <div className="flex items-center justify-between relative z-10">
+                        {/* Left: Store Status (Next to Menu button space) */}
+                        <div className="flex items-center gap-2">
+                            <div className="w-12 h-12 shrink-0" /> {/* Spacer for the fixed menu button in Layout.tsx */}
+                            <div className="flex items-center gap-2 bg-slate-50/50 px-3 py-1.5 rounded-full border border-slate-100/50 whitespace-nowrap">
+                                <div className={`w-2 h-2 rounded-full ${storeStatus?.status === 'offline' ? 'bg-rose-500' : 'bg-emerald-500 animate-pulse-ring'}`}></div>
+                                <span className={`text-[10px] font-black uppercase tracking-widest ${storeStatus?.status === 'offline' ? 'text-rose-500' : 'text-emerald-500'}`}>
+                                    {storeStatus?.status === 'offline' ? 'Off' : 'On'}
+                                </span>
+                            </div>
                         </div>
-                        <h1 className="text-xl font-black text-slate-800 tracking-tighter uppercase whitespace-nowrap">Delivery <span className="text-indigo-500">Fast®</span></h1>
+
+                        {/* Right: Greeting & Icons */}
+                        <div className="flex items-center gap-2">
+                            <div className="flex flex-col items-end mr-1">
+                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">Olá,</span>
+                                <span className="text-[11px] font-bold text-slate-700 truncate max-w-[80px]">{client?.name?.split(' ')[0] || ''}</span>
+                            </div>
+                            
+                            <button
+                                onClick={() => setShowNotificationCenter(true)}
+                                className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-slate-500 hover:text-indigo-600 transition-all shadow-sm border border-slate-100 active:scale-95"
+                            >
+                                <Icons.Bell className="w-4 h-4" />
+                            </button>
+
+                            <button 
+                                onClick={() => setShowProfilePhotoModal(true)}
+                                className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm border border-slate-100 active:scale-95 overflow-hidden"
+                            >
+                                {client?.avatarUrl ? (
+                                    <img src={client.avatarUrl} alt="Perfil" className="w-full h-full object-cover" />
+                                ) : (
+                                    <span className="font-black text-indigo-600 text-sm">{client?.name?.[0].toUpperCase() || 'U'}</span>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* App Title Center Row */}
+                    <div className="flex flex-col items-center mt-2 relative z-10">
+                        <h1 className="text-xl font-black text-slate-800 tracking-tighter uppercase whitespace-nowrap">
+                            Delivery <span className="text-indigo-500">Fast®</span>
+                        </h1>
                         
                         {isProfileIncomplete && (
                             <button 
                                 onClick={() => setShowCompleteProfile(true)}
-                                className="text-[9px] font-black text-rose-500 uppercase tracking-widest animate-slow-blink hover:text-rose-600 transition-colors text-center"
+                                className="text-[9px] font-black text-rose-500 uppercase tracking-widest animate-slow-blink hover:text-rose-600 transition-colors mt-0.5"
                             >
                                 ⚠️ Complete seu cadastro
                             </button>
                         )}
                     </div>
-                    
-                    <div className="flex items-center gap-2 mt-4 w-full justify-between">
-                        <div className="w-11" /> {/* Spacer to balance the right side buttons */}
-                        
-                        <div className="flex items-center gap-2">
-                            <div className="flex flex-col items-end mr-1">
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Olá,</span>
-                                <span className="text-xs font-bold text-slate-700 max-w-[100px] truncate">{client?.name?.split(' ')[0] || ''}</span>
-                            </div>
-                            <button
-                                onClick={() => setShowNotificationCenter(true)}
-                                className="w-11 h-11 bg-white rounded-2xl flex items-center justify-center text-slate-500 hover:text-indigo-600 hover:bg-slate-50 transition-all shadow-sm border border-slate-100 active:scale-95"
-                            >
-                                <Icons.Bell className="w-5 h-5" />
-                            </button>
 
-                            <button 
-                                onClick={() => setShowProfilePhotoModal(true)}
-                                className="w-11 h-11 bg-white rounded-2xl flex items-center justify-center text-slate-500 hover:text-indigo-600 hover:bg-slate-50 transition-all shadow-sm border border-slate-100 active:scale-95 overflow-hidden"
-                            >
-                                {client?.avatarUrl ? (
-                                    <img src={client.avatarUrl} alt="Perfil" className="w-full h-full object-cover" />
-                                ) : (
-                                    <span className="font-black text-indigo-600 text-lg">{client?.name?.[0].toUpperCase() || 'U'}</span>
-                                )}
-                            </button>
+                    {/* Search Field */}
+                    <div className="relative z-10 mt-4">
+                        <input
+                            type="text"
+                            placeholder="O que você quer comer hoje?"
+                            value={searchQuery}
+                            onChange={e => setSearchQuery(e.target.value)}
+                            className="w-full p-4 bg-slate-50/50 border border-slate-100 text-slate-800 placeholder:text-slate-400 rounded-2xl font-bold text-sm focus:ring-4 focus:ring-indigo-50 focus:border-indigo-100 focus:bg-white transition-all pl-12 shadow-sm"
+                        />
+                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+                            <Icons.Search className="w-4 h-4" />
                         </div>
                     </div>
                 </div>
 
-                {/* Search */}
-                <div className="relative z-10 mt-1">
-                    <input
-                        type="text"
-                        placeholder="O que você quer comer hoje?"
-                        value={searchQuery}
-                        onChange={e => setSearchQuery(e.target.value)}
-                        className="w-full p-5 bg-slate-50/80 border border-slate-100 text-slate-800 placeholder:text-slate-400 rounded-2xl font-bold text-sm focus:ring-4 focus:ring-indigo-50 focus:border-indigo-100 focus:bg-white transition-all pl-14 shadow-inner"
-                    />
-                    <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400">
-                        <Icons.Search className="w-5 h-5" />
-                    </div>
+                {/* Categories Sticky Row */}
+                <div className="flex gap-2 overflow-x-auto px-6 py-3 no-scrollbar border-t border-slate-50/50">
+                    {categories.map(cat => (
+                        <button
+                            key={cat}
+                            onClick={() => setSelectedCategory(cat)}
+                            className={`px-4 py-2 rounded-xl font-black text-[9px] uppercase tracking-widest transition-all whitespace-nowrap shadow-sm border ${selectedCategory === cat ? 'bg-indigo-600 text-white border-indigo-500 translate-y-[-1px]' : 'bg-white text-slate-500 border-slate-100 hover:border-indigo-200'}`}
+                        >
+                            {cat}
+                        </button>
+                    ))}
                 </div>
-            </div>
-
-
-            {/* Categories */}
-            <div className="flex gap-3 overflow-x-auto p-6 no-scrollbar">
-                {categories.map(cat => (
-                    <button
-                        key={cat}
-                        onClick={() => setSelectedCategory(cat)}
-                        className={`px-5 py-3 rounded-[1.25rem] font-black text-[10px] uppercase tracking-widest transition-all whitespace-nowrap shadow-sm border ${selectedCategory === cat ? 'bg-indigo-600 text-white border-indigo-500 shadow-indigo-200 translate-y-[-2px]' : 'bg-white text-slate-500 border-slate-200 hover:border-indigo-300'}`}
-                    >
-                        {cat}
-                    </button>
-                ))}
             </div>
 
             {/* Products Grid */}
