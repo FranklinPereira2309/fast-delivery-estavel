@@ -188,7 +188,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                         className={`fixed top-0 left-0 h-full w-[85%] max-w-sm bg-white dark:bg-slate-900 z-[90] shadow-2xl transition-transform duration-500 ease-out flex flex-col ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
                     >
                         {/* Header with Campaign Logo */}
-                        <div className="relative bg-[#4f39f6] p-6 pb-10 flex flex-col items-center justify-center text-center overflow-hidden">
+                        <div className="relative bg-[#4f39f6] flex flex-col items-center justify-center text-center overflow-hidden aspect-video min-h-[160px] w-full">
                             <div className="absolute -bottom-12 -left-12 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
                             <div className="absolute -top-12 -right-12 w-32 h-32 bg-black/10 rounded-full blur-2xl"></div>
 
@@ -196,8 +196,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                                 <img 
                                     src={settings.campaignLogoUrl} 
                                     alt="Logo" 
-                                    style={{ width: '5cm', height: '3cm' }}
-                                    className="object-contain mb-1 animate-in zoom-in duration-500 relative z-10" 
+                                    className="absolute inset-0 w-full h-full object-cover animate-in zoom-in duration-500 z-10" 
                                 />
                             ) : (
                                 <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mb-1 relative z-10">

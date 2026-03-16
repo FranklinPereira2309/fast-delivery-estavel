@@ -103,7 +103,7 @@ const Home: React.FC = () => {
 
 
     return (
-        <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 pb-28 transition-colors duration-500">
+        <div className="h-screen flex flex-col bg-slate-50 dark:bg-slate-950 transition-colors duration-500 overflow-hidden">
             <style>
                 {`
                 @keyframes slow-blink {
@@ -204,16 +204,33 @@ const Home: React.FC = () => {
 
                 {/* Categories Sticky Row (Only for Cardápio + showMenu) */}
                 {activeTab === 'CARDAPIO' && showMenu && (
-                    <div className="flex gap-2 overflow-x-auto px-6 py-3 no-scrollbar border-t border-slate-50/50 dark:border-slate-800 bg-white dark:bg-slate-900">
-                        {categories.map(cat => (
-                            <button
-                                key={cat}
-                                onClick={() => setSelectedCategory(cat)}
-                                className={`px-4 py-2 rounded-xl font-black text-[9px] uppercase tracking-widest transition-all whitespace-nowrap shadow-sm border ${selectedCategory === cat ? 'bg-indigo-600 text-white border-indigo-500 translate-y-[-1px]' : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-100 dark:border-slate-700 hover:border-indigo-200 dark:hover:border-indigo-800'}`}
-                            >
-                                {cat}
-                            </button>
-                        ))}
+                    <div className="flex flex-col bg-white dark:bg-slate-900 border-t border-slate-50/50 dark:border-slate-800">
+                        {/* Search Field inside Sticky Header */}
+                        <div className="px-6 py-3 relative">
+                            <input
+                                type="text"
+                                placeholder="O que você quer comer hoje?"
+                                value={searchQuery}
+                                onChange={e => setSearchQuery(e.target.value)}
+                                className="w-full p-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/50 text-slate-800 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-2xl font-bold text-sm focus:ring-4 focus:ring-indigo-50 dark:focus:ring-indigo-900/20 transition-all pl-12 shadow-sm"
+                            />
+                            <div className="absolute left-10 top-1/2 -translate-y-1/2 text-slate-400">
+                                <Icons.Search className="w-4 h-4" />
+                            </div>
+                        </div>
+
+                        {/* Category Buttons Carousel */}
+                        <div className="flex gap-2 overflow-x-auto px-6 pb-3 no-scrollbar">
+                            {categories.map(cat => (
+                                <button
+                                    key={cat}
+                                    onClick={() => setSelectedCategory(cat)}
+                                    className={`px-4 py-2 rounded-xl font-black text-[9px] uppercase tracking-widest transition-all whitespace-nowrap shadow-sm border ${selectedCategory === cat ? 'bg-indigo-600 text-white border-indigo-500 translate-y-[-1px]' : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-100 dark:border-slate-700 hover:border-indigo-200 dark:hover:border-indigo-800'}`}
+                                >
+                                    {cat}
+                                </button>
+                            ))}
+                        </div>
                     </div>
                 )}
             </div>
@@ -222,13 +239,13 @@ const Home: React.FC = () => {
             {activeTab === 'CARDAPIO' ? (
                 <div className="flex-1 flex flex-col space-y-6 pt-6 animate-in fade-in duration-500">
                     {!showMenu ? (
-                        /* Advertisement Banner Space */
-                        <div className="flex-1 flex flex-col px-6 pb-6">
+                        /* Advertisement Banner Space - Fixed/Fitting screen */
+                        <div className="flex-1 flex flex-col px-6 pb-4">
                             <div className="flex-1 w-full bg-slate-100 dark:bg-slate-800 rounded-[2.5rem] overflow-hidden shadow-sm relative group flex items-center justify-center">
                                 {settings?.appBannerUrl ? (
-                                    <img src={settings.appBannerUrl} alt="Propaganda" className="w-full h-full object-contain" />
+                                    <img src={settings.appBannerUrl} alt="Propaganda" className="w-full h-full object-cover" />
                                 ) : (
-                                    <div className="w-full max-w-sm aspect-square md:aspect-video flex flex-col items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600 p-8 text-center rounded-[2.5rem] shadow-2xl">
+                                    <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600 p-8 text-center rounded-[2.5rem]">
                                         <Icons.ShoppingCart className="w-16 h-16 text-white/20 mb-4" />
                                         <h2 className="text-white font-black uppercase tracking-tighter text-2xl mb-2">Seja Bem-vindo!</h2>
                                         <p className="text-white/60 font-bold text-xs uppercase tracking-widest">Clique em cardápio para ver as delícias de hoje.</p>
@@ -237,20 +254,8 @@ const Home: React.FC = () => {
                             </div>
                         </div>
                     ) : (
-                        <>
-                            {/* Search Field inside Cardápio */}
-                            <div className="px-6 relative scale-in-center">
-                                <input
-                                    type="text"
-                                    placeholder="O que você quer comer hoje?"
-                                    value={searchQuery}
-                                    onChange={e => setSearchQuery(e.target.value)}
-                                    className="w-full p-4 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-800 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-2xl font-bold text-sm focus:ring-4 focus:ring-indigo-50 dark:focus:ring-indigo-900/20 transition-all pl-12 shadow-sm"
-                                />
-                                <div className="absolute left-10 top-1/2 -translate-y-1/2 text-slate-400">
-                                    <Icons.Search className="w-4 h-4" />
-                                </div>
-                            </div>
+                        <div className="flex-1 overflow-y-auto no-scrollbar">
+                            <div className="flex flex-col gap-5 px-6 pb-6">
 
                             {/* Products Grid */}
                             <div className="px-6 grid grid-cols-1 gap-5 animate-in slide-in-from-bottom-4 duration-500">
@@ -281,9 +286,10 @@ const Home: React.FC = () => {
                                     </div>
                                 ))}
                             </div>
-                        </>
-                    )}
-                </div>
+                        </div>
+                    </div>
+                )}
+            </div>
             ) : (
                 <CheckoutTab onOrderPlaced={() => navigate('/history')} />
             )}
