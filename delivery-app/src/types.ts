@@ -109,6 +109,7 @@ export interface Coupon {
   type: 'FIXED' | 'PERCENTAGE' | 'FREE_SHIPPING';
   value: number;
   minOrderValue?: number;
+  maxDiscount?: number;
   startDate: string;
   endDate?: string;
   usageLimit?: number;

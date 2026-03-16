@@ -39,6 +39,12 @@ const Checkout: React.FC = () => {
         isOpen: false, title: '', message: '', type: 'INFO', onConfirm: () => { }, onCancel: () => setAlertState(prev => ({ ...prev, isOpen: false }))
     });
 
+    // Coupon State
+    const [couponCode, setCouponCode] = useState('');
+    const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
+    const [couponError, setCouponError] = useState('');
+    const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
+
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -93,7 +99,45 @@ const Checkout: React.FC = () => {
         };
     }, [navigate]);
 
-    const finalTotal = total + deliveryFee;
+    const calculateDiscount = () => {
+        if (!appliedCoupon) return 0;
+        let discount = 0;
+        if (appliedCoupon.type === 'FIXED') {
+            discount = appliedCoupon.value || 0;
+        } else if (appliedCoupon.type === 'PERCENTAGE') {
+            discount = (total * (appliedCoupon.value || 0)) / 100;
+            if (appliedCoupon.maxDiscount && discount > appliedCoupon.maxDiscount) {
+                discount = appliedCoupon.maxDiscount;
+            }
+        } else if (appliedCoupon.type === 'FREE_SHIPPING') {
+            discount = deliveryFee;
+        }
+        return discount;
+    };
+
+    const discountValue = calculateDiscount();
+    const finalTotal = total + deliveryFee - discountValue;
+
+    const handleApplyCoupon = async () => {
+        if (!couponCode.trim()) return;
+        setIsValidatingCoupon(true);
+        setCouponError('');
+        try {
+            const coupon = await api.validateCoupon(couponCode, total);
+            setAppliedCoupon(coupon);
+            setCouponCode(''); // Clear input on success
+        } catch (err: any) {
+            setCouponError(err.message || 'Cupom inválido');
+            setAppliedCoupon(null);
+        } finally {
+            setIsValidatingCoupon(false);
+        }
+    };
+
+    const handleRemoveCoupon = () => {
+        setAppliedCoupon(null);
+        setCouponError('');
+    };
 
     const showAlert = (title: string, message: string, type: 'INFO' | 'SUCCESS' | 'DANGER' = 'INFO', onConfirm?: () => void, onCancel?: (() => void) | null, confirmText?: string) => {
         setAlertState({
@@ -182,6 +226,7 @@ const Checkout: React.FC = () => {
                         })),
                         total: finalTotal,
                         deliveryFee: deliveryFee,
+                        couponCode: appliedCoupon?.code || null,
                         type: 'OWN_DELIVERY',
                         status: 'PENDING'
                     };
@@ -282,6 +327,14 @@ const Checkout: React.FC = () => {
                                 <span className="text-[10px] font-black uppercase tracking-widest">Taxa de Entrega</span>
                                 <span className="text-xs font-bold">R$ {deliveryFee.toFixed(2)}</span>
                             </div>
+                            {appliedCoupon && (
+                                <div className="flex justify-between items-center text-emerald-600">
+                                    <span className="text-[10px] font-black uppercase tracking-widest flex items-center gap-1">
+                                        <Icons.Ticket className="w-3 h-3" /> Cupom: {appliedCoupon.code}
+                                    </span>
+                                    <span className="text-xs font-bold">- R$ {discountValue.toFixed(2)}</span>
+                                </div>
+                            )}
                             <div className="flex justify-between items-center pt-3 border-t border-dashed border-slate-200">
                                 <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Total do Pedido</span>
                                 <span className="text-2xl font-black text-indigo-600 tracking-tighter">R$ {finalTotal.toFixed(2)}</span>
@@ -459,6 +512,61 @@ const Checkout: React.FC = () => {
                                     ))}
                                 </div>
                             </div>
+                        </div>
+                    )}
+                </div>
+
+                {/* Coupon Code Section */}
+                <div className="space-y-4">
+                    <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2 flex items-center gap-2">
+                        <Icons.Ticket className="w-4 h-4 text-indigo-400" /> Cupom de Desconto
+                    </h2>
+                    {appliedCoupon ? (
+                        <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-[1.5rem] flex items-center justify-between animate-in fade-in zoom-in-95 duration-300">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-emerald-500/20">
+                                    <Icons.Check className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <p className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">Cupom Ativado</p>
+                                    <p className="text-sm font-bold text-slate-800">{appliedCoupon.code}</p>
+                                </div>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={handleRemoveCoupon}
+                                className="text-[10px] font-black uppercase text-rose-500 tracking-widest px-4 py-2 hover:bg-rose-50 rounded-full transition-all"
+                            >
+                                Remover
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="space-y-2">
+                            <div className="flex gap-2">
+                                <div className="flex-1 relative">
+                                    <input
+                                        type="text"
+                                        placeholder="Digite seu cupom..."
+                                        value={couponCode}
+                                        onChange={e => setCouponCode(e.target.value.toUpperCase())}
+                                        className="w-full p-4 bg-white border border-slate-100 rounded-[1.25rem] font-bold text-sm text-slate-600 focus:ring-4 focus:ring-indigo-50 focus:border-indigo-100 transition-all placeholder:text-slate-300"
+                                    />
+                                    {isValidatingCoupon && (
+                                        <div className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin"></div>
+                                    )}
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={handleApplyCoupon}
+                                    disabled={!couponCode.trim() || isValidatingCoupon}
+                                    className="px-6 bg-slate-800 text-white rounded-[1.25rem] font-black uppercase text-[10px] tracking-widest hover:bg-slate-700 disabled:opacity-50 transition-all active:scale-95 whitespace-nowrap"
+                                >
+                                    Aplicar
+                                </button>
+                            </div>
+                            {couponError && (
+                                <p className="text-[10px] font-bold text-rose-500 ml-4 animate-in fade-in duration-300">{couponError}</p>
+                            )}
                         </div>
                     )}
                 </div>

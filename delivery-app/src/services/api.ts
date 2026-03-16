@@ -143,6 +143,13 @@ class DeliveryApiService {
     async getCoupons() {
         return this.request<any[]>('/public/promotions');
     }
+    
+    async validateCoupon(code: string, orderTotal: number) {
+        return this.request<any>('/promotions/validate', {
+            method: 'POST',
+            body: JSON.stringify({ code, orderTotal }),
+        });
+    }
 
     logout() {
         localStorage.removeItem('delivery_app_token');
