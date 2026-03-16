@@ -103,7 +103,7 @@ const Home: React.FC = () => {
 
 
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-28">
+        <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 pb-28 transition-colors duration-500">
             <style>
                 {`
                 @keyframes slow-blink {
@@ -220,15 +220,15 @@ const Home: React.FC = () => {
 
             {/* TAB CONTENT */}
             {activeTab === 'CARDAPIO' ? (
-                <div className="space-y-6 pt-6 animate-in fade-in duration-500">
+                <div className="flex-1 flex flex-col space-y-6 pt-6 animate-in fade-in duration-500">
                     {!showMenu ? (
                         /* Advertisement Banner Space */
-                        <div className="px-6">
-                            <div className="w-full aspect-[16/9] bg-slate-200 dark:bg-slate-800 rounded-[2.5rem] overflow-hidden shadow-sm relative group">
+                        <div className="flex-1 flex flex-col px-6 pb-6">
+                            <div className="flex-1 w-full bg-slate-200 dark:bg-slate-800 rounded-[2.5rem] overflow-hidden shadow-sm relative group flex items-center justify-center">
                                 {settings?.appBannerUrl ? (
-                                    <img src={settings.appBannerUrl} alt="Propaganda" className="w-full h-full object-cover" />
+                                    <img src={settings.appBannerUrl} alt="Propaganda" className="w-full h-full object-contain" />
                                 ) : (
-                                    <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600 p-8 text-center">
+                                    <div className="w-full max-w-sm aspect-square md:aspect-video flex flex-col items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600 p-8 text-center rounded-[2.5rem] shadow-2xl">
                                         <Icons.ShoppingCart className="w-16 h-16 text-white/20 mb-4" />
                                         <h2 className="text-white font-black uppercase tracking-tighter text-2xl mb-2">Seja Bem-vindo!</h2>
                                         <p className="text-white/60 font-bold text-xs uppercase tracking-widest">Clique em cardápio para ver as delícias de hoje.</p>
