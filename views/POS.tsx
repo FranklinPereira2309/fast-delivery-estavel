@@ -1736,7 +1736,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
           </div>
         </div>
 
-        <div className={`w-80 lg:w-80 xl:w-96 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col shrink-0 overflow-hidden relative border-l-4 border-l-blue-600/10 dark:border-l-blue-500/10 transition-all duration-500 ${!activeCashSession ? 'grayscale pointer-events-none opacity-40' : ''}`}>
+        <div className={`w-80 lg:w-80 xl:w-96 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col shrink-0 overflow-y-auto relative border-l-4 border-l-blue-600/10 dark:border-l-blue-500/10 transition-all duration-500 ${!activeCashSession ? 'grayscale pointer-events-none opacity-40' : ''}`}>
           {!activeCashSession && (
             <div className="absolute inset-0 z-20 bg-slate-50/10 dark:bg-slate-900/10 backdrop-blur-[1px]"></div>
           )}
@@ -1749,7 +1749,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
             </div>
           )}
 
-          <div className="p-4 lg:p-6 xl:p-8 border-b border-slate-50 dark:border-slate-800 shrink-0">
+          <div className="p-4 lg:p-6 xl:p-8 border-b border-slate-50 dark:border-slate-800 shrink-0 sticky top-0 bg-white dark:bg-slate-900 z-10">
             <h3 className="font-black text-lg xl:text-xl text-slate-800 dark:text-white uppercase tracking-tighter">Área de Pagamento</h3>
             <div className="mt-3 xl:mt-6 space-y-3 xl:space-y-4">
               <div className="flex gap-2 bg-slate-100 dark:bg-slate-800 p-1.5 rounded-2xl">
@@ -1830,7 +1830,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
             </div>
           </div>
 
-          <div className="flex-1 min-h-0 p-4 lg:p-6 xl:p-8 space-y-3 xl:space-y-4 font-receipt text-[11px] overflow-y-auto custom-scrollbar">
+          <div className="flex-1 p-4 lg:p-6 xl:p-8 space-y-3 xl:space-y-4 font-receipt text-[11px]">
             {groupedCart.length > 0 ? groupedCart.map(([id, data]) => (
               <div key={id} className={`flex justify-between items-center border-b border-dotted dark:border-slate-700 pb-2 ${(currentOrderStatus === OrderStatus.PREPARING || currentOrderStatus === OrderStatus.PARTIALLY_READY) ? 'animate-moderate-blink text-orange-600 dark:text-orange-400' : ''}`}>
                 <div className="flex-1">
