@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import FooterNav from './FooterNav';
-import { Phone, Facebook, Instagram, Globe, Ticket, LogOut } from 'lucide-react';
+import { Phone, Facebook, Instagram, Globe, Ticket, LogOut, Sun, Moon } from 'lucide-react';
+import { useTheme } from '../ThemeContext';
 import { api } from '../services/api';
 import { socket } from '../services/socket';
 import type { BusinessSettings, StoreStatus } from '../types';
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const { theme, toggleTheme } = useTheme();
     const location = useLocation();
     const hideFooterPaths = ['/login', '/register', '/recover'];
     const shouldShowFooter = !hideFooterPaths.includes(location.pathname);
@@ -133,7 +135,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const isHome = location.pathname === '/';
 
     return (
-        <div className={`min-h-screen bg-slate-50 ${shouldShowFooter ? 'pb-28' : ''}`}>
+        <div className={`min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300 ${shouldShowFooter ? 'pb-28' : ''}`}>
             {/* Banner de Status da Loja (Global) */}
             {(storeStatus?.status === 'offline' || isClosingSoon) && (
                 <div className={`text-center py-2 text-[10px] font-black uppercase tracking-widest text-white px-4 sticky top-0 z-[60] animate-in slide-in-from-top duration-300 ${storeStatus?.status === 'offline' ? 'bg-rose-600/90 backdrop-blur-md' : 'bg-orange-500/90 backdrop-blur-md'}`}>
@@ -164,7 +166,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                         <div className="fixed top-4 left-4 z-[70]">
                             <button
                                 onClick={() => setIsSidebarOpen(true)}
-                                className="w-12 h-12 bg-[#4f39f6] rounded-xl flex flex-col items-center justify-center gap-1.5 shadow-xl shadow-[#4f39f6]/20 active:scale-90 transition-all border-b-4 border-[#3a29c4]"
+                                className="w-12 h-12 bg-[#4f39f6] dark:bg-indigo-600 rounded-xl flex flex-col items-center justify-center gap-1.5 shadow-xl shadow-[#4f39f6]/20 dark:shadow-none active:scale-90 transition-all border-b-4 border-[#3a29c4] dark:border-indigo-800"
                             >
                                 <div className="w-6 h-1 bg-white rounded-full"></div>
                                 <div className="w-6 h-1 bg-white rounded-full"></div>
@@ -183,7 +185,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                     <aside
                         onTouchStart={handleTouchStart}
                         onTouchEnd={handleTouchEnd}
-                        className={`fixed top-0 left-0 h-full w-[85%] max-w-sm bg-white z-[90] shadow-2xl transition-transform duration-500 ease-out flex flex-col ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
+                        className={`fixed top-0 left-0 h-full w-[85%] max-w-sm bg-white dark:bg-slate-900 z-[90] shadow-2xl transition-transform duration-500 ease-out flex flex-col ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
                     >
                         {/* Header with Campaign Logo */}
                         <div className="relative bg-[#4f39f6] p-6 pb-10 flex flex-col items-center justify-center text-center overflow-hidden">
@@ -200,53 +202,53 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                         </div>
 
                         {/* Content Scrollable */}
-                        <div className="flex-1 overflow-y-auto px-6 py-8 space-y-8">
+                        <div className="flex-1 overflow-y-auto px-6 py-8 space-y-8 no-scrollbar">
                             {/* Contact Info */}
                             <section className="space-y-4">
-                                <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1">Contato & Social</h3>
+                                <h3 className="text-[10px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-widest px-1">Contato & Social</h3>
                                 <div className="space-y-2">
-                                    <div className="bg-white p-4 rounded-2xl border border-slate-100 flex items-center gap-4 shadow-sm">
-                                        <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-[#4f39f6]">
+                                    <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700 flex items-center gap-4 shadow-sm">
+                                        <div className="w-10 h-10 bg-indigo-50 dark:bg-indigo-900/30 rounded-xl flex items-center justify-center text-[#4f39f6] dark:text-indigo-400">
                                             <Phone className="w-5 h-5" />
                                         </div>
                                         <div>
-                                            <p className="text-[10px] font-black text-slate-400 uppercase">Telefone</p>
-                                            <p className="text-sm font-bold text-slate-700">{settings?.phone || 'Não informado'}</p>
+                                            <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase">Telefone</p>
+                                            <p className="text-sm font-bold text-slate-700 dark:text-slate-200">{settings?.phone || 'Não informado'}</p>
                                         </div>
                                     </div>
 
                                     {settings?.facebook && (
-                                        <div className="bg-white p-4 rounded-2xl border border-slate-100 flex items-center gap-4">
-                                            <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600">
+                                        <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700 flex items-center gap-4 shadow-sm">
+                                            <div className="w-10 h-10 bg-blue-50 dark:bg-blue-900/30 rounded-xl flex items-center justify-center text-blue-600 dark:text-blue-400">
                                                 <Facebook className="w-5 h-5" />
                                             </div>
                                             <div>
-                                                <p className="text-[10px] font-black text-slate-400 uppercase">Facebook</p>
-                                                <p className="text-sm font-bold text-slate-700">@{settings.facebook}</p>
+                                                <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase">Facebook</p>
+                                                <p className="text-sm font-bold text-slate-700 dark:text-slate-200">@{settings.facebook}</p>
                                             </div>
                                         </div>
                                     )}
 
                                     {settings?.instagram && (
-                                        <div className="bg-white p-4 rounded-2xl border border-slate-100 flex items-center gap-4">
-                                            <div className="w-10 h-10 bg-rose-50 rounded-xl flex items-center justify-center text-rose-600">
+                                        <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700 flex items-center gap-4 shadow-sm">
+                                            <div className="w-10 h-10 bg-rose-50 dark:bg-rose-900/30 rounded-xl flex items-center justify-center text-rose-600 dark:text-rose-400">
                                                 <Instagram className="w-5 h-5" />
                                             </div>
                                             <div>
-                                                <p className="text-[10px] font-black text-slate-400 uppercase">Instagram</p>
-                                                <p className="text-sm font-bold text-slate-700">@{settings.instagram}</p>
+                                                <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase">Instagram</p>
+                                                <p className="text-sm font-bold text-slate-700 dark:text-slate-200">@{settings.instagram}</p>
                                             </div>
                                         </div>
                                     )}
 
                                     {settings?.website && (
-                                        <div className="bg-white p-4 rounded-2xl border border-slate-100 flex items-center gap-4">
-                                            <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-slate-600">
+                                        <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700 flex items-center gap-4 shadow-sm">
+                                            <div className="w-10 h-10 bg-slate-50 dark:bg-slate-700 rounded-xl flex items-center justify-center text-slate-600 dark:text-slate-300">
                                                 <Globe className="w-5 h-5" />
                                             </div>
                                             <div>
-                                                <p className="text-[10px] font-black text-slate-400 uppercase">Site</p>
-                                                <p className="text-sm font-bold text-slate-700">{settings.website.replace(/^https?:\/\//, '')}</p>
+                                                <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase">Site</p>
+                                                <p className="text-sm font-bold text-slate-700 dark:text-slate-200">{settings.website.replace(/^https?:\/\//, '')}</p>
                                             </div>
                                         </div>
                                     )}
@@ -256,20 +258,20 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                             {/* Active Coupons */}
                             {coupons.length > 0 && (
                                 <section className="space-y-4">
-                                    <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1">Cupons Disponíveis</h3>
+                                    <h3 className="text-[10px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-widest px-1">Cupons Disponíveis</h3>
                                     <div className="space-y-3">
                                         {coupons.map(coupon => (
-                                            <div key={coupon.id} className="bg-white p-4 rounded-2xl border-2 border-dashed border-[#4f39f6]/20 flex items-center gap-4 relative overflow-hidden group">
-                                                <div className="absolute top-0 right-0 w-8 h-8 bg-[#4f39f6] rounded-bl-2xl flex items-center justify-center text-white scale-0 group-hover:scale-100 transition-transform">
+                                            <div key={coupon.id} className="bg-white dark:bg-slate-800 p-4 rounded-2xl border-2 border-dashed border-[#4f39f6]/20 dark:border-indigo-500/30 flex items-center gap-4 relative overflow-hidden group shadow-sm">
+                                                <div className="absolute top-0 right-0 w-8 h-8 bg-[#4f39f6] dark:bg-indigo-600 rounded-bl-2xl flex items-center justify-center text-white scale-0 group-hover:scale-100 transition-transform">
                                                     <Ticket className="w-4 h-4" />
                                                 </div>
                                                 <div className="flex-1">
-                                                    <div className="text-sm font-black text-slate-800 uppercase tracking-tight group-hover:text-[#4f39f6] transition-colors">{coupon.code}</div>
-                                                    <div className="text-[10px] font-bold text-[#4f39f6] uppercase">{coupon.description || 'Desconto imperdível'}</div>
+                                                    <div className="text-sm font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight group-hover:text-[#4f39f6] dark:group-hover:text-indigo-400 transition-colors">{coupon.code}</div>
+                                                    <div className="text-[10px] font-bold text-[#4f39f6] dark:text-indigo-400 uppercase">{coupon.description || 'Desconto imperdível'}</div>
                                                 </div>
                                                 <div className="text-right">
-                                                    <div className="text-xs font-black text-slate-400">VÁLIDO ATÉ</div>
-                                                    <div className="text-[10px] font-bold text-slate-600">{coupon.endDate ? new Date(coupon.endDate).toLocaleDateString() : 'INDETERMINADO'}</div>
+                                                    <div className="text-xs font-black text-slate-300 dark:text-slate-600">VÁLIDO ATÉ</div>
+                                                    <div className="text-[10px] font-bold text-slate-600 dark:text-slate-400">{coupon.endDate ? new Date(coupon.endDate).toLocaleDateString() : 'INDETERMINADO'}</div>
                                                 </div>
                                             </div>
                                         ))}
@@ -279,23 +281,42 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                         </div>
 
                         {/* Footer Section */}
-                        <div className="p-6 border-t border-slate-100 bg-slate-50 flex flex-col gap-4">
+                        <div className="p-6 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 flex flex-col gap-4">
+                            {/* Theme Toggle Switch */}
+                            <div className="flex flex-col gap-2">
+                                <p className="text-[10px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-widest px-1">Tema do App</p>
+                                <button 
+                                    onClick={toggleTheme}
+                                    className="w-full p-4 bg-white dark:bg-slate-800 rounded-2xl flex items-center justify-between border border-slate-100 dark:border-slate-700 shadow-sm active:scale-95 transition-all group"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${theme === 'dark' ? 'bg-indigo-900/50 text-indigo-400' : 'bg-orange-50 text-orange-500'}`}>
+                                            {theme === 'dark' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+                                        </div>
+                                        <span className="text-sm font-bold text-slate-700 dark:text-slate-200">{theme === 'dark' ? 'Modo Escuro' : 'Modo Claro'}</span>
+                                    </div>
+                                    <div className={`w-12 h-6 rounded-full relative transition-colors ${theme === 'dark' ? 'bg-indigo-600' : 'bg-slate-200'}`}>
+                                        <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${theme === 'dark' ? 'left-7' : 'left-1'}`}></div>
+                                    </div>
+                                </button>
+                            </div>
+
                             <button 
                                 onClick={() => {
                                     api.logout();
                                     window.location.reload();
                                 }}
-                                className="w-full p-4 bg-rose-50 text-rose-500 rounded-2xl flex items-center justify-center gap-3 font-black uppercase text-[10px] tracking-widest border border-rose-100 shadow-sm active:scale-95 transition-all"
+                                className="w-full p-4 bg-rose-50 dark:bg-rose-900/10 text-rose-500 rounded-2xl flex items-center justify-center gap-3 font-black uppercase text-[10px] tracking-widest border border-rose-100 dark:border-rose-900/30 shadow-sm active:scale-95 transition-all"
                             >
                                 <LogOut className="w-5 h-5" />
                                 Sair do App
                             </button>
 
                             <div className="flex flex-col items-center justify-center pt-2 opacity-50 grayscale hover:grayscale-0 transition-all">
-                                <p className="text-[8px] font-black uppercase tracking-widest text-slate-400 mb-1">Tecnologia por</p>
+                                <p className="text-[8px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-600 mb-1">Tecnologia por</p>
                                 <div className="flex items-center gap-1.5">
                                     <img src="/logo_fransoft.png" alt="Fransoft Logo" className="w-6 h-6 object-contain" />
-                                    <span className="text-slate-900 font-extrabold text-xs tracking-tighter uppercase">Fransoft <span className="text-indigo-600 font-medium">Developer®</span></span>
+                                    <span className="text-slate-900 dark:text-slate-400 font-extrabold text-xs tracking-tighter uppercase">Fransoft <span className="text-indigo-600 dark:text-indigo-400 font-medium">Developer®</span></span>
                                 </div>
                             </div>
                         </div>

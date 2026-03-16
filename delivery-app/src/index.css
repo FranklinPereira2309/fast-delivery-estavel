@@ -25,42 +25,39 @@
   --color-blue-950: #1e1b4b;
 }
 
-body {
-  @apply bg-slate-50 text-slate-800 antialiased font-sans;
+@utility glass {
+  @apply bg-white/70 backdrop-blur-md border border-white/40 shadow-lg dark:bg-slate-900/70 dark:border-white/10;
 }
 
-@layer utilities {
-  .glass {
-    @apply bg-white/70 backdrop-blur-md border border-white/40 shadow-lg;
-  }
+@utility glass-dark {
+  @apply bg-slate-900/80 backdrop-blur-xl border border-white/10 shadow-2xl;
+}
 
-  .glass-dark {
-    @apply bg-slate-900/80 backdrop-blur-xl border border-white/10 shadow-2xl;
-  }
+body {
+  @apply bg-slate-50 text-slate-800 antialiased font-sans dark:bg-slate-950 dark:text-slate-100 transition-colors duration-300;
+}
 
-  .text-glow {
-    text-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
-  }
+@utility text-glow {
+  text-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
+}
 
-  .animate-blob {
-    animation: blob 7s infinite;
-  }
+@utility animate-blob {
+  animation: blob 7s infinite;
+}
 
-  .animate-fade-in {
-    animation: fadeIn 0.4s ease-out forwards;
-  }
+@utility animate-fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}
 
-  .animation-delay-2000 {
-    animation-delay: 2s;
-  }
+@utility animation-delay-2000 {
+  animation-delay: 2s;
+}
 
-  .no-scrollbar::-webkit-scrollbar {
+@utility no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
     display: none;
-  }
-
-  .no-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
   }
 }
 

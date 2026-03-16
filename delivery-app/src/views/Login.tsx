@@ -181,17 +181,17 @@ const Login: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-4 md:p-6 relative font-sans">
+        <div className="min-h-screen bg-slate-900 transition-colors duration-500 flex flex-col items-center justify-center p-4 md:p-6 relative font-sans">
             <div className="w-full max-w-md animate-in fade-in zoom-in duration-500">
-                <div className="w-full bg-white p-5 md:p-10 rounded-3xl md:rounded-[3rem] shadow-2xl relative">
+                <div className="w-full bg-white dark:bg-slate-800 p-5 md:p-10 rounded-3xl md:rounded-[3rem] shadow-2xl relative border border-slate-100 dark:border-slate-700">
                 {/* Fechar Modal Login */}
                 {/* Header */}
                 <div className="flex flex-col items-center mb-5 md:mb-8 text-center pt-2 md:pt-0">
                     <div className="w-16 h-16 md:w-20 md:h-20 bg-indigo-600 rounded-[1.2rem] md:rounded-[1.5rem] flex items-center justify-center shadow-2xl shadow-indigo-500/30 mb-4 md:mb-6 transform -rotate-3 transition-transform hover:rotate-0 duration-500">
                         <span className="text-white font-black text-2xl md:text-3xl tracking-tighter">DA</span>
                     </div>
-                    <h2 className="text-2xl md:text-3xl font-black text-slate-800 uppercase tracking-tighter italic leading-none">Delivery App</h2>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2 md:mt-3">
+                    <h2 className="text-2xl md:text-3xl font-black text-slate-800 dark:text-white uppercase tracking-tighter italic leading-none">Delivery App</h2>
+                    <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-2 md:mt-3">
                         {view === 'LOGIN' ? 'Acesso do Cliente' : 'Troca de Senha Obrigatória'}
                     </p>
                 </div>
@@ -200,14 +200,14 @@ const Login: React.FC = () => {
                     <>
                         <form onSubmit={handleLogin} className="space-y-3 md:space-y-6">
                             <div className="space-y-1 md:space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">WhatsApp</label>
+                                <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-4">WhatsApp</label>
                                 <div className="relative group">
-                                    <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors">
+                                    <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 dark:text-slate-600 group-focus-within:text-indigo-500 transition-colors">
                                         <Icons.Phone className="w-5 h-5" />
                                     </div>
                                     <input
                                         type="tel"
-                                        className="w-full pl-14 pr-5 py-3 md:py-4 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-indigo-100 transition-all font-bold text-sm"
+                                        className="w-full pl-14 pr-5 py-3 md:py-4 bg-slate-50 dark:bg-slate-900 border-none rounded-2xl focus:ring-4 focus:ring-indigo-100 dark:focus:ring-indigo-900/20 transition-all font-bold text-sm text-slate-800 dark:text-slate-100"
                                         placeholder="(00) 00000-0000"
                                         value={phone}
                                         onChange={e => setPhone(maskPhone(e.target.value))}
@@ -217,14 +217,14 @@ const Login: React.FC = () => {
                             </div>
 
                             <div className="space-y-1 md:space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Senha</label>
+                                <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-4">Senha</label>
                                 <div className="relative group">
-                                    <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors">
+                                    <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 dark:text-slate-600 group-focus-within:text-indigo-500 transition-colors">
                                         <Icons.Lock className="w-5 h-5" />
                                     </div>
                                     <input
                                         type={showPassword ? "text" : "password"}
-                                        className="w-full pl-14 pr-14 py-3 md:py-4 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-indigo-100 transition-all font-bold text-sm"
+                                        className="w-full pl-14 pr-14 py-3 md:py-4 bg-slate-50 dark:bg-slate-900 border-none rounded-2xl focus:ring-4 focus:ring-indigo-100 dark:focus:ring-indigo-900/20 transition-all font-bold text-sm text-slate-800 dark:text-slate-100"
                                         placeholder="••••••••"
                                         value={password}
                                         onChange={e => setPassword(e.target.value)}
@@ -243,7 +243,7 @@ const Login: React.FC = () => {
                             <button
                                 disabled={isLoading}
                                 type="submit"
-                                className="w-full bg-slate-900 hover:bg-black text-white py-3 md:py-4 rounded-2xl font-black uppercase text-xs tracking-widest transition-all shadow-xl shadow-slate-900/20 mt-2 md:mt-4 active:scale-[0.98]"
+                                className="w-full bg-slate-900 dark:bg-indigo-600 hover:bg-black dark:hover:bg-indigo-500 text-white py-3 md:py-4 rounded-2xl font-black uppercase text-xs tracking-widest transition-all shadow-xl shadow-slate-900/20 dark:shadow-black/20 mt-2 md:mt-4 active:scale-[0.98]"
                             >
                                 {isLoading ? 'Entrando...' : 'Entrar no Sistema'}
                             </button>
@@ -251,9 +251,9 @@ const Login: React.FC = () => {
 
                         <div className="mt-5 md:mt-8 flex flex-col items-center gap-3 md:gap-6">
                             <div className="w-full flex items-center gap-4">
-                                <div className="flex-1 h-[1px] bg-slate-100"></div>
-                                <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Ou entrar com</span>
-                                <div className="flex-1 h-[1px] bg-slate-100"></div>
+                                <div className="flex-1 h-[1px] bg-slate-100 dark:bg-slate-700"></div>
+                                <span className="text-[10px] font-black text-slate-300 dark:text-slate-600 uppercase tracking-widest">Ou entrar com</span>
+                                <div className="flex-1 h-[1px] bg-slate-100 dark:bg-slate-700"></div>
                             </div>
 
                             <GoogleLogin
@@ -276,12 +276,12 @@ const Login: React.FC = () => {
                         </div>
 
                         <div className="mt-5 md:mt-8 text-center space-y-2 md:space-y-4">
-                            <p className="text-xs font-bold text-slate-400">
-                                Não tem conta? <button onClick={() => navigate('/register')} className="text-indigo-600 ml-1">Cadastre-se</button>
+                            <p className="text-xs font-bold text-slate-400 dark:text-slate-500">
+                                Não tem conta? <button onClick={() => navigate('/register')} className="text-indigo-600 dark:text-indigo-400 ml-1">Cadastre-se</button>
                             </p>
                             <button
                                 onClick={() => navigate('/recover')}
-                                className="text-[10px] font-black text-slate-300 uppercase tracking-widest hover:text-indigo-400 transition-colors"
+                                className="text-[10px] font-black text-slate-300 dark:text-slate-600 uppercase tracking-widest hover:text-indigo-400 transition-colors"
                             >
                                 Esqueci minha senha
                             </button>
@@ -289,21 +289,21 @@ const Login: React.FC = () => {
                     </>
                 ) : (
                     <form onSubmit={handleResetPassword} className="space-y-3 md:space-y-6 animate-in fade-in duration-300">
-                        <div className="p-4 bg-amber-50 border border-amber-100 rounded-2xl mb-4">
-                            <p className="text-[9px] font-black text-amber-600 uppercase tracking-tight leading-relaxed">
+                        <div className="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-900/30 rounded-2xl mb-4">
+                            <p className="text-[9px] font-black text-amber-600 dark:text-amber-500 uppercase tracking-tight leading-relaxed">
                                 Você está usando a senha padrão. Por segurança, crie uma senha forte agora.
                             </p>
                         </div>
 
                         <div className="space-y-1 md:space-y-2">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Nova Senha</label>
+                            <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-4">Nova Senha</label>
                             <div className="relative group">
-                                <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors">
+                                <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 dark:text-slate-600 group-focus-within:text-indigo-500 transition-colors">
                                     <Icons.Lock className="w-5 h-5" />
                                 </div>
                                 <input
                                     type={showNewPassword ? "text" : "password"}
-                                    className="w-full pl-14 pr-14 py-3 md:py-5 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-indigo-100 transition-all font-bold text-sm"
+                                    className="w-full pl-14 pr-14 py-3 md:py-5 bg-slate-50 dark:bg-slate-900 border-none rounded-2xl focus:ring-4 focus:ring-indigo-100 dark:focus:ring-indigo-900/20 transition-all font-bold text-sm text-slate-800 dark:text-slate-100"
                                     placeholder="••••••••"
                                     value={newPassword}
                                     onChange={e => setNewPassword(e.target.value)}
@@ -320,14 +320,14 @@ const Login: React.FC = () => {
                         </div>
 
                         <div className="space-y-1 md:space-y-2">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Confirme a Senha</label>
+                            <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-4">Confirme a Senha</label>
                             <div className="relative group">
-                                <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors">
+                                <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 dark:text-slate-600 group-focus-within:text-indigo-500 transition-colors">
                                     <Icons.Lock className="w-5 h-5" />
                                 </div>
                                 <input
                                     type={showConfirmPassword ? "text" : "password"}
-                                    className="w-full pl-14 pr-14 py-3 md:py-5 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-indigo-100 transition-all font-bold text-sm"
+                                    className="w-full pl-14 pr-14 py-3 md:py-5 bg-slate-50 dark:bg-slate-900 border-none rounded-2xl focus:ring-4 focus:ring-indigo-100 dark:focus:ring-indigo-900/20 transition-all font-bold text-sm text-slate-800 dark:text-slate-100"
                                     placeholder="••••••••"
                                     value={confirmPassword}
                                     onChange={e => setConfirmPassword(e.target.value)}
@@ -346,7 +346,7 @@ const Login: React.FC = () => {
                         <button
                             disabled={isLoading}
                             type="submit"
-                            className="w-full bg-emerald-600 text-white py-3 md:py-5 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-emerald-700 transition-all shadow-xl shadow-emerald-200 mt-2 md:mt-4"
+                            className="w-full bg-emerald-600 text-white py-3 md:py-5 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-emerald-700 transition-all shadow-xl shadow-emerald-200 dark:shadow-none mt-2 md:mt-4"
                         >
                             {isLoading ? 'Salvando...' : 'Salvar Nova Senha'}
                         </button>
@@ -360,7 +360,7 @@ const Login: React.FC = () => {
                                     setNewPassword('');
                                     setConfirmPassword('');
                                 }}
-                                className="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors"
+                                className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
                             >
                                 Voltar para o Login
                             </button>
@@ -369,7 +369,7 @@ const Login: React.FC = () => {
                 )}
             </div>
 
-            <p className="text-center mt-4 md:mt-12 text-slate-600 text-[9px] md:text-[10px] font-black uppercase tracking-[0.3em]">
+            <p className="text-center mt-4 md:mt-12 text-slate-600 dark:text-slate-500 text-[9px] md:text-[10px] font-black uppercase tracking-[0.3em]">
                 Fransoft Developer®
             </p>
 
