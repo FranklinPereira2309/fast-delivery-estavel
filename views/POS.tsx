@@ -895,12 +895,12 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       return showAlert("Método Duplicado", "Este método de pagamento já foi adicionado. Remova-o para ajustar o valor ou escolha outro.", "DANGER");
     }
 
-    // Validation for DINHEIRO
+    // Validation for DINHEIRO, PIX, CRÉDITO, DÉBITO
     let received: number | undefined = undefined;
-    if (paymentMethod === 'DINHEIRO') {
+    if (['DINHEIRO', 'PIX', 'CRÉDITO', 'DÉBITO'].includes(paymentMethod)) {
       received = parseFloat(paymentData.receivedAmount.replace(',', '.')) || 0;
       if (received <= 0) {
-        return showAlert("Valor Recebido", "Para pagamentos em Dinheiro, é obrigatório informar o valor recebido pelo cliente.", "DANGER");
+        return showAlert("Valor Recebido", `Para pagamentos em ${paymentMethod}, é obrigatório informar o valor recebido pelo cliente.`, "DANGER");
       }
 
       // If received is less than the suggested amount, we record the actual received amount
@@ -908,7 +908,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       if (received < amount) {
         // No block here. We adjust segment amount to match received value.
         // The user will then select another method for the rest.
-      } else {
+      } else if (paymentMethod === 'DINHEIRO') {
         const change = received - amount;
         const maxChange = businessSettings?.maxChange || 10.00;
         if (change > maxChange) {
@@ -921,7 +921,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       }
     }
 
-    const finalAmount = (paymentMethod === 'DINHEIRO' && received && received < amount) ? received : amount;
+    const finalAmount = (['DINHEIRO', 'PIX', 'CRÉDITO', 'DÉBITO'].includes(paymentMethod) && received && received < amount) ? received : amount;
 
     setPayments(prev => [...prev, {
       method: paymentMethod,
@@ -1016,7 +1016,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                       />
                     </div>
 
-                    {paymentMethod === 'DINHEIRO' && (
+                    {['DINHEIRO', 'PIX', 'CRÉDITO', 'DÉBITO'].includes(paymentMethod) && (
                       <div className="animate-in fade-in duration-300">
                         <label className="text-[8px] font-black text-emerald-800 dark:text-emerald-500 uppercase tracking-widest ml-1">Valor Recebido (R$)</label>
                         <input
