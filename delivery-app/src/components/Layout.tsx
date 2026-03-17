@@ -166,7 +166,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                         <div className="fixed top-4 left-4 z-[70]">
                             <button
                                 onClick={() => setIsSidebarOpen(true)}
-                                className="w-12 h-12 bg-[#4f39f6] dark:bg-indigo-600 rounded-xl flex flex-col items-center justify-center gap-1.5 shadow-xl shadow-[#4f39f6]/20 dark:shadow-none active:scale-90 transition-all border-b-4 border-[#3a29c4] dark:border-indigo-800"
+                                className="w-12 h-12 bg-[#4f39f6] dark:bg-indigo-600 flex flex-col items-center justify-center gap-1.5 active:scale-90 transition-all"
                             >
                                 <div className="w-6 h-1 bg-white rounded-full"></div>
                                 <div className="w-6 h-1 bg-white rounded-full"></div>

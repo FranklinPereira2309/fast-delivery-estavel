@@ -103,7 +103,7 @@ const Home: React.FC = () => {
 
 
     return (
-        <div className="h-screen flex flex-col bg-slate-50 dark:bg-slate-950 transition-colors duration-500 overflow-hidden">
+        <div className="h-[calc(100vh-112px)] flex flex-col bg-slate-50 dark:bg-slate-950 transition-colors duration-500 overflow-hidden relative">
             <style>
                 {`
                 @keyframes slow-blink {
@@ -164,7 +164,7 @@ const Home: React.FC = () => {
                     {/* App Title Center Row */}
                     <div className="flex flex-col items-center mt-2 relative z-10">
                         <h1 className="text-xl font-black text-slate-800 dark:text-white tracking-tighter uppercase whitespace-nowrap">
-                            Delivery <span className="text-indigo-500">Fast®</span>
+                            Delivery <span className="text-indigo-500">App®</span>
                         </h1>
                         
                         {isProfileIncomplete && (
@@ -237,13 +237,13 @@ const Home: React.FC = () => {
 
             {/* TAB CONTENT */}
             {activeTab === 'CARDAPIO' ? (
-                <div className="flex-1 flex flex-col space-y-6 pt-6 animate-in fade-in duration-500">
+                <div className="flex-1 flex flex-col animate-in fade-in duration-500 overflow-hidden">
                     {!showMenu ? (
                         /* Advertisement Banner Space - Fixed/Fitting screen */
-                        <div className="flex-1 flex flex-col px-6 pb-4">
+                        <div className="flex-1 flex flex-col px-6 pt-4 pb-4">
                             <div className="flex-1 w-full bg-slate-100 dark:bg-slate-800 rounded-[2.5rem] overflow-hidden shadow-sm relative group flex items-center justify-center">
                                 {settings?.appBannerUrl ? (
-                                    <img src={settings.appBannerUrl} alt="Propaganda" className="w-full h-full object-cover" />
+                                    <img src={settings.appBannerUrl} alt="Propaganda" className="w-full h-full object-contain" />
                                 ) : (
                                     <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600 p-8 text-center rounded-[2.5rem]">
                                         <Icons.ShoppingCart className="w-16 h-16 text-white/20 mb-4" />
