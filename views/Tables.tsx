@@ -311,7 +311,7 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
     } catch (err: any) {
       console.error('Error saving table session:', err);
       const errorMessage = err.message || "Erro desconhecido";
-      showAlert("Erro ao Salvar", `Não foi possível adicionar o item: ${errorMessage}`, "DANGER");
+      addToast({ title: "ERRO AO SALVAR", message: `Não foi possível adicionar o item: ${errorMessage}`, type: "DANGER" });
     }
 
     setLastAddedProduct(product.id);
@@ -427,7 +427,7 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
       await refreshData();
     } catch (err) {
       console.error("Erro ao aprovar digitais", err);
-      showAlert("Erro", "Falha ao processar a aprovação.", "DANGER");
+      addToast({ title: "ERRO", message: "Falha ao processar a aprovação.", type: "DANGER" });
     }
   };
 
@@ -475,7 +475,7 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
       } catch (err) {
         console.error("Erro ao rejeitar digitais", err);
         setAlertConfig(prev => ({ ...prev, isOpen: false }));
-        showAlert("Erro", "Falha ao processar a rejeição.", "DANGER");
+        addToast({ title: "ERRO", message: "Falha ao processar a rejeição.", type: "DANGER" });
       }
     }, () => setAlertConfig(prev => ({ ...prev, isOpen: false })));
   };
