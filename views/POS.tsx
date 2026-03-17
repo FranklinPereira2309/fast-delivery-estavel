@@ -109,14 +109,10 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
     observations: ''
   });
   const [systemPreview, setSystemPreview] = useState<{
-    cash: number;
-    pix: number;
-    credit: number;
-    debit: number;
-    others: number;
-    fiado: number;
     orphanSales: number;
   } | null>(null);
+  const [showCatalog, setShowCatalog] = useState(true);
+  const [productSearchTerm, setProductSearchTerm] = useState('');
 
   const showAlert = (title: string, message: string, type: 'INFO' | 'DANGER' | 'SUCCESS' = 'INFO') => {
     setAlertConfig({ isOpen: true, title, message, onConfirm: () => setAlertConfig(prev => ({ ...prev, isOpen: false })), type });
@@ -1734,22 +1730,66 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
           {!activeCashSession && (
             <div className="absolute inset-0 z-10 bg-slate-50/10 dark:bg-slate-900/10 backdrop-blur-[1px] rounded-[3rem]"></div>
           )}
-          <div className="flex gap-2 mb-6 overflow-x-auto pb-2 shrink-0">
-            {['Todos', ...Array.from(new Set(products.map(p => p.category)))].map(cat => (
-              <button key={cat as string} onClick={() => setActiveCategory(cat as string)} className={`px-4 py-2 rounded-full whitespace-nowrap text-[10px] font-black uppercase tracking-widest ${activeCategory === cat ? 'bg-blue-600 text-white shadow-lg shadow-blue-100 dark:shadow-none' : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 shadow-sm border dark:border-slate-800'}`}>{cat as string}</button>
-            ))}
-          </div>
-          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 overflow-y-auto pr-2">
-            {products.filter(p => activeCategory === 'Todos' || p.category === activeCategory).map(product => (
-              <button key={product.id} onClick={() => { setSelectedProductForCart(product); setCartObservation(''); }} className="bg-white dark:bg-slate-900 p-4 rounded-3xl shadow-sm border border-slate-50 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-500 hover:scale-[1.02] transition-all text-left group">
-                <div className="w-full h-32 bg-slate-50 dark:bg-slate-800 rounded-2xl mb-3 flex items-center justify-center overflow-hidden">
-                  <img src={formatImageUrl(product.imageUrl)} onError={e => e.currentTarget.src = PLACEHOLDER_FOOD_IMAGE} className="max-h-full object-contain group-hover:scale-110 transition-transform" />
-                </div>
-                <p className="font-black text-slate-800 dark:text-white line-clamp-1 uppercase text-[10px] tracking-tighter">{product.name}</p>
-                <p className="text-blue-600 dark:text-blue-400 font-black mt-1">R$ {product.price.toFixed(2)}</p>
+
+          <div className="flex flex-col gap-4 mb-6 shrink-0 z-20">
+            <div className="flex items-center justify-between gap-4">
+              <button
+                onClick={() => setShowCatalog(!showCatalog)}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${showCatalog ? 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400' : 'bg-blue-600 text-white shadow-lg shadow-blue-200'}`}
+              >
+                {showCatalog ? <Icons.ViewOff className="w-4 h-4" /> : <Icons.View className="w-4 h-4" />}
+                {showCatalog ? 'Ocultar Cardápio' : 'Mostrar Cardápio'}
               </button>
-            ))}
+
+              {showCatalog && (
+                <div className="relative flex-1 max-w-md animate-in slide-in-from-right-4 duration-300">
+                  <input
+                    type="text"
+                    placeholder="Buscar produto pelo nome..."
+                    className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl text-[11px] font-black uppercase outline-none focus:ring-2 focus:ring-blue-500 transition-all dark:text-white"
+                    value={productSearchTerm}
+                    onChange={(e) => setProductSearchTerm(e.target.value)}
+                  />
+                  <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">
+                    <Icons.Search className="w-4 h-4" />
+                  </div>
+                  {productSearchTerm && (
+                    <button onClick={() => setProductSearchTerm('')} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-500 transition-colors">×</button>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {showCatalog && (
+              <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar-hide animate-in slide-in-from-top-2 duration-300">
+                {['Todos', ...Array.from(new Set(products.map(p => p.category)))].map(cat => (
+                  <button
+                    key={cat as string}
+                    onClick={() => setActiveCategory(cat as string)}
+                    className={`px-4 py-2 rounded-xl whitespace-nowrap text-[9px] font-black uppercase tracking-widest transition-all ${activeCategory === cat ? 'bg-blue-600 text-white shadow-md shadow-blue-100 dark:shadow-none' : 'bg-white/80 dark:bg-slate-900/80 text-slate-500 dark:text-slate-400 border border-slate-100 dark:border-slate-800'}`}
+                  >
+                    {cat as string}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
+
+          {showCatalog && (
+            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 overflow-y-auto pr-2 animate-in fade-in zoom-in-95 duration-300">
+              {products
+                .filter(p => (activeCategory === 'Todos' || p.category === activeCategory) && (p.name.toLowerCase().includes(productSearchTerm.toLowerCase())))
+                .map(product => (
+                  <button key={product.id} onClick={() => { setSelectedProductForCart(product); setCartObservation(''); }} className="bg-white dark:bg-slate-900 p-4 rounded-3xl shadow-sm border border-slate-50 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-500 hover:scale-[1.02] transition-all text-left group">
+                    <div className="w-full h-32 bg-slate-50 dark:bg-slate-800 rounded-2xl mb-3 flex items-center justify-center overflow-hidden">
+                      <img src={formatImageUrl(product.imageUrl)} onError={e => e.currentTarget.src = PLACEHOLDER_FOOD_IMAGE} className="max-h-full object-contain group-hover:scale-110 transition-transform" />
+                    </div>
+                    <p className="font-black text-slate-800 dark:text-white line-clamp-1 uppercase text-[10px] tracking-tighter">{product.name}</p>
+                    <p className="text-blue-600 dark:text-blue-400 font-black mt-1">R$ {product.price.toFixed(2)}</p>
+                  </button>
+                ))}
+            </div>
+          )}
         </div>
 
         <div className={`w-80 lg:w-80 xl:w-96 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col shrink-0 overflow-y-auto relative border-l-4 border-l-blue-600/10 dark:border-l-blue-500/10 transition-all duration-500 ${!activeCashSession ? 'grayscale pointer-events-none opacity-40' : ''}`}>
