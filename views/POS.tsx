@@ -627,10 +627,23 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
 
   const handlePrintOrder = async () => {
     if (!printingOrder) return;
+    
+    // Se não houver IP, tentamos impressão do sistema (com diálogo)
+    if (!businessSettings?.printerIp) {
+      addToast({ title: "Impressão", message: "Enviando para a impressora do sistema...", type: "INFO" });
+      setTimeout(() => {
+        window.print();
+        // Não fechamos o modal aqui para dar tempo do usuário ver o preview do sistema
+      }, 500);
+      return;
+    }
+
     try {
         const res = await sendOrderToThermalPrinter(printingOrder, businessSettings!);
         if (!res.fallback) {
             addToast({ title: "Impressão", message: "Cupom térmico enviado com sucesso", type: "SUCCESS" });
+            // Se for térmico direto, podemos fechar o modal
+            setPrintingOrder(null);
         }
     } catch(e: any) {
         showAlert("Erro de Impressão ESC/POS", e.message || "Impressora Offline ou não configurada corretamente na aba Empresa.", "DANGER");
@@ -2046,10 +2059,11 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
 
       {
         printingOrder && businessSettings && (
-          <div className="fixed inset-0 z-[60] flex justify-center p-4 bg-slate-900/80 backdrop-blur-md overflow-y-auto pt-10">
-            <div id="pos-receipt" className="relative w-full max-w-[48mm] bg-white dark:bg-slate-900 p-2 border border-dashed dark:border-slate-800 shadow-2xl font-receipt text-[14px] text-black dark:text-white is-receipt animate-in zoom-in duration-200">
-              {isNfceVisual ? (
-                // NFC-e (DANFE) Layout - Redesigned to match image
+          <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-900/90 backdrop-blur-xl animate-in fade-in duration-300 overflow-y-auto">
+            {/* Hidden Receipt for Printing Only */}
+            <div id="pos-receipt" className="hidden print:block fixed top-0 left-0 w-full max-w-[48mm] bg-white p-2 font-receipt text-[14px] text-black is-receipt">
+               {isNfceVisual ? (
+                // NFC-e Layout
                 <div className="space-y-4 font-mono text-[16px] leading-tight text-black">
                   <div className="text-center space-y-1">
                     <p className="font-bold">CNPJ - {businessSettings.cnpj} - {businessSettings.name?.toUpperCase()}</p>
@@ -2057,7 +2071,6 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                     <p className="uppercase">Loja: 001 PDV: 001 VD: {printingOrder.id.substring(0, 6)} OPERADOR: {currentUser.name?.toUpperCase()}</p>
                     <p className="font-bold mt-2">DOCUMENTO AUXILIAR DA NOTA FISCAL DE CONSUMIDOR</p>
                   </div>
-
                   <div className="border-t border-dashed border-black mt-2 pt-2">
                     <table className="w-full text-left">
                       <thead>
@@ -2085,7 +2098,6 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                       </tbody>
                     </table>
                   </div>
-
                   <div className="space-y-1 pt-2">
                     <div className="flex justify-between font-bold">
                       <span>VALOR A PAGAR R$</span>
@@ -2095,73 +2107,43 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                       <span className="uppercase">{printingOrder.paymentMethod || 'OUTROS'}</span>
                       <span>{printingOrder.total.toFixed(2)}</span>
                     </div>
-                    {printingOrder.appliedServiceFee && printingOrder.appliedServiceFee > 0 ? (
-                      <div className="flex justify-between italic">
-                        <span>TAXA SERVICO R$</span>
-                        <span>{printingOrder.appliedServiceFee.toFixed(2)}</span>
-                      </div>
-                    ) : null}
                   </div>
-
                   <div className="text-center space-y-1 border-t border-dashed border-black pt-2">
                     <p className="font-bold">NFCe: {printingOrder.nfeNumber?.split('-')[1] || '000001'} Ser: 001 Emi: {new Date(printingOrder.createdAt).toLocaleDateString('pt-BR')} {new Date(printingOrder.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</p>
                     <p>Consulte pela chave de acesso em</p>
-                    <p className="text-[8px] underline">www.nfce.sefaz.ba.gov.br/portal/consultaNFCe.jsp</p>
                     <p className="text-[13px] font-bold break-all leading-none">35240212345678000190650010000000011000000012</p>
                   </div>
-
                   <div className="text-center space-y-1 border-t border-dashed border-black pt-2">
                     <p className="font-bold">{!printingOrder.clientName || printingOrder.clientName === 'Consumidor' || printingOrder.clientName === 'Consumidor Padrão' ? 'CONSUMIDOR NAO INFORMADO' : `CLIENTE: ${printingOrder.clientName?.toUpperCase()}`}</p>
                     {printingOrder.clientDocument && <p className="font-bold">CPF/CNPJ: {printingOrder.clientDocument}</p>}
-                    <p>Protocolo de Autorizacao: {Math.floor(Math.random() * 100000000000000)}</p>
-                    <div className="flex justify-between text-[8px]">
-                      <span>Tributos Totais Incidentes (Lei Federal 12.741/2012)</span>
-                      <span className="font-bold">{(printingOrder.total * 0.1345).toFixed(2)}</span>
-                    </div>
                   </div>
-
                   <div className="flex justify-center py-4">
-                    <div className="bg-white p-2">
-                      <QRCodeCanvas
+                     <QRCodeCanvas
                         value={printingOrder.nfeUrl || `https://www.nfce.sefaz.ba.gov.br/portal/consultaNFCe.jsp?p=${printingOrder.id}`}
                         size={120}
                         level={"M"}
                         includeMargin={false}
                       />
-                    </div>
                   </div>
                 </div>
               ) : (
-                // Standard Sales Coupon Layout
+                // Standard Layout
                 <>
                   <div className="text-center mb-2">
                     <h2 className="font-bold text-xs uppercase tracking-tighter mb-0">{businessSettings.name}</h2>
                     <p className="text-[8px] font-bold uppercase">CNPJ: {businessSettings.cnpj}</p>
-                    <div className="section-divider"></div>
-                    <p className="text-[10px] font-bold uppercase tracking-widest">COMPROVANTE</p>
+                    <p className="text-[10px] font-bold uppercase tracking-widest mt-1">COMPROVANTE</p>
                   </div>
-                  
-                  <div className="section-divider"></div>
-
-                  <div className="space-y-0.5 mb-2 text-[8px]">
+                  <div className="space-y-0.5 mb-2 text-[8px] border-t border-dashed border-black pt-1">
                     <div className="flex justify-between">
                       <span>DATA: {new Date(printingOrder.createdAt).toLocaleDateString('pt-BR')}</span>
                       <span>{new Date(printingOrder.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
                     </div>
                     <p>CLIENTE: {printingOrder.clientName?.toUpperCase() || 'NAO INFORMADO'}</p>
-                    {printingOrder.clientPhone && <p>FONE: {printingOrder.clientPhone}</p>}
-                    
-                    {printingOrder.type === SaleType.OWN_DELIVERY && printingOrder.clientAddress && (
-                      <p className="font-bold border-t border-black mt-1 pt-0.5 uppercase">ENTREGA: {printingOrder.clientAddress}</p>
-                    )}
-                    
-                    {printingOrder.tableNumber && <p className="font-bold">MESA: {printingOrder.tableNumber}</p>}
                     <p>PAGTO: {printingOrder.paymentMethod || 'PENDENTE'}</p>
+                    {printingOrder.tableNumber && <p className="font-bold">MESA: {printingOrder.tableNumber}</p>}
                   </div>
-
-                  <div className="section-divider"></div>
-
-                  <div className="mb-2">
+                  <div className="mb-2 border-t border-dashed border-black pt-1">
                     {groupedPrintingItems.map(([id, data]) => (
                       <div key={id} className="flex justify-between font-bold uppercase py-0.5 text-[9px]">
                         <span>{data.quantity}x {data.product?.name.substring(0, 15)}</span>
@@ -2169,10 +2151,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                       </div>
                     ))}
                   </div>
-
-                  <div className="section-divider"></div>
-
-                  <div className="space-y-0.5">
+                  <div className="space-y-0.5 border-t border-dashed border-black pt-1">
                     <div className="flex justify-between items-center text-[8px] font-bold uppercase">
                       <span>SUBTOTAL:</span>
                       <span>R$ {(printingOrder.total - (printingOrder.appliedServiceFee || 0)).toFixed(2)}</span>
@@ -2190,22 +2169,102 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                   </div>
                 </>
               )}
+            </div>
 
-              <div className="grid grid-cols-2 gap-4 no-print mt-6">
-                <button
-                  onClick={async () => {
-                    await printElement('pos-receipt');
-                    setPrintingOrder(null);
-                  }}
-                  className="bg-slate-900 text-white py-4 rounded-[22px] font-receipt font-black uppercase text-[11px] shadow-xl hover:bg-black active:scale-95 transition-all flex items-center justify-center"
-                >
-                  IMPRIMIR
-                </button>
+            {/* Visual Modern Summary */}
+            <div className="bg-white dark:bg-slate-900 w-[500px] max-w-[95vw] rounded-[3rem] shadow-2xl overflow-hidden border border-slate-100 dark:border-slate-800 flex flex-col max-h-[95vh] relative no-print">
+              <div className="p-8 border-b border-slate-50 dark:border-slate-800 shrink-0 relative bg-slate-50/50 dark:bg-slate-800/50">
                 <button
                   onClick={() => setPrintingOrder(null)}
-                  className="bg-slate-50 text-slate-400 py-4 rounded-[22px] font-receipt font-black uppercase text-[11px] hover:bg-slate-100 active:scale-95 transition-all flex items-center justify-center"
+                  className="absolute right-6 top-6 w-10 h-10 flex items-center justify-center bg-white dark:bg-slate-800 rounded-full text-slate-400 dark:text-slate-500 hover:bg-red-50 dark:hover:bg-red-900/30 hover:text-red-500 dark:hover:text-red-400 transition-all font-black text-xl z-20 shadow-sm"
                 >
-                  FECHAR
+                  ×
+                </button>
+                <div className="text-center">
+                  <div className="w-20 h-20 bg-emerald-100 dark:bg-emerald-900/20 rounded-[2rem] flex items-center justify-center mx-auto mb-6 text-3xl shadow-inner animate-bounce-subtle">✅</div>
+                  <h2 className="text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tighter">Venda Finalizada</h2>
+                  <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-1">Resumo detalhado da transação</p>
+                </div>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-8 space-y-8 custom-scrollbar">
+                {/* IDENTIFICATION */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 border-l-4 border-blue-600 pl-3">
+                    <h3 className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-widest">Identificação</h3>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4 bg-slate-50 dark:bg-slate-800/50 p-6 rounded-[2rem] border border-slate-100 dark:border-slate-700">
+                    <div>
+                      <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Cliente</p>
+                      <p className="text-[11px] font-black text-slate-700 dark:text-slate-200 uppercase">{printingOrder.clientName || 'Consumidor Padrão'}</p>
+                    </div>
+                    <div>
+                      <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Mesa / Pedido</p>
+                      <p className="text-[11px] font-black text-slate-700 dark:text-slate-200 uppercase">{printingOrder.tableNumber ? `Mesa ${printingOrder.tableNumber}` : printingOrder.id.substring(0, 8)}</p>
+                    </div>
+                    <div>
+                      <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Data</p>
+                      <p className="text-[11px] font-black text-slate-700 dark:text-slate-200 uppercase">{new Date(printingOrder.createdAt).toLocaleDateString('pt-BR')}</p>
+                    </div>
+                    <div>
+                      <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Horário</p>
+                      <p className="text-[11px] font-black text-slate-700 dark:text-slate-200 uppercase">{new Date(printingOrder.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* ITEMS */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 border-l-4 border-indigo-600 pl-3">
+                    <h3 className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-widest">Itens Consumidos</h3>
+                  </div>
+                  <div className="bg-slate-50 dark:bg-slate-800/50 rounded-[2rem] p-8 border border-slate-100 dark:border-slate-700 space-y-3 font-receipt shadow-inner">
+                    {groupedPrintingItems.map(([id, data]) => (
+                      <div key={id} className="flex justify-between border-b border-dashed border-slate-200 dark:border-slate-700 pb-2">
+                        <span className="text-[10px] font-black text-slate-600 dark:text-slate-400 uppercase max-w-[70%]">{data.quantity}x {data.product?.name}</span>
+                        <span className="text-[10px] font-black text-slate-800 dark:text-white">R$ {(data.quantity * data.price).toFixed(2)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* SUMMARY */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 border-l-4 border-emerald-600 pl-3">
+                    <h3 className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-widest">Resumo Financeiro</h3>
+                  </div>
+                  <div className="bg-emerald-50 dark:bg-emerald-900/10 rounded-[2rem] p-8 border border-emerald-100/50 dark:border-emerald-500/10 space-y-3">
+                    <div className="flex justify-between">
+                      <span className="text-[10px] font-bold text-emerald-600/60 uppercase">Subtotal</span>
+                      <span className="text-[10px] font-black text-emerald-700 dark:text-emerald-400">R$ {(printingOrder.total - (printingOrder.appliedServiceFee || 0)).toFixed(2)}</span>
+                    </div>
+                    {printingOrder.appliedServiceFee && printingOrder.appliedServiceFee > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-[10px] font-bold text-emerald-600/60 uppercase">Taxa de Serviço ({businessSettings?.serviceFeePercentage || 10}%)</span>
+                        <span className="text-[10px] font-black text-emerald-700 dark:text-emerald-400">R$ {printingOrder.appliedServiceFee.toFixed(2)}</span>
+                      </div>
+                    )}
+                    <div className="pt-3 border-t border-emerald-200/50 dark:border-emerald-500/20 flex justify-between items-end">
+                      <span className="text-xs font-black text-emerald-800 dark:text-emerald-300 uppercase">Total Geral</span>
+                      <span className="text-2xl font-black text-emerald-600 dark:text-emerald-400">R$ {printingOrder.total.toFixed(2)}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-8 bg-slate-50/50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800 grid grid-cols-2 gap-4 transition-all">
+                <button
+                  onClick={() => setPrintingOrder(null)}
+                  className="py-5 bg-white dark:bg-slate-800 text-slate-400 dark:text-slate-500 rounded-[2rem] font-black uppercase text-[10px] tracking-widest hover:text-red-500 dark:hover:text-red-400 transition-all border border-slate-200 dark:border-slate-700 active:scale-95 flex items-center justify-center gap-2"
+                >
+                  Fechar
+                </button>
+                <button
+                  onClick={handlePrintOrder}
+                  className="py-5 bg-slate-900 text-white rounded-[2rem] font-black uppercase text-[10px] tracking-widest hover:bg-black transition-all shadow-xl active:scale-95 flex items-center justify-center gap-2"
+                >
+                  <Icons.Print className="w-4 h-4" />
+                  Imprimir Comprovante
                 </button>
               </div>
             </div>

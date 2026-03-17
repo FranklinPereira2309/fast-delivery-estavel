@@ -647,11 +647,6 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
     const sessionToPrint = isConfirmingBilling ? printingPreBill : getSessForTable(selectedTable!);
     if (!sessionToPrint) return;
 
-    if (!settings?.printerIp) {
-      window.print();
-      return;
-    }
-
     const pseudoOrder: Order = {
       id: `TABLE-${sessionToPrint.tableNumber}`,
       clientId: sessionToPrint.clientId || 'ANONYMOUS',
@@ -666,11 +661,19 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
       appliedServiceFee: settings.serviceFeeStatus ? (sessionToPrint.items.reduce((acc, it) => acc + (it.price * it.quantity), 0) * (settings.serviceFeePercentage || 10) / 100) : 0,
     };
 
+    if (!settings?.printerIp) {
+      // In soft printer mode, we keep visual as fallback but the user wants "direct"
+      // Since it's a browser, we can only window.print() if no thermal IP is set.
+      addToast({ title: "Impressão", message: "Enviando para a impressora do sistema...", type: "INFO" });
+      setTimeout(() => window.print(), 500);
+      return;
+    }
+
     try {
       const { sendOrderToThermalPrinter } = await import('../services/printService');
       const res = await sendOrderToThermalPrinter(pseudoOrder, settings);
       if (!res.fallback) {
-        addToast({ title: "Impressão", message: "Conferência enviada para a impressora", type: "SUCCESS" });
+        addToast({ title: "Impressão", message: "Conferência enviada para a impressora térmica", type: "SUCCESS" });
       }
     } catch(e: any) {
       addToast({ title: "Erro de Impressão", message: e.message || "Impressora Offline.", type: "DANGER" });
@@ -910,7 +913,13 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
 
                 {activeModalTab === 'CONSUMPTION' && (
                   <div className="space-y-6">
-                    <div className="flex justify-between items-center"><div><h4 className="text-xl font-black text-slate-800 dark:text-white uppercase tracking-tighter">Prévia de Consumo</h4><p className="text-xs text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest">Conferência Agrupada dos Itens</p></div><button onClick={() => setShowConsumptionTicket(true)} className="px-6 py-4 bg-indigo-600 text-white rounded-2xl text-[10px] font-black uppercase shadow-xl hover:bg-indigo-700 transition-all flex items-center gap-2"><Icons.Print /> Cupom de Conferência</button></div>
+                    <div className="flex justify-between items-center"><div><h4 className="text-xl font-black text-slate-800 dark:text-white uppercase tracking-tighter">Prévia de Consumo</h4><p className="text-xs text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest">Conferência Agrupada dos Itens</p></div><button onClick={() => {
+                      const sess = getSessForTable(selectedTable!);
+                      if (!sess || sess.items.length === 0) {
+                        return addToast({ title: "Consumo Zerado", message: "Esta mesa não possui consumo para gerar cupom.", type: "WARNING" });
+                      }
+                      setShowConsumptionTicket(true);
+                    }} className="px-6 py-4 bg-indigo-600 text-white rounded-2xl text-[10px] font-black uppercase shadow-xl hover:bg-indigo-700 transition-all flex items-center gap-2"><Icons.Print /> Cupom de Conferência</button></div>
                     <div className="bg-slate-50 dark:bg-slate-800/50 rounded-[2rem] p-8 border border-slate-100 dark:border-slate-700 space-y-3 font-receipt shadow-inner">
                       {getGroupedItems(getSessForTable(selectedTable)?.items || []).map((it, idx) => (
                         <div key={idx} className="flex justify-between border-b border-dashed border-slate-200 dark:border-slate-700 pb-2">
