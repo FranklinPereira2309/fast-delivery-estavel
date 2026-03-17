@@ -1,4 +1,4 @@
-import type { Client, Product, Order, User, AuditLog, InventoryItem, RecipeItem, DeliveryDriver, OrderStatus, TableSession, Waiter, InventoryMovement, CashSession, OrderRejection, BusinessSettings } from '../types';
+import type { Client, Product, Order, User, AuditLog, InventoryItem, RecipeItem, DeliveryDriver, OrderStatus, TableSession, Waiter, InventoryMovement, CashSession, OrderRejection, BusinessSettings, Coupon, Campaign } from '../types';
 
 const API_URL = (import.meta as any).env.VITE_API_URL || 'http://localhost:3000/api';
 const AUTH_KEY = 'delivery_fast_auth';
@@ -48,9 +48,15 @@ class APIDBService {
         }
 
         let message = '';
+        let technicalDetails = '';
         try {
           const errorData = await response.json();
           message = errorData.error || errorData.message;
+          technicalDetails = errorData.details || '';
+          
+          if (technicalDetails) {
+            console.error(`[API-ERROR] ${path}:`, technicalDetails);
+          }
         } catch (e) {
           // Fallback to status translations
         }
@@ -61,18 +67,20 @@ class APIDBService {
             case 401: message = 'Acesso não Autorizado'; break;
             case 403: message = 'Você não tem permissão para esta ação'; break;
             case 404: message = 'Recurso não encontrado'; break;
-            case 500: message = 'Erro interno no servidor'; break;
+            case 500: message = 'Erro interno no servidor (Impressão/Processamento)'; break;
             default: message = `Erro inesperado: Status ${response.status}`;
           }
         }
 
-        throw new Error(message);
+        // Se tiver detalhes técnicos, anexa à mensagem de erro para o usuário ver no Toast
+        const finalMessage = technicalDetails ? `${message} (${technicalDetails})` : message;
+        throw new Error(finalMessage);
       }
 
       return response.json();
-    } catch (e) {
-      if (retries > 0) {
-        // Erro de rede (Failed to fetch) - tenta de novo
+    } catch (e: any) {
+      console.error(`[FETCH-FAILED] ${path}:`, e);
+      if (retries > 0 && e.name !== 'Error') { // Só tenta de novo se for erro de rede, não erro 4xx/5xx já tratado
         await new Promise(r => setTimeout(r, 2000));
         return this.request(path, options, retries - 1);
       }
@@ -619,6 +627,14 @@ class APIDBService {
   public async sendCampaign(id: string) {
     return this.request<{ message: string }>(`/campaigns/${id}/send`, {
       method: 'POST'
+    });
+  }
+
+  // Thermal Printing API
+  public async printThermalReceipt(payload: { printerIp?: string, printerPort?: number, type?: string, data: any }): Promise<{ success: boolean, message?: string }> {
+    return this.request<{ success: boolean, message?: string }>('/print/receipt', {
+      method: 'POST',
+      body: JSON.stringify(payload)
     });
   }
 }

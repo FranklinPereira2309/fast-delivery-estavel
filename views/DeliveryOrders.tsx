@@ -5,6 +5,7 @@ import { Order, User, OrderStatusLabels, DeliveryDriver, Product, SaleType, Busi
 import { Icons } from '../constants';
 import { useToast } from '../hooks/useToast';
 import CustomAlert from '../components/CustomAlert';
+import { sendOrderToThermalPrinter } from '../services/printService';
 
 interface DeliveryOrdersProps {
     currentUser: User;
@@ -194,6 +195,18 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
 
     const handlePrint = (order: Order) => {
         setPrintingOrder(order);
+    };
+
+    const handlePrintOrder = async () => {
+        if (!printingOrder) return;
+        try {
+            const res = await sendOrderToThermalPrinter(printingOrder, businessSettings!);
+            if (!res.fallback) {
+                addToast({ title: "Impressão", message: "Cupom térmico enviado com sucesso", type: "SUCCESS" });
+            }
+        } catch(e: any) {
+            setAlertConfig({ isOpen: true, title: "Erro de Impressão ESC/POS", message: e.message || "Impressora Offline", type: "DANGER", onConfirm: () => setAlertConfig(prev => ({ ...prev, isOpen: false })) });
+        }
     };
 
     const activeOrders = orders.filter(o => !['DELIVERED', 'CANCELLED'].includes(o.status));
@@ -508,7 +521,7 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
 
                         <div className="grid grid-cols-2 gap-4 no-print mt-6">
                             <button
-                                onClick={() => window.print()}
+                                onClick={handlePrintOrder}
                                 className="bg-slate-900 text-white py-4 rounded-[22px] font-receipt font-black uppercase text-[11px] shadow-xl hover:bg-black active:scale-95 transition-all flex items-center justify-center"
                             >
                                 IMPRIMIR

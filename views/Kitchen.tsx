@@ -7,7 +7,10 @@ import { Icons } from '../constants';
 import { useDigitalAlert } from '../hooks/useDigitalAlert';
 import { useToast } from '../hooks/useToast';
 
+import { usePrinter } from '../hooks/usePrinter';
+
 const Kitchen: React.FC = () => {
+  const { printElement } = usePrinter();
   const { addToast } = useToast();
   const { isAlerting, dismissAlert } = useDigitalAlert();
   const [orders, setOrders] = useState<Order[]>([]);
@@ -466,68 +469,46 @@ const Kitchen: React.FC = () => {
 
       {printingOrder && businessSettings && (
         <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
-          <div className="relative w-full max-w-[58mm] bg-white p-4 border border-dashed shadow-2xl font-receipt text-[10px] text-black print-container is-receipt animate-in zoom-in duration-200">
-            <div className="text-center mb-6 border-b border-dashed pb-4">
-              <h2 className="font-black text-sm uppercase tracking-tighter">{businessSettings.name}</h2>
-              <p className="text-[9px] font-bold mt-1 uppercase">
-                {viewTab === 'FILA' ? 'Cupom de Produção' : 'Conferência de Consumo'}
+          <div id="kitchen-receipt" className="relative w-full max-w-[48mm] bg-white p-2 shadow-2xl font-receipt text-[8px] text-black print-container is-receipt animate-in zoom-in duration-200">
+            <div className="text-center mb-1">
+              <h2 className="font-bold text-[10px] uppercase tracking-tighter mb-0">{businessSettings.name}</h2>
+              <p className="text-[8px] font-bold mt-1 uppercase">
+                {viewTab === 'FILA' ? 'PRODUÇÃO' : 'CONSUMO'}
               </p>
               
+              <div className="section-divider"></div>
+
               {printingOrder.tableNumber && (
-                <div className="mt-4 flex justify-center">
-                  <span className="bg-slate-900 text-white px-4 py-1.5 rounded-lg font-black text-xs uppercase tracking-widest">
-                    Mesa {printingOrder.tableNumber}
-                  </span>
-                </div>
+                <p className="font-bold text-[12px]">MESA {printingOrder.tableNumber}</p>
               )}
             </div>
 
-            <div className="space-y-1 mb-4">
-              <p>DATA: {new Date(printingOrder.createdAt).toLocaleString('pt-BR')}</p>
-              <p>TIPO: {translateOrderType(printingOrder.type)}</p>
-              <p>CLIENTE: {printingOrder.clientName || 'Cliente Direto'}</p>
-              {printingOrder.waiterId && (
-                <p>RESPONSÁVEL: {getWaiterName(printingOrder.waiterId)}</p>
-              )}
+            <div className="section-divider"></div>
+
+            <div className="space-y-0.5 mb-2">
+              <p>DATA: {new Date(printingOrder.createdAt).toLocaleDateString('pt-BR')} {new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' }).format(new Date(printingOrder.createdAt))}</p>
+              <p>TIPO: {translateOrderType(printingOrder.type).toUpperCase()}</p>
+              <p>CLIENTE: {(printingOrder.clientName || 'Cliente Direto').toUpperCase()}</p>
             </div>
 
-            <div className="border-t border-dashed my-3 py-3 space-y-3">
+            <div className="section-divider"></div>
+
+            <div className="mb-2 space-y-1">
               {printingOrder.items.map((it, idx) => {
                 const product = products.find(p => p.id === it.productId);
                 const isReady = it.isReady;
                 
-                // Em modo HISTORICO, só mostra os prontos. No modo FILA (Produção), mostra todos.
                 if (viewTab === 'HISTORICO' && !isReady) return null;
 
                 return (
-                  <div key={idx} className="space-y-1">
-                    <div className={`flex justify-between font-black uppercase py-0.5 ${isReady && viewTab === 'FILA' ? 'line-through opacity-50' : ''}`}>
-                      <span>{it.quantity}X {(product?.name || 'Item').substring(0, 22)}</span>
-                      {isReady && it.readyAt && (
-                        <span className="text-[8px] opacity-50">
-                          {new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' }).format(new Date(it.readyAt))}
-                        </span>
-                      )}
+                  <div key={idx} className="space-y-0.5">
+                    <div className={`flex justify-between font-bold uppercase py-0.5 ${isReady && viewTab === 'FILA' ? 'line-through opacity-50' : ''}`}>
+                      <span>{it.quantity}X {(product?.name || 'Item').substring(0, 15)}</span>
                     </div>
                     
-                    {/* Ficha Técnica no Cupom */}
-                    {product?.recipe && product.recipe.length > 0 && (
-                      <div className="pl-4 space-y-0.5 border-l border-slate-200">
-                        <p className="text-[8px] font-black uppercase text-slate-500">Ficha Técnica:</p>
-                        {product.recipe.map((r, rIdx) => {
-                          const invItem = inventory.find(inv => inv.id === r.inventoryItemId);
-                          return (
-                            <p key={rIdx} className="text-[9px] font-bold text-slate-700 uppercase">
-                              - {invItem?.name}: {r.quantity * it.quantity} {invItem?.unit}
-                            </p>
-                          );
-                        })}
-                      </div>
-                    )}
-
                     {it.observations && (
-                      <p className="text-[9px] text-orange-600 font-black pl-4">
-                        * OBS: {it.observations}
+                      <p className="text-[7px] text-orange-600 font-bold pl-2">
+                        * {it.observations}
                       </p>
                     )}
                   </div>
@@ -535,10 +516,12 @@ const Kitchen: React.FC = () => {
               })}
             </div>
 
+            <div className="section-divider"></div>
+
             {viewTab === 'HISTORICO' && (
-              <div className="flex justify-between items-end border-t border-dashed pt-4 mb-8">
-                <span className="font-black text-[10px] uppercase tracking-widest">TOTAL:</span>
-                <span className="text-2xl font-black">R$ {(printingOrder.total || 0).toFixed(2)}</span>
+              <div className="flex justify-between items-end pt-1">
+                <span className="font-bold text-[10px] uppercase">TOTAL:</span>
+                <span className="text-sm font-bold">R$ {(printingOrder.total || 0).toFixed(2)}</span>
               </div>
             )}
 
@@ -550,14 +533,17 @@ const Kitchen: React.FC = () => {
 
             <div className="grid grid-cols-2 gap-4 no-print mt-6">
               <button
-                onClick={() => window.print()}
-                className="bg-slate-900 text-white py-4 rounded-[22px] font-receipt font-black uppercase text-[11px] shadow-xl hover:bg-black active:scale-95 transition-all flex items-center justify-center"
+                onClick={async () => {
+                  await printElement('kitchen-receipt');
+                  setPrintingOrder(null);
+                }}
+                className="bg-slate-900 dark:bg-blue-600 text-white py-4 rounded-[22px] font-receipt font-black uppercase text-[11px] shadow-xl hover:bg-black active:scale-95 transition-all flex items-center justify-center"
               >
                 IMPRIMIR
               </button>
               <button
                 onClick={() => setPrintingOrder(null)}
-                className="bg-slate-50 text-slate-400 py-4 rounded-[22px] font-receipt font-black uppercase text-[11px] hover:bg-slate-100 active:scale-95 transition-all flex items-center justify-center"
+                className="bg-slate-50 dark:bg-slate-800 text-slate-400 dark:text-slate-500 py-4 rounded-[22px] font-receipt font-black uppercase text-[11px] hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-95 transition-all flex items-center justify-center"
               >
                 FECHAR
               </button>

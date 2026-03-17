@@ -101,6 +101,8 @@ export interface BusinessSettings {
   website?: string;
   campaignLogoUrl?: string;
   appBannerUrl?: string;
+  printerIp?: string;
+  printerType?: string;
 }
 
 export interface Coupon {

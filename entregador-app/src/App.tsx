@@ -102,6 +102,7 @@ const App: React.FC = () => {
   });
   const [historyEndDate, setHistoryEndDate] = useState(new Date().toISOString().split('T')[0]);
   const [printingHistoryOrder, setPrintingHistoryOrder] = useState<Order | null>(null);
+  const [isPrinting, setIsPrinting] = useState(false);
   const [storeStatus, setStoreStatus] = useState<{ status: 'online' | 'offline', next_status_change?: string | null, is_manually_closed?: boolean, enableDigitalMenu: boolean }>({ status: 'offline', enableDigitalMenu: true });
   const [countdown, setCountdown] = useState<string | null>(null);
   const [customAlertMessage, setCustomAlertMessage] = useState<string | null>(null);
@@ -308,6 +309,46 @@ const App: React.FC = () => {
     });
     return Object.entries(grouped);
   }, [printingOrder, products]);
+
+  const handlePrintNetwork = async () => {
+    if (!printingHistoryOrder) return;
+    if (!settings || !settings.printerIp) {
+      window.print();
+      return;
+    }
+    
+    setIsPrinting(true);
+    try {
+        const payload = {
+             printerIp: settings.printerIp,
+             type: settings.printerType || 'EPSON',
+             data: {
+                 businessName: settings.name,
+                 date: printingHistoryOrder.createdAt || new Date().toISOString(),
+                 clientName: printingHistoryOrder.clientName || 'Consumidor',
+                 clientAddress: printingHistoryOrder.clientAddress,
+                 paymentMethod: printingHistoryOrder.paymentMethod,
+                 deliveryFee: printingHistoryOrder.deliveryFee || 0,
+                 subtotal: printingHistoryOrder.items.reduce((acc, item) => acc + (item.quantity * item.price), 0),
+                 total: printingHistoryOrder.total,
+                 items: printingHistoryOrder.items.map(item => ({
+                     name: ((item as any).product?.name || (item as any).productName || 'Item').substring(0, 20),
+                     quantity: item.quantity,
+                     price: item.price,
+                     total: item.price * item.quantity
+                 }))
+             }
+        };
+        await db.printThermalReceipt(payload);
+        setPrintingHistoryOrder(null);
+        alert("Cupom de comprovação enviado para a impressora.");
+    } catch(e: any) {
+        console.error(e);
+        alert("Erro de Impressão: " + (e.message || 'Falha ao acessar impressora da rede.'));
+    } finally {
+      setIsPrinting(false);
+    }
+  };
 
 
   useEffect(() => {
@@ -757,7 +798,7 @@ const App: React.FC = () => {
               <span className="text-2xl font-black">R$ {printingHistoryOrder.total.toFixed(2)}</span>
             </div>
             <div className="flex gap-2 no-print">
-              <button onClick={() => window.print()} className="flex-1 bg-slate-900 text-white py-4 rounded-2xl font-black uppercase text-[10px] shadow-xl">Imprimir</button>
+              <button onClick={handlePrintNetwork} disabled={isPrinting} className="flex-1 bg-slate-900 text-white py-4 rounded-2xl font-black uppercase text-[10px] shadow-xl disabled:opacity-50">{isPrinting ? 'Enviando...' : 'Imprimir'}</button>
               <button onClick={() => setPrintingHistoryOrder(null)} className="flex-1 bg-slate-100 text-slate-600 py-4 rounded-2xl font-black uppercase text-[10px]">Fechar</button>
             </div>
           </div>

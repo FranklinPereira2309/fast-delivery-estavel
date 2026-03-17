@@ -643,6 +643,40 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
     addToast({ title: "SUCESSO", message: "Solicitação de fechamento enviada ao PDV!", type: "SUCCESS" });
   };
 
+  const handlePrintTable = async () => {
+    const sessionToPrint = isConfirmingBilling ? printingPreBill : getSessForTable(selectedTable!);
+    if (!sessionToPrint) return;
+
+    if (!settings?.printerIp) {
+      window.print();
+      return;
+    }
+
+    const pseudoOrder: Order = {
+      id: `TABLE-${sessionToPrint.tableNumber}`,
+      clientId: sessionToPrint.clientId || 'ANONYMOUS',
+      clientName: isConfirmingBilling ? (isUnregisteredClient ? manualClientName : (selectedClient?.name || 'CONSUMIDOR PADRÃO')) : (sessionToPrint.clientName || 'EM ATENDIMENTO'),
+      clientPhone: isConfirmingBilling ? (isUnregisteredClient ? manualClientPhone : selectedClient?.phone) : sessionToPrint.clientPhone,
+      items: sessionToPrint.items,
+      total: sessionToPrint.items.reduce((acc, it) => acc + (it.price * it.quantity), 0) + (settings.serviceFeeStatus ? (sessionToPrint.items.reduce((acc, it) => acc + (it.price * it.quantity), 0) * (settings.serviceFeePercentage || 10) / 100) : 0),
+      status: OrderStatus.PENDING,
+      type: SaleType.TABLE,
+      createdAt: sessionToPrint.startTime,
+      tableNumber: sessionToPrint.tableNumber,
+      appliedServiceFee: settings.serviceFeeStatus ? (sessionToPrint.items.reduce((acc, it) => acc + (it.price * it.quantity), 0) * (settings.serviceFeePercentage || 10) / 100) : 0,
+    };
+
+    try {
+      const { sendOrderToThermalPrinter } = await import('../services/printService');
+      const res = await sendOrderToThermalPrinter(pseudoOrder, settings);
+      if (!res.fallback) {
+        addToast({ title: "Impressão", message: "Conferência enviada para a impressora", type: "SUCCESS" });
+      }
+    } catch(e: any) {
+      addToast({ title: "Erro de Impressão", message: e.message || "Impressora Offline.", type: "DANGER" });
+    }
+  };
+
   if (!settings) return null;
 
   return (
@@ -1176,7 +1210,7 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
                 </button>
               ) : (
                 <button
-                  onClick={() => window.print()}
+                  onClick={handlePrintTable}
                   className="bg-slate-900 text-white py-4 rounded-[22px] font-receipt font-black uppercase text-[11px] shadow-xl hover:bg-black active:scale-95 transition-all flex items-center justify-center"
                 >
                   IMPRIMIR

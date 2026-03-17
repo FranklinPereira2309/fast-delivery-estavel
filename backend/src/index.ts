@@ -28,6 +28,7 @@ import backupRoutes from './routes/backupRoutes';
 import supportRoutes from './routes/supportRoutes';
 import promotionRoutes from './routes/promotionRoutes';
 import campaignRoutes from './routes/campaignRoutes';
+import printRoutes from './routes/printRoutes';
 import { initSocket } from './socket';
 import { startOrderTimeoutService } from './services/orderTimeoutService';
 import { loadSettingsToCache } from './storeStatusCache';
@@ -85,6 +86,7 @@ app.use('/api/backup', backupRoutes);
 app.use('/api/support', supportRoutes);
 app.use('/api/promotions', promotionRoutes);
 app.use('/api/campaigns', campaignRoutes);
+app.use('/api/print', printRoutes);
 
 // Basic health check
 app.get('/health', (req, res) => {

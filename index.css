@@ -44,42 +44,92 @@
 }
 
 @media print {
-    @page {
-        margin: 0;
-        size: auto;
-    }
+  /* 1. Remove elementos não necessários na impressão */
+  body * {
+    visibility: hidden;
+  }
 
-    body {
-        visibility: hidden !important;
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        display: flex !important;
-        justify-content: center !important;
-        align-items: flex-start !important;
-    }
+  .is-receipt, .is-receipt * {
+    visibility: visible;
+  }
 
-    .no-print {
-        display: none !important;
-    }
+  .is-receipt {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100% !important;
+    max-width: 48mm !important; /* Slightly narrower to avoid right cut-off */
+    margin: 0 !important;
+    padding: 0 !important;
+    padding-right: 2mm !important; /* Added safety margin on the right */
+  }
 
-    .is-receipt {
-        visibility: visible !important;
-        position: relative !important;
-        margin: 0 auto !important;
-        width: 48mm !important;
-        max-width: 48mm !important;
-        padding: 0 !important;
-        padding-bottom: 30mm !important; /* Extra space for cutting */
-        background: white !important;
-        box-shadow: none !important;
-        border: none !important;
-        font-size: 18px !important;
-        line-height: 1.1 !important;
-    }
+  .no-print {
+    display: none !important;
+  }
 
-    .is-receipt * {
-        visibility: visible !important;
-    }
+  /* 2. Força o navegador a entender o tamanho exato da bobina e zera margens do S.O. */
+  @page {
+    margin: 0;
+    size: 58mm auto; /* Largura da bobina x altura automática */
+  }
+
+  /* 3. Reseta o body para não empurrar nada */
+  body, html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    background-color: white;
+  }
+
+  /* Limitador de Corte - REMOVED per user request */
+  .is-receipt::after {
+    display: none;
+  }
+
+  /* Utilitários para flexbox separando "Produto" e "Preço" */
+  .is-receipt .linha-produto {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+  }
+  
+  .is-receipt .nome-produto {
+    flex: 1;
+    padding-right: 2px;
+  }
+
+  /* Compact Printing Styles */
+  .is-receipt {
+    color: black !important;
+    background: white !important;
+    font-family: monospace !important;
+    font-size: 8px !important; /* Reduced font size significantly */
+    line-height: 1.1 !important; /* Tighter line height */
+    border: none !important; /* Remove dashed borders */
+  }
+
+  .is-receipt h2 {
+    font-size: 10px !important;
+    margin-bottom: 2px !important;
+  }
+
+  .is-receipt p, .is-receipt span, .is-receipt div {
+    margin-bottom: 1px !important;
+  }
+
+  .is-receipt table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .is-receipt th, .is-receipt td {
+    padding: 1px 0 !important;
+  }
+
+  /* Simple sections separators */
+  .is-receipt .section-divider {
+    border-top: 1px solid black !important;
+    margin: 3px 0 !important;
+  }
 }

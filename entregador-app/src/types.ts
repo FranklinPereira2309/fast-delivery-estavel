@@ -179,4 +179,6 @@ export interface BusinessSettings {
     enableDigitalMenu?: boolean;
     enableWaiterApp?: boolean;
     enableDriverApp?: boolean;
+    printerIp?: string;
+    printerType?: string;
 }

@@ -18,6 +18,47 @@ const HistoryModal: React.FC<HistoryModalProps> = ({ user, tables, settings, res
     const [orders, setOrders] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
     const [printingOrder, setPrintingOrder] = useState<Order | null>(null);
+    const [isPrinting, setIsPrinting] = useState(false);
+
+    const handlePrintNetwork = async () => {
+        if (!printingOrder) return;
+        if (!settings?.printerIp) {
+            window.print();
+            return;
+        }
+        
+        setIsPrinting(true);
+        try {
+            const payload = {
+                 printerIp: settings.printerIp,
+                 type: settings.printerType || 'EPSON',
+                 data: {
+                     businessName: settings.name,
+                     date: printingOrder.createdAt || new Date().toISOString(),
+                     clientName: printingOrder.clientName || 'Consumidor',
+                     table: printingOrder.tableNumber,
+                     paymentMethod: printingOrder.paymentMethod,
+                     subtotal: printingOrder.items.reduce((acc, item) => acc + (item.quantity * item.price), 0),
+                     serviceFee: printingOrder.appliedServiceFee || 0,
+                     total: printingOrder.total,
+                     items: printingOrder.items.map(item => ({
+                         name: ((item as any).product?.name || (item as any).productName || 'Item').substring(0, 20),
+                         quantity: item.quantity,
+                         price: item.price,
+                         total: item.price * item.quantity
+                     }))
+                 }
+            };
+            await db.printThermalReceipt(payload);
+            setPrintingOrder(null);
+            alert("Cupom enviado para a impressora configurada na rede.");
+        } catch(e: any) {
+            console.error(e);
+            alert("Erro de Impressora: " + (e.message || 'Verifique se a impressora térmica está online.'));
+        } finally {
+            setIsPrinting(false);
+        }
+    };
 
     useEffect(() => {
         const fetchOrders = async () => {
@@ -272,7 +313,7 @@ const HistoryModal: React.FC<HistoryModalProps> = ({ user, tables, settings, res
 
                         <div className="flex flex-col gap-2 no-print">
                             <div className="flex gap-2">
-                                <button onClick={() => window.print()} className="flex-[2] bg-slate-900 text-white font-bold py-4 rounded-3xl uppercase text-[10px] tracking-widest shadow-xl active:scale-95 transition-all">Imprimir</button>
+                                <button onClick={handlePrintNetwork} disabled={isPrinting} className="flex-[2] bg-slate-900 text-white font-bold py-4 rounded-3xl uppercase text-[10px] tracking-widest shadow-xl active:scale-95 transition-all disabled:opacity-50">{isPrinting ? 'Enviando...' : 'Imprimir'}</button>
                                 <button onClick={() => setPrintingOrder(null)} className="flex-1 bg-slate-200 text-slate-600 font-bold py-4 rounded-3xl uppercase text-[10px] tracking-widest active:scale-95 transition-all">Fechar</button>
                             </div>
                         </div>

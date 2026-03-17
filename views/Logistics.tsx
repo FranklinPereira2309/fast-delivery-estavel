@@ -883,7 +883,49 @@ const Logistics: React.FC = () => {
 
             <div className="grid grid-cols-2 gap-4 no-print mt-6">
               <button
-                onClick={() => window.print()}
+                onClick={async () => {
+                  if (!businessSettings || !printingOrder) return;
+                  try {
+                    const payload = {
+                      printerIp: businessSettings.printerIp,
+                      type: businessSettings.printerType || 'EPSON',
+                      data: {
+                        businessName: businessSettings.name,
+                        cnpj: businessSettings.cnpj,
+                        date: printingOrder.createdAt,
+                        clientName: printingOrder.clientName || 'CONSUMIDOR',
+                        clientPhone: printingOrder.clientPhone,
+                        clientAddress: printingOrder.clientAddress,
+                        status: OrderStatusLabels[printingOrder.status],
+                        paymentMethod: printingOrder.paymentMethod,
+                        deliveryFee: printingOrder.deliveryFee || 0,
+                        total: printingOrder.total,
+                        items: printingOrder.items.map((it: any) => {
+                          const prod = products.find(p => p.id === it.productId);
+                          return {
+                            name: (prod?.name || 'Item').substring(0, 22),
+                            quantity: it.quantity,
+                            total: it.price * it.quantity
+                          };
+                        })
+                      }
+                    };
+
+                    if (businessSettings.printerIp) {
+                      addToast({ title: 'Impressão', message: 'Enviando cupom de entrega...', type: 'INFO' });
+                      const res = await db.printThermalReceipt(payload);
+                      if (res.success) {
+                        addToast({ title: 'Sucesso', message: 'Cupom impresso!', type: 'SUCCESS' });
+                        setPrintingOrder(null);
+                      }
+                    } else {
+                      window.print();
+                    }
+                  } catch (error: any) {
+                    addToast({ title: 'Erro na Impressão', message: error.message || 'Falha ao comunicar com a impressora.', type: 'DANGER' });
+                    window.print();
+                  }
+                }}
                 className="bg-slate-900 text-white py-4 rounded-[22px] font-receipt font-black uppercase text-[11px] shadow-xl hover:bg-black active:scale-95 transition-all flex items-center justify-center"
               >
                 IMPRIMIR
@@ -942,7 +984,49 @@ const Logistics: React.FC = () => {
 
             <div className="grid grid-cols-2 gap-4 no-print mt-6">
               <button
-                onClick={() => window.print()}
+                onClick={async () => {
+                  if (!businessSettings || !printingHistoryOrder) return;
+                  try {
+                    const payload = {
+                      printerIp: businessSettings.printerIp,
+                      type: businessSettings.printerType || 'EPSON',
+                      data: {
+                        businessName: businessSettings.name,
+                        cnpj: businessSettings.cnpj,
+                        date: printingHistoryOrder.createdAt,
+                        clientName: printingHistoryOrder.clientName || 'CONSUMIDOR',
+                        clientPhone: printingHistoryOrder.clientPhone,
+                        clientAddress: printingHistoryOrder.clientAddress,
+                        status: 'ENTREGUE',
+                        paymentMethod: printingHistoryOrder.paymentMethod,
+                        deliveryFee: printingHistoryOrder.deliveryFee || 0,
+                        total: printingHistoryOrder.total,
+                        items: printingHistoryOrder.items.map((it: any) => {
+                          const prod = products.find(p => p.id === it.productId);
+                          return {
+                            name: (prod?.name || 'Item').substring(0, 22),
+                            quantity: it.quantity,
+                            total: it.price * it.quantity
+                          };
+                        })
+                      }
+                    };
+
+                    if (businessSettings.printerIp) {
+                      addToast({ title: 'Impressão', message: 'Enviando cupom de histórico...', type: 'INFO' });
+                      const res = await db.printThermalReceipt(payload);
+                      if (res.success) {
+                        addToast({ title: 'Sucesso', message: 'Cupom impresso!', type: 'SUCCESS' });
+                        setPrintingHistoryOrder(null);
+                      }
+                    } else {
+                      window.print();
+                    }
+                  } catch (error: any) {
+                    addToast({ title: 'Erro na Impressão', message: error.message || 'Falha ao comunicar com a impressora.', type: 'DANGER' });
+                    window.print();
+                  }
+                }}
                 className="bg-slate-900 text-white py-4 rounded-[22px] font-receipt font-black uppercase text-[11px] shadow-xl hover:bg-black active:scale-95 transition-all flex items-center justify-center"
               >
                 IMPRIMIR

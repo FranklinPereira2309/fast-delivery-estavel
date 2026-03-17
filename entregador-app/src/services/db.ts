@@ -108,6 +108,13 @@ class DriverDBService {
     public async getStoreStatus(): Promise<any> {
         return this.request('/public/store-status');
     }
+
+    public async printThermalReceipt(payload: any): Promise<{ success: boolean; message: string }> {
+        return this.request('/print/receipt', {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        });
+    }
 }
 
 export const db = new DriverDBService();

@@ -83,3 +83,66 @@
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(0, 0, 0, 0.1);
 }
+
+@media print {
+  /* 1. Remove elementos não necessários na impressão */
+  .no-print {
+    display: none !important;
+  }
+
+  /* 2. Força o navegador a entender o tamanho exato da bobina e zera margens do S.O. */
+  @page {
+    margin: 0;
+    size: 58mm auto; /* Largura da bobina x altura automática */
+  }
+
+  /* 3. Reseta o body para não empurrar nada */
+  body, html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    background-color: white;
+  }
+
+  /* 4. O container do cupom - O segredo está na largura da margem de segurança (44mm para bobina de 58mm) */
+  .is-receipt {
+    width: 100% !important;
+    max-width: 42mm !important;
+    margin: 0 !important;
+    padding: 0;
+    padding-left: 2mm !important;
+    
+    transform: scale(0.9) !important; 
+    transform-origin: top left !important;
+    
+    /* AS 4 REGRAS DE OURO PARA EVITAR O CORTE LATERAL: */
+    box-sizing: border-box !important; /* Garante que padding não aumente a largura total */
+    word-wrap: break-word !important;  /* Força a quebra de palavras longas */
+    overflow-wrap: break-word !important; /* Garante que o endereço não quebre o layout */
+    font-size: 11px !important;
+    
+    /* Configurações extras recomendadas para cupons */
+    font-family: monospace, sans-serif;
+    color: black;
+    text-align: left;
+    overflow: hidden; /* Evita que uma linha longa expanda o cupom para a direita */
+  }
+
+  /* Garante que imagens (como QR Codes ou logos) não quebrem a largura */
+  .is-receipt img {
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* Utilitários para flexbox separando "Produto" e "Preço" */
+  .is-receipt .linha-produto {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+  }
+  
+  .is-receipt .nome-produto {
+    flex: 1; /* Ocupa o espaço disponível */
+    padding-right: 5px; /* Dá um respiro antes do valor */
+  }
+}

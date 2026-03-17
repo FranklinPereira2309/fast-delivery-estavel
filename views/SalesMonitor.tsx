@@ -7,7 +7,10 @@ import { Icons } from '../constants';
 import CustomAlert from '../components/CustomAlert';
 import { useToast } from '../hooks/useToast';
 
+import { usePrinter } from '../hooks/usePrinter';
+
 const SalesMonitor: React.FC = () => {
+  const { printElement } = usePrinter();
   const { addToast } = useToast();
   const [orders, setOrders] = useState<Order[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -325,7 +328,7 @@ const SalesMonitor: React.FC = () => {
 
           {printingOrder && businessSettings && (
             <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/80 dark:bg-slate-950/90 backdrop-blur-md">
-            <div className="relative w-full max-w-[48mm] bg-white dark:bg-slate-900 p-2 border border-dashed dark:border-slate-800 shadow-2xl font-receipt text-[14px] text-black dark:text-white is-receipt animate-in zoom-in duration-200">
+            <div id="thermal-receipt" className="relative w-full max-w-[48mm] bg-white dark:bg-slate-900 p-2 border border-dashed dark:border-slate-800 shadow-2xl font-receipt text-[14px] text-black dark:text-white is-receipt animate-in zoom-in duration-200">
                 {isNfceVisual ? (
                   <div className="space-y-4 font-mono text-[10px] leading-tight text-black dark:text-white">
                     <div className="text-center space-y-1">
@@ -405,124 +408,79 @@ const SalesMonitor: React.FC = () => {
                   </div>
                 ) : (
                   <>
-                    <div className="text-center mb-6 border-b border-dashed pb-4">
-                      <h2 className="font-black text-2xl uppercase tracking-tighter">{businessSettings.name}</h2>
-                      <p className="text-[16px] font-bold mt-1">CNPJ: {businessSettings.cnpj}</p>
-                      <p className="text-[18px] font-black mt-3 border border-slate-900 dark:border-slate-300 py-1 uppercase tracking-widest text-center">Comprovante de Pagamento</p>
+                    <div className="text-center mb-2">
+                      <h2 className="font-bold text-xs uppercase tracking-tighter mb-0">{businessSettings.name}</h2>
+                      <p className="text-[8px] font-bold uppercase">CNPJ: {businessSettings.cnpj}</p>
+                      <div className="section-divider"></div>
+                      <p className="text-[10px] font-bold uppercase tracking-widest">COMPROVANTE</p>
                     </div>
-                    <div className="space-y-1 mb-4">
-                      <p>DATA: {new Date(printingOrder.createdAt).toLocaleString('pt-BR')}</p>
-                      <p>CLIENTE: {printingOrder.clientName}</p>
+
+                    <div className="section-divider"></div>
+
+                    <div className="space-y-0.5 mb-2 text-[8px]">
+                      <div className="flex justify-between">
+                        <span>DATA: {new Date(printingOrder.createdAt).toLocaleDateString('pt-BR')}</span>
+                        <span>{new Date(printingOrder.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
+                      </div>
+                      <p>CLIENTE: {printingOrder.clientName?.toUpperCase()}</p>
                       {printingOrder.clientPhone && <p>FONE: {printingOrder.clientPhone}</p>}
-                      {printingOrder.clientAddress && (
-                        <p className="font-bold border-t border-dashed mt-2 pt-1 uppercase leading-tight">ENTREGA: {printingOrder.clientAddress}</p>
+                      {printingOrder.type === SaleType.OWN_DELIVERY && printingOrder.clientAddress && (
+                        <p className="font-bold border-t border-black mt-1 pt-0.5 uppercase">ENTREGA: {printingOrder.clientAddress}</p>
                       )}
-                      {printingOrder.tableNumber && <p className="font-black">MESA: {printingOrder.tableNumber}</p>}
-                      <p>STATUS: {OrderStatusLabels[printingOrder.status]}</p>
+                      {printingOrder.tableNumber && <p className="font-bold">MESA: {printingOrder.tableNumber}</p>}
+                      <p>STATUS: {OrderStatusLabels[printingOrder.status].toUpperCase()}</p>
 
                       {renderPaymentEditor()}
                     </div>
-                    <div className="border-t border-dashed my-3 py-3">
+
+                    <div className="section-divider"></div>
+
+                    <div className="mb-2">
                       {groupedPrintingItems.map(([id, data]) => {
                         const prodName = data.product?.name || `PROD #${id.substring(0, 5)}`;
                         return (
-                          <div key={id} className="flex justify-between font-black uppercase py-0.5">
-                            <span>{data.quantity}x {prodName.substring(0, 8)}</span>
+                          <div key={id} className="flex justify-between font-bold uppercase py-0.5 text-[9px]">
+                            <span>{data.quantity}x {prodName.substring(0, 15)}</span>
                             <span>R$ {(data.quantity * data.price).toFixed(2)}</span>
                           </div>
                         );
                       })}
                     </div>
-                    <div className="flex justify-between items-end border-t border-dashed pt-4 mb-1">
-                      <span className="font-black text-[9px] uppercase tracking-widest">SUBTOTAL:</span>
-                      <span className="text-sm font-black">R$ {(printingOrder.total - (printingOrder.type === SaleType.OWN_DELIVERY ? (printingOrder.deliveryFee || 0) : 0) - (printingOrder.type === SaleType.TABLE ? (printingOrder.appliedServiceFee || 0) : 0)).toFixed(2)}</span>
-                    </div>
-                    {printingOrder.type === SaleType.OWN_DELIVERY && printingOrder.deliveryFee !== undefined && printingOrder.deliveryFee > 0 && (
-                      <div className="flex justify-between items-end mb-1">
-                        <span className="font-black text-[9px] uppercase tracking-widest">TAXA ENTREGA:</span>
-                        <span className="text-sm font-black">R$ {printingOrder.deliveryFee.toFixed(2)}</span>
-                      </div>
-                    )}
-                    {printingOrder.type === SaleType.TABLE && typeof printingOrder.appliedServiceFee === 'number' && (
-                      <div className="flex justify-between items-center mb-1 bg-slate-50 dark:bg-slate-800 p-1.5 rounded border border-slate-100 dark:border-slate-700 no-print mx-[-6px] px-[6px]">
-                        <span className="font-black text-[9px] uppercase tracking-widest">TAXA SERVIÇO:</span>
-                        {editingServiceFee ? (
-                          <div className="flex gap-2 items-center">
-                            <span className="text-[10px] font-black">R$</span>
-                            <input
-                              type="number"
-                              step="0.01"
-                              value={newServiceFeeValue}
-                              onChange={(e) => setNewServiceFeeValue(e.target.value)}
-                              className="w-16 text-[10px] font-black text-right p-1 rounded border dark:border-slate-700 bg-white dark:bg-slate-900 dark:text-white outline-none"
-                              disabled={isSavingServiceFee}
-                            />
-                            <button
-                              disabled={isSavingServiceFee}
-                              onClick={async () => {
-                                setIsSavingServiceFee(true);
-                                try {
-                                  let newFeeNum = parseFloat(newServiceFeeValue);
-                                  if (isNaN(newFeeNum)) newFeeNum = 0;
 
-                                  const session = db.getCurrentSession();
-                                  await db.updateOrderServiceFee(printingOrder.id, newFeeNum, session?.user || { id: 'system', name: 'Sistema', email: '', password: '', permissions: [], createdAt: '', active: true });
+                    <div className="section-divider"></div>
 
-                                  const oldFee = printingOrder.appliedServiceFee || 0;
-                                  const newTotal = printingOrder.total - oldFee + newFeeNum;
-
-                                  setPrintingOrder({ ...printingOrder, appliedServiceFee: newFeeNum, total: newTotal });
-                                  setOrders(prev => prev.map(o => o.id === printingOrder.id ? { ...o, appliedServiceFee: newFeeNum, total: newTotal } : o));
-                                  setEditingServiceFee(false);
-                                } catch (err) {
-                                  console.error('Error updating service fee', err);
-                                  addToast({ title: 'Erro', message: 'Erro ao atualizar taxa de serviço.', type: 'DANGER' });
-                                } finally {
-                                  setIsSavingServiceFee(false);
-                                }
-                              }}
-                              className="bg-emerald-500 text-white px-2 py-1 rounded text-[8px] font-black uppercase"
-                            >
-                              Salvar
-                            </button>
-                            <button
-                              onClick={() => {
-                                setNewServiceFeeValue((printingOrder.appliedServiceFee || 0).toString());
-                              }}
-                              className="bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-2 py-1 rounded text-[8px] font-black uppercase"
-                            >
-                              X
-                            </button>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-black">R$ {(printingOrder.appliedServiceFee || 0).toFixed(2)}</span>
-                            <button
-                              onClick={() => setEditingServiceFee(true)}
-                              className="text-[9px] text-blue-600 font-bold underline px-1"
-                            >
-                              Editar
-                            </button>
-                          </div>
-                        )}
+                    <div className="space-y-0.5">
+                      <div className="flex justify-between items-center text-[8px] font-bold uppercase">
+                        <span>SUBTOTAL:</span>
+                        <span>R$ {(printingOrder.total - (printingOrder.type === SaleType.OWN_DELIVERY ? (printingOrder.deliveryFee || 0) : 0) - (printingOrder.type === SaleType.TABLE ? (printingOrder.appliedServiceFee || 0) : 0)).toFixed(2)}</span>
                       </div>
-                    )}
-                    {printingOrder.type === SaleType.TABLE && typeof printingOrder.appliedServiceFee === 'number' && (
-                      <div className="hidden print:flex justify-between items-end mb-1">
-                        <span className="font-black text-[9px] uppercase tracking-widest">TAXA SERVIÇO:</span>
-                        <span className="text-sm font-black">R$ {(printingOrder.appliedServiceFee || 0).toFixed(2)}</span>
+                      {printingOrder.type === SaleType.OWN_DELIVERY && printingOrder.deliveryFee !== undefined && printingOrder.deliveryFee > 0 && (
+                        <div className="flex justify-between items-center text-[8px] font-bold uppercase">
+                          <span>TAXA ENTREGA:</span>
+                          <span>R$ {printingOrder.deliveryFee.toFixed(2)}</span>
+                        </div>
+                      )}
+                      {printingOrder.type === SaleType.TABLE && typeof printingOrder.appliedServiceFee === 'number' && (
+                        <div className="flex justify-between items-center text-[8px] font-bold uppercase">
+                          <span>TAXA SERVICO:</span>
+                          <span>R$ {printingOrder.appliedServiceFee.toFixed(2)}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between items-end pt-1">
+                        <span className="font-bold text-[10px] uppercase">TOTAL:</span>
+                        <span className="text-sm font-bold">R$ {printingOrder.total.toFixed(2)}</span>
                       </div>
-                    )}
-                    <div className="flex justify-between items-end border-t border-dashed pt-2 mb-6">
-                      <span className="font-black text-[14px] uppercase tracking-widest">TOTAL:</span>
-                      <span className="text-2xl font-black">R$ {printingOrder.total.toFixed(2)}</span>
                     </div>
                   </>
                 )}
 
                 <div className="grid grid-cols-2 gap-4 no-print mt-6">
                   <button
-                    onClick={() => window.print()}
+                    onClick={async () => {
+                      if (!businessSettings || !printingOrder) return;
+                      await printElement('thermal-receipt');
+                      setPrintingOrder(null);
+                    }}
                     className="bg-slate-900 text-white py-4 rounded-[22px] font-receipt font-black uppercase text-[11px] shadow-xl hover:bg-black active:scale-95 transition-all flex items-center justify-center"
                   >
                     IMPRIMIR

@@ -377,6 +377,8 @@ model BusinessSettings {
   website              String?
   campaignLogoUrl      String?
   appBannerUrl         String?
+  printerIp            String?
+  printerType          String  @default("EPSON")
 }
 
 model ChatMessage {

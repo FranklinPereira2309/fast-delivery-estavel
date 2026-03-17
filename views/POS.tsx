@@ -9,6 +9,9 @@ import CustomAlert from '../components/CustomAlert';
 import { validateEmail, validateCPF, validateCNPJ, maskPhone, maskDocument, toTitleCase } from '../services/validationUtils';
 import { formatAddress } from '../services/formatUtils';
 import { QRCodeCanvas } from 'qrcode.react';
+import { sendOrderToThermalPrinter } from '../services/printService';
+
+import { usePrinter } from '../hooks/usePrinter';
 
 const API_URL = (import.meta as any).env.VITE_API_URL || 'http://localhost:3000/api';
 
@@ -17,6 +20,7 @@ interface POSProps {
 }
 
 const POS: React.FC<POSProps> = ({ currentUser }) => {
+  const { printElement } = usePrinter();
   const { addToast } = useToast();
   const [products, setProducts] = useState<Product[]>([]);
   const [cart, setCart] = useState<OrderItem[]>([]);
@@ -622,6 +626,18 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
 
     clearState(false, !orderData.status || orderData.status !== OrderStatus.PREPARING);
     await refreshAllData();
+  };
+
+  const handlePrintOrder = async () => {
+    if (!printingOrder) return;
+    try {
+        const res = await sendOrderToThermalPrinter(printingOrder, businessSettings!);
+        if (!res.fallback) {
+            addToast({ title: "Impressão", message: "Cupom térmico enviado com sucesso", type: "SUCCESS" });
+        }
+    } catch(e: any) {
+        showAlert("Erro de Impressão ESC/POS", e.message || "Impressora Offline ou não configurada corretamente na aba Empresa.", "DANGER");
+    }
   };
 
   const clearState = async (skipRevertFiado: boolean = false, keepPrinting: boolean = false) => {
@@ -1990,7 +2006,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       {
         printingOrder && businessSettings && (
           <div className="fixed inset-0 z-[60] flex justify-center p-4 bg-slate-900/80 backdrop-blur-md overflow-y-auto pt-10">
-            <div className="relative w-full max-w-[48mm] bg-white rounded-xl p-0 border border-dashed shadow-2xl font-receipt text-[18px] text-black is-receipt animate-in zoom-in duration-200">
+            <div id="pos-receipt" className="relative w-full max-w-[48mm] bg-white dark:bg-slate-900 p-2 border border-dashed dark:border-slate-800 shadow-2xl font-receipt text-[14px] text-black dark:text-white is-receipt animate-in zoom-in duration-200">
               {isNfceVisual ? (
                 // NFC-e (DANFE) Layout - Redesigned to match image
                 <div className="space-y-4 font-mono text-[16px] leading-tight text-black">
@@ -2077,46 +2093,69 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
               ) : (
                 // Standard Sales Coupon Layout
                 <>
-                  <div className="text-center mb-6 border-b border-dashed pb-4">
-                    <h2 className="font-black text-2xl uppercase tracking-tighter">{businessSettings.name}</h2>
-                    <p className="text-[16px] font-bold mt-1 uppercase">Comprovante de Pagamento</p>
+                  <div className="text-center mb-2">
+                    <h2 className="font-bold text-xs uppercase tracking-tighter mb-0">{businessSettings.name}</h2>
+                    <p className="text-[8px] font-bold uppercase">CNPJ: {businessSettings.cnpj}</p>
+                    <div className="section-divider"></div>
+                    <p className="text-[10px] font-bold uppercase tracking-widest">COMPROVANTE</p>
                   </div>
-                  <div className="space-y-1 mb-4 text-[18px] bg-slate-50 p-2 rounded-lg border border-slate-100">
-                    <p className="text-[16px] font-black text-slate-400 uppercase mb-1">Dados do Cliente</p>
-                    <p className="font-bold">CLIENTE: {printingOrder.clientName?.toUpperCase() || 'NAO INFORMADO'}</p>
-                    {printingOrder.clientDocument && <p>CPF/CNPJ: {printingOrder.clientDocument}</p>}
-                    {printingOrder.clientEmail && <p>E-MAIL: {printingOrder.clientEmail.toLowerCase()}</p>}
+                  
+                  <div className="section-divider"></div>
+
+                  <div className="space-y-0.5 mb-2 text-[8px]">
+                    <div className="flex justify-between">
+                      <span>DATA: {new Date(printingOrder.createdAt).toLocaleDateString('pt-BR')}</span>
+                      <span>{new Date(printingOrder.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
+                    </div>
+                    <p>CLIENTE: {printingOrder.clientName?.toUpperCase() || 'NAO INFORMADO'}</p>
                     {printingOrder.clientPhone && <p>FONE: {printingOrder.clientPhone}</p>}
-                    {printingOrder.clientAddress && (
-                      <p className="font-bold border-t border-dashed border-slate-200 mt-2 pt-1 uppercase leading-tight text-blue-600">ENTREGA: {printingOrder.clientAddress}</p>
+                    
+                    {printingOrder.type === SaleType.OWN_DELIVERY && printingOrder.clientAddress && (
+                      <p className="font-bold border-t border-black mt-1 pt-0.5 uppercase">ENTREGA: {printingOrder.clientAddress}</p>
                     )}
-                    {printingOrder.tableNumber && <p className="font-black">MESA: {printingOrder.tableNumber}</p>}
-                    <p className="text-slate-500">MÉTODO: {printingOrder.paymentMethod || 'PENDENTE'}</p>
+                    
+                    {printingOrder.tableNumber && <p className="font-bold">MESA: {printingOrder.tableNumber}</p>}
+                    <p>PAGTO: {printingOrder.paymentMethod || 'PENDENTE'}</p>
                   </div>
-                  <div className="border-t border-dashed my-3 py-3">
+
+                  <div className="section-divider"></div>
+
+                  <div className="mb-2">
                     {groupedPrintingItems.map(([id, data]) => (
-                      <div key={id} className="flex justify-between font-black uppercase py-0.5">
-                        <span>{data.quantity}x {data.product?.name.substring(0, 8)}</span>
+                      <div key={id} className="flex justify-between font-bold uppercase py-0.5 text-[9px]">
+                        <span>{data.quantity}x {data.product?.name.substring(0, 15)}</span>
                         <span>R$ {(data.quantity * data.price).toFixed(2)}</span>
                       </div>
                     ))}
                   </div>
-                  {printingOrder.appliedServiceFee && printingOrder.appliedServiceFee > 0 && (
-                    <div className="flex justify-between items-center border-t border-dashed pt-4 mb-2 text-[10px] uppercase font-black">
-                      <span>Taxa Serviço:</span>
-                      <span>R$ {printingOrder.appliedServiceFee.toFixed(2)}</span>
+
+                  <div className="section-divider"></div>
+
+                  <div className="space-y-0.5">
+                    <div className="flex justify-between items-center text-[8px] font-bold uppercase">
+                      <span>SUBTOTAL:</span>
+                      <span>R$ {(printingOrder.total - (printingOrder.appliedServiceFee || 0)).toFixed(2)}</span>
                     </div>
-                  )}
-                  <div className={`flex justify-between items-end ${(printingOrder.type === SaleType.OWN_DELIVERY || printingOrder.appliedServiceFee) ? '' : 'border-t border-dashed pt-4'} mb-6`}>
-                    <span className="font-black text-[14px] uppercase tracking-widest">TOTAL:</span>
-                    <span className="text-2xl font-black">R$ {printingOrder.total.toFixed(2)}</span>
+                    {printingOrder.appliedServiceFee && printingOrder.appliedServiceFee > 0 && (
+                      <div className="flex justify-between items-center text-[8px] font-bold uppercase">
+                        <span>TAXA SERVICO:</span>
+                        <span>R$ {printingOrder.appliedServiceFee.toFixed(2)}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between items-end pt-1">
+                      <span className="font-bold text-[10px] uppercase">TOTAL:</span>
+                      <span className="text-sm font-bold">R$ {printingOrder.total.toFixed(2)}</span>
+                    </div>
                   </div>
                 </>
               )}
 
               <div className="grid grid-cols-2 gap-4 no-print mt-6">
                 <button
-                  onClick={() => window.print()}
+                  onClick={async () => {
+                    await printElement('pos-receipt');
+                    setPrintingOrder(null);
+                  }}
                   className="bg-slate-900 text-white py-4 rounded-[22px] font-receipt font-black uppercase text-[11px] shadow-xl hover:bg-black active:scale-95 transition-all flex items-center justify-center"
                 >
                   IMPRIMIR
@@ -2486,7 +2525,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
       {
         isReviewModalOpen && reviewSession && (
           <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/40 dark:bg-slate-950/60 animate-in fade-in duration-300 p-2 print:p-0 print:bg-white print:items-start print:static print:z-auto print-modal">
-            <div className="bg-white dark:bg-slate-900 w-full max-w-[650px] border border-slate-300 dark:border-slate-800 shadow-xl flex flex-col max-h-[98vh] print:max-h-none print:h-auto print:shadow-none print:border-none print:w-full print:m-0 rounded-2xl print:rounded-none">
+            <div id="cash-closing-report" className="bg-white dark:bg-slate-900 w-full max-w-[650px] border border-slate-300 dark:border-slate-800 shadow-xl flex flex-col max-h-[98vh] print:max-h-none print:h-auto print:shadow-none print:border-none print:w-full print:m-0 rounded-2xl print:rounded-none">
               <div className="flex-1 p-4 lg:p-6 space-y-4 overflow-y-auto print:overflow-visible custom-scrollbar">
                 {/* Formal Header */}
                 <div className="border-b border-slate-900 dark:border-slate-700 pb-2">
@@ -2650,8 +2689,9 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                     <Icons.Dashboard className="w-3.5 h-3.5" /> Ajustes
                   </button>
                   <button
-                    onClick={() => {
-                      setTimeout(() => window.print(), 100);
+                    onClick={async () => {
+                      addToast({ title: 'Impressão', message: 'Gerando imagem do relatório...', type: 'INFO' });
+                      await printAsImage('cash-closing-report');
                     }}
                     className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 py-2.5 rounded-xl font-bold uppercase text-[10px] tracking-widest hover:bg-black dark:hover:bg-slate-100 active:scale-95 transition-all flex items-center justify-center gap-2 shadow-md shadow-slate-200 dark:shadow-none"
                   >
