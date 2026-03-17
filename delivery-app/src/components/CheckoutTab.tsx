@@ -116,7 +116,10 @@ const CheckoutTab: React.FC<{ onOrderPlaced: () => void }> = ({ onOrderPlaced })
                 setAlertState(prev => ({ ...prev, isOpen: false }));
                 if (onConfirm) onConfirm();
             },
-            onCancel: onCancel === null ? null : (onCancel || (() => setAlertState(prev => ({ ...prev, isOpen: false })))),
+            onCancel: onCancel === null ? null : () => {
+                setAlertState(prev => ({ ...prev, isOpen: false }));
+                if (onCancel) onCancel();
+            },
             confirmText: confirmText
         });
     };
@@ -217,7 +220,7 @@ const CheckoutTab: React.FC<{ onOrderPlaced: () => void }> = ({ onOrderPlaced })
     }
 
     return (
-        <div className="animate-in fade-in slide-in-from-right-4 duration-500">
+        <div className="flex flex-col h-full animate-in fade-in slide-in-from-right-4 duration-500 overflow-hidden">
             <CustomAlert
                 isOpen={alertState.isOpen}
                 title={alertState.title}
@@ -228,13 +231,30 @@ const CheckoutTab: React.FC<{ onOrderPlaced: () => void }> = ({ onOrderPlaced })
                 onCancel={alertState.onCancel === null ? undefined : (alertState.onCancel || (() => setAlertState(prev => ({ ...prev, isOpen: false }))))}
             />
 
-            <form onSubmit={handleSubmit} className="p-6 space-y-8 max-w-lg mx-auto">
-                {/* Resumo */}
-                <div className="space-y-4">
-                    <h2 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-2 flex items-center gap-2">
-                        <Icons.ShoppingCart className="w-4 h-4 text-indigo-400" /> Resumo do Pedido
-                    </h2>
-                    <div className="bg-white dark:bg-slate-800 rounded-[2rem] p-6 shadow-sm border border-slate-100 dark:border-slate-700 space-y-4">
+            <div className="flex-1 overflow-y-auto no-scrollbar">
+                <form onSubmit={handleSubmit} className="p-6 space-y-8 max-w-lg mx-auto">
+                    {/* Resumo */}
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between px-2">
+                            <h2 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                                <Icons.ShoppingCart className="w-4 h-4 text-indigo-400" /> Resumo do Pedido
+                            </h2>
+                            <button
+                                type="button"
+                                onClick={() => showAlert(
+                                    'Limpar Carrinho',
+                                    'Deseja remover todos os itens do seu carrinho?',
+                                    'DANGER',
+                                    () => clearCart(),
+                                    undefined,
+                                    'Limpar'
+                                )}
+                                className="text-[10px] font-black text-rose-500 uppercase tracking-widest hover:text-rose-600 transition-all flex items-center gap-1.5"
+                            >
+                                <Icons.Trash className="w-3 h-3" /> Limpar
+                            </button>
+                        </div>
+                        <div className="bg-white dark:bg-slate-800 rounded-[2rem] p-6 shadow-sm border border-slate-100 dark:border-slate-700 space-y-4">
                         {items.map(item => (
                             <div key={item.product.id} className="flex gap-4 items-center">
                                 <div className="w-12 h-12 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 font-black rounded-xl flex items-center justify-center shrink-0">{item.quantity}x</div>
@@ -378,7 +398,8 @@ const CheckoutTab: React.FC<{ onOrderPlaced: () => void }> = ({ onOrderPlaced })
                         {isLoading ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : `Confirmar Pedido • R$ ${finalTotal.toFixed(2)}`}
                     </span>
                 </button>
-            </form>
+                </form>
+            </div>
 
             {isEditingSavedAddress && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 animate-in fade-in duration-300">

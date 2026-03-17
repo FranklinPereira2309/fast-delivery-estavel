@@ -240,10 +240,10 @@ const Home: React.FC = () => {
                 <div className="flex-1 flex flex-col animate-in fade-in duration-500 overflow-hidden">
                     {!showMenu ? (
                         /* Advertisement Banner Space - Fixed/Fitting screen */
-                        <div className="flex-1 flex flex-col px-6 pt-4 pb-4">
+                        <div className="flex-1 flex flex-col px-6 pt-0 pb-0">
                             <div className="flex-1 w-full bg-slate-100 dark:bg-slate-800 rounded-[2.5rem] overflow-hidden shadow-sm relative group flex items-center justify-center">
                                 {settings?.appBannerUrl ? (
-                                    <img src={settings.appBannerUrl} alt="Propaganda" className="w-full h-full object-contain" />
+                                    <img src={settings.appBannerUrl} alt="Propaganda" className="w-full h-full object-cover" />
                                 ) : (
                                     <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600 p-8 text-center rounded-[2.5rem]">
                                         <Icons.ShoppingCart className="w-16 h-16 text-white/20 mb-4" />
