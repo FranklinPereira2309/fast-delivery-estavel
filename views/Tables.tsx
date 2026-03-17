@@ -1151,77 +1151,114 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
       {/* MODAL DE VISUALIZAÇÃO PRÉVIA (CUPOM DE CONFERÊNCIA) - REFATORADO COM AGRUPAMENTO */}
 
       {(showConsumptionTicket || isConfirmingBilling) && (printingPreBill || getSessForTable(selectedTable!)) && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-900/90 backdrop-blur-xl animate-in fade-in duration-300">
-          <div className="relative w-full max-w-[58mm] bg-white p-4 border border-dashed shadow-2xl font-receipt text-black overflow-hidden animate-in zoom-in duration-300 print-container is-receipt rounded-sm">
-            <div className="text-center mb-6 border-b border-dashed border-slate-300 pb-4">
-              <h2 className="font-black text-sm uppercase tracking-tighter">{settings.name}</h2>
-              <p className="text-[9px] font-bold mt-1 uppercase opacity-60">{isConfirmingBilling ? 'Solicitação de Fechamento' : 'Conferência de Consumo'}</p>
-              <div className="mt-4 bg-slate-900 text-white py-1 px-3 inline-block rounded-md font-black text-xs uppercase">MESA {selectedTable}</div>
-            </div>
-
-            <div className="space-y-2 mb-6">
-              <div className="border-b border-dashed border-slate-200 pb-2 flex flex-col gap-0.5">
-                <p className="text-[10px] font-black opacity-50 uppercase">Cliente:</p>
-                <p className="text-[12px] font-black uppercase truncate">
-                  {isConfirmingBilling
-                    ? (isUnregisteredClient ? manualClientName.toUpperCase() : (selectedClient?.name.toUpperCase() || 'CONSUMIDOR PADRÃO'))
-                    : (getSessForTable(selectedTable!)?.clientName?.toUpperCase() || 'EM ATENDIMENTO')}
-                </p>
-                {(isConfirmingBilling ? (isUnregisteredClient ? manualClientPhone : selectedClient?.phone) : getSessForTable(selectedTable!)?.clientPhone) && (
-                  <p className="text-[10px] font-bold text-slate-500 italic mt-0.5">CONTATO: {isConfirmingBilling ? (isUnregisteredClient ? manualClientPhone : selectedClient?.phone) : getSessForTable(selectedTable!)?.clientPhone}</p>
-                )}
-              </div>
-
-              <div className="py-2">
-                {getGroupedItems((isConfirmingBilling ? printingPreBill : getSessForTable(selectedTable!))?.items || []).map((it, i) => (
-                  <div key={i} className="flex justify-between items-start gap-4 animate-in slide-in-from-left duration-200" style={{ animationDelay: `${i * 30}ms` }}>
-                    <span className={`font-bold text-[12px] leading-tight flex-1 uppercase ${it.allReady ? 'text-slate-800' : 'text-slate-400'}`}>
-                      {it.quantity}x {it.product?.name.toUpperCase()} {it.allReady ? '✓' : ''}
-                    </span>
-                    <span className="font-black text-[12px] whitespace-nowrap">R$ {(it.quantity * it.price).toFixed(2)}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="border-t border-dashed border-slate-900 pt-4 mb-8">
-              {settings.serviceFeeStatus && (
-                <div className="flex justify-between items-end mb-1 opacity-70">
-                  <span className="font-black text-[9px] uppercase">Taxa Receb. ({settings.serviceFeePercentage || 10}%)</span>
-                  <span className="font-black text-[10px]">R$ {(((isConfirmingBilling ? printingPreBill : getSessForTable(selectedTable!))?.items.reduce((acc, it) => acc + (it.price * it.quantity), 0) || 0) * (settings.serviceFeePercentage || 10) / 100).toFixed(2)}</span>
+        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden animate-in zoom-in-95 duration-300">
+            {/* Modal Header */}
+            <div className={`p-8 pb-6 text-center border-b border-slate-50 dark:border-slate-800 ${isConfirmingBilling ? 'bg-orange-50/50 dark:bg-orange-500/10' : 'bg-blue-50/50 dark:bg-blue-500/10'}`}>
+              <div className="flex justify-center mb-4">
+                <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg transition-transform hover:scale-110 duration-300 ${isConfirmingBilling ? 'bg-orange-500 text-white shadow-orange-200' : 'bg-blue-500 text-white shadow-blue-200'}`}>
+                  {isConfirmingBilling ? <Icons.MoneyBag className="w-8 h-8" /> : <Icons.View className="w-8 h-8" />}
                 </div>
-              )}
-              <div className="flex justify-between items-end">
-                <span className="font-black text-[10px] uppercase opacity-50">Total Mesa:</span>
-                <span className="text-2xl font-black">R$ {(
-                  ((isConfirmingBilling ? printingPreBill : getSessForTable(selectedTable!))?.items.reduce((acc, it) => acc + (it.price * it.quantity), 0) || 0) +
-                  (settings.serviceFeeStatus ? (((isConfirmingBilling ? printingPreBill : getSessForTable(selectedTable!))?.items.reduce((acc, it) => acc + (it.price * it.quantity), 0) || 0) * (settings.serviceFeePercentage || 10) / 100) : 0)
-                ).toFixed(2)}</span>
+              </div>
+              <h2 className="text-xl font-black text-slate-800 dark:text-white uppercase tracking-tighter">
+                Mesa {selectedTable}
+              </h2>
+              <p className={`text-[10px] font-black uppercase tracking-widest mt-1 ${isConfirmingBilling ? 'text-orange-600 dark:text-orange-400' : 'text-blue-600 dark:text-blue-400'}`}>
+                {isConfirmingBilling ? 'Solicitação de Fechamento' : 'Conferência de Consumo'}
+              </p>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-8 space-y-6">
+              {/* Client Info Section */}
+              <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-700">
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Identificação</p>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-white dark:bg-slate-800 flex items-center justify-center text-slate-400 border border-slate-100 dark:border-slate-700">
+                    <Icons.User className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-black text-slate-700 dark:text-white uppercase truncate">
+                      {isConfirmingBilling
+                        ? (isUnregisteredClient ? manualClientName.toUpperCase() : (selectedClient?.name.toUpperCase() || 'CONSUMIDOR PADRÃO'))
+                        : (getSessForTable(selectedTable!)?.clientName?.toUpperCase() || 'EM ATENDIMENTO')}
+                    </p>
+                    {(isConfirmingBilling ? (isUnregisteredClient ? manualClientPhone : selectedClient?.phone) : getSessForTable(selectedTable!)?.clientPhone) && (
+                      <p className="text-[10px] font-bold text-slate-400/80 uppercase">
+                        Contato: {isConfirmingBilling ? (isUnregisteredClient ? manualClientPhone : selectedClient?.phone) : getSessForTable(selectedTable!)?.clientPhone}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Items List */}
+              <div className="space-y-3">
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Itens Consumidos</p>
+                <div className="max-h-56 overflow-y-auto pr-2 space-y-2 custom-scrollbar">
+                  {getGroupedItems((isConfirmingBilling ? printingPreBill : getSessForTable(selectedTable!))?.items || []).map((it, i) => (
+                    <div key={i} className="flex justify-between items-center p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700">
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-[11px] font-black uppercase truncate ${it.allReady ? 'text-slate-800 dark:text-white' : 'text-slate-400'}`}>
+                          {it.quantity}x {it.product?.name.toUpperCase()}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        {it.allReady && <span className="text-emerald-500 font-black text-xs">✓</span>}
+                        <span className="text-xs font-black text-slate-600 dark:text-slate-400">
+                          R$ {(it.quantity * it.price).toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Totals Section */}
+              <div className="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-2">
+                {settings.serviceFeeStatus && (
+                  <div className="flex justify-between items-center px-1">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Taxa de Serviço ({settings.serviceFeePercentage || 10}%)</span>
+                    <span className="text-xs font-black text-slate-600 dark:text-slate-400">
+                      R$ {(((isConfirmingBilling ? printingPreBill : getSessForTable(selectedTable!))?.items.reduce((acc, it) => acc + (it.price * it.quantity), 0) || 0) * (settings.serviceFeePercentage || 10) / 100).toFixed(2)}
+                    </span>
+                  </div>
+                )}
+                <div className="flex justify-between items-end p-4 bg-slate-900 text-white rounded-[2rem]">
+                  <span className="text-[10px] font-black uppercase tracking-[0.2em] mb-1">Total Geral</span>
+                  <span className="text-2xl font-black tracking-tighter">
+                    R$ {(
+                      ((isConfirmingBilling ? printingPreBill : getSessForTable(selectedTable!))?.items.reduce((acc, it) => acc + (it.price * it.quantity), 0) || 0) +
+                      (settings.serviceFeeStatus ? (((isConfirmingBilling ? printingPreBill : getSessForTable(selectedTable!))?.items.reduce((acc, it) => acc + (it.price * it.quantity), 0) || 0) * (settings.serviceFeePercentage || 10) / 100) : 0)
+                    ).toFixed(2)}
+                  </span>
+                </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 no-print mt-6">
+            {/* Modal Actions */}
+            <div className="p-8 pt-0 flex gap-3">
+              <button
+                onClick={() => { setShowConsumptionTicket(false); setIsConfirmingBilling(false); }}
+                className="flex-1 py-4 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded-2xl font-black uppercase text-[10px] tracking-widest transition-all hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-95"
+              >
+                {isConfirmingBilling ? 'Cancelar' : 'Fechar'}
+              </button>
               {isConfirmingBilling ? (
                 <button
                   onClick={confirmBilling}
-                  className="bg-blue-600 text-white py-4 rounded-[22px] font-black uppercase text-[10px] tracking-widest shadow-xl hover:bg-blue-700 active:scale-95 transition-all flex items-center justify-center gap-2"
+                  className="flex-[1.5] py-4 bg-orange-600 hover:bg-orange-700 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-orange-100 dark:shadow-none transition-all active:scale-95 flex items-center justify-center gap-2"
                 >
-                  <Icons.Dashboard /> CONFIRMAR
+                  <Icons.Check className="w-4 h-4" /> Confirmar
                 </button>
               ) : (
                 <button
                   onClick={handlePrintTable}
-                  className="bg-slate-900 text-white py-4 rounded-[22px] font-receipt font-black uppercase text-[11px] shadow-xl hover:bg-black active:scale-95 transition-all flex items-center justify-center"
+                  className="flex-[1.5] py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-blue-100 dark:shadow-none transition-all active:scale-95 flex items-center justify-center gap-2"
                 >
-                  IMPRIMIR
+                  <Icons.View className="w-4 h-4" /> Imprimir
                 </button>
               )}
-              <button
-                onClick={() => { setShowConsumptionTicket(false); setIsConfirmingBilling(false); }}
-                className="bg-slate-50 text-slate-400 py-4 rounded-[22px] font-receipt font-black uppercase text-[11px] hover:bg-slate-100 active:scale-95 transition-all flex items-center justify-center"
-              >
-                {isConfirmingBilling ? 'CANCELAR' : 'FECHAR'}
-              </button>
             </div>
           </div>
         </div>
