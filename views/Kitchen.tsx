@@ -283,6 +283,18 @@ const Kitchen: React.FC = () => {
                                       })}
                                     </div>
                                   )}
+
+                                    {/* Instruções de Preparo */}
+                                    {product?.preparation && (
+                                      <div className="mt-2 p-2 bg-blue-50/50 dark:bg-blue-900/10 rounded-lg border border-blue-100/50 dark:border-blue-800/30">
+                                        <p className="text-[8px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-1 flex items-center gap-1">
+                                          <Icons.View size={8} /> Instruções de Preparo
+                                        </p>
+                                        <p className="text-[9px] text-slate-600 dark:text-slate-400 font-medium leading-tight whitespace-pre-wrap">
+                                          {product.preparation}
+                                        </p>
+                                      </div>
+                                    )}
                                 </div>
                               </div>
                             </label>
@@ -510,6 +522,38 @@ const Kitchen: React.FC = () => {
                       <p className="text-[7px] text-orange-600 font-bold pl-2">
                         * {it.observations}
                       </p>
+                    )}
+
+                    {/* Ficha Técnica no Cupom */}
+                    {(product?.recipe && product.recipe.length > 0 || product?.preparation) && (
+                      <div className="mt-1 ml-2 p-1 border border-dashed border-black/20 bg-slate-50/50">
+                        <p className="text-[6px] font-black uppercase mb-0.5 border-b border-black/10 pb-0.5">Ficha Técnica</p>
+                        
+                        {/* Ingredientes */}
+                        {product?.recipe && product.recipe.length > 0 && (
+                          <div className="mb-1">
+                            {product.recipe.map((r, rIdx) => {
+                              const invItem = inventory.find(inv => inv.id === r.inventoryItemId);
+                              const totalQty = r.quantity * it.quantity;
+                              return (
+                                <p key={rIdx} className="text-[6px] leading-tight m-0">
+                                  - {invItem?.name}: {totalQty} {invItem?.unit}
+                                </p>
+                              );
+                            })}
+                          </div>
+                        )}
+
+                        {/* Modo de Preparo */}
+                        {product?.preparation && (
+                          <div className="mt-1 pt-1 border-t border-black/5">
+                            <p className="text-[5px] font-bold uppercase mb-0.5">Preparo:</p>
+                            <p className="text-[6px] leading-tight m-0 italic whitespace-pre-wrap">
+                              {product.preparation}
+                            </p>
+                          </div>
+                        )}
+                      </div>
                     )}
                   </div>
                 );

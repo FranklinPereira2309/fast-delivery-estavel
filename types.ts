@@ -180,6 +180,7 @@ export interface Product {
   category: string;
   stock: number;
   imageUrl: string;
+  preparation?: string;
   recipe?: RecipeItem[];
   // Tax Fields
   ncm?: string;

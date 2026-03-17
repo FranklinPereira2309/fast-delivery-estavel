@@ -120,6 +120,7 @@ model Product {
   ncm        String?
   cfop       String?
   cest       String?
+  preparation String?
   recipe     RecipeItem[]
   orderItems OrderItem[]
 }

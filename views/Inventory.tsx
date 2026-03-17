@@ -26,7 +26,7 @@ const Inventory: React.FC = () => {
 
   const [prodFormData, setProdFormData] = useState({
     name: '', price: 0, category: '', imageUrl: '', stock: 0,
-    ncm: '', cfop: '', cest: ''
+    ncm: '', cfop: '', cest: '', preparation: ''
   });
 
   const [tempRecipe, setTempRecipe] = useState<RecipeItem[]>([]);
@@ -101,11 +101,12 @@ const Inventory: React.FC = () => {
         stock: product.stock,
         ncm: product.ncm || '',
         cfop: product.cfop || '',
-        cest: product.cest || ''
+        cest: product.cest || '',
+        preparation: product.preparation || ''
       });
     } else {
       setEditingProduct(null);
-      setProdFormData({ name: '', price: 0, category: 'Geral', imageUrl: '', stock: 0, ncm: '', cfop: '', cest: '' });
+      setProdFormData({ name: '', price: 0, category: 'Geral', imageUrl: '', stock: 0, ncm: '', cfop: '', cest: '', preparation: '' });
     }
     setIsProdModalOpen(true);
   };
@@ -336,8 +337,17 @@ const Inventory: React.FC = () => {
                 <div className="flex gap-2">
                   <input type="text" value={prodFormData.imageUrl} onChange={e => setProdFormData({ ...prodFormData, imageUrl: e.target.value })} className="flex-1 p-4 bg-slate-100 dark:bg-slate-800 border-none rounded-2xl text-[10px] font-bold text-slate-800 dark:text-white" placeholder="URL da imagem..." />
                   <button type="button" onClick={() => fileInputRef.current?.click()} className="p-4 bg-blue-600 text-white rounded-2xl text-[10px] font-black shadow-lg shadow-blue-100 dark:shadow-blue-900/20">UP</button>
-                  <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileUpload} />
                 </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Modo de Preparo / Ficha Técnica</label>
+                <textarea
+                  placeholder="Instruções para a cozinha..."
+                  value={prodFormData.preparation}
+                  onChange={e => setProdFormData({ ...prodFormData, preparation: e.target.value })}
+                  className="w-full p-4 bg-slate-100 dark:bg-slate-800 border-none rounded-2xl focus:ring-2 focus:ring-blue-500 font-bold text-sm text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 min-h-[120px] resize-none"
+                />
               </div>
 
               <div className="pt-4 border-t border-slate-50 dark:border-slate-800 space-y-4">

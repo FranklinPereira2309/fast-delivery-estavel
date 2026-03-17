@@ -481,7 +481,8 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
     if ((isDelivery || isCounterSale) && !selectedClient && !avulsoData.name) {
       setIsClientModalOpen(true);
       const modeLabel = isDelivery ? 'Delivery' : 'Balcão';
-      return showAlert('Identificar Cliente', `A modalidade ${modeLabel} exige um cliente selecionado para prosseguir. Identifique o cliente.`, 'DANGER');
+      addToast({ title: 'Identificar Cliente', message: `A modalidade ${modeLabel} exige um cliente selecionado para prosseguir. Identifique o cliente.`, type: 'DANGER' });
+      return;
     }
 
     // New Business Rule: For NEW Balcão or Delivery orders, payment is optional when sending to production.
