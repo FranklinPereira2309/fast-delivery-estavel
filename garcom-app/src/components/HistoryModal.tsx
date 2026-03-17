@@ -248,7 +248,7 @@ const HistoryModal: React.FC<HistoryModalProps> = ({ user, tables, settings, res
 
             {printingOrder && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md" onClick={() => setPrintingOrder(null)}>
-                    <div className="relative w-full max-w-[80mm] bg-[#f9f9f5] p-8 shadow-2xl font-mono text-[11px] text-black animate-in zoom-in duration-200" onClick={e => e.stopPropagation()}>
+                    <div className="relative w-full max-w-[58mm] bg-[#f9f9f5] p-4 shadow-2xl font-mono text-[10px] text-black is-receipt animate-in zoom-in duration-200" onClick={e => e.stopPropagation()}>
                         <div className="text-center mb-6 border-b border-dashed border-slate-300 pb-4">
                             <h2 className="font-bold text-sm uppercase">{settings?.name || 'ESTABELECIMENTO'}</h2>
                             <p className="text-[10px] mt-2 uppercase">CÓPIA DE COMPROVANTE</p>

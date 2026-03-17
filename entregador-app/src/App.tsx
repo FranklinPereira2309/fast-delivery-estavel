@@ -734,7 +734,7 @@ const App: React.FC = () => {
 
       {printingHistoryOrder && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md animate-in fade-in duration-200" onClick={() => setPrintingHistoryOrder(null)}>
-          <div className="relative w-full max-w-[80mm] bg-white p-8 border border-dashed shadow-2xl font-receipt text-[11px] text-black print-container is-receipt" onClick={e => e.stopPropagation()}>
+          <div className="relative w-full max-w-[58mm] bg-white p-4 border border-dashed shadow-2xl font-receipt text-[10px] text-black print-container is-receipt" onClick={e => e.stopPropagation()}>
             <div className="text-center mb-6 border-b border-dashed pb-4">
               <h2 className="font-black text-sm uppercase tracking-tighter">ESTABELECIMENTO</h2>
               <p className="text-[9px] font-bold mt-1 uppercase">Cópia de Comprovante</p>

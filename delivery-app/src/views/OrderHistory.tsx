@@ -208,7 +208,7 @@ const OrderHistory: React.FC = () => {
             {printingOrder && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md animate-in fade-in duration-300">
                     <div className="absolute inset-0 no-print" onClick={() => setPrintingOrder(null)}></div>
-                    <div className={`bg-white dark:bg-slate-900 w-full max-w-[80mm] border-dashed shadow-2xl p-8 animate-in zoom-in duration-300 overflow-y-auto max-h-[95vh] custom-scrollbar relative ${printingOrder.status === 'CANCELLED' ? 'rounded-[2rem]' : 'is-receipt border dark:border-slate-800'}`}>
+                    <div className={`bg-white dark:bg-slate-900 w-full max-w-[58mm] border-dashed shadow-2xl p-4 animate-in zoom-in duration-300 overflow-y-auto max-h-[95vh] custom-scrollbar relative is-receipt ${printingOrder.status === 'CANCELLED' ? 'rounded-[2rem]' : 'border dark:border-slate-800'}`}>
                         <div className="text-center mb-6 border-b border-dashed dark:border-slate-700 pb-4">
                             <h2 className="font-black text-sm uppercase tracking-tighter text-slate-800 dark:text-white">{businessSettings?.name || 'Sistema de Delivery'}</h2>
                             {businessSettings?.cnpj && printingOrder.status !== 'CANCELLED' && <p className="text-[9px] font-bold mt-1 text-slate-500 dark:text-slate-400">CNPJ: {businessSettings.cnpj}</p>}

@@ -1989,11 +1989,11 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
 
       {
         printingOrder && businessSettings && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
-            <div className="relative w-full max-w-[80mm] bg-white rounded-xl p-8 border border-dashed shadow-2xl font-receipt text-[11px] text-black is-receipt animate-in zoom-in duration-200">
+          <div className="fixed inset-0 z-[60] flex justify-center p-4 bg-slate-900/80 backdrop-blur-md overflow-y-auto pt-10">
+            <div className="relative w-full max-w-[48mm] bg-white rounded-xl p-0 border border-dashed shadow-2xl font-receipt text-[18px] text-black is-receipt animate-in zoom-in duration-200">
               {isNfceVisual ? (
                 // NFC-e (DANFE) Layout - Redesigned to match image
-                <div className="space-y-4 font-mono text-[10px] leading-tight text-black">
+                <div className="space-y-4 font-mono text-[16px] leading-tight text-black">
                   <div className="text-center space-y-1">
                     <p className="font-bold">CNPJ - {businessSettings.cnpj} - {businessSettings.name?.toUpperCase()}</p>
                     <p className="uppercase">{businessSettings.address}</p>
@@ -2050,7 +2050,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                     <p className="font-bold">NFCe: {printingOrder.nfeNumber?.split('-')[1] || '000001'} Ser: 001 Emi: {new Date(printingOrder.createdAt).toLocaleDateString('pt-BR')} {new Date(printingOrder.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</p>
                     <p>Consulte pela chave de acesso em</p>
                     <p className="text-[8px] underline">www.nfce.sefaz.ba.gov.br/portal/consultaNFCe.jsp</p>
-                    <p className="text-[9px] font-bold break-all">35240212345678000190650010000000011000000012</p>
+                    <p className="text-[13px] font-bold break-all leading-none">35240212345678000190650010000000011000000012</p>
                   </div>
 
                   <div className="text-center space-y-1 border-t border-dashed border-black pt-2">
@@ -2078,11 +2078,11 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                 // Standard Sales Coupon Layout
                 <>
                   <div className="text-center mb-6 border-b border-dashed pb-4">
-                    <h2 className="font-black text-sm uppercase tracking-tighter">{businessSettings.name}</h2>
-                    <p className="text-[9px] font-bold mt-1 uppercase">Comprovante de Pagamento</p>
+                    <h2 className="font-black text-2xl uppercase tracking-tighter">{businessSettings.name}</h2>
+                    <p className="text-[16px] font-bold mt-1 uppercase">Comprovante de Pagamento</p>
                   </div>
-                  <div className="space-y-1 mb-4 text-[10px] bg-slate-50 p-2 rounded-lg border border-slate-100">
-                    <p className="text-[8px] font-black text-slate-400 uppercase mb-1">Dados do Cliente</p>
+                  <div className="space-y-1 mb-4 text-[18px] bg-slate-50 p-2 rounded-lg border border-slate-100">
+                    <p className="text-[16px] font-black text-slate-400 uppercase mb-1">Dados do Cliente</p>
                     <p className="font-bold">CLIENTE: {printingOrder.clientName?.toUpperCase() || 'NAO INFORMADO'}</p>
                     {printingOrder.clientDocument && <p>CPF/CNPJ: {printingOrder.clientDocument}</p>}
                     {printingOrder.clientEmail && <p>E-MAIL: {printingOrder.clientEmail.toLowerCase()}</p>}
@@ -2096,7 +2096,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                   <div className="border-t border-dashed my-3 py-3">
                     {groupedPrintingItems.map(([id, data]) => (
                       <div key={id} className="flex justify-between font-black uppercase py-0.5">
-                        <span>{data.quantity}x {data.product?.name.substring(0, 18)}</span>
+                        <span>{data.quantity}x {data.product?.name.substring(0, 8)}</span>
                         <span>R$ {(data.quantity * data.price).toFixed(2)}</span>
                       </div>
                     ))}
@@ -2108,7 +2108,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                     </div>
                   )}
                   <div className={`flex justify-between items-end ${(printingOrder.type === SaleType.OWN_DELIVERY || printingOrder.appliedServiceFee) ? '' : 'border-t border-dashed pt-4'} mb-6`}>
-                    <span className="font-black text-[9px] uppercase tracking-widest">TOTAL:</span>
+                    <span className="font-black text-[14px] uppercase tracking-widest">TOTAL:</span>
                     <span className="text-2xl font-black">R$ {printingOrder.total.toFixed(2)}</span>
                   </div>
                 </>

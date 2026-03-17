@@ -44,25 +44,42 @@
 }
 
 @media print {
+    @page {
+        margin: 0;
+        size: auto;
+    }
+
     body {
         visibility: hidden !important;
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
-    }
-
-    .print-modal,
-    .print-modal * {
-        visibility: visible !important;
-    }
-
-    .print-modal {
-        position: absolute !important;
-        left: 0 !important;
-        top: 0 !important;
-        width: 100% !important;
-        height: auto !important;
         margin: 0 !important;
         padding: 0 !important;
+        display: flex !important;
+        justify-content: center !important;
+        align-items: flex-start !important;
+    }
+
+    .no-print {
+        display: none !important;
+    }
+
+    .is-receipt {
+        visibility: visible !important;
+        position: relative !important;
+        margin: 0 auto !important;
+        width: 48mm !important;
+        max-width: 48mm !important;
+        padding: 0 !important;
+        padding-bottom: 30mm !important; /* Extra space for cutting */
         background: white !important;
+        box-shadow: none !important;
+        border: none !important;
+        font-size: 18px !important;
+        line-height: 1.1 !important;
+    }
+
+    .is-receipt * {
+        visibility: visible !important;
     }
 }

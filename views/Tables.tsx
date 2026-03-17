@@ -1118,7 +1118,7 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
 
       {(showConsumptionTicket || isConfirmingBilling) && (printingPreBill || getSessForTable(selectedTable!)) && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-900/90 backdrop-blur-xl animate-in fade-in duration-300">
-          <div className="relative w-full max-w-[80mm] bg-white p-8 border border-dashed shadow-2xl font-receipt text-black overflow-hidden animate-in zoom-in duration-300 print-container is-receipt rounded-sm">
+          <div className="relative w-full max-w-[58mm] bg-white p-4 border border-dashed shadow-2xl font-receipt text-black overflow-hidden animate-in zoom-in duration-300 print-container is-receipt rounded-sm">
             <div className="text-center mb-6 border-b border-dashed border-slate-300 pb-4">
               <h2 className="font-black text-sm uppercase tracking-tighter">{settings.name}</h2>
               <p className="text-[9px] font-bold mt-1 uppercase opacity-60">{isConfirmingBilling ? 'Solicitação de Fechamento' : 'Conferência de Consumo'}</p>

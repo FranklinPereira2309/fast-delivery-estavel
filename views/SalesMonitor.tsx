@@ -325,7 +325,7 @@ const SalesMonitor: React.FC = () => {
 
           {printingOrder && businessSettings && (
             <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/80 dark:bg-slate-950/90 backdrop-blur-md">
-              <div className="relative w-full max-w-[80mm] bg-white dark:bg-slate-900 p-8 border border-dashed dark:border-slate-800 shadow-2xl font-receipt text-[11px] text-black dark:text-white is-receipt animate-in zoom-in duration-200">
+            <div className="relative w-full max-w-[48mm] bg-white dark:bg-slate-900 p-2 border border-dashed dark:border-slate-800 shadow-2xl font-receipt text-[14px] text-black dark:text-white is-receipt animate-in zoom-in duration-200">
                 {isNfceVisual ? (
                   <div className="space-y-4 font-mono text-[10px] leading-tight text-black dark:text-white">
                     <div className="text-center space-y-1">
@@ -380,7 +380,7 @@ const SalesMonitor: React.FC = () => {
                       <p className="font-bold">NFCe: {printingOrder.nfeNumber?.split('-')[1] || '000001'} Ser: 001 Emi: {new Date(printingOrder.createdAt).toLocaleDateString('pt-BR')} {new Date(printingOrder.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</p>
                       <p>Consulte pela chave de acesso em</p>
                       <p className="text-[8px] underline">www.nfce.sefaz.ba.gov.br/portal/consultaNFCe.jsp</p>
-                      <p className="text-[9px] font-bold break-all">35240212345678000190650010000000011000000012</p>
+                      <p className="text-[13px] font-bold break-all leading-none">35240212345678000190650010000000011000000012</p>
                     </div>
 
                     <div className="text-center space-y-1 border-t border-dashed border-black dark:border-slate-700 pt-2">
@@ -406,9 +406,9 @@ const SalesMonitor: React.FC = () => {
                 ) : (
                   <>
                     <div className="text-center mb-6 border-b border-dashed pb-4">
-                      <h2 className="font-black text-sm uppercase tracking-tighter">{businessSettings.name}</h2>
-                      <p className="text-[9px] font-bold mt-1">CNPJ: {businessSettings.cnpj}</p>
-                      <p className="text-[10px] font-black mt-3 border border-slate-900 dark:border-slate-300 py-1 uppercase tracking-widest">Comprovante de Pagamento</p>
+                      <h2 className="font-black text-2xl uppercase tracking-tighter">{businessSettings.name}</h2>
+                      <p className="text-[16px] font-bold mt-1">CNPJ: {businessSettings.cnpj}</p>
+                      <p className="text-[18px] font-black mt-3 border border-slate-900 dark:border-slate-300 py-1 uppercase tracking-widest text-center">Comprovante de Pagamento</p>
                     </div>
                     <div className="space-y-1 mb-4">
                       <p>DATA: {new Date(printingOrder.createdAt).toLocaleString('pt-BR')}</p>
@@ -427,7 +427,7 @@ const SalesMonitor: React.FC = () => {
                         const prodName = data.product?.name || `PROD #${id.substring(0, 5)}`;
                         return (
                           <div key={id} className="flex justify-between font-black uppercase py-0.5">
-                            <span>{data.quantity}x {prodName.substring(0, 18)}</span>
+                            <span>{data.quantity}x {prodName.substring(0, 8)}</span>
                             <span>R$ {(data.quantity * data.price).toFixed(2)}</span>
                           </div>
                         );
@@ -514,7 +514,7 @@ const SalesMonitor: React.FC = () => {
                       </div>
                     )}
                     <div className="flex justify-between items-end border-t border-dashed pt-2 mb-6">
-                      <span className="font-black text-[9px] uppercase tracking-widest">TOTAL:</span>
+                      <span className="font-black text-[14px] uppercase tracking-widest">TOTAL:</span>
                       <span className="text-2xl font-black">R$ {printingOrder.total.toFixed(2)}</span>
                     </div>
                   </>
