@@ -54,14 +54,16 @@
   }
 
   .is-receipt {
-    position: absolute;
-    left: 0;
-    top: 0;
+    position: fixed !important; /* Changed from absolute to fixed to ensure it stays at the top of the viewport/page */
+    left: 0 !important;
+    top: 0 !important;
     width: 100% !important;
     max-width: 58mm !important; /* Standard 58mm width */
     margin: 0 !important;
     padding: 0 !important;
     padding-right: 2mm !important; /* Added safety margin on the right */
+    background: white !important;
+    z-index: 9999 !important;
   }
 
   .no-print {
@@ -74,12 +76,16 @@
     size: 58mm auto; /* Largura da bobina x altura automática */
   }
 
-  /* 3. Reseta o body para não empurrar nada */
+  /* 3. Reseta o body para não empurrar nada e evitar alinhamento flex centralizado */
   body, html {
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    background-color: white;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: auto !important;
+    display: block !important; /* Force block to avoid flex centering from parent styles */
+    background-color: white !important;
+    overflow: visible !important;
   }
 
   /* Limitador de Corte - REMOVED per user request */
