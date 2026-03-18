@@ -65,9 +65,9 @@
   /* 4. O container do cupom - Modelo Laranjinha */
   .is-receipt {
     width: 100% !important;
-    max-width: 44mm !important;
+    max-width: 42mm !important; /* Reduzido de 44mm p/ evitar cortes */
     margin: 0 !important;
-    padding: 0 !important;
+    padding: 2mm !important; /* Adicionado margem de segurança */
     
     /* AS 4 REGRAS DE OURO PARA EVITAR O CORTE LATERAL: */
     box-sizing: border-box !important;
@@ -81,7 +81,6 @@
     font-family: 'Courier New', Courier, monospace !important;
     color: black !important;
     text-align: left !important;
-    overflow: hidden !important;
   }
 
   .is-receipt h2 {

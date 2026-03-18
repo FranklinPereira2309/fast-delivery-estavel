@@ -289,7 +289,7 @@ const HistoryModal: React.FC<HistoryModalProps> = ({ user, tables, settings, res
 
             {printingOrder && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md" onClick={() => setPrintingOrder(null)}>
-            <div className="relative w-full max-w-[48mm] bg-white p-2 shadow-2xl font-mono text-black is-receipt animate-in zoom-in duration-200" onClick={e => e.stopPropagation()}>
+            <div className="relative w-full max-w-[42mm] bg-white p-2 shadow-2xl font-mono text-black is-receipt animate-in zoom-in duration-200" onClick={e => e.stopPropagation()}>
                 <div className="text-center mb-1">
                     <h2 className="font-bold text-[10px] uppercase tracking-tighter mb-0">{settings?.name || 'ESTABELECIMENTO'}</h2>
                     <div className="section-divider"></div>

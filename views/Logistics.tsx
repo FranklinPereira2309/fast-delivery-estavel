@@ -840,7 +840,7 @@ const Logistics: React.FC = () => {
       {/* CUPOM DE ENTREGA AGRUPADO */}
       {printingOrder && businessSettings && (
         <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm">
-          <div className="relative w-full max-w-[48mm] bg-white p-2 shadow-2xl font-receipt text-black print-container is-receipt animate-in zoom-in duration-200">
+          <div className="relative w-full max-w-[42mm] bg-white p-2 shadow-2xl font-receipt text-black print-container is-receipt animate-in zoom-in duration-200">
             <div className="text-center mb-1">
               <h2 className="font-bold text-[10px] uppercase tracking-tighter mb-0">{businessSettings.name}</h2>
               <div className="section-divider"></div>
@@ -955,7 +955,7 @@ const Logistics: React.FC = () => {
       {/* CUPOM DE HISTÓRICO RESUMIDO */}
       {printingHistoryOrder && businessSettings && (
         <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm">
-          <div className="relative w-full max-w-[48mm] bg-white p-2 shadow-2xl font-receipt text-black print-container is-receipt animate-in zoom-in duration-200">
+          <div className="relative w-full max-w-[42mm] bg-white p-2 shadow-2xl font-receipt text-black print-container is-receipt animate-in zoom-in duration-200">
             <div className="text-center mb-1">
               <h2 className="font-bold text-[10px] uppercase tracking-tighter mb-0">{businessSettings.name}</h2>
               <div className="section-divider"></div>

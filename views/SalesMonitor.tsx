@@ -328,7 +328,7 @@ const SalesMonitor: React.FC = () => {
 
           {printingOrder && businessSettings && (
             <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/80 dark:bg-slate-950/90 backdrop-blur-md">
-            <div id="thermal-receipt" className="relative w-full max-w-[48mm] bg-white dark:bg-slate-900 p-2 border border-dashed dark:border-slate-800 shadow-2xl font-receipt text-[14px] text-black dark:text-white is-receipt animate-in zoom-in duration-200">
+            <div id="thermal-receipt" className="relative w-full max-w-[42mm] bg-white dark:bg-slate-900 p-2 border border-dashed dark:border-slate-800 shadow-2xl font-receipt text-[10px] text-black dark:text-white is-receipt animate-in zoom-in duration-200">
                 {isNfceVisual ? (
                   <div className="space-y-4 font-mono text-[10px] leading-tight text-black dark:text-white">
                     <div className="text-center space-y-1">

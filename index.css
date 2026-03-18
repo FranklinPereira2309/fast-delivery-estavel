@@ -107,12 +107,16 @@
 
   /* Compact Printing Styles (Modelo Laranjinha) */
   .is-receipt {
+    width: 100% !important;
+    max-width: 42mm !important; /* Reduzido de 44mm p/ evitar cortes */
+    padding: 2mm !important; /* Margem de segurança */
     color: black !important;
     background: white !important;
     font-family: 'Courier New', Courier, monospace !important;
     font-size: 9px !important; /* Reduzido de 11px p/ metade da percepção visual */
     line-height: 1.0 !important; /* Espaçamento vertical mínimo */
     letter-spacing: -0.2px !important;
+    box-sizing: border-box !important;
   }
 
   .is-receipt h2 {
@@ -123,7 +127,6 @@
 
   .is-receipt p, .is-receipt span, .is-receipt div {
     margin: 0 !important; /* Retira espaços verticais */
-    padding: 0 !important;
   }
 
   .is-receipt table {
