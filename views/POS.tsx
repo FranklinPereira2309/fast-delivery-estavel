@@ -2138,41 +2138,41 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                 // Standard Layout
                 <>
                   <div className="text-center mb-2">
-                    <h2 className="font-bold text-xs uppercase tracking-tighter mb-0">{businessSettings.name}</h2>
-                    <p className="text-[8px] font-bold uppercase">CNPJ: {businessSettings.cnpj}</p>
-                    <p className="text-[10px] font-bold uppercase tracking-widest mt-1">COMPROVANTE</p>
+                    <h2 className="font-bold text-[14px] uppercase tracking-tighter mb-0">{businessSettings.name}</h2>
+                    <p className="text-[11px] font-bold uppercase">CNPJ: {businessSettings.cnpj}</p>
+                    <p className="text-[12px] font-bold uppercase tracking-widest mt-1">COMPROVANTE</p>
                   </div>
-                  <div className="space-y-0.5 mb-2 text-[8px] border-t border-dashed border-black pt-1">
+                  <div className="space-y-0.5 mb-2 text-[11px] border-t border-dashed border-black pt-1">
                     <div className="flex justify-between">
                       <span>DATA: {new Date(printingOrder.createdAt).toLocaleDateString('pt-BR')}</span>
                       <span>{new Date(printingOrder.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
                     </div>
                     <p>CLIENTE: {printingOrder.clientName?.toUpperCase() || 'NAO INFORMADO'}</p>
                     <p>PAGTO: {printingOrder.paymentMethod || 'PENDENTE'}</p>
-                    {printingOrder.tableNumber && <p className="font-bold">MESA: {printingOrder.tableNumber}</p>}
+                    {printingOrder.tableNumber && <p className="font-bold text-[12px]">MESA: {printingOrder.tableNumber}</p>}
                   </div>
                   <div className="mb-2 border-t border-dashed border-black pt-1">
                     {groupedPrintingItems.map(([id, data]) => (
-                      <div key={id} className="flex justify-between font-bold uppercase py-0.5 text-[9px]">
+                      <div key={id} className="flex justify-between font-bold uppercase py-0.5 text-[11px]">
                         <span>{data.quantity}x {data.product?.name.substring(0, 15)}</span>
                         <span>R$ {(data.quantity * data.price).toFixed(2)}</span>
                       </div>
                     ))}
                   </div>
                   <div className="space-y-0.5 border-t border-dashed border-black pt-1">
-                    <div className="flex justify-between items-center text-[8px] font-bold uppercase">
+                    <div className="flex justify-between items-center text-[11px] font-bold uppercase">
                       <span>SUBTOTAL:</span>
                       <span>R$ {(printingOrder.total - (printingOrder.appliedServiceFee || 0)).toFixed(2)}</span>
                     </div>
                     {printingOrder.appliedServiceFee && printingOrder.appliedServiceFee > 0 && (
-                      <div className="flex justify-between items-center text-[8px] font-bold uppercase">
+                      <div className="flex justify-between items-center text-[11px] font-bold uppercase">
                         <span>TAXA SERVICO:</span>
                         <span>R$ {printingOrder.appliedServiceFee.toFixed(2)}</span>
                       </div>
                     )}
                     <div className="flex justify-between items-end pt-1">
-                      <span className="font-bold text-[10px] uppercase">TOTAL:</span>
-                      <span className="text-sm font-bold">R$ {printingOrder.total.toFixed(2)}</span>
+                      <span className="font-bold text-[12px] uppercase">TOTAL:</span>
+                      <span className="text-[16px] font-bold">R$ {printingOrder.total.toFixed(2)}</span>
                     </div>
                   </div>
                 </>
