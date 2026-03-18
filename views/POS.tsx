@@ -2135,37 +2135,49 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                   </div>
                 </div>
               ) : (
-                // Standard Layout
-                <>
-                  <div className="text-center mb-2">
-                    <h2 className="font-bold text-xs uppercase tracking-tighter mb-0">{businessSettings.name}</h2>
-                    <p className="text-[8px] font-bold uppercase">CNPJ: {businessSettings.cnpj}</p>
-                    <p className="text-[10px] font-bold uppercase tracking-widest mt-1">COMPROVANTE</p>
+                // Standard Layout (Modelo Laranjinha)
+                <div className="text-black bg-white p-1">
+                  <div className="text-center mb-1">
+                    <h2 className="font-bold text-[10px] uppercase tracking-tighter mb-0">{businessSettings.name}</h2>
+                    {businessSettings.cnpj && <p className="text-[8px] font-bold uppercase">CNPJ: {businessSettings.cnpj}</p>}
+                    
+                    <div className="section-divider"></div>
+                    <p className="text-[10px] font-black uppercase tracking-widest">COMPROVANTE</p>
+                    <div className="section-divider"></div>
                   </div>
-                  <div className="space-y-0.5 mb-2 text-[8px] border-t border-dashed border-black pt-1">
-                    <div className="flex justify-between">
+
+                  <div className="text-[9px] mb-1">
+                    <div className="flex justify-between font-bold">
                       <span>DATA: {new Date(printingOrder.createdAt).toLocaleDateString('pt-BR')}</span>
                       <span>{new Date(printingOrder.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
                     </div>
-                    <p>CLIENTE: {printingOrder.clientName?.toUpperCase() || 'NAO INFORMADO'}</p>
-                    <p>PAGTO: {printingOrder.paymentMethod || 'PENDENTE'}</p>
+                    <p>CLIENTE: {(printingOrder.clientName || 'CONSUMIDOR').toUpperCase()}</p>
+                    <p>PAGTO: {(printingOrder.paymentMethod || 'PENDENTE').toUpperCase()}</p>
+                    
+                    {/* Condicional de Endereço: Só se for Delivery */}
+                    {(['DELIVERY', 'OWN_DELIVERY', 'THIRD_PARTY'].includes(printingOrder.type?.toUpperCase() || '')) && printingOrder.clientAddress && (
+                      <p className="border-t border-dotted border-black/20 mt-1 pt-1">ENDEREÇO: {printingOrder.clientAddress.toUpperCase()}</p>
+                    )}
+
                     {printingOrder.tableNumber && <p className="font-bold">MESA: {printingOrder.tableNumber}</p>}
                   </div>
-                  <div className="mb-2 border-t border-dashed border-black pt-1">
+
+                  <div className="mb-1 border-t border-black pt-1">
                     {groupedPrintingItems.map(([id, data]) => (
-                      <div key={id} className="flex justify-between font-bold uppercase py-0.5 text-[9px]">
-                        <span>{data.quantity}x {data.product?.name.substring(0, 15)}</span>
-                        <span>R$ {(data.quantity * data.price).toFixed(2)}</span>
+                      <div key={id} className="flex justify-between font-bold uppercase py-0.5 text-[10px]">
+                        <span className="flex-1 pr-2">{data.quantity}X {data.product?.name.substring(0, 20)}</span>
+                        <span className="shrink-0">R$ {(data.quantity * data.price).toFixed(2)}</span>
                       </div>
                     ))}
                   </div>
-                  <div className="space-y-0.5 border-t border-dashed border-black pt-1">
-                    <div className="flex justify-between items-center text-[8px] font-bold uppercase">
+
+                  <div className="border-t border-black pt-1">
+                    <div className="flex justify-between items-center text-[9px] font-bold uppercase">
                       <span>SUBTOTAL:</span>
                       <span>R$ {(printingOrder.total - (printingOrder.appliedServiceFee || 0)).toFixed(2)}</span>
                     </div>
                     {printingOrder.appliedServiceFee && printingOrder.appliedServiceFee > 0 && (
-                      <div className="flex justify-between items-center text-[8px] font-bold uppercase">
+                      <div className="flex justify-between items-center text-[9px] font-bold uppercase">
                         <span>TAXA SERVICO:</span>
                         <span>R$ {printingOrder.appliedServiceFee.toFixed(2)}</span>
                       </div>
@@ -2175,7 +2187,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                       <span className="text-sm font-bold">R$ {printingOrder.total.toFixed(2)}</span>
                     </div>
                   </div>
-                </>
+                </div>
               )}
             </div>
 

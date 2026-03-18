@@ -486,23 +486,23 @@ const Kitchen: React.FC = () => {
 
       {printingOrder && businessSettings && (
         <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
-          <div id="kitchen-receipt" className="relative w-full max-w-[48mm] bg-white p-4 shadow-2xl font-receipt text-[10px] text-black print-container is-receipt animate-in zoom-in duration-200">
-            <div className="text-center mb-2">
-              <h2 className="font-bold text-xs uppercase tracking-tighter mb-0">{businessSettings.name}</h2>
-              <p className="text-[8px] font-bold mt-1 uppercase">
+          <div id="kitchen-receipt" className="relative w-full max-w-[48mm] bg-white p-2 shadow-2xl font-receipt text-black print-container is-receipt animate-in zoom-in duration-200">
+            <div className="text-center mb-1">
+              <h2 className="font-bold text-[10px] uppercase tracking-tighter mb-0">{businessSettings.name}</h2>
+              <p className="text-[8px] font-black uppercase">
                 {viewTab === 'FILA' ? 'PRODUÇÃO' : 'CONSUMO'}
               </p>
               
               <div className="section-divider"></div>
 
               {printingOrder.tableNumber && (
-                <p className="font-bold text-[16px]">MESA {printingOrder.tableNumber}</p>
+                <p className="font-bold text-[14px]">MESA {printingOrder.tableNumber}</p>
               )}
             </div>
 
             <div className="section-divider"></div>
 
-            <div className="space-y-0.5 mb-2">
+            <div className="text-[9px] mb-1">
               <p>DATA: {new Date(printingOrder.createdAt).toLocaleDateString('pt-BR')} {new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' }).format(new Date(printingOrder.createdAt))}</p>
               <p>TIPO: {translateOrderType(printingOrder.type).toUpperCase()}</p>
               <p>CLIENTE: {(printingOrder.clientName || 'Cliente Direto').toUpperCase()}</p>
@@ -510,7 +510,7 @@ const Kitchen: React.FC = () => {
 
             <div className="section-divider"></div>
 
-            <div className="mb-2 space-y-1">
+            <div className="mb-1">
               {printingOrder.items.map((it, idx) => {
                 const product = products.find(p => p.id === it.productId);
                 const isReady = it.isReady;
@@ -518,30 +518,30 @@ const Kitchen: React.FC = () => {
                 if (viewTab === 'HISTORICO' && !isReady) return null;
 
                 return (
-                  <div key={idx} className="space-y-0.5">
-                    <div className={`flex justify-between font-bold uppercase py-0.5 ${isReady && viewTab === 'FILA' ? 'line-through opacity-50' : ''}`}>
-                      <span>{it.quantity}X {(product?.name || 'Item').substring(0, 15)}</span>
+                  <div key={idx} className="border-b border-dotted border-black/10 last:border-0 py-1">
+                    <div className={`flex justify-between font-bold uppercase ${isReady && viewTab === 'FILA' ? 'line-through opacity-50' : ''}`}>
+                      <span className="text-[11px]">{it.quantity}X {(product?.name || 'Item').substring(0, 20)}</span>
                     </div>
                     
                     {it.observations && (
-                      <p className="text-[10px] text-orange-600 font-bold pl-2">
+                      <p className="text-[10px] text-red-600 font-bold">
                         * {it.observations}
                       </p>
                     )}
 
-                    {/* Ficha Técnica no Cupom */}
+                    {/* Ficha Técnica no Cupom - MANTIDA LEGÍVEL */}
                     {(product?.recipe && product.recipe.length > 0 || product?.preparation) && (
-                      <div className="mt-2 ml-2 p-2 border border-dashed border-black/30 bg-slate-50/50">
-                        <p className="text-[9px] font-black uppercase mb-1 border-b border-black/20 pb-1">Ficha Técnica</p>
+                      <div className="mt-1 ml-1 p-1 border-l-2 border-black/20 bg-slate-50">
+                        <p className="text-[9px] font-black uppercase mb-0.5 border-b border-black/10">Ficha Técnica</p>
                         
                         {/* Ingredientes */}
                         {product?.recipe && product.recipe.length > 0 && (
-                          <div className="mb-2">
+                          <div className="mb-1">
                             {product.recipe.map((r, rIdx) => {
                               const invItem = inventory.find(inv => inv.id === r.inventoryItemId);
                               const totalQty = r.quantity * it.quantity;
                               return (
-                                <p key={rIdx} className="text-[9px] leading-tight m-0">
+                                <p key={rIdx} className="text-[10px] font-bold leading-tight m-0">
                                   - {invItem?.name}: {totalQty} {invItem?.unit}
                                 </p>
                               );
@@ -551,9 +551,9 @@ const Kitchen: React.FC = () => {
 
                         {/* Modo de Preparo */}
                         {product?.preparation && (
-                          <div className="mt-2 pt-2 border-t border-black/10">
-                            <p className="text-[10px] font-bold uppercase mb-1">Preparo:</p>
-                            <p className="text-[9px] leading-tight m-0 italic whitespace-pre-wrap">
+                          <div className="mt-1 pt-1 border-t border-black/5">
+                            <p className="text-[10px] font-extrabold uppercase mb-0.5">Preparo:</p>
+                            <p className="text-[10px] leading-tight m-0 italic whitespace-pre-wrap font-medium">
                               {product.preparation}
                             </p>
                           </div>
@@ -568,31 +568,31 @@ const Kitchen: React.FC = () => {
             <div className="section-divider"></div>
 
             {viewTab === 'HISTORICO' && (
-              <div className="flex justify-between items-end pt-1">
-                <span className="font-bold text-[10px] uppercase">TOTAL:</span>
+              <div className="flex justify-between items-end">
+                <span className="font-bold text-[9px] uppercase">TOTAL:</span>
                 <span className="text-sm font-bold">R$ {(printingOrder.total || 0).toFixed(2)}</span>
               </div>
             )}
 
             {viewTab === 'FILA' && (
-              <div className="text-center border-t border-dashed pt-4 mb-8">
-                <p className="text-[8px] font-black uppercase tracking-widest opacity-50 italic">Fila de Produção - Sem valor fiscal</p>
+              <div className="text-center pt-1 mb-2">
+                <p className="text-[7px] font-black uppercase tracking-widest opacity-40 italic">Produção - Sem valor fiscal</p>
               </div>
             )}
 
-            <div className="grid grid-cols-2 gap-4 no-print mt-6">
+            <div className="grid grid-cols-2 gap-2 no-print mt-4">
               <button
                 onClick={async () => {
                   await printElement('kitchen-receipt');
                   setPrintingOrder(null);
                 }}
-                className="bg-slate-900 dark:bg-blue-600 text-white py-4 rounded-[22px] font-receipt font-black uppercase text-[11px] shadow-xl hover:bg-black active:scale-95 transition-all flex items-center justify-center"
+                className="bg-slate-900 text-white py-3 rounded-xl font-receipt font-black uppercase text-[10px] shadow-lg active:scale-95 transition-all flex items-center justify-center"
               >
                 IMPRIMIR
               </button>
               <button
                 onClick={() => setPrintingOrder(null)}
-                className="bg-slate-50 dark:bg-slate-800 text-slate-400 dark:text-slate-500 py-4 rounded-[22px] font-receipt font-black uppercase text-[11px] hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-95 transition-all flex items-center justify-center"
+                className="bg-slate-100 text-slate-500 py-3 rounded-xl font-receipt font-black uppercase text-[10px] active:scale-95 transition-all flex items-center justify-center"
               >
                 FECHAR
               </button>

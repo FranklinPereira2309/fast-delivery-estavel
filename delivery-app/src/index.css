@@ -144,34 +144,43 @@ body {
 
   /* 3. Reseta o body para não empurrar nada */
   body, html {
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    background-color: white;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    background-color: white !important;
   }
 
-  /* 4. O container do cupom - O segredo está na largura da margem de segurança (44mm para bobina de 58mm) */
+  /* 4. O container do cupom - Modelo Laranjinha */
   .is-receipt {
     width: 100% !important;
-    max-width: 42mm !important;
+    max-width: 44mm !important;
     margin: 0 !important;
-    padding: 0;
-    padding-left: 2mm !important;
-    
-    transform: scale(0.9) !important; 
-    transform-origin: top left !important;
+    padding: 0 !important;
     
     /* AS 4 REGRAS DE OURO PARA EVITAR O CORTE LATERAL: */
-    box-sizing: border-box !important; /* Garante que padding não aumente a largura total */
-    word-wrap: break-word !important;  /* Força a quebra de palavras longas */
-    overflow-wrap: break-word !important; /* Garante que o endereço não quebre o layout */
-    font-size: 11px !important;
+    box-sizing: border-box !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    font-size: 9px !important;
+    line-height: 1.0 !important;
+    letter-spacing: -0.2px !important;
     
     /* Configurações extras recomendadas para cupons */
-    font-family: monospace, sans-serif;
-    color: black;
-    text-align: left;
-    overflow: hidden; /* Evita que uma linha longa expanda o cupom para a direita */
+    font-family: 'Courier New', Courier, monospace !important;
+    color: black !important;
+    text-align: left !important;
+    overflow: hidden !important;
+  }
+
+  .is-receipt h2 {
+    font-size: 11px !important;
+    margin: 0 0 2px 0 !important;
+    text-transform: uppercase !important;
+  }
+
+  .is-receipt p, .is-receipt span, .is-receipt div {
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
   /* Garante que imagens (como QR Codes ou logos) não quebrem a largura */
@@ -188,7 +197,13 @@ body {
   }
   
   .is-receipt .nome-produto {
-    flex: 1; /* Ocupa o espaço disponível */
-    padding-right: 5px; /* Dá um respiro antes do valor */
+    flex: 1;
+    padding-right: 2px;
+  }
+
+  .is-receipt .section-divider {
+    border-top: 1px solid black !important;
+    margin: 2px 0 !important;
+    width: 100% !important;
   }
 }

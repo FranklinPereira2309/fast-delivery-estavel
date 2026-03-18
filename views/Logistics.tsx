@@ -840,24 +840,31 @@ const Logistics: React.FC = () => {
       {/* CUPOM DE ENTREGA AGRUPADO */}
       {printingOrder && businessSettings && (
         <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm">
-          <div className="relative w-full max-w-[48mm] bg-white rounded-[2rem] p-4 border border-dashed shadow-2xl font-receipt text-[10px] text-black print-container is-receipt animate-in zoom-in duration-200">
-            <div className="text-center mb-6 border-b border-dashed pb-4">
-              <h2 className="font-black text-xs uppercase tracking-tighter">{businessSettings.name}</h2>
-              <p className="text-[8px] font-bold mt-1 uppercase">Comprovante de Pagamento</p>
+          <div className="relative w-full max-w-[48mm] bg-white p-2 shadow-2xl font-receipt text-black print-container is-receipt animate-in zoom-in duration-200">
+            <div className="text-center mb-1">
+              <h2 className="font-bold text-[10px] uppercase tracking-tighter mb-0">{businessSettings.name}</h2>
+              <div className="section-divider"></div>
+              <p className="text-[10px] font-black uppercase tracking-widest">Comprovante</p>
+              <div className="section-divider"></div>
             </div>
 
-            <div className="space-y-1 mb-4">
-              <p>DATA: {new Date(printingOrder.createdAt).toLocaleString('pt-BR')}</p>
-              <p>CLIENTE: {printingOrder.clientName}</p>
+            <div className="text-[9px] mb-1">
+              <p>DATA: {new Date(printingOrder.createdAt).toLocaleDateString('pt-BR')} {new Date(printingOrder.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</p>
+              <p>CLIENTE: {(printingOrder.clientName || 'CONSUMIDOR').toUpperCase()}</p>
               {printingOrder.clientPhone && <p>FONE: {printingOrder.clientPhone}</p>}
-              {printingOrder.clientAddress && (
-                <p className="font-bold border-t border-dashed mt-2 pt-1 uppercase leading-tight">ENTREGA: {printingOrder.clientAddress}</p>
+              
+              {/* Só imprime endereço se for DELIVERY */}
+              {(['DELIVERY', 'OWN_DELIVERY', 'THIRD_PARTY'].includes(printingOrder.type?.toUpperCase() || '')) && printingOrder.clientAddress && (
+                <p className="font-bold border-t border-dotted border-black/20 mt-1 pt-1 uppercase leading-tight">ENTREGA: {printingOrder.clientAddress}</p>
               )}
-              {printingOrder.tableNumber && <p className="font-black">MESA: {printingOrder.tableNumber}</p>}
+              
               <p>PAGTO: {(paymentLabels[(printingOrder.paymentMethod || '').toUpperCase()] || printingOrder.paymentMethod || 'PENDENTE').toUpperCase()}</p>
+              {printingOrder.tableNumber && <p className="font-black">MESA: {printingOrder.tableNumber}</p>}
             </div>
 
-            <div className="border-t border-dashed my-3 py-3">
+            <div className="section-divider"></div>
+
+            <div className="mb-1">
               {Object.entries(printingOrder.items.reduce((acc: Record<string, any>, item) => {
                 const prod = products.find(p => p.id === item.productId);
                 if (!acc[item.productId]) {
@@ -866,21 +873,23 @@ const Logistics: React.FC = () => {
                 acc[item.productId].quantity += item.quantity;
                 return acc;
               }, {} as Record<string, any>)).map(([id, data]: [string, any]) => (
-                <div key={id} className="flex justify-between font-black uppercase py-0.5">
-                  <span>{data.quantity}x {data.name.substring(0, 18)}</span>
-                  <span>R$ {(data.quantity * data.price).toFixed(2)}</span>
+                <div key={id} className="flex justify-between font-bold uppercase py-0.5 text-[10px]">
+                  <span className="flex-1 pr-2">{data.quantity}X {data.name.substring(0, 20)}</span>
+                  <span className="shrink-0">R$ {(data.quantity * data.price).toFixed(2)}</span>
                 </div>
               ))}
             </div>
 
-            <div className="flex justify-between items-center py-1">
-              <span className="text-[9px] uppercase font-bold">TAXA ENTREGA:</span>
+            <div className="section-divider"></div>
+
+            <div className="flex justify-between items-center py-0.5 text-[9px]">
+              <span className="uppercase font-bold">TAXA ENTREGA:</span>
               <span className="font-bold">R$ {(printingOrder.deliveryFee || 0).toFixed(2)}</span>
             </div>
 
-            <div className="flex justify-between items-end border-t border-dashed pt-4 mb-6">
+            <div className="flex justify-between items-end pt-1 mb-2">
               <span className="font-black text-[9px] uppercase tracking-widest">TOTAL:</span>
-              <span className="text-2xl font-black">R$ {printingOrder.total.toFixed(2)}</span>
+              <span className="text-xl font-black">R$ {printingOrder.total.toFixed(2)}</span>
             </div>
 
             <div className="grid grid-cols-2 gap-4 no-print mt-6">
@@ -946,42 +955,53 @@ const Logistics: React.FC = () => {
       {/* CUPOM DE HISTÓRICO RESUMIDO */}
       {printingHistoryOrder && businessSettings && (
         <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm">
-          <div className="relative w-full max-w-[48mm] bg-white rounded-[2rem] p-4 border border-dashed shadow-2xl font-receipt text-[10px] text-black print-container is-receipt animate-in zoom-in duration-200">
-            <div className="text-center mb-6 border-b border-dashed pb-4">
-              <h2 className="font-black text-xs uppercase tracking-tighter">{businessSettings.name}</h2>
-              <p className="text-[8px] font-bold mt-1 uppercase">Cópia de Comprovante</p>
+          <div className="relative w-full max-w-[48mm] bg-white p-2 shadow-2xl font-receipt text-black print-container is-receipt animate-in zoom-in duration-200">
+            <div className="text-center mb-1">
+              <h2 className="font-bold text-[10px] uppercase tracking-tighter mb-0">{businessSettings.name}</h2>
+              <div className="section-divider"></div>
+              <p className="text-[8px] font-black uppercase tracking-widest">Cópia de Comprovante</p>
+              <div className="section-divider"></div>
             </div>
 
-            <div className="space-y-1 mb-4">
-              <p>DATA: {new Date(printingHistoryOrder.createdAt).toLocaleString('pt-BR')}</p>
+            <div className="text-[9px] mb-1">
+              <p>DATA: {new Date(printingHistoryOrder.createdAt).toLocaleDateString('pt-BR')} {new Date(printingHistoryOrder.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</p>
               <p>CLIENTE: {printingHistoryOrder.clientName}</p>
               {printingHistoryOrder.clientPhone && <p>FONE: {printingHistoryOrder.clientPhone}</p>}
-              {printingHistoryOrder.clientAddress && (
-                <p className="font-bold border-t border-dashed mt-2 pt-1 uppercase leading-tight">ENTREGA: {printingHistoryOrder.clientAddress}</p>
+              
+              {/* Só imprime endereço se for DELIVERY */}
+              {(['DELIVERY', 'OWN_DELIVERY', 'THIRD_PARTY'].includes(printingHistoryOrder.type?.toUpperCase() || '')) && printingHistoryOrder.clientAddress && (
+                <p className="font-bold border-t border-dotted border-black/20 mt-1 pt-1 uppercase leading-tight">ENTREGA: {printingHistoryOrder.clientAddress}</p>
               )}
+
               <p>PAGTO: {(paymentLabels[(printingHistoryOrder.paymentMethod || '').toUpperCase()] || printingHistoryOrder.paymentMethod || 'PENDENTE').toUpperCase()}</p>
-              <p className="font-bold border-t border-dashed mt-2 pt-1 uppercase">ENTREGADOR: {getDriverName(printingHistoryOrder.driverId)}</p>
+              <p className="font-bold border-t border-black/10 mt-1 pt-1 uppercase">ENTREGADOR: {getDriverName(printingHistoryOrder.driverId)}</p>
             </div>
 
             {groupedPrintingItems.length > 0 && (
-              <div className="border-t border-dashed my-3 py-3">
+              <div className="section-divider"></div>
+            )}
+            
+            {groupedPrintingItems.length > 0 && (
+              <div className="mb-1">
                 {groupedPrintingItems.map(([id, data]: [string, any]) => (
-                  <div key={id} className="flex justify-between font-black uppercase py-0.5">
-                    <span>{data.quantity}x {data.name.substring(0, 18)}</span>
-                    <span>R$ {(data.quantity * data.price).toFixed(2)}</span>
+                  <div key={id} className="flex justify-between font-bold uppercase py-0.5 text-[10px]">
+                    <span className="flex-1 pr-2">{data.quantity}X {data.name.substring(0, 20)}</span>
+                    <span className="shrink-0">R$ {(data.quantity * data.price).toFixed(2)}</span>
                   </div>
                 ))}
               </div>
             )}
 
-            <div className="flex justify-between items-center py-1">
-              <span className="text-[9px] uppercase font-bold">TAXA ENTREGA:</span>
+            <div className="section-divider"></div>
+
+            <div className="flex justify-between items-center py-0.5 text-[9px]">
+              <span className="uppercase font-bold">TAXA ENTREGA:</span>
               <span className="font-bold">R$ {(printingHistoryOrder.deliveryFee || 0).toFixed(2)}</span>
             </div>
 
-            <div className="flex justify-between items-end border-t border-dashed pt-4 mb-6">
+            <div className="flex justify-between items-end pt-1 mb-2">
               <span className="font-black text-[9px] uppercase tracking-widest">TOTAL:</span>
-              <span className="text-2xl font-black">R$ {printingHistoryOrder.total.toFixed(2)}</span>
+              <span className="text-xl font-black">R$ {printingHistoryOrder.total.toFixed(2)}</span>
             </div>
 
             <div className="grid grid-cols-2 gap-4 no-print mt-6">

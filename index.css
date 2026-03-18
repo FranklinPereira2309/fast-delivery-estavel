@@ -105,22 +105,25 @@
     padding-right: 2px;
   }
 
-  /* Compact Printing Styles */
+  /* Compact Printing Styles (Modelo Laranjinha) */
   .is-receipt {
     color: black !important;
     background: white !important;
-    font-family: monospace !important;
-    font-size: 11px !important; /* Increased for better legibility as requested */
-    line-height: 1.2 !important; /* Tighter line height */
+    font-family: 'Courier New', Courier, monospace !important;
+    font-size: 9px !important; /* Reduzido de 11px p/ metade da percepção visual */
+    line-height: 1.0 !important; /* Espaçamento vertical mínimo */
+    letter-spacing: -0.2px !important;
   }
 
   .is-receipt h2 {
-    font-size: 14px !important;
-    margin-bottom: 4px !important;
+    font-size: 11px !important; /* Título menor */
+    margin: 0 0 2px 0 !important;
+    text-transform: uppercase !important;
   }
 
   .is-receipt p, .is-receipt span, .is-receipt div {
-    margin-bottom: 2px !important;
+    margin: 0 !important; /* Retira espaços verticais */
+    padding: 0 !important;
   }
 
   .is-receipt table {
@@ -129,12 +132,13 @@
   }
 
   .is-receipt th, .is-receipt td {
-    padding: 1px 0 !important;
+    padding: 0 !important;
   }
 
   /* Simple sections separators */
   .is-receipt .section-divider {
     border-top: 1px solid black !important;
-    margin: 3px 0 !important;
+    margin: 2px 0 !important;
+    width: 100% !important;
   }
 }

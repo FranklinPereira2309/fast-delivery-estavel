@@ -289,35 +289,52 @@ const HistoryModal: React.FC<HistoryModalProps> = ({ user, tables, settings, res
 
             {printingOrder && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md" onClick={() => setPrintingOrder(null)}>
-                    <div className="relative w-full max-w-[58mm] bg-[#f9f9f5] p-4 shadow-2xl font-mono text-[10px] text-black is-receipt animate-in zoom-in duration-200" onClick={e => e.stopPropagation()}>
-                        <div className="text-center mb-6 border-b border-dashed border-slate-300 pb-4">
-                            <h2 className="font-bold text-sm uppercase">{settings?.name || 'ESTABELECIMENTO'}</h2>
-                            <p className="text-[10px] mt-2 uppercase">CÓPIA DE COMPROVANTE</p>
-                        </div>
-                        <div className="space-y-2 mb-6 border-b border-dashed border-slate-300 pb-4">
-                            <p>DATA: {new Date(printingOrder.createdAt || new Date()).toLocaleString('pt-BR')}</p>
-                            <p>CLIENTE: {printingOrder.clientName || 'Consumidor'}</p>
-                            <p>PAGAMENTO: {printingOrder.paymentMethod || 'Pendente'}</p>
-                            <p>GARÇOM: {user.name?.toUpperCase()}</p>
-                        </div>
+            <div className="relative w-full max-w-[48mm] bg-white p-2 shadow-2xl font-mono text-black is-receipt animate-in zoom-in duration-200" onClick={e => e.stopPropagation()}>
+                <div className="text-center mb-1">
+                    <h2 className="font-bold text-[10px] uppercase tracking-tighter mb-0">{settings?.name || 'ESTABELECIMENTO'}</h2>
+                    <div className="section-divider"></div>
+                    <p className="text-[10px] font-black uppercase tracking-widest">Comprovante</p>
+                    <div className="section-divider"></div>
+                </div>
+                
+                <div className="text-[9px] mb-1">
+                    <p>DATA: {new Date(printingOrder.createdAt || new Date()).toLocaleDateString('pt-BR')} {new Date(printingOrder.createdAt || new Date()).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</p>
+                    <p>CLIENTE: {(printingOrder.clientName || 'CONSUMIDOR').toUpperCase()}</p>
+                    <p>PAGTO: {(printingOrder.paymentMethod || 'PENDENTE').toUpperCase()}</p>
+                    <p>GARÇOM: {user.name?.toUpperCase()}</p>
+                    {printingOrder.tableNumber && <p className="font-bold">MESA: {printingOrder.tableNumber}</p>}
+                </div>
 
-                        <div className="flex justify-between items-end mb-4 font-bold border-b border-dashed border-slate-300 pb-4">
-                            <span className="text-[10px] uppercase">TAXA SERVIÇO:</span>
-                            <span className="text-[11px]">R$ {((printingOrder.appliedServiceFee !== null && printingOrder.appliedServiceFee !== undefined) ? printingOrder.appliedServiceFee : (printingOrder.total - (printingOrder.total / (1 + ((settings?.serviceFeePercentage || 10) / 100))))).toFixed(2)}</span>
-                        </div>
+                <div className="section-divider"></div>
 
-                        <div className="flex justify-between items-center mb-8">
-                            <span className="font-bold text-[11px] uppercase">TOTAL:</span>
-                            <span className="text-3xl font-bold tracking-tighter">R$ {printingOrder.total.toFixed(2)}</span>
+                <div className="mb-1">
+                    {printingOrder.items.map((item, idx) => (
+                        <div key={idx} className="flex justify-between font-bold uppercase py-0.5 text-[10px]">
+                            <span className="flex-1 pr-2">{item.quantity}X {((item as any).product?.name || (item as any).productName || 'ITEM').substring(0, 20)}</span>
+                            <span className="shrink-0">R$ {(item.quantity * item.price).toFixed(2)}</span>
                         </div>
+                    ))}
+                </div>
 
-                        <div className="flex flex-col gap-2 no-print">
-                            <div className="flex gap-2">
-                                <button onClick={handlePrintNetwork} disabled={isPrinting} className="flex-[2] bg-slate-900 text-white font-bold py-4 rounded-3xl uppercase text-[10px] tracking-widest shadow-xl active:scale-95 transition-all disabled:opacity-50">{isPrinting ? 'Enviando...' : 'Imprimir'}</button>
-                                <button onClick={() => setPrintingOrder(null)} className="flex-1 bg-slate-200 text-slate-600 font-bold py-4 rounded-3xl uppercase text-[10px] tracking-widest active:scale-95 transition-all">Fechar</button>
-                            </div>
-                        </div>
+                <div className="section-divider"></div>
+
+                <div className="flex justify-between items-center py-0.5 text-[9px]">
+                    <span className="uppercase font-bold">TAXA SERVIÇO:</span>
+                    <span className="font-bold">R$ {((printingOrder.appliedServiceFee !== null && printingOrder.appliedServiceFee !== undefined) ? printingOrder.appliedServiceFee : (printingOrder.total - (printingOrder.total / (1 + ((settings?.serviceFeePercentage || 10) / 100))))).toFixed(2)}</span>
+                </div>
+
+                <div className="flex justify-between items-end pt-1 mb-4">
+                    <span className="font-black text-[9px] uppercase tracking-widest">TOTAL:</span>
+                    <span className="text-2xl font-black">R$ {printingOrder.total.toFixed(2)}</span>
+                </div>
+
+                <div className="flex flex-col gap-2 no-print">
+                    <div className="flex gap-2">
+                        <button onClick={handlePrintNetwork} disabled={isPrinting} className="flex-[2] bg-slate-900 text-white font-bold py-4 rounded-3xl uppercase text-[10px] tracking-widest shadow-xl active:scale-95 transition-all disabled:opacity-50">{isPrinting ? 'Enviando...' : 'Imprimir'}</button>
+                        <button onClick={() => setPrintingOrder(null)} className="flex-1 bg-slate-200 text-slate-600 font-bold py-4 rounded-3xl uppercase text-[10px] tracking-widest active:scale-95 transition-all">Fechar</button>
                     </div>
+                </div>
+            </div>
                 </div>
             )}
         </div>

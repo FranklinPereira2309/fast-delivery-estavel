@@ -42,35 +42,48 @@ export const printReceipt = async (req: Request, res: Response): Promise<void> =
             }
         }
 
-        // --- CONTEÚDO DO CUPOM ---
+        // --- CONTEÚDO DO CUPOM (MODELO LARANJINHA) ---
         printer.alignCenter();
         printer.bold(true);
-        printer.setTextSize(2, 2);
-        printer.println(data.businessName || 'COMPROVANTE');
-        printer.setTextNormal();
+        // Título menor conforme solicitado
+        printer.println((data.businessName || 'FAST DELIVERY').toUpperCase());
         printer.bold(false);
         if (data.cnpj) printer.println(`CNPJ: ${data.cnpj}`);
+        
+        printer.bold(true);
+        printer.println("COMPROVANTE");
+        printer.bold(false);
         printer.drawLine();
 
         printer.alignLeft();
-        printer.println(`DATA: ${new Date(data.date || Date.now()).toLocaleString('pt-BR')}`);
-        printer.println(`CLIENTE: ${data.clientName || 'CONSUMIDOR FINAL'}`);
+        // Data e Hora mais compactos
+        const dateObj = new Date(data.date || Date.now());
+        const dateStr = dateObj.toLocaleDateString('pt-BR');
+        const timeStr = dateObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        printer.leftRight(`DATA: ${dateStr}`, timeStr);
+
+        printer.println(`CLIENTE: ${(data.clientName || 'CONSUMIDOR').toUpperCase()}`);
         if(data.clientPhone) printer.println(`FONE: ${data.clientPhone}`);
-        if(data.clientAddress) printer.println(`ENTREGA: ${data.clientAddress}`);
+        
+        // Só imprime endereço se for DELIVERY
+        const isDelivery = ['DELIVERY', 'OWN_DELIVERY', 'THIRD_PARTY'].includes(data.type?.toUpperCase() || '');
+        if(isDelivery && data.clientAddress) {
+            printer.println(`ENDEREÇO: ${data.clientAddress.toUpperCase()}`);
+        }
         
         const info = [
             data.table ? `MESA: ${data.table}` : null,
-            data.status ? `STATUS: ${data.status}` : null,
             data.paymentMethod ? `PAGTO: ${data.paymentMethod}` : null
         ].filter(Boolean);
         
-        if (info.length) printer.println(info.join(' | '));
+        if (info.length) printer.println(info.join(' | ').toUpperCase());
         printer.drawLine();
 
+        // Itens com margem corrigida (mais colunas para o nome para evitar quebras feias)
         data.items.forEach((item: any) => {
-            const QtdName = `${item.quantity}x ${item.name}`.substring(0, 22);
+            const QtdName = `${item.quantity}X ${item.name}`.toUpperCase();
             const Price = `R$ ${parseFloat(item.total).toFixed(2)}`;
-            printer.leftRight(QtdName, Price);
+            printer.leftRight(QtdName.substring(0, 24), Price);
         });
 
         printer.drawLine();
@@ -83,15 +96,15 @@ export const printReceipt = async (req: Request, res: Response): Promise<void> =
 
         printer.drawLine();
         printer.bold(true);
-        printer.setTextSize(2, 2);
+        // Total um pouco maior mas sem exagero (1,1 ou negrito apenas)
         printer.leftRight('TOTAL:', `R$ ${parseFloat(data.total).toFixed(2)}`);
         
-        printer.setTextNormal();
+        printer.bold(false);
         printer.alignCenter();
-        printer.println(" ");
         printer.println("Obrigado pela preferência!");
+        // Removido printer.println(" ") para reduzir espaço vertical
         printer.cut();
-        printer.beep();
+        // printer.beep(); // Removido por silêncio se preferir, mas deixei se quiser sinal sonoro. Vou tirar p/ compactar logs.
         
         if (isIpAddress) {
             await printer.execute();
