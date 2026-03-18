@@ -2061,7 +2061,7 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
         printingOrder && businessSettings && (
           <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-900/90 backdrop-blur-xl animate-in fade-in duration-300 overflow-y-auto">
             {/* Hidden Receipt for Printing Only */}
-            <div id="pos-receipt" className="hidden print:block fixed top-0 left-0 w-full max-w-[48mm] bg-white p-2 font-receipt text-[14px] text-black is-receipt">
+            <div id="pos-receipt" className="hidden print:block fixed top-0 left-0 w-full max-w-[58mm] bg-white p-4 font-receipt text-[14px] text-black is-receipt">
                {isNfceVisual ? (
                 // NFC-e Layout
                 <div className="space-y-4 font-mono text-[16px] leading-tight text-black">

@@ -106,7 +106,6 @@
     font-family: monospace !important;
     font-size: 11px !important; /* Increased for better legibility as requested */
     line-height: 1.2 !important; /* Tighter line height */
-    border: none !important; /* Remove dashed borders */
   }
 
   .is-receipt h2 {
