@@ -486,10 +486,10 @@ const Kitchen: React.FC = () => {
 
       {printingOrder && businessSettings && (
         <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
-          <div id="kitchen-receipt" className="relative w-full max-w-[58mm] bg-white p-4 shadow-2xl font-receipt text-[11px] text-black print-container is-receipt animate-in zoom-in duration-200">
+          <div id="kitchen-receipt" className="relative w-full max-w-[48mm] bg-white p-4 shadow-2xl font-receipt text-[10px] text-black print-container is-receipt animate-in zoom-in duration-200">
             <div className="text-center mb-2">
-              <h2 className="font-bold text-[14px] uppercase tracking-tighter mb-0">{businessSettings.name}</h2>
-              <p className="text-[10px] font-bold mt-1 uppercase">
+              <h2 className="font-bold text-xs uppercase tracking-tighter mb-0">{businessSettings.name}</h2>
+              <p className="text-[8px] font-bold mt-1 uppercase">
                 {viewTab === 'FILA' ? 'PRODUÇÃO' : 'CONSUMO'}
               </p>
               
@@ -532,7 +532,7 @@ const Kitchen: React.FC = () => {
                     {/* Ficha Técnica no Cupom */}
                     {(product?.recipe && product.recipe.length > 0 || product?.preparation) && (
                       <div className="mt-2 ml-2 p-2 border border-dashed border-black/30 bg-slate-50/50">
-                        <p className="text-[11px] font-black uppercase mb-1 border-b border-black/20 pb-1">Ficha Técnica</p>
+                        <p className="text-[9px] font-black uppercase mb-1 border-b border-black/20 pb-1">Ficha Técnica</p>
                         
                         {/* Ingredientes */}
                         {product?.recipe && product.recipe.length > 0 && (
@@ -541,7 +541,7 @@ const Kitchen: React.FC = () => {
                               const invItem = inventory.find(inv => inv.id === r.inventoryItemId);
                               const totalQty = r.quantity * it.quantity;
                               return (
-                                <p key={rIdx} className="text-[11px] leading-tight m-0">
+                                <p key={rIdx} className="text-[9px] leading-tight m-0">
                                   - {invItem?.name}: {totalQty} {invItem?.unit}
                                 </p>
                               );
@@ -553,7 +553,7 @@ const Kitchen: React.FC = () => {
                         {product?.preparation && (
                           <div className="mt-2 pt-2 border-t border-black/10">
                             <p className="text-[10px] font-bold uppercase mb-1">Preparo:</p>
-                            <p className="text-[11px] leading-tight m-0 italic whitespace-pre-wrap">
+                            <p className="text-[9px] leading-tight m-0 italic whitespace-pre-wrap">
                               {product.preparation}
                             </p>
                           </div>

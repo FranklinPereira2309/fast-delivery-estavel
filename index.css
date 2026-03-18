@@ -56,12 +56,12 @@
   .is-receipt {
     position: fixed !important; /* Changed from absolute to fixed to ensure it stays at the top of the viewport/page */
     left: 0 !important;
+    right: 0 !important;
     top: 0 !important;
     width: 100% !important;
-    max-width: 58mm !important; /* Standard 58mm width */
-    margin: 0 !important;
+    max-width: 48mm !important; /* Standard 48mm width matching Sales Monitor */
+    margin: 0 auto !important;
     padding: 0 !important;
-    padding-right: 2mm !important; /* Added safety margin on the right */
     background: white !important;
     z-index: 9999 !important;
   }

@@ -514,10 +514,10 @@ const Receivables: React.FC<ReceivablesProps> = ({ currentUser, setActiveTab }) 
             {/* Printing Modal (Receipt Layout) */}
             {printingOrder && businessSettings && (
                 <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-900/80 dark:bg-slate-950/90 backdrop-blur-md">
-                    <div className="relative w-full max-w-[58mm] bg-white rounded-2xl p-4 border border-dashed shadow-2xl font-receipt text-[10px] text-black is-receipt animate-in zoom-in duration-200">
+                    <div className="relative w-full max-w-[48mm] bg-white rounded-2xl p-4 border border-dashed shadow-2xl font-receipt text-[10px] text-black is-receipt animate-in zoom-in duration-200">
                         <div className="text-center mb-6 border-b border-dashed pb-4">
-                            <h2 className="font-black text-sm uppercase tracking-tighter">{businessSettings.name}</h2>
-                            <p className="text-[9px] font-bold mt-1 uppercase">Extrato de Consumo (Fiado)</p>
+                            <h2 className="font-black text-xs uppercase tracking-tighter">{businessSettings.name}</h2>
+                            <p className="text-[8px] font-bold mt-1 uppercase">Extrato de Consumo (Fiado)</p>
                         </div>
                         <div className="space-y-1 mb-4 text-[10px] bg-slate-50 p-2 rounded-lg border border-slate-100">
                             <p className="text-[8px] font-black text-slate-400 uppercase mb-1">Dados do Cliente</p>

@@ -490,10 +490,10 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
 
             {printingOrder && businessSettings && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
-                    <div className="relative w-full max-w-[58mm] bg-white p-4 shadow-2xl font-receipt text-[11px] text-black print-container is-receipt animate-in zoom-in duration-200">
+                    <div className="relative w-full max-w-[48mm] bg-white p-4 shadow-2xl font-receipt text-[10px] text-black print-container is-receipt animate-in zoom-in duration-200">
                         <div className="text-center mb-6 border-b border-dashed pb-4">
-                            <h2 className="font-black text-[14px] uppercase tracking-tighter">{businessSettings.name}</h2>
-                            <p className="text-[11px] font-bold mt-1 uppercase">Comprovante de Pedido</p>
+                            <h2 className="font-black text-sm uppercase tracking-tighter">{businessSettings.name}</h2>
+                            <p className="text-[9px] font-bold mt-1 uppercase">Comprovante de Pedido</p>
                         </div>
 
                         <div className="space-y-1 mb-4">
@@ -515,8 +515,8 @@ const DeliveryOrders: React.FC<DeliveryOrdersProps> = ({ currentUser }) => {
                         </div>
 
                         <div className="flex justify-between items-end border-t border-dashed pt-4 mb-8">
-                            <span className="font-black text-[12px] uppercase tracking-widest">TOTAL:</span>
-                            <span className="text-[24px] font-black">R$ {printingOrder.total.toFixed(2)}</span>
+                            <span className="font-black text-[10px] uppercase tracking-widest">TOTAL:</span>
+                            <span className="text-2xl font-black">R$ {printingOrder.total.toFixed(2)}</span>
                         </div>
 
                         <div className="grid grid-cols-2 gap-4 no-print mt-6">

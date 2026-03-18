@@ -1163,15 +1163,15 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
         <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-300">
           <div className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden animate-in zoom-in-95 duration-300">
             {/* Hidden Receipt for Printing Only */}
-            <div id="table-receipt" className={`hidden print:block fixed top-0 left-0 w-full max-w-[58mm] bg-white p-4 font-receipt text-black is-receipt`}>
+            <div id="table-receipt" className={`hidden print:block fixed top-0 left-0 w-full max-w-[48mm] bg-white p-4 font-receipt text-black is-receipt`}>
               <div className="text-center mb-2">
-                <h2 className="font-bold text-[14px] uppercase tracking-tighter mb-0">{settings.name}</h2>
-                <p className="text-[11px] font-bold uppercase">CNPJ: {settings.cnpj}</p>
-                <p className="text-[12px] font-bold uppercase tracking-widest mt-1">
+                <h2 className="font-bold text-xs uppercase tracking-tighter mb-0">{settings.name}</h2>
+                <p className="text-[8px] font-bold uppercase">CNPJ: {settings.cnpj}</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest mt-1">
                    {isConfirmingBilling ? "FECHAMENTO DE CONTA" : "CONFERENCIA DE MESA"}
                 </p>
               </div>
-              <div className="space-y-0.5 mb-2 text-[11px] border-t border-dashed border-black pt-1">
+              <div className="space-y-0.5 mb-2 text-[8px] border-t border-dashed border-black pt-1">
                 <div className="flex justify-between">
                   <span>DATA: {new Date().toLocaleDateString('pt-BR')}</span>
                   <span>{new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
@@ -1181,26 +1181,26 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
               </div>
               <div className="mb-2 border-t border-dashed border-black pt-1">
                 {getGroupedItems((isConfirmingBilling ? printingPreBill : getSessForTable(selectedTable!))?.items || []).map((it, i) => (
-                  <div key={i} className="flex justify-between font-bold uppercase py-0.5 text-[11px]">
+                  <div key={i} className="flex justify-between font-bold uppercase py-0.5 text-[9px]">
                     <span>{it.quantity}x {it.product?.name.substring(0, 15)}</span>
                     <span>R$ {(it.quantity * it.price).toFixed(2)}</span>
                   </div>
                 ))}
               </div>
               <div className="space-y-0.5 border-t border-dashed border-black pt-1">
-                <div className="flex justify-between items-center text-[11px] font-bold uppercase">
+                <div className="flex justify-between items-center text-[8px] font-bold uppercase">
                   <span>SUBTOTAL:</span>
                   <span>R$ {((isConfirmingBilling ? printingPreBill : getSessForTable(selectedTable!))?.items.reduce((acc, it) => acc + (it.price * it.quantity), 0) || 0).toFixed(2)}</span>
                 </div>
                 {settings.serviceFeeStatus && (
-                  <div className="flex justify-between items-center text-[11px] font-bold uppercase">
+                  <div className="flex justify-between items-center text-[8px] font-bold uppercase">
                     <span>TAXA SERVICO ({settings.serviceFeePercentage || 10}%):</span>
                     <span>R$ {(((isConfirmingBilling ? printingPreBill : getSessForTable(selectedTable!))?.items.reduce((acc, it) => acc + (it.price * it.quantity), 0) || 0) * (settings.serviceFeePercentage || 10) / 100).toFixed(2)}</span>
                   </div>
                 )}
                 <div className="flex justify-between items-end pt-1">
-                  <span className="font-bold text-[12px] uppercase">TOTAL:</span>
-                  <span className="text-[16px] font-bold">
+                  <span className="font-bold text-[10px] uppercase">TOTAL:</span>
+                  <span className="text-sm font-bold">
                     R$ {(
                       ((isConfirmingBilling ? printingPreBill : getSessForTable(selectedTable!))?.items.reduce((acc, it) => acc + (it.price * it.quantity), 0) || 0) +
                       (settings.serviceFeeStatus ? (((isConfirmingBilling ? printingPreBill : getSessForTable(selectedTable!))?.items.reduce((acc, it) => acc + (it.price * it.quantity), 0) || 0) * (settings.serviceFeePercentage || 10) / 100) : 0)
