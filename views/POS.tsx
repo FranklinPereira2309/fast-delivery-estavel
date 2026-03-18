@@ -459,9 +459,13 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
   };
 
   const handleFinalize = async () => {
-    if (!activeCashSession) return showAlert("Caixa Fechado", "Você precisa abrir o caixa para finalizar o pedido.", "DANGER");
+    if (!activeCashSession) {
+      addToast({ title: "Caixa Fechado", message: "Você precisa abrir o caixa para finalizar o pedido.", type: "DANGER" });
+      return;
+    }
     if (cart.length === 0) {
-      return showAlert("Carrinho Vazio", "Adicione produtos antes de finalizar.", "INFO");
+      addToast({ title: "Carrinho Vazio", message: "Adicione produtos antes de finalizar.", type: "INFO" });
+      return;
     }
 
     const isTableSale = saleType === SaleType.TABLE;
@@ -470,10 +474,14 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
     const finalTableNum = isTableSale ? parseInt(tableNumberInput) : null;
 
     if (isTableSale) {
-      if (isNaN(finalTableNum!)) return showAlert("Erro", "Por favor, informe o número da mesa.", "DANGER");
+      if (isNaN(finalTableNum!)) {
+        addToast({ title: "Erro", message: "Por favor, informe o número da mesa.", type: "DANGER" });
+        return;
+      }
       const tableOrder = orders.find(o => o.id === `TABLE-${finalTableNum}`);
       if (tableOrder && (tableOrder.status === OrderStatus.PREPARING || tableOrder.status === OrderStatus.PARTIALLY_READY)) {
-        return showAlert("Produção Ativa", "ATENÇÃO: Checkout bloqueado. Esta mesa ainda possui itens EM PREPARO na cozinha.", "DANGER");
+        addToast({ title: "Produção Ativa", message: "ATENÇÃO: Checkout bloqueado. Esta mesa ainda possui itens EM PREPARO na cozinha.", type: "DANGER" });
+        return;
       }
     }
 
