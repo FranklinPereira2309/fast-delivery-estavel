@@ -263,38 +263,43 @@ const Kitchen: React.FC = () => {
                                     </p>
                                   )}
                                   
-                                  {/* Ficha Técnica (Ingredientes) */}
-                                  {product?.recipe && product.recipe.length > 0 && (
-                                    <div className="mt-2 space-y-1 bg-slate-50/50 dark:bg-slate-800/20 p-2 rounded-lg border border-slate-100/50 dark:border-slate-800/50">
-                                      <p className="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-1">
-                                        <Icons.Alert size={8} /> Ficha Técnica
-                                      </p>
-                                      {product.recipe.map((r, idx) => {
-                                        const invItem = inventory.find(inv => inv.id === r.inventoryItemId);
-                                        const totalQty = r.quantity * item.quantity;
-                                        return (
-                                          <div key={idx} className="flex items-center gap-1.5">
-                                            <div className="w-1 h-1 rounded-full bg-blue-400/50" />
-                                            <p className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tight">
-                                              {invItem?.name}: <span className="text-blue-600 dark:text-blue-400">{totalQty} {invItem?.unit}</span>
-                                            </p>
+                                  {/* Ficha Técnica / Instruções de Preparo */}
+                                  {(product?.recipe && product.recipe.length > 0 || product?.preparation) && (
+                                    <div className="mt-3 bg-slate-50 dark:bg-slate-900/60 p-3 rounded-xl border border-slate-100 dark:border-slate-800 shadow-inner">
+                                      {product?.recipe && product.recipe.length > 0 && (
+                                        <div className="mb-2 last:mb-0">
+                                          <p className="text-[9px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+                                            <Icons.Alert size={10} className="text-slate-400" /> Ficha Técnica
+                                          </p>
+                                          <div className="space-y-1">
+                                            {product.recipe.map((r, idx) => {
+                                              const invItem = inventory.find(inv => inv.id === r.inventoryItemId);
+                                              const totalQty = r.quantity * item.quantity;
+                                              return (
+                                                <div key={idx} className="flex items-center gap-2 pl-1">
+                                                  <div className="w-1 h-1 rounded-full bg-blue-500/40" />
+                                                  <p className="text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-tight">
+                                                    {invItem?.name}: <span className="text-blue-600 dark:text-blue-400 font-black">{totalQty} {invItem?.unit}</span>
+                                                  </p>
+                                                </div>
+                                              );
+                                            })}
                                           </div>
-                                        );
-                                      })}
+                                        </div>
+                                      )}
+
+                                      {product?.preparation && (
+                                        <div className="mt-2 pt-2 border-t border-slate-200/50 dark:border-slate-700/50">
+                                          <p className="text-[9px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+                                            <Icons.View size={10} /> Instruções de Preparo
+                                          </p>
+                                          <p className="text-[10px] text-slate-600 dark:text-slate-300 font-medium leading-relaxed whitespace-pre-wrap pl-1 italic">
+                                            {product.preparation}
+                                          </p>
+                                        </div>
+                                      )}
                                     </div>
                                   )}
-
-                                    {/* Instruções de Preparo */}
-                                    {product?.preparation && (
-                                      <div className="mt-2 p-2 bg-blue-50/50 dark:bg-blue-900/10 rounded-lg border border-blue-100/50 dark:border-blue-800/30">
-                                        <p className="text-[8px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-1 flex items-center gap-1">
-                                          <Icons.View size={8} /> Instruções de Preparo
-                                        </p>
-                                        <p className="text-[9px] text-slate-600 dark:text-slate-400 font-medium leading-tight whitespace-pre-wrap">
-                                          {product.preparation}
-                                        </p>
-                                      </div>
-                                    )}
                                 </div>
                               </div>
                             </label>
