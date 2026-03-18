@@ -1163,22 +1163,22 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
         <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-300">
           <div className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden animate-in zoom-in-95 duration-300">
             {/* Modal Header */}
-            <div className={`p-8 pb-6 text-center border-b border-slate-50 dark:border-slate-800 ${isConfirmingBilling ? 'bg-orange-50/50 dark:bg-orange-500/10' : 'bg-blue-50/50 dark:bg-blue-500/10'}`}>
-              <div className="flex justify-center mb-4">
-                <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg transition-transform hover:scale-110 duration-300 ${isConfirmingBilling ? 'bg-orange-500 text-white shadow-orange-200' : 'bg-blue-500 text-white shadow-blue-200'}`}>
-                  {isConfirmingBilling ? <Icons.MoneyBag className="w-8 h-8" /> : <Icons.View className="w-8 h-8" />}
+            <div className={`p-6 pb-4 text-center border-b border-slate-50 dark:border-slate-800 ${isConfirmingBilling ? 'bg-orange-50/50 dark:bg-orange-500/10' : 'bg-blue-50/50 dark:bg-blue-500/10'}`}>
+              <div className="flex justify-center mb-3">
+                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg transition-transform hover:scale-110 duration-300 ${isConfirmingBilling ? 'bg-orange-500 text-white shadow-orange-200' : 'bg-blue-500 text-white shadow-blue-200'}`}>
+                  {isConfirmingBilling ? <Icons.MoneyBag className="w-7 h-7" /> : <Icons.View className="w-7 h-7" />}
                 </div>
               </div>
               <h2 className="text-xl font-black text-slate-800 dark:text-white uppercase tracking-tighter">
                 Mesa {selectedTable}
               </h2>
-              <p className={`text-[10px] font-black uppercase tracking-widest mt-1 ${isConfirmingBilling ? 'text-orange-600 dark:text-orange-400' : 'text-blue-600 dark:text-blue-400'}`}>
+              <p className={`text-[10px] font-black uppercase tracking-widest mt-0.5 ${isConfirmingBilling ? 'text-orange-600 dark:text-orange-400' : 'text-blue-600 dark:text-blue-400'}`}>
                 {isConfirmingBilling ? 'Solicitação de Fechamento' : 'Conferência de Consumo'}
               </p>
             </div>
 
             {/* Modal Content */}
-            <div className="p-8 space-y-6">
+            <div className="p-6 space-y-4">
               {/* Client Info Section */}
               <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-700">
                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Identificação</p>
@@ -1246,7 +1246,7 @@ const Tables: React.FC<TablesProps> = ({ currentUser }) => {
             </div>
 
             {/* Modal Actions */}
-            <div className="p-8 pt-0 flex gap-3">
+            <div className="p-6 pt-0 flex gap-3">
               <button
                 onClick={() => { setShowConsumptionTicket(false); setIsConfirmingBilling(false); }}
                 className="flex-1 py-4 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded-2xl font-black uppercase text-[10px] tracking-widest transition-all hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-95"

@@ -2172,28 +2172,28 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
             </div>
 
             {/* Visual Modern Summary */}
-            <div className="bg-white dark:bg-slate-900 w-[500px] max-w-[95vw] rounded-[3rem] shadow-2xl overflow-hidden border border-slate-100 dark:border-slate-800 flex flex-col max-h-[95vh] relative no-print">
-              <div className="p-8 border-b border-slate-50 dark:border-slate-800 shrink-0 relative bg-slate-50/50 dark:bg-slate-800/50">
+            <div className="bg-white dark:bg-slate-900 w-[450px] max-w-[95vw] rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-100 dark:border-slate-800 flex flex-col max-h-[90vh] relative no-print">
+              <div className="p-6 border-b border-slate-50 dark:border-slate-800 shrink-0 relative bg-slate-50/50 dark:bg-slate-800/50">
                 <button
                   onClick={() => setPrintingOrder(null)}
-                  className="absolute right-6 top-6 w-10 h-10 flex items-center justify-center bg-white dark:bg-slate-800 rounded-full text-slate-400 dark:text-slate-500 hover:bg-red-50 dark:hover:bg-red-900/30 hover:text-red-500 dark:hover:text-red-400 transition-all font-black text-xl z-20 shadow-sm"
+                  className="absolute right-4 top-4 w-8 h-8 flex items-center justify-center bg-white dark:bg-slate-800 rounded-full text-slate-400 dark:text-slate-500 hover:bg-red-50 dark:hover:bg-red-900/30 hover:text-red-500 dark:hover:text-red-400 transition-all font-black text-lg z-20 shadow-sm"
                 >
                   ×
                 </button>
                 <div className="text-center">
-                  <div className="w-20 h-20 bg-emerald-100 dark:bg-emerald-900/20 rounded-[2rem] flex items-center justify-center mx-auto mb-6 text-3xl shadow-inner animate-bounce-subtle">✅</div>
-                  <h2 className="text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tighter">Venda Finalizada</h2>
-                  <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-1">Resumo detalhado da transação</p>
+                  <div className="w-14 h-14 bg-emerald-100 dark:bg-emerald-900/20 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl shadow-inner animate-bounce-subtle">✅</div>
+                  <h2 className="text-xl font-black text-slate-800 dark:text-white uppercase tracking-tighter">Venda Finalizada</h2>
+                  <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-0.5">Resumo detalhado da transação</p>
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-8 space-y-8 custom-scrollbar">
+              <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
                 {/* IDENTIFICATION */}
-                <div className="space-y-4">
+                <div className="space-y-3">
                   <div className="flex items-center gap-2 border-l-4 border-blue-600 pl-3">
                     <h3 className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-widest">Identificação</h3>
                   </div>
-                  <div className="grid grid-cols-2 gap-4 bg-slate-50 dark:bg-slate-800/50 p-6 rounded-[2rem] border border-slate-100 dark:border-slate-700">
+                  <div className="grid grid-cols-2 gap-4 bg-slate-50 dark:bg-slate-800/50 p-4 rounded-3xl border border-slate-100 dark:border-slate-700">
                     <div>
                       <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Cliente</p>
                       <p className="text-[11px] font-black text-slate-700 dark:text-slate-200 uppercase">{printingOrder.clientName || 'Consumidor Padrão'}</p>
@@ -2214,11 +2214,11 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                 </div>
 
                 {/* ITEMS */}
-                <div className="space-y-4">
+                <div className="space-y-3">
                   <div className="flex items-center gap-2 border-l-4 border-indigo-600 pl-3">
                     <h3 className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-widest">Itens Consumidos</h3>
                   </div>
-                  <div className="bg-slate-50 dark:bg-slate-800/50 rounded-[2rem] p-8 border border-slate-100 dark:border-slate-700 space-y-3 font-receipt shadow-inner">
+                  <div className="bg-slate-50 dark:bg-slate-800/50 rounded-3xl p-6 border border-slate-100 dark:border-slate-700 space-y-2 font-receipt shadow-inner max-h-40 overflow-y-auto custom-scrollbar">
                     {groupedPrintingItems.map(([id, data]) => (
                       <div key={id} className="flex justify-between border-b border-dashed border-slate-200 dark:border-slate-700 pb-2">
                         <span className="text-[10px] font-black text-slate-600 dark:text-slate-400 uppercase max-w-[70%]">{data.quantity}x {data.product?.name}</span>
@@ -2229,11 +2229,11 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                 </div>
 
                 {/* SUMMARY */}
-                <div className="space-y-4">
+                <div className="space-y-3">
                   <div className="flex items-center gap-2 border-l-4 border-emerald-600 pl-3">
                     <h3 className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-widest">Resumo Financeiro</h3>
                   </div>
-                  <div className="bg-emerald-50 dark:bg-emerald-900/10 rounded-[2rem] p-8 border border-emerald-100/50 dark:border-emerald-500/10 space-y-3">
+                  <div className="bg-emerald-50 dark:bg-emerald-900/10 rounded-3xl p-6 border border-emerald-100/50 dark:border-emerald-500/10 space-y-2">
                     <div className="flex justify-between">
                       <span className="text-[10px] font-bold text-emerald-600/60 uppercase">Subtotal</span>
                       <span className="text-[10px] font-black text-emerald-700 dark:text-emerald-400">R$ {(printingOrder.total - (printingOrder.appliedServiceFee || 0)).toFixed(2)}</span>
@@ -2252,16 +2252,16 @@ const POS: React.FC<POSProps> = ({ currentUser }) => {
                 </div>
               </div>
 
-              <div className="p-8 bg-slate-50/50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800 grid grid-cols-2 gap-4 transition-all">
+              <div className="p-6 bg-slate-50/50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800 grid grid-cols-2 gap-3 transition-all">
                 <button
                   onClick={() => setPrintingOrder(null)}
-                  className="py-5 bg-white dark:bg-slate-800 text-slate-400 dark:text-slate-500 rounded-[2rem] font-black uppercase text-[10px] tracking-widest hover:text-red-500 dark:hover:text-red-400 transition-all border border-slate-200 dark:border-slate-700 active:scale-95 flex items-center justify-center gap-2"
+                  className="py-4 bg-white dark:bg-slate-800 text-slate-400 dark:text-slate-500 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:text-red-500 dark:hover:text-red-400 transition-all border border-slate-200 dark:border-slate-700 active:scale-95 flex items-center justify-center gap-2"
                 >
                   Fechar
                 </button>
                 <button
                   onClick={handlePrintOrder}
-                  className="py-5 bg-slate-900 text-white rounded-[2rem] font-black uppercase text-[10px] tracking-widest hover:bg-black transition-all shadow-xl active:scale-95 flex items-center justify-center gap-2"
+                  className="py-4 bg-slate-900 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-black transition-all shadow-xl active:scale-95 flex items-center justify-center gap-2"
                 >
                   <Icons.Print className="w-4 h-4" />
                   Imprimir Comprovante

@@ -58,7 +58,7 @@
     left: 0;
     top: 0;
     width: 100% !important;
-    max-width: 48mm !important; /* Slightly narrower to avoid right cut-off */
+    max-width: 58mm !important; /* Standard 58mm width */
     margin: 0 !important;
     padding: 0 !important;
     padding-right: 2mm !important; /* Added safety margin on the right */
@@ -104,18 +104,18 @@
     color: black !important;
     background: white !important;
     font-family: monospace !important;
-    font-size: 8px !important; /* Reduced font size significantly */
-    line-height: 1.1 !important; /* Tighter line height */
+    font-size: 11px !important; /* Increased for better legibility as requested */
+    line-height: 1.2 !important; /* Tighter line height */
     border: none !important; /* Remove dashed borders */
   }
 
   .is-receipt h2 {
-    font-size: 10px !important;
-    margin-bottom: 2px !important;
+    font-size: 14px !important;
+    margin-bottom: 4px !important;
   }
 
   .is-receipt p, .is-receipt span, .is-receipt div {
-    margin-bottom: 1px !important;
+    margin-bottom: 2px !important;
   }
 
   .is-receipt table {
